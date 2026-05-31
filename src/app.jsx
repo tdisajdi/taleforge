@@ -1280,8 +1280,7 @@ function ChatApp({ apiKeys, character, onReset, onReincarnate, onKeyReset, pastL
     const frags = loadMemoryFragments();
     const fragSection = frags.length > 0 ? `
 [💭 전생 기억 파편]
-${frags.slice(-3).map(f=>f.text).join("
-")}` : "";
+${frags.slice(-3).map(f=>f.text).join("\n")}` : "";
     // 2번: 전생 인연 (pastLife intimateNpcs)
     const intimateNpcs = (char.pastLifeIntimateNpcs || []);
     const intiSection = intimateNpcs.length > 0 ? `
@@ -4346,7 +4345,7 @@ ${healEvents.length > 0 ? `회복한 적: ${healEvents.map(h => `${h.icon}${h.na
   };
 
   return (
-    <React.Fragment>
+    <>
       {titleToast && (
         <div style={{ position:"fixed", top:16, left:"50%", transform:"translateX(-50%)", zIndex:1100, background:"linear-gradient(135deg,#1a1208,#2a1f0d)", border:`2px solid ${RARITY_COLOR[titleToast.rarity]}`, boxShadow:`0 0 20px ${RARITY_COLOR[titleToast.rarity]}55`, padding:"10px 18px", display:"flex", alignItems:"center", gap:10, animation:"savepop 3.5s ease forwards", pointerEvents:"none", maxWidth:"90vw" }}>
           <span style={{ fontSize:20 }}>{titleToast.icon}</span>
@@ -5172,7 +5171,7 @@ ${healEvents.length > 0 ? `회복한 적: ${healEvents.map(h => `${h.icon}${h.na
           }} style={{ padding:"7px 10px", background:"transparent", border:"1px solid #2a1a05", color:"#4a3a2a", fontSize:10 }}>🔄 새 시작</button>
         <button onClick={onKeyReset} style={{ padding:"7px 10px", background:"transparent", border:"1px solid #2a1a05", color:"#4a3a2a", fontSize:10 }}>🔑 키 변경</button>
       </div>
-    </React.Fragment>
+    </>
   );
 }
 

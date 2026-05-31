@@ -153,10 +153,13 @@ function ApiKeyScreen({ onConfirm }) {
 }
 
 const SCENARIOS = [
-  { id: "medieval", era: "중세 판타지", icon: "⚔️", title: "왕국의 황혼", desc: "마법과 검이 공존하는 왕국.", bg: "linear-gradient(135deg, #1a0a00, #2a1500, #1a0800)", accent: "#c8a96e" },
-  { id: "wuxia", era: "무협 강호", icon: "🐉", title: "강호의 전설", desc: "무림의 고수들이 패권을 다투는 강호.", bg: "linear-gradient(135deg, #0a0008, #150010, #080010)", accent: "#e05a5a" },
-  { id: "cyberpunk", era: "사이버펑크", icon: "🤖", title: "네온의 도시", desc: "2087년, 거대 기업이 지배하는 도시.", bg: "linear-gradient(135deg, #00050f, #050020, #0f0010)", accent: "#00d4ff" },
-  { id: "custom", era: "나만의 세계", icon: "✨", title: "커스텀 시나리오", desc: "자유롭게 캐릭터와 세계를 설정합니다.", bg: "linear-gradient(135deg, #0a0500, #150d03, #0a0500)", accent: "#c8a96e" }
+  { id: "medieval",   era: "중세 판타지", icon: "⚔️",  title: "왕국의 황혼",     desc: "마법과 검이 공존하는 왕국.",                            bg: "linear-gradient(135deg, #1a0a00, #2a1500, #1a0800)", accent: "#c8a96e" },
+  { id: "wuxia",      era: "무협 강호",   icon: "🐉",  title: "강호의 전설",     desc: "무림의 고수들이 패권을 다투는 강호.",                    bg: "linear-gradient(135deg, #0a0008, #150010, #080010)", accent: "#e05a5a" },
+  { id: "cyberpunk",  era: "사이버펑크",  icon: "🤖",  title: "네온의 도시",     desc: "2087년, 거대 기업이 지배하는 도시.",                    bg: "linear-gradient(135deg, #00050f, #050020, #0f0010)", accent: "#00d4ff" },
+  { id: "apocalypse", era: "아포칼립스",  icon: "☢️",  title: "붕괴의 황무지",   desc: "문명이 무너진 뒤 폐허가 된 세상. 생존이 곧 목표다.",  bg: "linear-gradient(135deg, #0f0800, #1a0f00, #100800)", accent: "#e8a030" },
+  { id: "mythology",  era: "신화 세계관", icon: "⚡",  title: "신들의 시대",     desc: "신과 영웅이 공존하는 고대 신화의 세계.",                bg: "linear-gradient(135deg, #000a1a, #001030, #000818)", accent: "#ffd060" },
+  { id: "steampunk",  era: "스팀펑크",    icon: "⚙️",  title: "증기의 제국",     desc: "증기 기관과 마법이 융합된 빅토리아 시대.",              bg: "linear-gradient(135deg, #0a0800, #150f00, #0a0800)", accent: "#b8860b" },
+  { id: "custom",     era: "나만의 세계", icon: "✨",  title: "커스텀 시나리오", desc: "자유롭게 캐릭터와 세계를 설정합니다.",                  bg: "linear-gradient(135deg, #0a0500, #150d03, #0a0500)", accent: "#c8a96e" }
 ];
 
 function ReincarnationScreen({ pastLife, onStart, onSkip }) {
@@ -797,60 +800,64 @@ function SetupScreen({ onStart, scenario }) {
     setJobSkillLoading(true); setJobSkillDone(false); setJobSkillCount(0);
     const apiKey = loadApiKeys()[loadKeyIndex()] || "";
     const scenarioId = scenario?.id || "custom";
-    const prompt = `당신은 RPG 스킬 디자이너입니다.
-세계관: ${era}
-직업: "${roleName}"
-
-이 직업에 특화된 스킬을 정확히 60개 생성하세요. 능동 스킬(active) 30개, 패시브 스킬(passive) 20개, 이벤트 스킬(event) 10개.
-
-각 스킬은 아래 JSON 배열 형식으로만 출력하세요. 설명 없이 JSON만.
-
-필드 설명:
-- id: "job_영문소문자_숫자" 형식 (예: job_slash_01)
-- type: "active" | "passive" | "event"
-- name: 한국어 스킬명
-- icon: 이모지 1개
-- rarity: "common" | "uncommon" | "rare" | "legendary"
-- mpCost: 능동 스킬 MP 소모 (0~50), 패시브/이벤트는 0
-- hpCost: HP 소모 (선택, 보통 0)
-- hpRestore: HP 회복량 (선택)
-- req: 필요 스탯 조건 객체 (예: {"str":30,"agi":20}), 없으면 {}
-- desc: 스킬 설명 (한국어, 1~2문장)
-- aiHint: AI 서사 힌트 (한국어, 이 스킬 사용 시 AI가 어떻게 묘사할지)
-- condition: 패시브/이벤트 발동 조건 문자열 (능동은 null)
-- conditionDesc: 조건 설명 (한국어)
-- statBoost: 패시브 발동 시 스탯 증가 객체 (선택)
-- scenario: "${scenarioId}" 또는 null
-- jobRole: "${roleName}"
-
-JSON 배열만 출력:
-[{"id":"job_...","type":"active","name":"...","icon":"...","rarity":"common","mpCost":10,"hpCost":0,"hpRestore":0,"req":{},"desc":"...","aiHint":"...","condition":null,"conditionDesc":null,"statBoost":{},"scenario":${JSON.stringify(scenarioId)},"jobRole":${JSON.stringify(roleName)}}, ...]`;
-
+    const makeFallback = (role, sid) => [
+      {id:"job_basic_attack",type:"active",name:"기본 공격",icon:"⚔️",rarity:"common",mpCost:0,hpCost:0,hpRestore:0,req:{},desc:`${role}의 기본 전투 기술.`,aiHint:`${role}이 기본 공격을 사용합니다.`,condition:null,conditionDesc:null,statBoost:{},scenario:sid,jobRole:role},
+      {id:"job_heavy_strike",type:"active",name:"강타",icon:"💥",rarity:"uncommon",mpCost:15,hpCost:0,hpRestore:0,req:{str:20},desc:"강력한 일격으로 큰 피해를 입힌다.",aiHint:`${role}이 강타를 날립니다.`,condition:null,conditionDesc:null,statBoost:{},scenario:sid,jobRole:role},
+      {id:"job_swift_strike",type:"active",name:"신속 공격",icon:"💨",rarity:"common",mpCost:8,hpCost:0,hpRestore:0,req:{agi:15},desc:"빠른 속도로 공격한다.",aiHint:`${role}이 빠르게 공격합니다.`,condition:null,conditionDesc:null,statBoost:{},scenario:sid,jobRole:role},
+      {id:"job_focus",type:"active",name:"집중",icon:"🎯",rarity:"uncommon",mpCost:10,hpCost:0,hpRestore:0,req:{},desc:"정신을 집중해 다음 판정을 향상시킨다.",aiHint:`${role}이 집중합니다.`,condition:null,conditionDesc:null,statBoost:{},scenario:sid,jobRole:role},
+      {id:"job_analyze",type:"active",name:"적 분석",icon:"🔍",rarity:"uncommon",mpCost:8,hpCost:0,hpRestore:0,req:{per:15},desc:"적의 약점을 파악한다. 다음 공격 판정 +10.",aiHint:`${role}이 적을 분석합니다.`,condition:null,conditionDesc:null,statBoost:{},scenario:sid,jobRole:role},
+      {id:"job_power_surge",type:"active",name:"힘의 급등",icon:"🔥",rarity:"rare",mpCost:25,hpCost:0,hpRestore:0,req:{str:25},desc:"순간적으로 모든 힘을 폭발시킨다.",aiHint:`${role}의 힘이 폭발합니다.`,condition:null,conditionDesc:null,statBoost:{},scenario:sid,jobRole:role},
+      {id:"job_taunt",type:"active",name:"도발",icon:"😤",rarity:"common",mpCost:8,hpCost:0,hpRestore:0,req:{fear:10},desc:"적의 주의를 끌어 아군을 보호한다.",aiHint:`${role}이 도발합니다.`,condition:null,conditionDesc:null,statBoost:{},scenario:sid,jobRole:role},
+      {id:"job_evasion",type:"passive",name:"회피 본능",icon:"🌪️",rarity:"common",mpCost:0,hpCost:0,hpRestore:0,req:{agi:15},desc:"공격을 본능적으로 피한다. AGI +6.",aiHint:`${role}이 공격을 피합니다.`,condition:"in_combat",conditionDesc:"전투 중",statBoost:{agi:6},scenario:sid,jobRole:role},
+      {id:"job_endure",type:"passive",name:"인내",icon:"🛡️",rarity:"common",mpCost:0,hpCost:0,hpRestore:0,req:{end:15},desc:"피해를 버텨낸다. END +6.",aiHint:`${role}이 버텨냅니다.`,condition:"in_combat",conditionDesc:"전투 중",statBoost:{end:6},scenario:sid,jobRole:role},
+      {id:"job_sharp_senses",type:"passive",name:"예리한 감각",icon:"👁️",rarity:"uncommon",mpCost:0,hpCost:0,hpRestore:0,req:{per:20},desc:"주변을 예리하게 감지한다. PER +8.",aiHint:`${role}이 감각을 곤두세웁니다.`,condition:"always",conditionDesc:"항시 발동",statBoost:{per:8},scenario:sid,jobRole:role},
+      {id:"job_iron_will",type:"passive",name:"강철 의지",icon:"💎",rarity:"rare",mpCost:0,hpCost:0,hpRestore:0,req:{wil:20},desc:"꺾이지 않는 의지. WIL +8.",aiHint:`${role}이 의지를 드러냅니다.`,condition:"always",conditionDesc:"항시 발동",statBoost:{wil:8},scenario:sid,jobRole:role},
+      {id:"job_second_wind",type:"event",name:"두 번째 바람",icon:"💪",rarity:"rare",mpCost:0,hpCost:0,hpRestore:25,req:{},desc:"위기 순간 숨겨진 힘이 솟구친다. HP 25 회복.",aiHint:`${role}이 강하게 일어납니다.`,condition:"hp_critical",conditionDesc:"HP 30% 이하",statBoost:{},scenario:sid,jobRole:role},
+      {id:"job_last_stand",type:"event",name:"최후의 저항",icon:"🌟",rarity:"legendary",mpCost:0,hpCost:0,hpRestore:0,req:{},desc:"죽음 직전 모든 힘을 끌어모아 반격한다.",aiHint:`${role}이 비장의 카드를 꺼냅니다!`,condition:"hp_danger",conditionDesc:"HP 15% 이하",statBoost:{str:20,agi:15},scenario:sid,jobRole:role},
+    ];
+    if (!apiKey) {
+      const fb = makeFallback(roleName, scenarioId);
+      const ex = loadJobSkills().filter(s => s.id?.startsWith("race_"));
+      saveJobSkills([...ex, ...fb]); setJobSkillCount(fb.length); setJobSkillDone(true); setJobSkillLoading(false); return;
+    }
+    const prompt = `당신은 RPG 스킬 디자이너입니다. 세계관: ${era} 직업: "${roleName}" 이 직업의 스킬 20개를 JSON 배열만 출력. active 10개 passive 7개 event 3개. [{"id":"job_영문","type":"active","name":"한국어명","icon":"이모지","rarity":"common","mpCost":10,"hpCost":0,"hpRestore":0,"req":{},"desc":"설명","aiHint":"힌트","condition":null,"conditionDesc":null,"statBoost":{},"scenario":"${scenarioId}","jobRole":"${roleName}"}]`;
     try {
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
         method:"POST", headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({ contents:[{ role:"user", parts:[{ text: prompt }] }], generationConfig:{ temperature:1.0, maxOutputTokens:8192 } })
+        body: JSON.stringify({ contents:[{ role:"user", parts:[{ text: prompt }] }], generationConfig:{ temperature:0.9, maxOutputTokens:4000 } })
       });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
+      if (data.error) throw new Error(data.error.message);
       const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
       const clean = raw.replace(/```json|```/g,"").trim();
-      // JSON 배열 추출
       const arrMatch = clean.match(/\[[\s\S]*\]/);
-      if (!arrMatch) throw new Error("JSON parse fail");
+      if (!arrMatch) throw new Error("no array");
       const parsed = JSON.parse(arrMatch[0]);
-      // 유효한 스킬만 필터
       const valid = parsed.filter(s => s.id && s.type && s.name && s.icon);
-      // 기존 직업 스킬 교체 저장
-      saveJobSkills(valid);
-      setJobSkillCount(valid.length);
-      setJobSkillDone(true);
+      if (valid.length < 5) throw new Error("too few: "+valid.length);
+      const ex = loadJobSkills().filter(s => s.id?.startsWith("race_"));
+      saveJobSkills([...ex, ...valid]);
+      setJobSkillCount(valid.length); setJobSkillDone(true);
     } catch(e) {
-      // 실패해도 게임은 진행 — 빈 배열 저장
-      saveJobSkills([]);
-      setJobSkillDone(true);
-      setJobSkillCount(0);
+      console.warn("스킬생성실패:", e.message);
+      const fb = makeFallback(roleName, scenarioId);
+      const ex = loadJobSkills().filter(s => s.id?.startsWith("race_"));
+      saveJobSkills([...ex, ...fb]);
+      setJobSkillCount(fb.length); setJobSkillDone(true);
     }
     setJobSkillLoading(false);
+  };
+
+  const LOCAL_FALLBACK = {
+    role: { medieval:["기사","마법사","도적","성직자","검사","팔라딘","연금술사","음유시인","레인저","궁수"], wuxia:["무사","검객","암살자","도사","의원","협객","신관","표국 무인","방랑자","속세 이탈자"], cyberpunk:["해커","용병","기업 스파이","사이버 의사","드론 조종사","정보 중개인","반란군 전사","AI 연구자","암거래상","네트러너"], apocalypse:["생존자","황무지 전사","의사","약탈자","정찰병","엔지니어","폐허 탐험가","부족 주술사","방랑자","용병"], mythology:["반신","영웅","신관","예언자","괴물 사냥꾼","운명의 전사","오라클","신화의 전사","티탄 후예","신들의 사자"], steampunk:["발명가","증기 기사","비행선 조종사","연금술사","귀족 탐정","기계 의사","에테르 마법사","혁명가","암시장 딜러","산업 스파이"], default:["전사","마법사","도적","성직자","탐정","상인","연금술사","음유시인","암살자","사냥꾼"] },
+    background: ["평범한 삶을 살다가 운명이 바뀐 순간이 있었다. 그 사건이 지금의 나를 만들었다.","가족을 잃은 후 복수를 맹세했다. 하지만 시간이 지나며 그 의미가 흐려지고 있다.","누군가의 제자였으나 스승을 잃고 홀로 세상에 내던져졌다.","비밀 조직에 속해 있었다. 그들이 원하는 것과 내가 원하는 것이 달라지기 시작했다.","과거의 죄를 씻기 위해 방랑한다. 언제까지 이 길을 걸어야 할지 알 수 없다."],
+    personality: ["차갑고 냉소적이지만 내면 깊은 곳에 의리가 있다.","겉으로는 밝고 유쾌하지만 혼자일 때는 깊은 고독에 잠긴다.","말수가 적고 감정을 잘 드러내지 않지만 행동으로 마음을 전한다.","직설적이고 거침없어 주변 사람을 당황하게 하지만 솔직한 진심이 있다.","논리적이고 냉정하게 보이지만 정작 감정에 약한 순간들이 있다."],
+    speechStyle: ["차갑고 간결하게 말한다. 불필요한 감정 표현을 피한다.","고풍스럽고 격식 있는 말투. 상대를 항상 경칭으로 부른다.","거칠고 직설적이다. 돌려 말하는 법을 모른다.","조용하고 사려 깊게 말한다. 말보다 침묵이 길다.","어딘가 빈정거리는 듯한 말투. 하지만 진심은 행동으로 드러난다."],
+  };
+  const getFallback = (key) => {
+    if (key === "role") { const sid = scenario?.id || "default"; const pool = LOCAL_FALLBACK.role[sid] || LOCAL_FALLBACK.role.default; return [...pool].sort(() => Math.random()-0.5).slice(0,5); }
+    return LOCAL_FALLBACK[key] || [];
   };
 
   const fetchSuggestions = async () => {
@@ -861,17 +868,25 @@ JSON 배열만 출력:
       setCustomInput(""); return;
     }
     setSugLoading(true); setSuggestions([]);
+    const apiKey = loadApiKeys()[loadKeyIndex()] || "";
+    if (!apiKey) { setSuggestions(getFallback(cur.key)); setSugLoading(false); return; }
     try {
-      const apiKey = loadApiKeys()[loadKeyIndex()] || "";
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
         method:"POST", headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({ contents:[{ role:"user", parts:[{ text:cur.prompt(char) }] }], generationConfig:{ temperature:1.1, maxOutputTokens:400 } })
+        body: JSON.stringify({ contents:[{ role:"user", parts:[{ text:cur.prompt(char) }] }], generationConfig:{ temperature:1.1, maxOutputTokens:500 } })
       });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
+      if (data.error) throw new Error(data.error.message);
       const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-      const parsed = JSON.parse(raw.replace(/```json|```/g,"").trim());
-      setSuggestions((parsed.items || []).slice(0, 5));
-    } catch { setSuggestions([]); }
+      const clean = raw.replace(/```json|```/g,"").trim();
+      const jm = clean.match(/\{[\s\S]*\}/);
+      if (!jm) throw new Error("no json");
+      const parsed = JSON.parse(jm[0]);
+      const items = (parsed.items || []).slice(0, 5);
+      if (!items.length) throw new Error("empty");
+      setSuggestions(items);
+    } catch(e) { console.warn("AI추천실패:", e.message); setSuggestions(getFallback(cur.key)); }
     setSugLoading(false);
   };
 
@@ -1274,639 +1289,505 @@ function ChatApp({ apiKeys, character, onReset, onReincarnate, onKeyReset, pastL
 
     // ── 숨겨진 직업 시스템 힌트 ──
     const hiddenJobDef = HIDDEN_JOBS.find(j => j.name === char.role);
-    const hiddenJobSection = hiddenJobDef ? `
-[🔓 숨겨진 직업 — ${hiddenJobDef.icon}${hiddenJobDef.name}] ${hiddenJobDef.systemHint}` : "";
+    const hiddenJobSection = hiddenJobDef ? `\n[🔓 숨겨진 직업 — ${hiddenJobDef.icon}${hiddenJobDef.name}] ${hiddenJobDef.systemHint}` : "";
 
     // 1번: 전생 기억 파편 섹션
     const frags = loadMemoryFragments();
-    const fragSection = frags.length > 0 ? `
-[💭 전생 기억 파편]
-${frags.slice(-3).map(f=>f.text).join("
-")}` : "";
+    const fragSection = frags.length > 0 ? `\n[💭 전생 기억 파편]\n${frags.slice(-3).map(f=>f.text).join("\n")}` : "";
     // 2번: 전생 인연 (pastLife intimateNpcs)
     const intimateNpcs = (char.pastLifeIntimateNpcs || []);
-    const intiSection = intimateNpcs.length > 0 ? `
-[💞 전생 인연] 다음 NPC들은 이전 생에 깊은 인연이 있었습니다. 첫 만남이지만 왠지 모를 친근함을 느낍니다: ${intimateNpcs.join(", ")}` : "";
+    const intiSection = intimateNpcs.length > 0 ? `\n[💞 전생 인연] 다음 NPC들은 이전 생에 깊은 인연이 있었습니다. 첫 만남이지만 왠지 모를 친근함을 느낍니다: ${intimateNpcs.join(", ")}` : "";
     // 8번: 명성 이월
     const fameLeg = loadFameLegacy();
-    const fameSection = fameLeg && fameLeg.type !== "neutral" ? `
-[${fameLeg.type==="hero"?"🌟":"💀"} 전생의 소문] 전생에서 ${fameLeg.characterName||"이 영혼"}의 소문이 퍼져있습니다. NPC들은 처음 만나도 ${fameLeg.type==="hero"?"호감":"두려움"}을 갖고 대합니다. (${fameLeg.label})` : "";
+    const fameSection = fameLeg && fameLeg.type !== "neutral" ? `\n[${fameLeg.type==="hero"?"🌟":"💀"} 전생의 소문] 전생에서 ${fameLeg.characterName||"이 영혼"}의 소문이 퍼져있습니다. NPC들은 처음 만나도 ${fameLeg.type==="hero"?"호감":"두려움"}을 갖고 대합니다. (${fameLeg.label})` : "";
     // 6번: 영혼 각인 무기
     const soulWpn = loadSoulWeapon();
-    const soulWpnSection = soulWpn ? `
-[⚔️ 영혼 각인] 전생에서 가장 많이 쓰던 ${soulWpn.name}. ${soulWpn.desc}` : "";
+    const soulWpnSection = soulWpn ? `\n[⚔️ 영혼 각인] 전생에서 가장 많이 쓰던 ${soulWpn.name}. ${soulWpn.desc}` : "";
 
     // 11번: 금지 스킬 해금 알림
     const forbiddenSkills11 = getUnlockedForbiddenSkills();
-    const forbiddenSection = forbiddenSkills11.length > 0 ? `
-[🔓 금지 스킬 해금] 특수 조건으로 해금된 금지 스킬이 있습니다: ${forbiddenSkills11.map(s=>`${s.icon}${s.name}(${s.desc})`).join(", ")}. 사용 시 강렬하게 묘사하십시오.` : "";
+    const forbiddenSection = forbiddenSkills11.length > 0 ? `\n[🔓 금지 스킬 해금] 특수 조건으로 해금된 금지 스킬이 있습니다: ${forbiddenSkills11.map(s=>`${s.icon}${s.name}(${s.desc})`).join(", ")}. 사용 시 강렬하게 묘사하십시오.` : "";
 
     // 12번: 나비효과
     const butterflies = loadButterfly();
-    const butterflySection = butterflies.length > 0 ? `
-[🦋 나비효과] 전생의 선택이 세계에 흔적을 남겼습니다:
-${butterflies.map(b => BUTTERFLY_EFFECTS[b.type]?.aiHint?.(b.data) || "").filter(Boolean).join("\n")}` : "";
+    const butterflySection = butterflies.length > 0 ? `\n[🦋 나비효과] 전생의 선택이 세계에 흔적을 남겼습니다:\n${butterflies.map(b => BUTTERFLY_EFFECTS[b.type]?.aiHint?.(b.data) || "").filter(Boolean).join("\n")}` : "";
 
     // 13번: 히든 엔딩 조각
     const hiddenPieces13 = loadHiddenEndingPieces();
-    const hiddenEndingSection = isHiddenEndingUnlocked() ? `
-[🔮 진엔딩 해금] 모든 운명의 파편을 모았습니다. 이번 회차에서 특별한 진실이 드러날 수 있습니다. 적절한 순간에 세계의 비밀을 암시하십시오.` : hiddenPieces13.length > 0 ? `
-[🔮 히든 엔딩 파편 ${hiddenPieces13.length}/${HIDDEN_ENDING_TOTAL}] 운명의 조각이 쌓이고 있습니다.` : "";
+    const hiddenEndingSection = isHiddenEndingUnlocked() ? `\n[🔮 진엔딩 해금] 모든 운명의 파편을 모았습니다. 이번 회차에서 특별한 진실이 드러날 수 있습니다. 적절한 순간에 세계의 비밀을 암시하십시오.` : hiddenPieces13.length > 0 ? `\n[🔮 히든 엔딩 파편 ${hiddenPieces13.length}/${HIDDEN_ENDING_TOTAL}] 운명의 조각이 쌓이고 있습니다.` : "";
 
     // 14번: 죽는 방식 보상
     const deathBonuses14 = getActiveDeathBonuses();
-    const deathBonusSection = deathBonuses14.length > 0 ? `
-[💀 전생 사망 유산] ${deathBonuses14.map(d=>`${d.name}: ${d.desc}`).join(" / ")}. 이 경험이 캐릭터의 신체와 감각에 자연스럽게 반영됩니다.` : "";
+    const deathBonusSection = deathBonuses14.length > 0 ? `\n[💀 전생 사망 유산] ${deathBonuses14.map(d=>`${d.name}: ${d.desc}`).join(" / ")}. 이 경험이 캐릭터의 신체와 감각에 자연스럽게 반영됩니다.` : "";
 
     // 15번: 트라우마 면역
     const traumaImmune15 = getTraumaImmunities();
-    const traumaSection = traumaImmune15.length > 0 ? `
-[🛡️ 트라우마 면역] 반복된 경험으로 면역 획득: ${traumaImmune15.map(t=>`${t.icon}${t.label}(${t.immunity})`).join(", ")}. 해당 상황에서 두려움 없이 행동합니다.` : "";
+    const traumaSection = traumaImmune15.length > 0 ? `\n[🛡️ 트라우마 면역] 반복된 경험으로 면역 획득: ${traumaImmune15.map(t=>`${t.icon}${t.label}(${t.immunity})`).join(", ")}. 해당 상황에서 두려움 없이 행동합니다.` : "";
 
     // 16번: 라스트 워드 오프닝
     const lastWord16 = loadLastWord();
-    const lastWordSection = lastWord16 ? `
-[💬 전생의 마지막 말] "${lastWord16.text}" — ${LAST_WORD_OPENINGS[lastWord16.tone] || ""}` : "";
+    const lastWordSection = lastWord16 ? `\n[💬 전생의 마지막 말] "${lastWord16.text}" — ${LAST_WORD_OPENINGS[lastWord16.tone] || ""}` : "";
 
     // 17번: 메타 지식
     const metaKnowledge17 = getMetaKnowledgeHints();
-    const metaSection = metaKnowledge17.length > 0 ? `
-[💡 전생의 메타 지식] 이전 생에서 얻은 정보들이 있습니다. 관련 상황 발생 시 "어디선가 본 듯한 느낌이 든다" 같은 선택지를 추가하십시오: ${metaKnowledge17.slice(-5).map(m=>`[${m.type}]${m.keyword}(${m.hint})`).join(", ")}` : "";
+    const metaSection = metaKnowledge17.length > 0 ? `\n[💡 전생의 메타 지식] 이전 생에서 얻은 정보들이 있습니다. 관련 상황 발생 시 "어디선가 본 듯한 느낌이 든다" 같은 선택지를 추가하십시오: ${metaKnowledge17.slice(-5).map(m=>`[${m.type}]${m.keyword}(${m.hint})`).join(", ")}` : "";
 
     // 18번: 혈통 진화
     const evolvedRace18 = char.race ? getEvolvedRace(char.race) : null;
-    const bloodlineSection = evolvedRace18?.isEvolved ? `
-[🧬 혈통 진화] ${char.race}에서 ${evolvedRace18.name}으로 진화. 종족 특성이 강화되어 있으며 종족 관련 묘사를 더욱 강렬하게 표현하십시오.` : "";
+    const bloodlineSection = evolvedRace18?.isEvolved ? `\n[🧬 혈통 진화] ${char.race}에서 ${evolvedRace18.name}으로 진화. 종족 특성이 강화되어 있으며 종족 관련 묘사를 더욱 강렬하게 표현하십시오.` : "";
 
     // 19번: 운명의 변수
     const fateRes19 = getFateResistance();
-    const fateSection = fateRes19 ? `
-[⚡ 운명의 저항 Lv.${fateRes19.level}] ${fateRes19.desc} 예상치 못한 방해와 변수를 적절히 삽입하여 도전적인 서사를 만드십시오.` : "";
+    const fateSection = fateRes19 ? `\n[⚡ 운명의 저항 Lv.${fateRes19.level}] ${fateRes19.desc} 예상치 못한 방해와 변수를 적절히 삽입하여 도전적인 서사를 만드십시오.` : "";
 
     // 20번: 전생 지도
     const exploredMaps20 = getExploredLocations(char.scenario);
-    const exploredSection = exploredMaps20.length > 0 ? `
-[🗺️ 전생 탐험 기록] 이전 생에서 방문한 장소들: ${exploredMaps20.map(m=>m.name).join(", ")}. 이 장소들에서 "낯익다"는 느낌이나 보너스 정보를 제공하십시오.` : "";
+    const exploredSection = exploredMaps20.length > 0 ? `\n[🗺️ 전생 탐험 기록] 이전 생에서 방문한 장소들: ${exploredMaps20.map(m=>m.name).join(", ")}. 이 장소들에서 "낯익다"는 느낌이나 보너스 정보를 제공하십시오.` : "";
 
     // 21번: 관계 유산
     const relLegacies21 = getRelationshipLegacies();
-    const relLegacySection = relLegacies21.length > 0 ? `
-[💞 관계 유산] 전생의 인연이 영혼에 새겨져 있습니다. 해당 이름의 NPC 등장 시 즉시 반영하십시오:\n${relLegacies21.map(r => REL_LEGACY_HINTS[r.bond]?.(r.npcName, r.depth) || "").filter(Boolean).join("\n")}` : "";
+    const relLegacySection = relLegacies21.length > 0 ? `\n[💞 관계 유산] 전생의 인연이 영혼에 새겨져 있습니다. 해당 이름의 NPC 등장 시 즉시 반영하십시오:\n${relLegacies21.map(r => REL_LEGACY_HINTS[r.bond]?.(r.npcName, r.depth) || "").filter(Boolean).join("\n")}` : "";
 
     // 22번: 세계관 기억
     const worldSecrets22 = getWorldSecrets(char.scenario);
-    const worldSecretSection = worldSecrets22.length > 0 ? `
-[🔍 세계관 기억] 전생에서 발견한 세계의 비밀들:\n${worldSecrets22.map(s => `• ${s.title}: ${s.hint}`).join("\n")}\n이 비밀들을 암시하는 장면이나 대사를 자연스럽게 삽입하십시오.` : "";
+    const worldSecretSection = worldSecrets22.length > 0 ? `\n[🔍 세계관 기억] 전생에서 발견한 세계의 비밀들:\n${worldSecrets22.map(s => `• ${s.title}: ${s.hint}`).join("\n")}\n이 비밀들을 암시하는 장면이나 대사를 자연스럽게 삽입하십시오.` : "";
 
     // 23번: 능력 각인
     const imprintedAbs23 = getImprintedAbilities();
-    const abilityImprintSection = imprintedAbs23.length > 0 ? `
-[⚡ 능력 각인] 전생에서 극한까지 단련한 능력이 이번 생에 타고난 재능으로 발현:\n${imprintedAbs23.map(a => { const def = ABILITY_IMPRINT_LABELS[a.statId]; return def ? `${def.name} (Tier ${a.tier}): ${def.desc}` : ""; }).filter(Boolean).join("\n")}` : "";
+    const abilityImprintSection = imprintedAbs23.length > 0 ? `\n[⚡ 능력 각인] 전생에서 극한까지 단련한 능력이 이번 생에 타고난 재능으로 발현:\n${imprintedAbs23.map(a => { const def = ABILITY_IMPRINT_LABELS[a.statId]; return def ? `${def.name} (Tier ${a.tier}): ${def.desc}` : ""; }).filter(Boolean).join("\n")}` : "";
 
     // 24번: 원한의 추적자
     const grudges24 = getActiveGrudges();
-    const grudgeSection = grudges24.length > 0 ? `
-[💀 원한의 추적자] 전생에서 쓰러뜨린 강적들의 원한이 남아있습니다. 적절한 시점에 복수자로 등장시키십시오:\n${grudges24.map(g => `• ${g.name} (위협도 ${g.power}성) — 전생 시나리오: ${g.scenario||"불명"}`).join("\n")}` : "";
+    const grudgeSection = grudges24.length > 0 ? `\n[💀 원한의 추적자] 전생에서 쓰러뜨린 강적들의 원한이 남아있습니다. 적절한 시점에 복수자로 등장시키십시오:\n${grudges24.map(g => `• ${g.name} (위협도 ${g.power}성) — 전생 시나리오: ${g.scenario||"불명"}`).join("\n")}` : "";
 
     // 25번: 시간의 메아리
     const timeEchoes25 = getTimeEchoes();
-    const timeEchoSection = timeEchoes25.length > 0 ? `
-[🔔 시간의 메아리] 과거 회차의 중요한 말들이 메아리처럼 울립니다. 감정적으로 유사한 장면에서 이 대사들을 환청처럼 묘사하십시오:\n${timeEchoes25.slice(-3).map(e => `• "${e.text}" — ${e.speaker} (${e.emotion||"무감정"})`).join("\n")}` : "";
+    const timeEchoSection = timeEchoes25.length > 0 ? `\n[🔔 시간의 메아리] 과거 회차의 중요한 말들이 메아리처럼 울립니다. 감정적으로 유사한 장면에서 이 대사들을 환청처럼 묘사하십시오:\n${timeEchoes25.slice(-3).map(e => `• "${e.text}" — ${e.speaker} (${e.emotion||"무감정"})`).join("\n")}` : "";
 
     // 26번: 운명의 선택 기록
     const fateChoices26 = getFateChoices(char.scenario);
-    const fateChoiceSection = fateChoices26.length > 0 ? `
-[🔀 운명의 선택 기록] 전생에서 했던 선택들입니다. 동일하거나 유사한 분기점 등장 시 "전에 이 길을 선택한 적이 있다"는 선택지를 추가하십시오:\n${fateChoices26.filter(c=>c.outcome!=="neutral").slice(-5).map(c => `• ${c.description} → 결과: ${c.outcome==="good"?"긍정적":"부정적"}`).join("\n")}` : "";
+    const fateChoiceSection = fateChoices26.length > 0 ? `\n[🔀 운명의 선택 기록] 전생에서 했던 선택들입니다. 동일하거나 유사한 분기점 등장 시 "전에 이 길을 선택한 적이 있다"는 선택지를 추가하십시오:\n${fateChoices26.filter(c=>c.outcome!=="neutral").slice(-5).map(c => `• ${c.description} → 결과: ${c.outcome==="good"?"긍정적":"부정적"}`).join("\n")}` : "";
 
     // 27번: 신의 시선
     const divineGaze27 = getDivineGazeStatus();
-    const divineGazeSection = divineGaze27 ? `
-[${divineGaze27.icon} ${divineGaze27.label}] ${divineGaze27.desc} 이번 회차에서 신적 존재의 암시나 기적적 개입을 서사에 자연스럽게 삽입하십시오.` : "";
+    const divineGazeSection = divineGaze27 ? `\n[${divineGaze27.icon} ${divineGaze27.label}] ${divineGaze27.desc} 이번 회차에서 신적 존재의 암시나 기적적 개입을 서사에 자연스럽게 삽입하십시오.` : "";
 
     // 28번: 저주 계보
     const curseMasteries28 = getCurseMasteries();
-    const curseMasterySection = curseMasteries28.length > 0 ? `
-[🌑 저주 숙달] 반복된 저주를 통해 습득한 능력:\n${curseMasteries28.map(c => { const def = CURSE_TYPE_DEFS[c.type]; return def ? `• ${def.name} 숙달 (${c.count}회): ${def.mastery}` : ""; }).filter(Boolean).join("\n")}` : "";
+    const curseMasterySection = curseMasteries28.length > 0 ? `\n[🌑 저주 숙달] 반복된 저주를 통해 습득한 능력:\n${curseMasteries28.map(c => { const def = CURSE_TYPE_DEFS[c.type]; return def ? `• ${def.name} 숙달 (${c.count}회): ${def.mastery}` : ""; }).filter(Boolean).join("\n")}` : "";
 
     // 29번: 전생의 기도
     const prayerStatus29 = getPastPrayerStatus();
-    const prayerSection = prayerStatus29 && prayerStatus29.available ? `
-[🙏 전생의 기도] 회차당 1회, 극한 위기에서 전생의 기억에 기도할 수 있습니다. 플레이어가 "기도한다" 또는 "전생에 빌다" 등의 행동을 하면 ${prayerStatus29.power} 수준의 전생 기억 계시로 위기를 극복할 힌트를 제공하십시오. 발동 시 반드시 극적이고 감동적으로 묘사하십시오.` : (prayerStatus29 && !prayerStatus29.available ? `
-[🙏 전생의 기도 — 소진] 이번 회차에 이미 전생에 기도했습니다.` : "");
+    const prayerSection = prayerStatus29 && prayerStatus29.available ? `\n[🙏 전생의 기도] 회차당 1회, 극한 위기에서 전생의 기억에 기도할 수 있습니다. 플레이어가 "기도한다" 또는 "전생에 빌다" 등의 행동을 하면 ${prayerStatus29.power} 수준의 전생 기억 계시로 위기를 극복할 힌트를 제공하십시오. 발동 시 반드시 극적이고 감동적으로 묘사하십시오.` : (prayerStatus29 && !prayerStatus29.available ? `\n[🙏 전생의 기도 — 소진] 이번 회차에 이미 전생에 기도했습니다.` : "");
 
     // 30번: 운명의 수레바퀴
     const greatCycle30 = getGreatCycleStatus();
-    const greatCycleSection = greatCycle30 ? `
-[⚙️ 운명의 수레바퀴 — ${greatCycle30.greatCycles}대순환] 위대한 순환이 ${greatCycle30.greatCycles}번 완성되었습니다.\n해금 보상: ${greatCycle30.unlockedRewards.join(" / ")}\n이 영웅은 수많은 삶을 거쳐온 운명의 중심입니다. 서사의 규모와 감동을 평소보다 훨씬 크게 묘사하십시오.` : "";
+    const greatCycleSection = greatCycle30 ? `\n[⚙️ 운명의 수레바퀴 — ${greatCycle30.greatCycles}대순환] 위대한 순환이 ${greatCycle30.greatCycles}번 완성되었습니다.\n해금 보상: ${greatCycle30.unlockedRewards.join(" / ")}\n이 영웅은 수많은 삶을 거쳐온 운명의 중심입니다. 서사의 규모와 감동을 평소보다 훨씬 크게 묘사하십시오.` : "";
 
     // 31번: 평행세계 조우
     const parallelSelf31 = getParallelSelfEncounter();
-    const parallelSelfSection = parallelSelf31 ? `
-[🌀 평행세계 조우] 전생 중 다른 회차의 자신(${parallelSelf31.name} · ${parallelSelf31.role})의 환영과 접촉한 기억이 있습니다. 그 자신은 「${parallelSelf31.keySkill || "알 수 없는 기술"}」을 사용했습니다. 깊은 명상이나 꿈, 또는 강렬한 위기 상황에서 이 평행 자아의 환영이 나타나 조언하거나 대결을 신청할 수 있습니다.` : "";
+    const parallelSelfSection = parallelSelf31 ? `\n[🌀 평행세계 조우] 전생 중 다른 회차의 자신(${parallelSelf31.name} · ${parallelSelf31.role})의 환영과 접촉한 기억이 있습니다. 그 자신은 「${parallelSelf31.keySkill || "알 수 없는 기술"}」을 사용했습니다. 깊은 명상이나 꿈, 또는 강렬한 위기 상황에서 이 평행 자아의 환영이 나타나 조언하거나 대결을 신청할 수 있습니다.` : "";
 
     // 32번: 저주의 고리
     const curseRings32 = getActiveCurseRings();
-    const curseRingSection = curseRings32.length > 0 ? `
-[🔗 저주의 고리] 반복된 행동 패턴이 저주로 굳어졌습니다:\n${curseRings32.map(r => `• ${r.icon}${r.label} (${r.count}회 반복, Lv.${r.penaltyLevel}): ${r.penalty}`).join("\n")}\n이 행동 패턴을 반복하면 AI가 자연스럽게 불리한 상황을 연출하십시오.` : "";
+    const curseRingSection = curseRings32.length > 0 ? `\n[🔗 저주의 고리] 반복된 행동 패턴이 저주로 굳어졌습니다:\n${curseRings32.map(r => `• ${r.icon}${r.label} (${r.count}회 반복, Lv.${r.penaltyLevel}): ${r.penalty}`).join("\n")}\n이 행동 패턴을 반복하면 AI가 자연스럽게 불리한 상황을 연출하십시오.` : "";
 
     // 33번: 회차 통계
     const stats33 = getCycleStatsSummary();
-    const statsSection = stats33.totalCycles >= 2 ? `
-[📊 회차 통계] 총 ${stats33.totalCycles}회차, 누적 사망 ${stats33.totalDeaths}회, 총 대화 ${stats33.totalTurns}턴${stats33.topEnemy ? `, 최다 처치: ${stats33.topEnemy.name}(${stats33.topEnemy.count}회)` : ""}${stats33.topScenario ? `, 선호 세계관: ${stats33.topScenario.name}` : ""}. 이 데이터를 바탕으로 캐릭터의 전투 본능과 습관을 서사에 자연스럽게 반영하십시오.` : "";
+    const statsSection = stats33.totalCycles >= 2 ? `\n[📊 회차 통계] 총 ${stats33.totalCycles}회차, 누적 사망 ${stats33.totalDeaths}회, 총 대화 ${stats33.totalTurns}턴${stats33.topEnemy ? `, 최다 처치: ${stats33.topEnemy.name}(${stats33.topEnemy.count}회)` : ""}${stats33.topScenario ? `, 선호 세계관: ${stats33.topScenario.name}` : ""}. 이 데이터를 바탕으로 캐릭터의 전투 본능과 습관을 서사에 자연스럽게 반영하십시오.` : "";
 
     // 34번: 부상 흔적
     const injuryEffects34 = getInjuryEffects();
-    const injurySection = injuryEffects34.length > 0 ? `
-[🩹 부상 흔적] 전생의 부상이 이번 생에 흔적을 남겼습니다:\n${injuryEffects34.map(i => `• ${i.icon}${i.label}: ${i.desc}`).join("\n")}\n해당 신체 부위가 사용되는 장면에서 자연스럽게 이 효과를 반영하십시오.` : "";
+    const injurySection = injuryEffects34.length > 0 ? `\n[🩹 부상 흔적] 전생의 부상이 이번 생에 흔적을 남겼습니다:\n${injuryEffects34.map(i => `• ${i.icon}${i.label}: ${i.desc}`).join("\n")}\n해당 신체 부위가 사용되는 장면에서 자연스럽게 이 효과를 반영하십시오.` : "";
 
     // 35번: 전생 테마
     const pastTheme35 = getPastTheme();
-    const pastThemeSection = pastTheme35 ? `
-[🎭 전생 테마 — ${pastTheme35.label}] ${pastTheme35.openingLine} 전반적인 서사 톤을 「${pastTheme35.openingMood}」 분위기로 유지하십시오.` : "";
+    const pastThemeSection = pastTheme35 ? `\n[🎭 전생 테마 — ${pastTheme35.label}] ${pastTheme35.openingLine} 전반적인 서사 톤을 「${pastTheme35.openingMood}」 분위기로 유지하십시오.` : "";
 
     // 36번: 기억 왜곡
     const memDistort36 = getMemoryDistortStatus();
-    const memDistortSection = memDistort36 && memDistort36.falseMemories.length > 0 ? `
-[🌫️ 기억 왜곡] 전생 기억의 정확도가 「${memDistort36.accuracy}」 상태입니다. 다음 잠재적 오기억을 가끔 암시하십시오:\n${memDistort36.falseMemories.map(m => `• ${m}`).join("\n")}\n플레이어가 전생 기억에 의존해 행동할 때 미묘하게 틀릴 수 있다는 가능성을 서술에 반영하십시오.` : "";
+    const memDistortSection = memDistort36 && memDistort36.falseMemories.length > 0 ? `\n[🌫️ 기억 왜곡] 전생 기억의 정확도가 「${memDistort36.accuracy}」 상태입니다. 다음 잠재적 오기억을 가끔 암시하십시오:\n${memDistort36.falseMemories.map(m => `• ${m}`).join("\n")}\n플레이어가 전생 기억에 의존해 행동할 때 미묘하게 틀릴 수 있다는 가능성을 서술에 반영하십시오.` : "";
 
     // 37번: 전생 나이의 역설
     const ageParadox37 = getAgeParadoxBonus();
-    const ageParadoxSection = ageParadox37 ? `
-[⌛ 나이의 역설 — ${ageParadox37.label}] ${ageParadox37.desc} ${ageParadox37.bonusDesc}. 이 캐릭터는 나이에 걸맞지 않는 성숙함이나 직감을 보여주십시오.` : "";
+    const ageParadoxSection = ageParadox37 ? `\n[⌛ 나이의 역설 — ${ageParadox37.label}] ${ageParadox37.desc} ${ageParadox37.bonusDesc}. 이 캐릭터는 나이에 걸맞지 않는 성숙함이나 직감을 보여주십시오.` : "";
 
     // 38번: 소환수 계승
     const summonLegacies38 = getSummonLegacies();
-    const summonLegacySection = summonLegacies38.length > 0 ? `
-[🐾 소환수의 기억] 전생에서 함께했던 소환수들이 이번 생의 세계 어딘가에 살고 있습니다:\n${summonLegacies38.map(s => `• ${s.name}(${s.type}) — 유대 ${s.bond}/10, ${s.appearances}회 동행`).join("\n")}\n이 소환수들은 야생에서 캐릭터를 알아보거나 특별한 반응을 보일 수 있습니다. 유대가 높을수록 재계약 가능성이 높습니다.` : "";
+    const summonLegacySection = summonLegacies38.length > 0 ? `\n[🐾 소환수의 기억] 전생에서 함께했던 소환수들이 이번 생의 세계 어딘가에 살고 있습니다:\n${summonLegacies38.map(s => `• ${s.name}(${s.type}) — 유대 ${s.bond}/10, ${s.appearances}회 동행`).join("\n")}\n이 소환수들은 야생에서 캐릭터를 알아보거나 특별한 반응을 보일 수 있습니다. 유대가 높을수록 재계약 가능성이 높습니다.` : "";
 
     // 39번: 원한 무기
     const grudgeWeapons39 = getGrudgeWeapons();
-    const grudgeWeaponSection = grudgeWeapons39.length > 0 ? `
-[⚔️ 원한 무기] 전생에서 나를 죽인 무기·기술들이 이번 생에 사용 가능한 형태로 어딘가에 존재합니다:\n${grudgeWeapons39.map(w => `• 「${w.weaponName}」(${w.killerName}에게 당함, ${w.times}회, 위력 Lv.${w.power})`).join("\n")}\n이 무기·기술을 입수할 기회를 자연스럽게 서사에 배치하십시오. 사용 시 특별히 강렬하게 묘사하십시오.` : "";
+    const grudgeWeaponSection = grudgeWeapons39.length > 0 ? `\n[⚔️ 원한 무기] 전생에서 나를 죽인 무기·기술들이 이번 생에 사용 가능한 형태로 어딘가에 존재합니다:\n${grudgeWeapons39.map(w => `• 「${w.weaponName}」(${w.killerName}에게 당함, ${w.times}회, 위력 Lv.${w.power})`).join("\n")}\n이 무기·기술을 입수할 기회를 자연스럽게 서사에 배치하십시오. 사용 시 특별히 강렬하게 묘사하십시오.` : "";
 
     // 40번: 세계수 성장
     const worldTree40 = getWorldTreeStatus();
-    const worldTreeSection = worldTree40.level > 0 ? `
-[🌳 세계수 성장 — ${worldTree40.stage.icon}${worldTree40.stage.label}] ${worldTree40.stage.desc}${worldTree40.stage.bonus ? `\n보너스: ${worldTree40.stage.bonus}` : ""}\n세계가 회차를 거듭하며 복원되고 있습니다. 이를 배경 서술에 자연스럽게 녹여 세계의 희망이 커지고 있음을 표현하십시오.` : "";
+    const worldTreeSection = worldTree40.level > 0 ? `\n[🌳 세계수 성장 — ${worldTree40.stage.icon}${worldTree40.stage.label}] ${worldTree40.stage.desc}${worldTree40.stage.bonus ? `\n보너스: ${worldTree40.stage.bonus}` : ""}\n세계가 회차를 거듭하며 복원되고 있습니다. 이를 배경 서술에 자연스럽게 녹여 세계의 희망이 커지고 있음을 표현하십시오.` : "";
 
     // 41번: 꿈의 예언
     const dreamProphecies41 = getDreamProphecies();
-    const dreamSection = dreamProphecies41.length > 0 ? `
-[🌙 꿈의 예언] 전생의 꿈이 예언으로 남아있습니다:\n${dreamProphecies41.map(d => `• ${d.icon}${d.keyword}의 꿈 (${d.count}회): ${d.prophecy}`).join("\n")}\n플레이어가 잠들거나 명상하는 장면에서 이 예언 이미지를 자연스럽게 삽입하고, 해당 예언 상황이 실제로 전개될 때 특별히 극적으로 묘사하십시오.` : "";
+    const dreamSection = dreamProphecies41.length > 0 ? `\n[🌙 꿈의 예언] 전생의 꿈이 예언으로 남아있습니다:\n${dreamProphecies41.map(d => `• ${d.icon}${d.keyword}의 꿈 (${d.count}회): ${d.prophecy}`).join("\n")}\n플레이어가 잠들거나 명상하는 장면에서 이 예언 이미지를 자연스럽게 삽입하고, 해당 예언 상황이 실제로 전개될 때 특별히 극적으로 묘사하십시오.` : "";
 
     // 42번: 유산 건축
     const legacyBuildings42 = getLegacyBuildings();
-    const legacyBuildingSection = legacyBuildings42.length > 0 ? `
-[🏛️ 유산 건축] 전생에 세운 건물·거점의 흔적이 세계에 남아있습니다:\n${legacyBuildings42.map(b => `• ${b.icon}${b.name}(${b.label}, ${b.count}회): ${b.ruinDesc} → ${b.bonus}`).join("\n")}\n이 장소들을 서사 속 폐허·전설·지역명으로 자연스럽게 등장시키십시오.` : "";
+    const legacyBuildingSection = legacyBuildings42.length > 0 ? `\n[🏛️ 유산 건축] 전생에 세운 건물·거점의 흔적이 세계에 남아있습니다:\n${legacyBuildings42.map(b => `• ${b.icon}${b.name}(${b.label}, ${b.count}회): ${b.ruinDesc} → ${b.bonus}`).join("\n")}\n이 장소들을 서사 속 폐허·전설·지역명으로 자연스럽게 등장시키십시오.` : "";
 
     // 43번: 감시자의 눈
     const watchers43 = getWatchers();
-    const watcherSection = watchers43.length > 0 ? `
-[👁️ 감시자의 눈] 전생에서 싸웠던 강적들이 플레이어의 혼을 기억하고 강화되어 재등장할 수 있습니다:\n${watchers43.map(w => `• ${w.name} (조우 ${w.encounters}회, 위력 Lv.${w.power}${w.evolved ? " ★진화형" : ""})`).join("\n")}\n이 적들이 재등장 시 반드시 이전보다 강해졌음을 명시하고, 플레이어를 알아보는 장면을 극적으로 연출하십시오.` : "";
+    const watcherSection = watchers43.length > 0 ? `\n[👁️ 감시자의 눈] 전생에서 싸웠던 강적들이 플레이어의 혼을 기억하고 강화되어 재등장할 수 있습니다:\n${watchers43.map(w => `• ${w.name} (조우 ${w.encounters}회, 위력 Lv.${w.power}${w.evolved ? " ★진화형" : ""})`).join("\n")}\n이 적들이 재등장 시 반드시 이전보다 강해졌음을 명시하고, 플레이어를 알아보는 장면을 극적으로 연출하십시오.` : "";
 
     // 44번: 영혼의 가면
     const soulMasks44 = getSoulMasks();
-    const soulMaskSection = soulMasks44.length > 0 ? `
-[🎭 영혼의 가면] 전생에서 익힌 역할이 변장 능력으로 이월되었습니다:\n${soulMasks44.map(m => `• ${m.icon}${m.masquerade} (숙련도 ${m.mastery}/5): ${m.bonus}`).join("\n")}\n플레이어가 이 역할로 변장하거나 행동할 때 자연스럽게 성공하도록 서술하십시오.` : "";
+    const soulMaskSection = soulMasks44.length > 0 ? `\n[🎭 영혼의 가면] 전생에서 익힌 역할이 변장 능력으로 이월되었습니다:\n${soulMasks44.map(m => `• ${m.icon}${m.masquerade} (숙련도 ${m.mastery}/5): ${m.bonus}`).join("\n")}\n플레이어가 이 역할로 변장하거나 행동할 때 자연스럽게 성공하도록 서술하십시오.` : "";
 
     // 45번: 감정의 파문
     const emotionRipples45 = getEmotionRipples();
-    const emotionRippleSection = emotionRipples45.length > 0 ? `
-[🌊 감정의 파문] 전생의 극단적 감정이 세계에 파문을 남겼습니다:\n${emotionRipples45.map(r => `• ${r.icon}${r.label} (강도 ${r.intensity}/5): ${r.worldEffect} → ${r.bonus}`).join("\n")}\n세계 분위기 묘사 시 이 파문의 영향을 자연스럽게 반영하십시오.` : "";
+    const emotionRippleSection = emotionRipples45.length > 0 ? `\n[🌊 감정의 파문] 전생의 극단적 감정이 세계에 파문을 남겼습니다:\n${emotionRipples45.map(r => `• ${r.icon}${r.label} (강도 ${r.intensity}/5): ${r.worldEffect} → ${r.bonus}`).join("\n")}\n세계 분위기 묘사 시 이 파문의 영향을 자연스럽게 반영하십시오.` : "";
 
     // 46번: 유언장
     const testaments46 = getTestaments();
-    const testamentSection = testaments46.length > 0 ? `
-[📜 유언장] 전생에 남긴 유언이 세계 어딘가에 존재합니다:\n${testaments46.slice(-2).map(t => `• ${t.icon}${t.label}(${t.characterName}): ${t.hint}`).join("\n")}\n폐허, 도서관, NPC 대화 등을 통해 이 유언이 발견되는 이벤트를 자연스럽게 배치하십시오.` : "";
+    const testamentSection = testaments46.length > 0 ? `\n[📜 유언장] 전생에 남긴 유언이 세계 어딘가에 존재합니다:\n${testaments46.slice(-2).map(t => `• ${t.icon}${t.label}(${t.characterName}): ${t.hint}`).join("\n")}\n폐허, 도서관, NPC 대화 등을 통해 이 유언이 발견되는 이벤트를 자연스럽게 배치하십시오.` : "";
 
     // 47번: 숙명의 별자리
     const constellation47 = getConstellation();
-    const constellationSection = constellation47 ? `
-[${constellation47.icon} 숙명의 별자리 — ${constellation47.name}(${constellation47.trait})] ${constellation47.bonus}\n⚠️ 경고: ${constellation47.challenge}\n이번 회차 내내 이 별자리의 특성이 운명처럼 작용합니다. 서사 전반에 자연스럽게 반영하십시오.` : "";
+    const constellationSection = constellation47 ? `\n[${constellation47.icon} 숙명의 별자리 — ${constellation47.name}(${constellation47.trait})] ${constellation47.bonus}\n⚠️ 경고: ${constellation47.challenge}\n이번 회차 내내 이 별자리의 특성이 운명처럼 작용합니다. 서사 전반에 자연스럽게 반영하십시오.` : "";
 
     // 48번: 탐험가의 유산
     const explorerMap48 = getExplorerMap();
-    const explorerMapSection = explorerMap48.length > 0 ? `
-[🗺️ 탐험가의 유산] 전생에 발견한 장소의 기억이 남아있습니다:\n${explorerMap48.map(l => `• ${l.icon}${l.label}: ${l.desc} → ${l.bonus}`).join("\n")}\n해당 장소 유형이 등장하는 장면에서 캐릭터가 본능적으로 길을 알거나 유리한 위치를 선점할 수 있도록 하십시오.` : "";
+    const explorerMapSection = explorerMap48.length > 0 ? `\n[🗺️ 탐험가의 유산] 전생에 발견한 장소의 기억이 남아있습니다:\n${explorerMap48.map(l => `• ${l.icon}${l.label}: ${l.desc} → ${l.bonus}`).join("\n")}\n해당 장소 유형이 등장하는 장면에서 캐릭터가 본능적으로 길을 알거나 유리한 위치를 선점할 수 있도록 하십시오.` : "";
 
     // 49번: 번개 각인
     const lightningImprints49 = getLightningImprints();
-    const lightningImprintSection = lightningImprints49.length > 0 ? `
-[⚡ 번개 각인] 전생의 가장 극적인 순간이 본능으로 각인되었습니다:\n${lightningImprints49.map(i => `• ${i.icon}${i.label} (위력 ${i.power}/5): ${i.bonus}`).join("\n")}\n각인된 상황이 발생하면 반드시 특별한 본능 발동 연출로 묘사하십시오.` : "";
+    const lightningImprintSection = lightningImprints49.length > 0 ? `\n[⚡ 번개 각인] 전생의 가장 극적인 순간이 본능으로 각인되었습니다:\n${lightningImprints49.map(i => `• ${i.icon}${i.label} (위력 ${i.power}/5): ${i.bonus}`).join("\n")}\n각인된 상황이 발생하면 반드시 특별한 본능 발동 연출로 묘사하십시오.` : "";
 
     // 50번: 전생의 일출
     const dawn50 = getDawnStatus();
-    const dawnSection = dawn50.stage > 0 ? `
-[${dawn50.stageData.icon} 전생의 일출 — ${dawn50.stageData.label}] ${dawn50.stageData.desc}${dawn50.stageData.worldBonus ? `\n세계 보너스: ${dawn50.stageData.worldBonus}` : ""}\n${dawn50.stage >= 5 ? "세계에 완전한 여명이 밝았습니다. 이 회차는 전설의 완성이 될 수 있습니다. 서사의 스케일과 감동을 최고조로 끌어올리십시오." : "세계가 조금씩 밝아오고 있습니다. 희망의 기운을 배경 묘사에 담아내십시오."}` : "";
+    const dawnSection = dawn50.stage > 0 ? `\n[${dawn50.stageData.icon} 전생의 일출 — ${dawn50.stageData.label}] ${dawn50.stageData.desc}${dawn50.stageData.worldBonus ? `\n세계 보너스: ${dawn50.stageData.worldBonus}` : ""}\n${dawn50.stage >= 5 ? "세계에 완전한 여명이 밝았습니다. 이 회차는 전설의 완성이 될 수 있습니다. 서사의 스케일과 감동을 최고조로 끌어올리십시오." : "세계가 조금씩 밝아오고 있습니다. 희망의 기운을 배경 묘사에 담아내십시오."}` : "";
 
     // ── 51번: 별자리 운세 — 모든 세계관, 1회차+ ──
     const starSign51 = getStarSign();
-    const starSignSection = (starSign51 && _cycle >= 1) ? `
-[${starSign51.icon} 별자리 운세 — ${starSign51.name}(${starSign51.trait})] ${starSign51.bonus}\n⚠️ 약점: ${starSign51.penalty}\n이번 생의 운명적 별자리입니다. 해당 특성이 모든 상황에서 자연스럽게 작용하도록 서사에 녹여내십시오.` : "";
+    const starSignSection = (starSign51 && _cycle >= 1) ? `\n[${starSign51.icon} 별자리 운세 — ${starSign51.name}(${starSign51.trait})] ${starSign51.bonus}\n⚠️ 약점: ${starSign51.penalty}\n이번 생의 운명적 별자리입니다. 해당 특성이 모든 상황에서 자연스럽게 작용하도록 서사에 녹여내십시오.` : "";
 
     // ── 52번: 전생어 — 3회차+, 중후반 ──
     const pastLang52 = getPastLanguage();
-    const pastLangSection = (pastLang52 && pastLang52.phrases && pastLang52.phrases.length > 0 && _cycle >= 3) ? `
-[🗣️ 전생어 해금 — Lv.${pastLang52.level}] 전생의 영혼이 기억하는 고대 언어를 구사할 수 있습니다:\n${pastLang52.phrases.slice(-3).map(p => `• "${p.phrase}" (${p.meaning}) → ${p.trigger}`).join("\n")}\n플레이어가 이 언어를 사용하는 장면에서 해당 효과를 극적으로 발동시키십시오.` : "";
+    const pastLangSection = (pastLang52 && pastLang52.phrases && pastLang52.phrases.length > 0 && _cycle >= 3) ? `\n[🗣️ 전생어 해금 — Lv.${pastLang52.level}] 전생의 영혼이 기억하는 고대 언어를 구사할 수 있습니다:\n${pastLang52.phrases.slice(-3).map(p => `• "${p.phrase}" (${p.meaning}) → ${p.trigger}`).join("\n")}\n플레이어가 이 언어를 사용하는 장면에서 해당 효과를 극적으로 발동시키십시오.` : "";
 
     // ── 53번: 가면 시스템 — 로그/암살/외교 직업 우선, 모든 세계관 ──
     const identities53 = getIdentityVault();
     const polishedIds = identities53.filter(i => i.polished);
-    const identitySection = (polishedIds.length > 0 && (isRogueRole || isLeaderRole || _cycle >= 2)) ? `
-[🎭 완성된 신분 금고] 전생에서 숙달된 위장 신분들:\n${polishedIds.map(i => `• ${i.icon}${i.label}(${i.alias || i.label}) — ${i.bonus}`).join("\n")}\n플레이어가 이 신분을 꺼낼 때 즉각적이고 자연스러운 신분 전환을 묘사하십시오.` : "";
+    const identitySection = (polishedIds.length > 0 && (isRogueRole || isLeaderRole || _cycle >= 2)) ? `\n[🎭 완성된 신분 금고] 전생에서 숙달된 위장 신분들:\n${polishedIds.map(i => `• ${i.icon}${i.label}(${i.alias || i.label}) — ${i.bonus}`).join("\n")}\n플레이어가 이 신분을 꺼낼 때 즉각적이고 자연스러운 신분 전환을 묘사하십시오.` : "";
 
     // ── 54번: 차원 균열 — 5회차+, 중후반 이상 ──
     const rift54 = getRiftStatus();
-    const riftSection = (rift54 && rift54.available && _cycle >= 5) ? `
-[${rift54.nextRift.icon} 차원 균열 — ${rift54.nextRift.label}] ${rift54.nextRift.desc}\n잠재 획득물: ${rift54.nextRift.loot} / 조우 NPC: ${rift54.nextRift.npc}\n극적으로 긴장이 고조된 순간 이 균열이 잠깐 열릴 수 있습니다. 등장 시 이계의 분위기를 생생하게 묘사하십시오.` : "";
+    const riftSection = (rift54 && rift54.available && _cycle >= 5) ? `\n[${rift54.nextRift.icon} 차원 균열 — ${rift54.nextRift.label}] ${rift54.nextRift.desc}\n잠재 획득물: ${rift54.nextRift.loot} / 조우 NPC: ${rift54.nextRift.npc}\n극적으로 긴장이 고조된 순간 이 균열이 잠깐 열릴 수 있습니다. 등장 시 이계의 분위기를 생생하게 묘사하십시오.` : "";
 
     // ── 55번: 연금술 누적 — 마법 직업/엘프/드워프 우선, 3회차+ ──
     const recipeBook55 = getRecipeBook();
     const topTier = recipeBook55.length > 0 ? recipeBook55[recipeBook55.length - 1] : null;
-    const recipeSection = (topTier && (isMagicRole || isElf || isDwarf || _cycle >= 3)) ? `
-[${topTier.icon} 레시피북 — ${topTier.label}] 전생에서 축적된 제조 지식:\n${topTier.recipes.slice(0, 3).map(r => `• ${r}`).join(", ")} 등 ${topTier.recipes.length}종\n플레이어가 재료를 구하거나 제조를 시도할 때 이 지식을 활용해 성공 가능성을 높이십시오.` : "";
+    const recipeSection = (topTier && (isMagicRole || isElf || isDwarf || _cycle >= 3)) ? `\n[${topTier.icon} 레시피북 — ${topTier.label}] 전생에서 축적된 제조 지식:\n${topTier.recipes.slice(0, 3).map(r => `• ${r}`).join(", ")} 등 ${topTier.recipes.length}종\n플레이어가 재료를 구하거나 제조를 시도할 때 이 지식을 활용해 성공 가능성을 높이십시오.` : "";
 
     // ── 56번: 전생 목표 달성률 — 모든 세계관, 1회차+ ──
     const achBonus56 = getLastAchievementBonus();
-    const achSection = (achBonus56 && _cycle >= 1) ? `
-[${achBonus56.icon} 전생 달성률 — ${achBonus56.label}(${achBonus56.rate}%)]${achBonus56.bonus ? ` 보너스: ${achBonus56.bonus}` : ""}${achBonus56.penalty ? ` 페널티: ${achBonus56.penalty}` : ""}\n이 달성률의 여파가 이번 회차 시작 분위기와 NPC 반응에 자연스럽게 배어나오도록 하십시오.` : "";
+    const achSection = (achBonus56 && _cycle >= 1) ? `\n[${achBonus56.icon} 전생 달성률 — ${achBonus56.label}(${achBonus56.rate}%)]${achBonus56.bonus ? ` 보너스: ${achBonus56.bonus}` : ""}${achBonus56.penalty ? ` 페널티: ${achBonus56.penalty}` : ""}\n이 달성률의 여파가 이번 회차 시작 분위기와 NPC 반응에 자연스럽게 배어나오도록 하십시오.` : "";
 
     // ── 57번: 인연의 꽃 — 모든 세계관, 1회차+ ──
     const romanceLeg57 = getRomanceLegacy();
     const topRomance = romanceLeg57.length > 0 ? romanceLeg57.sort((a,b) => b.depth - a.depth)[0] : null;
-    const romanceSection = (topRomance && _cycle >= 1) ? `
-[${topRomance.fate.icon} 인연의 꽃 — ${topRomance.npcName}(${topRomance.fate.label})] 전생에서 깊은 인연을 맺은 자가 이번 생에도 나타날 것입니다.\n첫 만남 연출: "${topRomance.fate.firstMeet}"\n이 NPC가 등장할 때 위 묘사를 자연스럽게 사용하고, 초기 호감도를 ${topRomance.fate.bond}으로 시작하십시오.` : "";
+    const romanceSection = (topRomance && _cycle >= 1) ? `\n[${topRomance.fate.icon} 인연의 꽃 — ${topRomance.npcName}(${topRomance.fate.label})] 전생에서 깊은 인연을 맺은 자가 이번 생에도 나타날 것입니다.\n첫 만남 연출: "${topRomance.fate.firstMeet}"\n이 NPC가 등장할 때 위 묘사를 자연스럽게 사용하고, 초기 호감도를 ${topRomance.fate.bond}으로 시작하십시오.` : "";
 
     // ── 58번: 사냥 기록 — 전사/도적 직업 우선, 모든 세계관 ──
     const bestiary58 = getFullBestiary();
-    const bestiarySection = (bestiary58.total > 0 && (isWarriorRole || isRogueRole || _cycle >= 2)) ? `
-[📖 몬스터 도감 — ${bestiary58.total}종 기록, 총 ${bestiary58.totalKills}처치] 전생의 사냥 경험이 본능적 지식으로 남아있습니다.${bestiary58.completionBonus ? `\n${bestiary58.completionBonus}` : ""}\n기록된 몬스터가 등장할 때 캐릭터가 본능적으로 패턴을 알아채는 묘사를 추가하십시오.` : "";
+    const bestiarySection = (bestiary58.total > 0 && (isWarriorRole || isRogueRole || _cycle >= 2)) ? `\n[📖 몬스터 도감 — ${bestiary58.total}종 기록, 총 ${bestiary58.totalKills}처치] 전생의 사냥 경험이 본능적 지식으로 남아있습니다.${bestiary58.completionBonus ? `\n${bestiary58.completionBonus}` : ""}\n기록된 몬스터가 등장할 때 캐릭터가 본능적으로 패턴을 알아채는 묘사를 추가하십시오.` : "";
 
     // ── 59번: 전생 기억 상인 — 4회차+, 중후반 ──
     const merchant59 = getMemoryMerchantStatus();
-    const merchantSection = (merchant59 && merchant59.appears && _cycle >= 4) ? `
-[🧙 전생 기억 상인] 고회차에만 나타나는 신비한 상인이 이번 생 어딘가에 존재합니다. 플레이어가 상인을 찾거나 운명적으로 마주치는 장면에서 등장시킬 수 있습니다. 상인은 전생 기억 조각을 대가로 귀한 정보를 줍니다. 이미 ${merchant59.visits}번 조우했습니다.` : "";
+    const merchantSection = (merchant59 && merchant59.appears && _cycle >= 4) ? `\n[🧙 전생 기억 상인] 고회차에만 나타나는 신비한 상인이 이번 생 어딘가에 존재합니다. 플레이어가 상인을 찾거나 운명적으로 마주치는 장면에서 등장시킬 수 있습니다. 상인은 전생 기억 조각을 대가로 귀한 정보를 줍니다. 이미 ${merchant59.visits}번 조우했습니다.` : "";
 
     // ── 60번: 시간 역행 토큰 — 토큰 보유 시만 ──
     const timeToken60 = getTimeTokenStatus();
-    const timeTokenSection = (timeToken60 && timeToken60.tokens > 0) ? `
-[⏪ 시간 역행 토큰 — ${timeToken60.tokens}개 보유] 플레이어가 "시간을 되돌린다" 또는 "다시 해보겠다"고 명시적으로 선언할 경우, 이 토큰을 1개 소모해 최대 3턴 이전으로 되돌릴 수 있습니다. 극적인 연출로 시간 역행을 묘사하십시오.` : "";
+    const timeTokenSection = (timeToken60 && timeToken60.tokens > 0) ? `\n[⏪ 시간 역행 토큰 — ${timeToken60.tokens}개 보유] 플레이어가 "시간을 되돌린다" 또는 "다시 해보겠다"고 명시적으로 선언할 경우, 이 토큰을 1개 소모해 최대 3턴 이전으로 되돌릴 수 있습니다. 극적인 연출로 시간 역행을 묘사하십시오.` : "";
 
     // ── 61번: 전생 동료의 유지 — 모든 세계관, 1회차+ ──
     const survivors61 = getSurvivorCompanions();
-    const survivorSection = (survivors61.length > 0 && _cycle >= 1) ? `
-[👥 전생 생존 동료] 전생에서 함께 살아남은 자들이 이번 생에 낯선 모습으로 나타납니다:\n${survivors61.slice(0, 3).map(c => `• ${c.npcName} — ${c.memoryStage.label}: "${c.memoryStage.firstMeet}"`).join("\n")}\n이 NPC가 등장할 때 위 연출을 사용하고, 특정 대화 조건에서 기억이 각성하도록 서사를 이끄십시오.` : "";
+    const survivorSection = (survivors61.length > 0 && _cycle >= 1) ? `\n[👥 전생 생존 동료] 전생에서 함께 살아남은 자들이 이번 생에 낯선 모습으로 나타납니다:\n${survivors61.slice(0, 3).map(c => `• ${c.npcName} — ${c.memoryStage.label}: "${c.memoryStage.firstMeet}"`).join("\n")}\n이 NPC가 등장할 때 위 연출을 사용하고, 특정 대화 조건에서 기억이 각성하도록 서사를 이끄십시오.` : "";
 
     // ── 62번: 불사 게이지 — 전사/도적 직업 우선, 모든 세계관 ──
     const undying62 = getUndyingGaugeStatus();
-    const undyingSection = (undying62 && undying62.totalNearDeaths > 0 && (isWarriorRole || isRogueRole || _cycle >= 3)) ? `
-[💪 불사 게이지 — ${undying62.gauge}/${undying62.maxGauge}]${undying62.passiveReady ? " ✅ 즉사 무효 준비 완료" : ""}${undying62.passiveUsedThisCycle ? " (이번 회차 소진)" : ""}\n총 ${undying62.totalNearDeaths}번의 죽음을 버텨낸 영혼입니다.${undying62.passiveReady && !undying62.passiveUsedThisCycle ? "\n다음 즉사 판정에서 1회 자동으로 살아남는 기적을 극적으로 묘사하십시오." : ""}` : "";
+    const undyingSection = (undying62 && undying62.totalNearDeaths > 0 && (isWarriorRole || isRogueRole || _cycle >= 3)) ? `\n[💪 불사 게이지 — ${undying62.gauge}/${undying62.maxGauge}]${undying62.passiveReady ? " ✅ 즉사 무효 준비 완료" : ""}${undying62.passiveUsedThisCycle ? " (이번 회차 소진)" : ""}\n총 ${undying62.totalNearDeaths}번의 죽음을 버텨낸 영혼입니다.${undying62.passiveReady && !undying62.passiveUsedThisCycle ? "\n다음 즉사 판정에서 1회 자동으로 살아남는 기적을 극적으로 묘사하십시오." : ""}` : "";
 
     // ── 63번: 다국어 해금 — 판타지/무협 종족 중심 ──
     const languages63 = getUnlockedLanguages();
-    const langSection = (languages63.length > 0 && (isFantasyRace || isMedieval || isWuxia || _cycle >= 4)) ? `
-[🌐 습득 언어 — ${languages63.length}종] 전생에서 익힌 언어들:\n${languages63.map(l => `• ${l.icon}${l.name}: ${l.bonus}`).join("\n")}\n해당 종족·세력 NPC와의 대화에서 이 언어를 자연스럽게 사용할 수 있으며, 전용 대화 선택지를 부여하십시오.` : "";
+    const langSection = (languages63.length > 0 && (isFantasyRace || isMedieval || isWuxia || _cycle >= 4)) ? `\n[🌐 습득 언어 — ${languages63.length}종] 전생에서 익힌 언어들:\n${languages63.map(l => `• ${l.icon}${l.name}: ${l.bonus}`).join("\n")}\n해당 종족·세력 NPC와의 대화에서 이 언어를 자연스럽게 사용할 수 있으며, 전용 대화 선택지를 부여하십시오.` : "";
 
     // ── 64번: 음유시인 기록 — 2회차+, 바드 직업 우선 ──
     const bardLeg64 = getBardLegendStatus();
-    const bardSection = (bardLeg64 && _cycle >= 2 && (isBardRole || _cycle >= 4)) ? `
-[🎵 음유시인의 기록 — 명성 ${bardLeg64.fame}점, ${bardLeg64.distortionData.label}] ${bardLeg64.distortionData.desc}\n술집이나 광장에서 NPC들이 ${bardLeg64.distortionData.multiplier}배로 과장된 전생의 이야기를 나누는 장면을 간헐적으로 삽입하십시오. 주인공이 그 이야기를 듣는 장면에서 복잡한 감정을 묘사하십시오.` : "";
+    const bardSection = (bardLeg64 && _cycle >= 2 && (isBardRole || _cycle >= 4)) ? `\n[🎵 음유시인의 기록 — 명성 ${bardLeg64.fame}점, ${bardLeg64.distortionData.label}] ${bardLeg64.distortionData.desc}\n술집이나 광장에서 NPC들이 ${bardLeg64.distortionData.multiplier}배로 과장된 전생의 이야기를 나누는 장면을 간헐적으로 삽입하십시오. 주인공이 그 이야기를 듣는 장면에서 복잡한 감정을 묘사하십시오.` : "";
 
     // ── 65번: 대미스터리 퍼즐 — 모든 세계관, 조각 있을 때 ──
     const mystery65 = getMysteryPuzzleStatus();
-    const mysterySection = (mystery65 && mystery65.pieces && mystery65.pieces.length > 0) ? `
-[🧩 대미스터리 퍼즐 — ${mystery65.pieces.length}/${mystery65.totalPieces}조각 수집]${mystery65.solved ? " 🌟 세계의 진실 완전 해명!" : ""}\n현재까지 밝혀진 단서:\n${mystery65.pieces.slice(-3).map(p => `• ${p.icon}${p.title}: ${p.hint}`).join("\n")}\n이 미스터리의 단서들을 이번 회차 서사에 자연스럽게 녹여넣고, 진실에 한 걸음 가까워지는 장면을 연출하십시오.` : "";
+    const mysterySection = (mystery65 && mystery65.pieces && mystery65.pieces.length > 0) ? `\n[🧩 대미스터리 퍼즐 — ${mystery65.pieces.length}/${mystery65.totalPieces}조각 수집]${mystery65.solved ? " 🌟 세계의 진실 완전 해명!" : ""}\n현재까지 밝혀진 단서:\n${mystery65.pieces.slice(-3).map(p => `• ${p.icon}${p.title}: ${p.hint}`).join("\n")}\n이 미스터리의 단서들을 이번 회차 서사에 자연스럽게 녹여넣고, 진실에 한 걸음 가까워지는 장면을 연출하십시오.` : "";
 
     // ── 66번: 감시자의 시선 — 6회차+, 후반 이상 ──
     const watcherGaze66 = getWatcherGazeStatus();
-    const watcherGazeSection = (watcherGaze66 && _cycle >= 6) ? `
-[👁️ 감시자의 시선 — ${watcherGaze66.stageData.desc}]${watcherGaze66.stageData.hint ? `\n암시: "${watcherGaze66.stageData.hint}"` : ""}\n${watcherGaze66.revealed ? "감시자의 정체가 밝혀졌습니다. 메타 스토리를 전면에 등장시키십시오." : "고요한 순간이나 깊은 명상 중에 이 감각을 섬세하게 묘사하십시오."}` : "";
+    const watcherGazeSection = (watcherGaze66 && _cycle >= 6) ? `\n[👁️ 감시자의 시선 — ${watcherGaze66.stageData.desc}]${watcherGaze66.stageData.hint ? `\n암시: "${watcherGaze66.stageData.hint}"` : ""}\n${watcherGaze66.revealed ? "감시자의 정체가 밝혀졌습니다. 메타 스토리를 전면에 등장시키십시오." : "고요한 순간이나 깊은 명상 중에 이 감각을 섬세하게 묘사하십시오."}` : "";
 
     // ── 67번: 운명 카드 — 카드 선택 시만 ──
     const fateCard67 = getCurrentFateCard();
-    const fateCardSection = fateCard67 ? `
-[${fateCard67.icon} 운명 카드 — ${fateCard67.name}(${fateCard67.theme})] ${fateCard67.effect}\n보너스: ${fateCard67.bonus} / 페널티: ${fateCard67.penalty}\n이번 회차 전체의 분위기와 사건 흐름이 이 카드의 테마를 중심으로 전개되도록 서사를 이끄십시오.` : "";
+    const fateCardSection = fateCard67 ? `\n[${fateCard67.icon} 운명 카드 — ${fateCard67.name}(${fateCard67.theme})] ${fateCard67.effect}\n보너스: ${fateCard67.bonus} / 페널티: ${fateCard67.penalty}\n이번 회차 전체의 분위기와 사건 흐름이 이 카드의 테마를 중심으로 전개되도록 서사를 이끄십시오.` : "";
 
     // ── 68번: 전생 본거지 — 2회차+, 시설 있을 때 ──
     const hideout68 = getHideoutStatus();
-    const hideoutSection = (hideout68 && hideout68.facilities && hideout68.facilities.length > 0 && _cycle >= 2) ? `
-[🏰 전생 본거지 — Lv.${hideout68.level}(${hideout68.facilities.length}개 시설)] 회차를 거쳐 세워진 은신처:\n${hideout68.facilities.slice(-3).map(f => `• ${f.icon}${f.name}: ${f.bonus}`).join("\n")}\n플레이어가 본거지를 방문하는 장면에서 이 시설들이 실제로 존재하고 기능하는 것으로 묘사하십시오.` : "";
+    const hideoutSection = (hideout68 && hideout68.facilities && hideout68.facilities.length > 0 && _cycle >= 2) ? `\n[🏰 전생 본거지 — Lv.${hideout68.level}(${hideout68.facilities.length}개 시설)] 회차를 거쳐 세워진 은신처:\n${hideout68.facilities.slice(-3).map(f => `• ${f.icon}${f.name}: ${f.bonus}`).join("\n")}\n플레이어가 본거지를 방문하는 장면에서 이 시설들이 실제로 존재하고 기능하는 것으로 묘사하십시오.` : "";
 
     // ── 69번: 악안(惡眼) — 각성 시만, 전투 직업 우선 ──
     const evilEye69 = getEvilEyeStatus();
-    const evilEyeSection = (evilEye69 && evilEye69.awakened && (isWarriorRole || isRogueRole || _cycle >= 5)) ? `
-[${evilEye69.levelData.icon || "🔴"} 악안 — ${evilEye69.levelData.label}] ${evilEye69.levelData.ability}\n총 ${evilEye69.killCount}번의 전투 경험이 눈에 각인되어 있습니다.\n전투 장면에서 이 능력을 자연스럽게 활용해 상대의 상태를 묘사하십시오.` : "";
+    const evilEyeSection = (evilEye69 && evilEye69.awakened && (isWarriorRole || isRogueRole || _cycle >= 5)) ? `\n[${evilEye69.levelData.icon || "🔴"} 악안 — ${evilEye69.levelData.label}] ${evilEye69.levelData.ability}\n총 ${evilEye69.killCount}번의 전투 경험이 눈에 각인되어 있습니다.\n전투 장면에서 이 능력을 자연스럽게 활용해 상대의 상태를 묘사하십시오.` : "";
 
     // ── 70번: 달의 위상 — 모든 세계관, 1회차+ ──
     const moonPhase70 = getMoonPhase();
-    const moonSection = moonPhase70 ? `
-[${moonPhase70.icon} 달의 위상 — ${moonPhase70.name}] ${moonPhase70.effect}\n특별 이벤트: ${moonPhase70.specialEvent}\n이번 회차 내내 달의 기운이 서사에 배어있습니다. 야간 장면이나 신비로운 순간에 이 위상의 영향을 자연스럽게 묘사하십시오.` : "";
+    const moonSection = moonPhase70 ? `\n[${moonPhase70.icon} 달의 위상 — ${moonPhase70.name}] ${moonPhase70.effect}\n특별 이벤트: ${moonPhase70.specialEvent}\n이번 회차 내내 달의 기운이 서사에 배어있습니다. 야간 장면이나 신비로운 순간에 이 위상의 영향을 자연스럽게 묘사하십시오.` : "";
 
     // ── 71번: 전생에서 보내는 편지 — 1회차+ ──
     const letter71 = getLatestLetter();
-    const letterSection = (letter71 && _cycle >= 1) ? `
-[📩 전생에서 온 편지 — ${letter71.tone} 어조] "${letter71.message.slice(0,80)}${letter71.message.length > 80 ? "..." : ""}"\n이 편지를 쓴 자: ${letter71.characterName}. 이번 회차 극적인 순간에 낡은 편지를 발견하는 장면으로 연출하십시오.` : "";
+    const letterSection = (letter71 && _cycle >= 1) ? `\n[📩 전생에서 온 편지 — ${letter71.tone} 어조] "${letter71.message.slice(0,80)}${letter71.message.length > 80 ? "..." : ""}"\n이 편지를 쓴 자: ${letter71.characterName}. 이번 회차 극적인 순간에 낡은 편지를 발견하는 장면으로 연출하십시오.` : "";
 
     // ── 72번: 회차 하이라이트 컷씬 — 1회차+ ──
     const reel72 = getHighlightReel();
-    const reelSection = (reel72.length > 0 && _cycle >= 1) ? `
-[🎬 전생 하이라이트] 이번 회차 오프닝이나 꿈 속에서 아래 장면들이 섬광처럼 스칠 수 있습니다:\n${reel72.slice(-3).map(r => `• ${r.icon}${r.label}: ${r.template.replace("${name}", r.characterName)}`).join("\n")}` : "";
+    const reelSection = (reel72.length > 0 && _cycle >= 1) ? `\n[🎬 전생 하이라이트] 이번 회차 오프닝이나 꿈 속에서 아래 장면들이 섬광처럼 스칠 수 있습니다:\n${reel72.slice(-3).map(r => `• ${r.icon}${r.label}: ${r.template.replace("${name}", r.characterName)}`).join("\n")}` : "";
 
     // ── 73번: 나비 지수 — 3회차+, 지수 양수일 때 ──
     const butterfly73 = getButterflyIndex();
-    const butterflyIdxSection = (butterfly73.index > 0 && _cycle >= 3) ? `
-[🦋 나비 지수 — ${butterfly73.index}/100 (${butterfly73.stageData.label})] ${butterfly73.stageData.desc}\n${butterfly73.chaosMode ? "주의: 카오스 모드 활성화. 플레이어의 사소한 행동이 예상치 못한 큰 파장을 일으킵니다. 모든 선택에 과장된 연쇄 효과를 부여하십시오." : `카오스 확률 ${butterfly73.stageData.chaosChance}% — 때때로 예상치 못한 파급 효과를 서사에 추가하십시오.`}` : "";
+    const butterflyIdxSection = (butterfly73.index > 0 && _cycle >= 3) ? `\n[🦋 나비 지수 — ${butterfly73.index}/100 (${butterfly73.stageData.label})] ${butterfly73.stageData.desc}\n${butterfly73.chaosMode ? "주의: 카오스 모드 활성화. 플레이어의 사소한 행동이 예상치 못한 큰 파장을 일으킵니다. 모든 선택에 과장된 연쇄 효과를 부여하십시오." : `카오스 확률 ${butterfly73.stageData.chaosChance}% — 때때로 예상치 못한 파급 효과를 서사에 추가하십시오.`}` : "";
 
     // ── 74번: 고대 비문 해독 — 유적/신전 세계관 우선, 비문 있을 때 ──
     const inscription74 = getInscriptionStatus();
-    const inscriptionSection = (inscription74 && inscription74.lines && inscription74.lines.length > 0 && (isMedieval || isWuxia || _cycle >= 2)) ? `
-[📜 고대 비문 — ${inscription74.progress}/${inscription74.total}줄 해독]${inscription74.completed ? " 🌟 비문 완전 해독! 신급 스킬 해금 조건 충족!" : ""}\n최근 해독 구절: "${inscription74.lines[inscription74.lines.length-1]?.text}"\n고대 유적이나 신전 장면에서 이 비문의 구절을 자연스럽게 등장시키십시오.` : "";
+    const inscriptionSection = (inscription74 && inscription74.lines && inscription74.lines.length > 0 && (isMedieval || isWuxia || _cycle >= 2)) ? `\n[📜 고대 비문 — ${inscription74.progress}/${inscription74.total}줄 해독]${inscription74.completed ? " 🌟 비문 완전 해독! 신급 스킬 해금 조건 충족!" : ""}\n최근 해독 구절: "${inscription74.lines[inscription74.lines.length-1]?.text}"\n고대 유적이나 신전 장면에서 이 비문의 구절을 자연스럽게 등장시키십시오.` : "";
 
     // ── 75번: 윤회 등급 — 1회차+ ──
     const rank75 = getRankStatus();
-    const rankSection = (rank75 && _cycle >= 1) ? `
-[${rank75.rankData.icon} 윤회 등급 — ${rank75.rankData.label}] ${rank75.rankData.bonus}\n${rank75.rankData.desc}${rank75.nextRank ? `\n다음 등급까지: ${rank75.nextRank.minScore - rank75.totalScore}점 남음` : ""}` : "";
+    const rankSection = (rank75 && _cycle >= 1) ? `\n[${rank75.rankData.icon} 윤회 등급 — ${rank75.rankData.label}] ${rank75.rankData.bonus}\n${rank75.rankData.desc}${rank75.nextRank ? `\n다음 등급까지: ${rank75.nextRank.minScore - rank75.totalScore}점 남음` : ""}` : "";
 
     // ── 76번: 벚꽃 엔딩 — 조건 달성 시만, 후반 이상 ──
     const sakura76 = getSakuraStatus();
-    const sakuraSection = (sakura76 && sakura76.metCount > 0 && _cycle >= 5) ? `
-[🌸 벚꽃 엔딩 — ${sakura76.metCount}/${sakura76.totalConditions}조건 달성]${sakura76.unlocked ? " ✅ 대단원 평화 엔딩 해금!" : ""}\n미달성 조건: ${sakura76.conditions.filter(c => !c.met).map(c => c.label).join(", ")}\n${sakura76.unlocked ? "이번 회차에서 평화적 결말을 이끌면 벚꽃 엔딩이 발동됩니다. 서사를 화해와 평화의 방향으로 이끄십시오." : ""}` : "";
+    const sakuraSection = (sakura76 && sakura76.metCount > 0 && _cycle >= 5) ? `\n[🌸 벚꽃 엔딩 — ${sakura76.metCount}/${sakura76.totalConditions}조건 달성]${sakura76.unlocked ? " ✅ 대단원 평화 엔딩 해금!" : ""}\n미달성 조건: ${sakura76.conditions.filter(c => !c.met).map(c => c.label).join(", ")}\n${sakura76.unlocked ? "이번 회차에서 평화적 결말을 이끌면 벚꽃 엔딩이 발동됩니다. 서사를 화해와 평화의 방향으로 이끄십시오." : ""}` : "";
 
     // ── 77번: 데자뷔 알림 — 1회차+ ──
     const dejavu77 = getDejavuStatus();
-    const dejavuSection = (dejavu77 && dejavu77.count > 0 && _cycle >= 1) ? `
-[💭 데자뷔 알림] 전생에서 겪은 상황이 재현될 때 자동으로 "익숙한 느낌" 묘사를 삽입하십시오:\n${dejavu77.triggerDefs.slice(0,4).map(t => `• ${t.keyword[0]} 관련 상황: "${t.feeling}"`).join("\n")}\n총 ${dejavu77.count}번의 데자뷔 경험이 축적되었습니다.` : "";
+    const dejavuSection = (dejavu77 && dejavu77.count > 0 && _cycle >= 1) ? `\n[💭 데자뷔 알림] 전생에서 겪은 상황이 재현될 때 자동으로 "익숙한 느낌" 묘사를 삽입하십시오:\n${dejavu77.triggerDefs.slice(0,4).map(t => `• ${t.keyword[0]} 관련 상황: "${t.feeling}"`).join("\n")}\n총 ${dejavu77.count}번의 데자뷔 경험이 축적되었습니다.` : "";
 
     // ── 78번: 인과율 조작 — 10회차+, 후반 이상 ──
     const causality78 = getCausalityStatus();
-    const causalitySection = (causality78 && _cycle >= 10) ? `
-[⚙️ 인과율 조작 — ${causality78.uses}/${causality78.maxUses}회 사용] 플레이어가 "원인을 바꾼다" 또는 "그 일이 일어나지 않았다면"이라고 명시적으로 선언할 경우, 이 능력을 소모해 과거 사건의 원인을 소급 변경하는 극적 장면을 연출하십시오.` : "";
+    const causalitySection = (causality78 && _cycle >= 10) ? `\n[⚙️ 인과율 조작 — ${causality78.uses}/${causality78.maxUses}회 사용] 플레이어가 "원인을 바꾼다" 또는 "그 일이 일어나지 않았다면"이라고 명시적으로 선언할 경우, 이 능력을 소모해 과거 사건의 원인을 소급 변경하는 극적 장면을 연출하십시오.` : "";
 
     // ── 79번: 전생 도박 빚 — 빚 있을 때만 ──
     const debt79 = getGamblingDebt();
-    const debtSection = (debt79 && !debt79.paidOff) ? `
-[💸 전생 도박 빚 — ${debt79.totalDebt}골드] 채권자: ${debt79.creditorName}\n이번 회차 초반에 빚쟁이 NPC가 나타나 빚을 요구하는 장면을 삽입하십시오. 갚으면 히든 퀘스트가 열립니다.` : "";
+    const debtSection = (debt79 && !debt79.paidOff) ? `\n[💸 전생 도박 빚 — ${debt79.totalDebt}골드] 채권자: ${debt79.creditorName}\n이번 회차 초반에 빚쟁이 NPC가 나타나 빚을 요구하는 장면을 삽입하십시오. 갚으면 히든 퀘스트가 열립니다.` : "";
 
     // ── 80번: 어린 시절 트라우마 — 트라우마 있을 때 ──
     const traumas80 = getChildhoodTraumas();
-    const trauma80Section = traumas80.length > 0 ? `
-[😢 각인된 트라우마]\n${traumas80.map(t => `• ${t.icon}${t.label}: 트리거(${t.trigger}) → 플래시백: "${t.flashback}"`).join("\n")}\n해당 상황이 등장할 때 위 플래시백 묘사를 자연스럽게 삽입하십시오.` : "";
+    const trauma80Section = traumas80.length > 0 ? `\n[😢 각인된 트라우마]\n${traumas80.map(t => `• ${t.icon}${t.label}: 트리거(${t.trigger}) → 플래시백: "${t.flashback}"`).join("\n")}\n해당 상황이 등장할 때 위 플래시백 묘사를 자연스럽게 삽입하십시오.` : "";
 
     // ── 81번: 세계 종말 카운터 — 3회차+, 카운터 > 0 ──
     const apo81 = getApocalypseStatus();
-    const apoSection = (apo81 && apo81.clock > 0 && _cycle >= 3) ? `
-[${apo81.stageData.icon} 세계 종말 카운터 — ${apo81.clock}/100 (${apo81.stageData.label})] ${apo81.stageData.desc}${apo81.stageData.warning ? `\n⚠️ ${apo81.stageData.warning}` : ""}\n${apo81.clock >= 80 ? "긴급: 이번 회차에서 봉인 이벤트를 발동시키지 않으면 멸망이 확정됩니다. 이 긴박감을 서사 전체에 흐르게 하십시오." : "세계 어딘가에서 이 카운터의 영향이 배경 묘사에 스며들도록 하십시오."}` : "";
+    const apoSection = (apo81 && apo81.clock > 0 && _cycle >= 3) ? `\n[${apo81.stageData.icon} 세계 종말 카운터 — ${apo81.clock}/100 (${apo81.stageData.label})] ${apo81.stageData.desc}${apo81.stageData.warning ? `\n⚠️ ${apo81.stageData.warning}` : ""}\n${apo81.clock >= 80 ? "긴급: 이번 회차에서 봉인 이벤트를 발동시키지 않으면 멸망이 확정됩니다. 이 긴박감을 서사 전체에 흐르게 하십시오." : "세계 어딘가에서 이 카운터의 영향이 배경 묘사에 스며들도록 하십시오."}` : "";
 
     // ── 82번: 슬픔 수치 — 상실 있을 때 ──
     const grief82 = getGriefStatus();
-    const griefSection = (grief82 && grief82.total > 0) ? `
-[${grief82.stageData.icon} 슬픔 수치 — ${grief82.total}명 상실 (${grief82.stageData.label})] 공감 능력 +${grief82.stageData.empathy} / 전투 의지 -${grief82.stageData.willPenalty}\n잃어버린 자들: ${grief82.lostOnes.slice(-3).map(l => `${l.name}(${l.relationship})`).join(", ")}...\n이 슬픔이 캐릭터의 눈빛과 행동에 자연스럽게 배어나오도록 하십시오.` : "";
+    const griefSection = (grief82 && grief82.total > 0) ? `\n[${grief82.stageData.icon} 슬픔 수치 — ${grief82.total}명 상실 (${grief82.stageData.label})] 공감 능력 +${grief82.stageData.empathy} / 전투 의지 -${grief82.stageData.willPenalty}\n잃어버린 자들: ${grief82.lostOnes.slice(-3).map(l => `${l.name}(${l.relationship})`).join(", ")}...\n이 슬픔이 캐릭터의 눈빛과 행동에 자연스럽게 배어나오도록 하십시오.` : "";
 
     // ── 83번: 전생 직감 — 3회차+ ──
     const instinct83 = getInstinctStatus();
-    const instinctSection = (instinct83 && _cycle >= 3) ? `
-[🔮 전생 직감 — 정확도 ${instinct83.accuracy}%] 새로운 NPC를 처음 만날 때 직감 판정으로 선의/악의를 ${instinct83.accuracy}% 확률로 감지합니다. "무언가 미심쩍은 느낌이 든다" 또는 "왠지 믿음직스럽다"는 묘사를 자연스럽게 삽입하십시오.` : "";
+    const instinctSection = (instinct83 && _cycle >= 3) ? `\n[🔮 전생 직감 — 정확도 ${instinct83.accuracy}%] 새로운 NPC를 처음 만날 때 직감 판정으로 선의/악의를 ${instinct83.accuracy}% 확률로 감지합니다. "무언가 미심쩍은 느낌이 든다" 또는 "왠지 믿음직스럽다"는 묘사를 자연스럽게 삽입하십시오.` : "";
 
     // ── 84번: 저주받은 유물 — 유물 있을 때 ──
     const cursedRelics84 = getCursedRelics();
-    const cursedRelicSection = cursedRelics84.length > 0 ? `
-[🔮 저주받은 유물의 흔적]\n${cursedRelics84.map(r => `• ${r.icon}${r.name}: ${r.curse} / 숨겨진 힘: ${r.hiddenPower}`).join("\n")}\n이 저주들이 희미하게 캐릭터를 따라다닙니다. 관련 상황에서 저주와 숨겨진 힘을 함께 묘사하십시오.` : "";
+    const cursedRelicSection = cursedRelics84.length > 0 ? `\n[🔮 저주받은 유물의 흔적]\n${cursedRelics84.map(r => `• ${r.icon}${r.name}: ${r.curse} / 숨겨진 힘: ${r.hiddenPower}`).join("\n")}\n이 저주들이 희미하게 캐릭터를 따라다닙니다. 관련 상황에서 저주와 숨겨진 힘을 함께 묘사하십시오.` : "";
 
     // ── 85번: 자연 회귀 — 자연 관련 세계관 우선, 중립 이상 스코어 ──
     const nature85 = getNatureKarma();
-    const natureSection = (nature85 && (nature85.score !== 50 || isMedieval || isWuxia) && _cycle >= 2) ? `
-[${nature85.status.icon} 자연 업보 — ${nature85.status.label}] ${nature85.status.effect}\n자연 관련 장면(숲, 강, 산, 폭풍)에서 이 업보의 영향을 자연스럽게 묘사하십시오.` : "";
+    const natureSection = (nature85 && (nature85.score !== 50 || isMedieval || isWuxia) && _cycle >= 2) ? `\n[${nature85.status.icon} 자연 업보 — ${nature85.status.label}] ${nature85.status.effect}\n자연 관련 장면(숲, 강, 산, 폭풍)에서 이 업보의 영향을 자연스럽게 묘사하십시오.` : "";
 
     // ── 86번: 신분 세탁 누적 — 가명 있을 때, 로그/리더 직업 우선 ──
     const aliases86 = getAliasList();
-    const aliasSection = (aliases86.length > 0 && (isRogueRole || isLeaderRole || _cycle >= 3)) ? `
-[🎭 신분 목록 — ${aliases86.length}개 가명] 즉시 사용 가능한 위장 신분:\n${aliases86.slice(0,4).map(a => `• "${a.name}" (${a.context}, 신뢰도 ${a.credibility}/5)`).join("\n")}\n플레이어가 이 신분을 사용할 때 자연스러운 전환과 신뢰도에 맞는 반응을 묘사하십시오.` : "";
+    const aliasSection = (aliases86.length > 0 && (isRogueRole || isLeaderRole || _cycle >= 3)) ? `\n[🎭 신분 목록 — ${aliases86.length}개 가명] 즉시 사용 가능한 위장 신분:\n${aliases86.slice(0,4).map(a => `• "${a.name}" (${a.context}, 신뢰도 ${a.credibility}/5)`).join("\n")}\n플레이어가 이 신분을 사용할 때 자연스러운 전환과 신뢰도에 맞는 반응을 묘사하십시오.` : "";
 
     // ── 87번: 소원 시스템 — 소원 사용 가능 시만 ──
     const wish87 = getWishStatus();
-    const wishSection = (wish87 && wish87.available) ? `
-[⭐ 소원 사용 가능] 100회차 달성 보상으로 소원 1회를 사용할 수 있습니다:\n${wish87.options.map(o => `• ${o.icon}${o.label}: ${o.desc}`).join("\n")}\n플레이어가 소원을 선택하면 해당 효과를 극적으로 연출하십시오.` : "";
+    const wishSection = (wish87 && wish87.available) ? `\n[⭐ 소원 사용 가능] 100회차 달성 보상으로 소원 1회를 사용할 수 있습니다:\n${wish87.options.map(o => `• ${o.icon}${o.label}: ${o.desc}`).join("\n")}\n플레이어가 소원을 선택하면 해당 효과를 극적으로 연출하십시오.` : "";
 
     // ── 88번: 전생 반려동물 — 반려동물 있을 때 ──
     const pets88 = getPetLegacy();
-    const petSection = pets88.length > 0 ? `
-[🐾 전생 반려동물] 전생에서 함께한 동물들이 이번 생 어딘가에 살고 있습니다:\n${pets88.map(p => `• ${p.icon}${p.petName}(${p.name}) — 유대 ${p.bond}/100, 재결합 아이템: ${p.reuniteItem}`).join("\n")}\n플레이어가 해당 아이템을 사용하거나 조건을 맞추면 감동적인 재결합 장면을 연출하십시오.` : "";
+    const petSection = pets88.length > 0 ? `\n[🐾 전생 반려동물] 전생에서 함께한 동물들이 이번 생 어딘가에 살고 있습니다:\n${pets88.map(p => `• ${p.icon}${p.petName}(${p.name}) — 유대 ${p.bond}/100, 재결합 아이템: ${p.reuniteItem}`).join("\n")}\n플레이어가 해당 아이템을 사용하거나 조건을 맞추면 감동적인 재결합 장면을 연출하십시오.` : "";
 
     // ── 89번: 봉인된 기억 방 — 봉인 있을 때, 2회차+ ──
     const sealedMems89 = getSealedMemories();
-    const sealedSection = (sealedMems89.length > 0 && _cycle >= 2) ? `
-[🔒 봉인된 기억 방 — ${sealedMems89.filter(m=>!m.opened).length}개 봉인 중]\n${sealedMems89.filter(m=>!m.opened).map(m => `• ${m.trigger} → 해금 시 스킬: ${m.skill} (정신력 -${m.mentalCost})`).join("\n")}\n플레이어가 봉인 해제를 시도하면 극적인 고통과 각성을 동시에 묘사하십시오.` : "";
+    const sealedSection = (sealedMems89.length > 0 && _cycle >= 2) ? `\n[🔒 봉인된 기억 방 — ${sealedMems89.filter(m=>!m.opened).length}개 봉인 중]\n${sealedMems89.filter(m=>!m.opened).map(m => `• ${m.trigger} → 해금 시 스킬: ${m.skill} (정신력 -${m.mentalCost})`).join("\n")}\n플레이어가 봉인 해제를 시도하면 극적인 고통과 각성을 동시에 묘사하십시오.` : "";
 
     // ── 90번: 영혼 결정체 — 결정체 있을 때 ──
     const sc90 = getSoulCrystalStatus();
-    const soulCrystalSection = (sc90 && sc90.count > 0) ? `
-[💠 영혼 결정체 — ${sc90.count}개 보유]${sc90.crafted && sc90.crafted.length > 0 ? ` / 제조 완료: ${sc90.crafted.map(c=>c.name).join(", ")}` : ""}\n${sc90.availableCrafts.length > 0 ? `제조 가능: ${sc90.availableCrafts.map(c=>`${c.icon}${c.name}(${c.cost}개)`).join(", ")}` : ""}` : "";
+    const soulCrystalSection = (sc90 && sc90.count > 0) ? `\n[💠 영혼 결정체 — ${sc90.count}개 보유]${sc90.crafted && sc90.crafted.length > 0 ? ` / 제조 완료: ${sc90.crafted.map(c=>c.name).join(", ")}` : ""}\n${sc90.availableCrafts.length > 0 ? `제조 가능: ${sc90.availableCrafts.map(c=>`${c.icon}${c.name}(${c.cost}개)`).join(", ")}` : ""}` : "";
 
     // ── 91번: 감정 잔향 — 1회차+ ──
     const echo91 = getEmotionEcho();
-    const echoSection = (echo91 && _cycle >= 1) ? `
-[${echo91.icon} 감정 잔향 — ${echo91.label}] ${echo91.trait}\n보너스: ${echo91.bonus} / 부작용: ${echo91.sideEffect}\n이 감정의 잔향이 캐릭터의 행동 방식과 반응에 자연스럽게 스며들도록 서사를 이끄십시오.` : "";
+    const echoSection = (echo91 && _cycle >= 1) ? `\n[${echo91.icon} 감정 잔향 — ${echo91.label}] ${echo91.trait}\n보너스: ${echo91.bonus} / 부작용: ${echo91.sideEffect}\n이 감정의 잔향이 캐릭터의 행동 방식과 반응에 자연스럽게 스며들도록 서사를 이끄십시오.` : "";
 
     // ── 92번: 차원 지도 — 2회차+, 세계 탐험 있을 때 ──
     const dimMap92 = getDimensionMapStatus();
-    const dimMapSection = (dimMap92 && dimMap92.totalWorlds > 0 && _cycle >= 2) ? `
-[🗺️ 차원 지도 — ${dimMap92.totalWorlds}개 세계 탐험]${dimMap92.unlockedSkills.length > 0 ? `\n해금 스킬: ${dimMap92.unlockedSkills.map(s=>`${s.icon}${s.skill}`).join(", ")}` : ""}\n${dimMap92.nextSkill ? `다음 해금까지 ${dimMap92.nextSkill.count - dimMap92.totalWorlds}개 세계 탐험 필요` : ""}` : "";
+    const dimMapSection = (dimMap92 && dimMap92.totalWorlds > 0 && _cycle >= 2) ? `\n[🗺️ 차원 지도 — ${dimMap92.totalWorlds}개 세계 탐험]${dimMap92.unlockedSkills.length > 0 ? `\n해금 스킬: ${dimMap92.unlockedSkills.map(s=>`${s.icon}${s.skill}`).join(", ")}` : ""}\n${dimMap92.nextSkill ? `다음 해금까지 ${dimMap92.nextSkill.count - dimMap92.totalWorlds}개 세계 탐험 필요` : ""}` : "";
 
     // ── 93번: 악역 계승 — 보스 처치 후, 카르마 높을 때 ──
     const villain93 = getVillainInheritStatus();
-    const villainSection = (villain93 && villain93.inherited && villain93.inherited.length > 0 && villain93.corruptionLevel > 0) ? `
-[😈 악역 계승 — 오염도 ${villain93.corruptionLevel}%] ${villain93.corruptDesc}\n계승한 힘: ${villain93.inherited.map(v=>`${v.bossName}의 ${v.ability}`).join(", ")}\n이 힘들이 서사에서 자연스럽게 발현되며, 오염도에 따라 어두운 선택지를 더 자주 제시하십시오.` : "";
+    const villainSection = (villain93 && villain93.inherited && villain93.inherited.length > 0 && villain93.corruptionLevel > 0) ? `\n[😈 악역 계승 — 오염도 ${villain93.corruptionLevel}%] ${villain93.corruptDesc}\n계승한 힘: ${villain93.inherited.map(v=>`${v.bossName}의 ${v.ability}`).join(", ")}\n이 힘들이 서사에서 자연스럽게 발현되며, 오염도에 따라 어두운 선택지를 더 자주 제시하십시오.` : "";
 
     // ── 94번: 눈물 수집 — 결정 있을 때 ──
     const tears94 = getTearCrystalStatus();
-    const tearSection = (tears94 && tears94.crystals > 0) ? `
-[💧 눈물 결정 — ${tears94.crystals}개]${tears94.canUse ? " ✅ 사용 가능(3개 이상)" : ""}\n플레이어가 "눈물을 바친다" 또는 "결정을 사용한다"고 선언하면 3개를 소모해 현재 NPC를 완전히 감동시키는 기적을 연출하십시오.` : "";
+    const tearSection = (tears94 && tears94.crystals > 0) ? `\n[💧 눈물 결정 — ${tears94.crystals}개]${tears94.canUse ? " ✅ 사용 가능(3개 이상)" : ""}\n플레이어가 "눈물을 바친다" 또는 "결정을 사용한다"고 선언하면 3개를 소모해 현재 NPC를 완전히 감동시키는 기적을 연출하십시오.` : "";
 
     // ── 95번: 속성 내성/약점 — 내성 있을 때 ──
     const elemRes95 = getElementResistances();
-    const elemSection = elemRes95.length > 0 ? `
-[🔰 속성 내성/약점]\n${elemRes95.map(r=>`• ${r.icon}${r.element}: ${r.resistLabel}(${r.resistLevel}) / 반대: ${r.weakLabel}`).join("\n")}\n전투와 마법 이벤트에서 이 내성/약점을 반드시 반영하십시오.` : "";
+    const elemSection = elemRes95.length > 0 ? `\n[🔰 속성 내성/약점]\n${elemRes95.map(r=>`• ${r.icon}${r.element}: ${r.resistLabel}(${r.resistLevel}) / 반대: ${r.weakLabel}`).join("\n")}\n전투와 마법 이벤트에서 이 내성/약점을 반드시 반영하십시오.` : "";
 
     // ── 96번: 이세계 서커스 — 7회차+, 고회차 ──
     const circus96 = getCircusStatus();
-    const circusSection = (circus96 && _cycle >= 7) ? `
-[🎪 이세계 서커스] 고회차 전용. 극적으로 잠드는 장면이나 혼절 순간에 서커스 이벤트가 발동될 수 있습니다. 다음 이벤트: ${circus96.nextAct?.icon}${circus96.nextAct?.name} — ${circus96.nextAct?.desc}` : "";
+    const circusSection = (circus96 && _cycle >= 7) ? `\n[🎪 이세계 서커스] 고회차 전용. 극적으로 잠드는 장면이나 혼절 순간에 서커스 이벤트가 발동될 수 있습니다. 다음 이벤트: ${circus96.nextAct?.icon}${circus96.nextAct?.name} — ${circus96.nextAct?.desc}` : "";
 
     // ── 97번: 신전 건립 — 신전 있을 때, 성직 직업 우선 ──
     const temple97 = getTempleStatus();
-    const templeSection = (temple97 && temple97.level > 0 && (isHealerRole || _cycle >= 3)) ? `
-[${temple97.levelData.icon} 신전 — ${temple97.levelData.name}] 신도 ${temple97.levelData.worshippers}명\n신도 혜택: ${temple97.levelData.boon}\n신전을 방문하거나 신도를 만나는 장면에서 이 혜택을 자연스럽게 부여하십시오.` : "";
+    const templeSection = (temple97 && temple97.level > 0 && (isHealerRole || _cycle >= 3)) ? `\n[${temple97.levelData.icon} 신전 — ${temple97.levelData.name}] 신도 ${temple97.levelData.worshippers}명\n신도 혜택: ${temple97.levelData.boon}\n신전을 방문하거나 신도를 만나는 장면에서 이 혜택을 자연스럽게 부여하십시오.` : "";
 
     // ── 98번: 유언 방송 — 2회차+ ──
     const legWords98 = getLegacyWords();
-    const legWordsSection = (legWords98.length > 0 && _cycle >= 2) ? `
-[📢 유언 방송] 전생의 마지막 말이 세계에 퍼져있습니다:\n${legWords98.slice(-2).map(w=>`• ${w.misinterpretation}`).join("\n")}\n술집, 시장, 신전에서 NPC들이 이 말을 인용하거나 오해하는 장면을 간헐적으로 삽입하십시오.` : "";
+    const legWordsSection = (legWords98.length > 0 && _cycle >= 2) ? `\n[📢 유언 방송] 전생의 마지막 말이 세계에 퍼져있습니다:\n${legWords98.slice(-2).map(w=>`• ${w.misinterpretation}`).join("\n")}\n술집, 시장, 신전에서 NPC들이 이 말을 인용하거나 오해하는 장면을 간헐적으로 삽입하십시오.` : "";
 
     // ── 99번: 돌연변이 — 같은 종족 반복 시, 각성 시만 ──
     const mutation99 = getMutationStatus(char.race);
-    const mutationSection = (mutation99 && mutation99.mutated) ? `
-[🧬 돌연변이 각성 — ${mutation99.mutation}] 외형: ${mutation99.appearance}\n각성 스킬: ${mutation99.skill}\n이 변화가 NPC들의 반응과 전투 장면에 자연스럽게 반영되도록 하십시오.` : "";
+    const mutationSection = (mutation99 && mutation99.mutated) ? `\n[🧬 돌연변이 각성 — ${mutation99.mutation}] 외형: ${mutation99.appearance}\n각성 스킬: ${mutation99.skill}\n이 변화가 NPC들의 반응과 전투 장면에 자연스럽게 반영되도록 하십시오.` : "";
 
     // ── 100번: 어둠의 메아리 — 악명 있을 때 ──
     const dark100 = getDarkEchoStatus();
-    const darkEchoSection = (dark100 && dark100.infamy > 0) ? `
-[${dark100.fearData.icon} 어둠의 메아리 — 악명 ${dark100.infamy}/100 (${dark100.fearData.label})] ${dark100.fearData.effect}\nNPC 반응: ${dark100.fearData.npcReaction}\n${dark100.rumors.length > 0 ? `최근 괴담: "${dark100.rumors[dark100.rumors.length-1]?.rumor}"` : ""}\n이 악명을 모르는 NPC와 아는 NPC의 반응을 극명하게 대비시키십시오.` : "";
+    const darkEchoSection = (dark100 && dark100.infamy > 0) ? `\n[${dark100.fearData.icon} 어둠의 메아리 — 악명 ${dark100.infamy}/100 (${dark100.fearData.label})] ${dark100.fearData.effect}\nNPC 반응: ${dark100.fearData.npcReaction}\n${dark100.rumors.length > 0 ? `최근 괴담: "${dark100.rumors[dark100.rumors.length-1]?.rumor}"` : ""}\n이 악명을 모르는 NPC와 아는 NPC의 반응을 극명하게 대비시키십시오.` : "";
 
     // ── 101번: 성장 나무 — 꽃 핀 가지 있을 때 ──
     const tree101 = getGrowthTreeStatus();
-    const treeSection = (tree101 && tree101.blossoms && tree101.blossoms.length > 0) ? `
-[🌳 성장 나무 — 가지 ${tree101.totalBranches}개, 꽃 ${tree101.blossoms.length}개] 활짝 핀 꽃들이 예고하는 이벤트:\n${tree101.blossoms.slice(-2).map(b => `• ${b.icon}${b.label}: ${b.event}`).join("\n")}\n이 예고된 이벤트를 이번 회차 서사에 자연스럽게 심어두십시오.` : "";
+    const treeSection = (tree101 && tree101.blossoms && tree101.blossoms.length > 0) ? `\n[🌳 성장 나무 — 가지 ${tree101.totalBranches}개, 꽃 ${tree101.blossoms.length}개] 활짝 핀 꽃들이 예고하는 이벤트:\n${tree101.blossoms.slice(-2).map(b => `• ${b.icon}${b.label}: ${b.event}`).join("\n")}\n이 예고된 이벤트를 이번 회차 서사에 자연스럽게 심어두십시오.` : "";
 
     // ── 102번: 신격화 루트 — 단계 1 이상 ──
     const deify102 = getDeificationStatus();
-    const deifySection = (deify102 && deify102.stage > 0) ? `
-[${deify102.stageData.icon} 신격화 — ${deify102.stageData.label}(${deify102.metCount}/${deify102.totalConditions}조건)]${deify102.stageData.power ? ` 능력: ${deify102.stageData.power}` : ""}\n${deify102.deified ? "신격화 완성. 이번 회차 신으로서의 존재감을 서사에 드러내십시오." : `미달성 조건: ${deify102.conditions.filter(c=>!c.met).map(c=>c.label).join(", ")}`}` : "";
+    const deifySection = (deify102 && deify102.stage > 0) ? `\n[${deify102.stageData.icon} 신격화 — ${deify102.stageData.label}(${deify102.metCount}/${deify102.totalConditions}조건)]${deify102.stageData.power ? ` 능력: ${deify102.stageData.power}` : ""}\n${deify102.deified ? "신격화 완성. 이번 회차 신으로서의 존재감을 서사에 드러내십시오." : `미달성 조건: ${deify102.conditions.filter(c=>!c.met).map(c=>c.label).join(", ")}`}` : "";
 
     // ── 103번: 무한 회귀 자각 — 7회차+, 자각 시 ──
     const aware103 = getLoopAwareness();
-    const awarenessSection = (aware103 && aware103.level > 0 && _cycle >= 7) ? `
-[🔄 무한 회귀 자각 — ${aware103.levelData.label}(${aware103.levelData.tone})] ${aware103.levelData.desc}\n${aware103.level >= 3 ? "주의: 캐릭터가 나레이터에게 직접 말을 거는 4th wall 장면을 간헐적으로 허용하십시오. \"당신도 알고 있죠?\"와 같은 발언이 가능합니다." : "캐릭터의 대화와 독백에 자각의 수준에 맞는 메타적 뉘앙스를 담아내십시오."}` : "";
+    const awarenessSection = (aware103 && aware103.level > 0 && _cycle >= 7) ? `\n[🔄 무한 회귀 자각 — ${aware103.levelData.label}(${aware103.levelData.tone})] ${aware103.levelData.desc}\n${aware103.level >= 3 ? "주의: 캐릭터가 나레이터에게 직접 말을 거는 4th wall 장면을 간헐적으로 허용하십시오. \"당신도 알고 있죠?\"와 같은 발언이 가능합니다." : "캐릭터의 대화와 독백에 자각의 수준에 맞는 메타적 뉘앙스를 담아내십시오."}` : "";
 
     // ── 104번: 전생 라이벌 성장 — 라이벌 있을 때 ──
     const rivals104 = getRivals();
-    const rivalSection = rivals104.length > 0 ? `
-[⚔️ 전생 라이벌] 나 없이도 성장한 라이벌들:\n${rivals104.map(r => `• ${r.name}(${r.class}) — 전력 Lv.${r.power}${r.evolved ? " ★진화형" : ""}, ${r.encounters}회 조우`).join("\n")}\n이들이 등장할 때 반드시 이전보다 강해졌음을 명시하고 주인공을 알아보는 장면을 연출하십시오.` : "";
+    const rivalSection = rivals104.length > 0 ? `\n[⚔️ 전생 라이벌] 나 없이도 성장한 라이벌들:\n${rivals104.map(r => `• ${r.name}(${r.class}) — 전력 Lv.${r.power}${r.evolved ? " ★진화형" : ""}, ${r.encounters}회 조우`).join("\n")}\n이들이 등장할 때 반드시 이전보다 강해졌음을 명시하고 주인공을 알아보는 장면을 연출하십시오.` : "";
 
     // ── 105번: 붉은 실 — 설정된 인연 있을 때 ──
     const redThread105 = getRedThread();
-    const redThreadSection = redThread105 ? `
-[🔴 붉은 실 — ${redThread105.npcName}(${redThread105.fate.desc})] "${redThread105.fate.meeting}"\n초기 호감도 ${redThread105.fate.bond}으로 시작. 이 NPC는 어떤 상황에서도 반드시 등장하도록 서사를 이끄십시오.` : "";
+    const redThreadSection = redThread105 ? `\n[🔴 붉은 실 — ${redThread105.npcName}(${redThread105.fate.desc})] "${redThread105.fate.meeting}"\n초기 호감도 ${redThread105.fate.bond}으로 시작. 이 NPC는 어떤 상황에서도 반드시 등장하도록 서사를 이끄십시오.` : "";
 
     // ── 106번: 전생 건축물 붕괴 — 건축물 있을 때, 중세/무협 우선 ──
     const ruins106 = getRuins();
-    const ruinsSection = (ruins106.length > 0 && (isMedieval || isWuxia || _cycle >= 3)) ? `
-[🏚️ 전생 건축물 폐허]\n${ruins106.filter(r=>!r.restored).map(r => `• ${r.icon}${r.originalName}(${r.name}): 복원 퀘스트 — ${r.restoreQuest} → 보상: ${r.reward}`).join("\n")}\n이 폐허들을 세계 곳곳에 배치하고, 복원 서브퀘스트를 자연스럽게 제시하십시오.` : "";
+    const ruinsSection = (ruins106.length > 0 && (isMedieval || isWuxia || _cycle >= 3)) ? `\n[🏚️ 전생 건축물 폐허]\n${ruins106.filter(r=>!r.restored).map(r => `• ${r.icon}${r.originalName}(${r.name}): 복원 퀘스트 — ${r.restoreQuest} → 보상: ${r.reward}`).join("\n")}\n이 폐허들을 세계 곳곳에 배치하고, 복원 서브퀘스트를 자연스럽게 제시하십시오.` : "";
 
     // ── 107번: 살의 감지 — 레벨 1 이상, 암살 경험 있을 때 ──
     const killSense107 = getKillSenseStatus();
-    const killSenseSection = (killSense107 && killSense107.level > 0) ? `
-[🎯 살의 감지 — ${killSense107.levelData.ability}] 총 ${killSense107.assassinDeaths}번 암살 피해 경험\n적대적 NPC의 살의를 먼저 느끼는 순간을 섬세하게 묘사하십시오. 기습 장면에서 감지 여부를 판정하십시오.` : "";
+    const killSenseSection = (killSense107 && killSense107.level > 0) ? `\n[🎯 살의 감지 — ${killSense107.levelData.ability}] 총 ${killSense107.assassinDeaths}번 암살 피해 경험\n적대적 NPC의 살의를 먼저 느끼는 순간을 섬세하게 묘사하십시오. 기습 장면에서 감지 여부를 판정하십시오.` : "";
 
     // ── 108번: 전생 원한꽃 — 원한꽃 있을 때 ──
     const grudgeFlowers108 = getGrudgeFlowers();
-    const grudgeFlowerSection = grudgeFlowers108.length > 0 ? `
-[🌹 원한꽃]\n${grudgeFlowers108.map(f => `• ${f.stateData?.icon}${f.enemyName}: ${f.stateData?.label} — ${f.stateData?.effect}`).join("\n")}\n복수 대상 적과 조우 시 원한꽃의 상태에 맞는 효과를 적용하십시오. 저주 상태라면 캐릭터에게 불리하게 작용합니다.` : "";
+    const grudgeFlowerSection = grudgeFlowers108.length > 0 ? `\n[🌹 원한꽃]\n${grudgeFlowers108.map(f => `• ${f.stateData?.icon}${f.enemyName}: ${f.stateData?.label} — ${f.stateData?.effect}`).join("\n")}\n복수 대상 적과 조우 시 원한꽃의 상태에 맞는 효과를 적용하십시오. 저주 상태라면 캐릭터에게 불리하게 작용합니다.` : "";
 
     // ── 109번: 불운의 회차 — 저주 회차이거나 극복 이력 있을 때 ──
     const cursedCycle109 = getCursedCycleStatus();
-    const cursedCycleSection = (cursedCycle109 && (cursedCycle109.isCursed || cursedCycle109.overcame > 0)) ? (cursedCycle109.isCursed ? `
-[💀 불운의 회차] 이번 회차는 저주받은 회차입니다. 주요 판정이 평소보다 더 낮게 나오는 경향이 있습니다. 역경을 극복하는 서사를 구성하십시오. 역이용해 클리어 시 전설 보상.` : `
-[💪 불운 극복자 — ${cursedCycle109.overcame}회 극복] 저주받은 회차를 버텨낸 경험이 있습니다. 이를 자부심의 근거로 서사에 반영하십시오.`) : "";
+    const cursedCycleSection = (cursedCycle109 && (cursedCycle109.isCursed || cursedCycle109.overcame > 0)) ? (cursedCycle109.isCursed ? `\n[💀 불운의 회차] 이번 회차는 저주받은 회차입니다. 주요 판정이 평소보다 더 낮게 나오는 경향이 있습니다. 역경을 극복하는 서사를 구성하십시오. 역이용해 클리어 시 전설 보상.` : `\n[💪 불운 극복자 — ${cursedCycle109.overcame}회 극복] 저주받은 회차를 버텨낸 경험이 있습니다. 이를 자부심의 근거로 서사에 반영하십시오.`) : "";
 
     // ── 110번: 자석 운명 — 회피 이벤트 있을 때 ──
     const magnet110 = getFateMagnet();
-    const magnetSection = (magnet110 && magnet110.strongestPull) ? `
-[🧲 자석 운명 — ${magnet110.strongestPull.type}(인력 ${magnet110.strongestPull.magnetPull}%)] 전생에서 피하려 했던 사건일수록 더 강하게 끌려옵니다.\n"${magnet110.strongestPull.type}" 유형의 이벤트를 이번 회차 피할 수 없는 방식으로 자연스럽게 등장시키십시오.` : "";
+    const magnetSection = (magnet110 && magnet110.strongestPull) ? `\n[🧲 자석 운명 — ${magnet110.strongestPull.type}(인력 ${magnet110.strongestPull.magnetPull}%)] 전생에서 피하려 했던 사건일수록 더 강하게 끌려옵니다.\n"${magnet110.strongestPull.type}" 유형의 이벤트를 이번 회차 피할 수 없는 방식으로 자연스럽게 등장시키십시오.` : "";
 
     // ── 111번: 기억의 홍수 — 10회차+, 이전 발생 이력 있을 때 ──
     const flood111 = getMemoryFloodStatus();
-    const floodSection = (flood111 && flood111.lastResult && _cycle >= 10) ? `
-[🌊 기억의 홍수] 이전 기억의 홍수 결과: ${flood111.lastResult.outcome?.label}\n깊은 명상·혼절·극한 감정 상황에서 기억의 홍수가 다시 발동될 수 있습니다. 정신력에 따라 각성 또는 혼란으로 연출하십시오.` : "";
+    const floodSection = (flood111 && flood111.lastResult && _cycle >= 10) ? `\n[🌊 기억의 홍수] 이전 기억의 홍수 결과: ${flood111.lastResult.outcome?.label}\n깊은 명상·혼절·극한 감정 상황에서 기억의 홍수가 다시 발동될 수 있습니다. 정신력에 따라 각성 또는 혼란으로 연출하십시오.` : "";
 
     // ── 112번: 회전목마 NPC — 1회차+ ──
     const carousel112 = getCarouselNPC();
-    const carouselSection = (carousel112 && carousel112.currentRole && _cycle >= 1) ? `
-[🎠 회전목마 NPC${carousel112.npcName ? ` — ${carousel112.npcName}` : ""}] 이번 회차 역할: ${carousel112.currentRole.icon}${carousel112.currentRole.label}\n첫 만남 대사: "${carousel112.currentRole.firstMeet}"\n이 NPC가 이번 회차에서 위 역할로 반드시 등장하도록 서사를 이끄십시오.` : "";
+    const carouselSection = (carousel112 && carousel112.currentRole && _cycle >= 1) ? `\n[🎠 회전목마 NPC${carousel112.npcName ? ` — ${carousel112.npcName}` : ""}] 이번 회차 역할: ${carousel112.currentRole.icon}${carousel112.currentRole.label}\n첫 만남 대사: "${carousel112.currentRole.firstMeet}"\n이 NPC가 이번 회차에서 위 역할로 반드시 등장하도록 서사를 이끄십시오.` : "";
 
     // ── 113번: 운명의 덫 — 함정 활성화 시만 ──
     const traps113 = getFateTraps();
-    const trapSection = (traps113 && traps113.activeTraps && traps113.activeTraps.length > 0) ? `
-[🪤 운명의 덫] 반복 행동 패턴을 노린 함정이 세팅되어 있습니다:\n${traps113.activeTraps.map(t => `• ${t.label}: ${t.trap}`).join("\n")}\n이 함정들을 이번 회차 자연스럽게 배치하되, 플레이어가 눈치채고 회피하면 추가 보상을 주십시오.` : "";
+    const trapSection = (traps113 && traps113.activeTraps && traps113.activeTraps.length > 0) ? `\n[🪤 운명의 덫] 반복 행동 패턴을 노린 함정이 세팅되어 있습니다:\n${traps113.activeTraps.map(t => `• ${t.label}: ${t.trap}`).join("\n")}\n이 함정들을 이번 회차 자연스럽게 배치하되, 플레이어가 눈치채고 회피하면 추가 보상을 주십시오.` : "";
 
     // ── 114번: 정신 오염 — 10회차+, 오염 레벨 1 이상 ──
     const mental114 = getMentalCorruption();
-    const mentalSection = (mental114 && mental114.level > 0 && _cycle >= 10) ? `
-[🌀 정신 오염 — ${mental114.levelData.label}] ${mental114.levelData.symptom}\n페널티: ${mental114.levelData.penalty}\n대화와 전투 장면에서 현재·과거 혼동 증상을 섬세하게 묘사하십시오. 오염이 심하면 치료 이벤트를 제시하십시오.` : "";
+    const mentalSection = (mental114 && mental114.level > 0 && _cycle >= 10) ? `\n[🌀 정신 오염 — ${mental114.levelData.label}] ${mental114.levelData.symptom}\n페널티: ${mental114.levelData.penalty}\n대화와 전투 장면에서 현재·과거 혼동 증상을 섬세하게 묘사하십시오. 오염이 심하면 치료 이벤트를 제시하십시오.` : "";
 
     // ── 115번: 전생 영화관 — 관람 이력 있을 때 ──
     const cinema115 = getCinemaStatus();
-    const cinemaSection = (cinema115 && cinema115.totalViewed > 0) ? `
-[🎬 전생 영화관 — ${cinema115.totalViewed}편 관람] 특정 장소(${cinema115.scenes.map(s=>s.trigger).slice(0,3).join(", ")} 등)에서 전생 명장면이 환영처럼 재생될 수 있습니다. 해당 장소 방문 시 관련 스킬 숙련도가 상승하는 효과를 연출하십시오.` : "";
+    const cinemaSection = (cinema115 && cinema115.totalViewed > 0) ? `\n[🎬 전생 영화관 — ${cinema115.totalViewed}편 관람] 특정 장소(${cinema115.scenes.map(s=>s.trigger).slice(0,3).join(", ")} 등)에서 전생 명장면이 환영처럼 재생될 수 있습니다. 해당 장소 방문 시 관련 스킬 숙련도가 상승하는 효과를 연출하십시오.` : "";
 
     // ── 116번: 쌍둥이 영혼 — 5회차+, 연결 시만 ──
     const twin116 = getTwinSoul();
-    const twinSection = (twin116 && twin116.connected && _cycle >= 5) ? `
-[👥 쌍둥이 영혼 — ${twin116.partnerName}] 연결 강도: ${twin116.connectionStrength}%\n공유 스킬: ${twin116.sharedSkills.map(s=>s.skill).join(", ")}\n깊은 집중 또는 위기 상황에서 파트너의 기억과 감각이 전달되는 장면을 간헐적으로 연출하십시오.` : "";
+    const twinSection = (twin116 && twin116.connected && _cycle >= 5) ? `\n[👥 쌍둥이 영혼 — ${twin116.partnerName}] 연결 강도: ${twin116.connectionStrength}%\n공유 스킬: ${twin116.sharedSkills.map(s=>s.skill).join(", ")}\n깊은 집중 또는 위기 상황에서 파트너의 기억과 감각이 전달되는 장면을 간헐적으로 연출하십시오.` : "";
 
     // ── 117번: 살수 명단 — 복수자 있을 때 ──
     const killList117 = getKillList();
-    const killListSection = (killList117 && killList117.avengers && killList117.avengers.length > 0) ? `
-[📜 살수 명단 — 복수자 ${killList117.avengers.length}명 대기 중]\n${killList117.avengers.slice(0,3).map(a => `• ${a.name}의 후손이 복수자로 이번 회차 어딘가 있습니다.`).join("\n")}\n이 복수자들을 이번 회차 자연스럽게 등장시키고, 조우 시 극적인 대결을 연출하십시오.` : "";
+    const killListSection = (killList117 && killList117.avengers && killList117.avengers.length > 0) ? `\n[📜 살수 명단 — 복수자 ${killList117.avengers.length}명 대기 중]\n${killList117.avengers.slice(0,3).map(a => `• ${a.name}의 후손이 복수자로 이번 회차 어딘가 있습니다.`).join("\n")}\n이 복수자들을 이번 회차 자연스럽게 등장시키고, 조우 시 극적인 대결을 연출하십시오.` : "";
 
     // ── 118번: 기억 경매 — 3회차+, 거래 가능 기억 있을 때 ──
     const auction118 = getMemoryAuction();
-    const auctionSection = (auction118 && auction118.available && auction118.available.length > 0 && _cycle >= 3) ? `
-[🔨 기억 경매] 신비한 기억 상인이 전생 기억을 사고 싶어합니다:\n${auction118.available.slice(0,3).map(a => `• ${a.label}: 판매가(${a.sellPrice}) — 대가(${a.cost})`).join("\n")}\n플레이어가 거래를 요청하면 해당 기억을 파는 감정적 장면을 연출하십시오.` : "";
+    const auctionSection = (auction118 && auction118.available && auction118.available.length > 0 && _cycle >= 3) ? `\n[🔨 기억 경매] 신비한 기억 상인이 전생 기억을 사고 싶어합니다:\n${auction118.available.slice(0,3).map(a => `• ${a.label}: 판매가(${a.sellPrice}) — 대가(${a.cost})`).join("\n")}\n플레이어가 거래를 요청하면 해당 기억을 파는 감정적 장면을 연출하십시오.` : "";
 
     // ── 119번: 인연 나무 — 잎사귀 5개 이상 ──
     const bondTree119 = getBondTreeStatus();
-    const bondTreeSection = (bondTree119 && bondTree119.leaves >= 5) ? `
-[${bondTree119.icon} 인연 나무 — ${bondTree119.stage}(잎 ${bondTree119.leaves}개, 깊은 인연 ${bondTree119.deepBonds}명)] 사회적 판정 보너스: +${bondTree119.socialBonus}\n인연의 깊이와 넓이가 사회적 장면에서 자연스럽게 빛나도록 서사에 녹여내십시오.` : "";
+    const bondTreeSection = (bondTree119 && bondTree119.leaves >= 5) ? `\n[${bondTree119.icon} 인연 나무 — ${bondTree119.stage}(잎 ${bondTree119.leaves}개, 깊은 인연 ${bondTree119.deepBonds}명)] 사회적 판정 보너스: +${bondTree119.socialBonus}\n인연의 깊이와 넓이가 사회적 장면에서 자연스럽게 빛나도록 서사에 녹여내십시오.` : "";
 
     // ── 120번: 사이버 각인 — 사이버펑크 전용 ──
     const cyber120 = getCyberImprint();
-    const cyberSection = (cyber120 && cyber120.imprints && cyber120.imprints.length > 0 && isCyberpunk) ? `
-[🔌 사이버 각인 — ${cyber120.imprints.length}개 임플란트 DNA 각인] 장착 비용 ${cyber120.discount}% 할인\n각인된 임플란트: ${cyber120.imprints.map(i=>`${i.icon}${i.name}(${i.bonus})`).join(", ")}\n이 임플란트들이 이미 신체에 익숙한 것처럼 자연스럽게 발동되도록 묘사하십시오.` : "";
+    const cyberSection = (cyber120 && cyber120.imprints && cyber120.imprints.length > 0 && isCyberpunk) ? `\n[🔌 사이버 각인 — ${cyber120.imprints.length}개 임플란트 DNA 각인] 장착 비용 ${cyber120.discount}% 할인\n각인된 임플란트: ${cyber120.imprints.map(i=>`${i.icon}${i.name}(${i.bonus})`).join(", ")}\n이 임플란트들이 이미 신체에 익숙한 것처럼 자연스럽게 발동되도록 묘사하십시오.` : "";
 
     // ── 121번: 검귀 빙의 — 무협 전용 ──
     const sword121 = getSwordGhost();
-    const swordSection = (sword121 && sword121.techniques && sword121.techniques.length > 0 && isWuxia) ? `
-[⚔️ 검귀 빙의 — 각성 Lv.${sword121.awakeLevel}] 습득 절기: ${sword121.techniques.map(t=>t.name).join(", ")}\nHP 20% 이하 등 조건 충족 시 전생의 무공이 자동 발동됩니다. 빙의 장면을 극적으로 연출하십시오.` : "";
+    const swordSection = (sword121 && sword121.techniques && sword121.techniques.length > 0 && isWuxia) ? `\n[⚔️ 검귀 빙의 — 각성 Lv.${sword121.awakeLevel}] 습득 절기: ${sword121.techniques.map(t=>t.name).join(", ")}\nHP 20% 이하 등 조건 충족 시 전생의 무공이 자동 발동됩니다. 빙의 장면을 극적으로 연출하십시오.` : "";
 
     // ── 122번: 왕국 유산 — 중세/판타지 전용 ──
     const kingdom122 = getKingdomLegacy();
-    const kingdomSection = (kingdom122 && isMedieval) ? `
-[👑 왕국 유산 — 누적 유산 ${kingdom122.legacy}] 전생에서 세운 왕국들:\n${kingdom122.founded.map(k=>`• ${k.icon}${k.kingdomName}(${k.name}): 후예 — ${k.descendantTitle}, 혜택 — ${k.boon}`).join("\n")}\n후예 NPC들이 선조를 모시는 경건한 태도로 주인공을 대하도록 연출하십시오.` : "";
+    const kingdomSection = (kingdom122 && isMedieval) ? `\n[👑 왕국 유산 — 누적 유산 ${kingdom122.legacy}] 전생에서 세운 왕국들:\n${kingdom122.founded.map(k=>`• ${k.icon}${k.kingdomName}(${k.name}): 후예 — ${k.descendantTitle}, 혜택 — ${k.boon}`).join("\n")}\n후예 NPC들이 선조를 모시는 경건한 태도로 주인공을 대하도록 연출하십시오.` : "";
 
     // ── 123번: 루프 자각자 길드 — 5회차+, 상태 있을 때 ──
     const guild123 = getLoopersGuild();
-    const guildSection = (guild123 && _cycle >= 5) ? `
-[🏛️ 루프 자각자 길드 — 상태: ${guild123.status === "member" ? `정회원(${guild123.rankData?.label})` : guild123.status === "hostile" ? "적대(거절 이력)" : "미접촉"}]${guild123.status === "member" ? `\n공유 지식: ${guild123.knowledgeShared?.join(", ")}` : ""}\n${guild123.status === "unknown" ? "이번 회차 비밀스러운 장소에서 길드 접촉 이벤트를 배치하십시오." : guild123.status === "hostile" ? "길드원들이 적으로 등장할 수 있습니다." : "길드원이 동료로 등장해 메타 정보를 공유합니다."}` : "";
+    const guildSection = (guild123 && _cycle >= 5) ? `\n[🏛️ 루프 자각자 길드 — 상태: ${guild123.status === "member" ? `정회원(${guild123.rankData?.label})` : guild123.status === "hostile" ? "적대(거절 이력)" : "미접촉"}]${guild123.status === "member" ? `\n공유 지식: ${guild123.knowledgeShared?.join(", ")}` : ""}\n${guild123.status === "unknown" ? "이번 회차 비밀스러운 장소에서 길드 접촉 이벤트를 배치하십시오." : guild123.status === "hostile" ? "길드원들이 적으로 등장할 수 있습니다." : "길드원이 동료로 등장해 메타 정보를 공유합니다."}` : "";
 
     // ── 124번: 사신과의 거래 — 거래 이력 있을 때 ──
     const dealer124 = getDeathDealerStatus();
-    const dealerSection = (dealer124 && dealer124.deals && dealer124.deals.length > 0) ? `
-[💀 사신과의 거래 — 빚 ${dealer124.debt}회, 위험도: ${dealer124.dangerLevel}]\n${dealer124.debtCollected ? "⚠️ 빚 회수 발동! 이번 회차 사신이 빚을 회수하러 옵니다. 극적인 대결을 연출하십시오." : "절체절명의 순간 사신과의 거래 선택지를 제시할 수 있습니다."}` : "";
+    const dealerSection = (dealer124 && dealer124.deals && dealer124.deals.length > 0) ? `\n[💀 사신과의 거래 — 빚 ${dealer124.debt}회, 위험도: ${dealer124.dangerLevel}]\n${dealer124.debtCollected ? "⚠️ 빚 회수 발동! 이번 회차 사신이 빚을 회수하러 옵니다. 극적인 대결을 연출하십시오." : "절체절명의 순간 사신과의 거래 선택지를 제시할 수 있습니다."}` : "";
 
     // ── 125번: 역할 반전 — 3회차+, 가능한 반전 있을 때 ──
     const reversal125 = getRoleReversal();
-    const reversalSection = (reversal125 && reversal125.available && reversal125.available.length > 0 && _cycle >= 3) ? `
-[🔄 역할 반전 가능] 전생에서 처치한 보스의 시점 플레이 가능:\n${reversal125.available.slice(0,2).map(r => `• ${r.bossName} — 성공 시 스킬: ${r.skills.join(", ") || "고유 스킬 전체"}`).join("\n")}\n특별한 꿈이나 환영 장면에서 역할 반전 이벤트를 제안할 수 있습니다.` : "";
+    const reversalSection = (reversal125 && reversal125.available && reversal125.available.length > 0 && _cycle >= 3) ? `\n[🔄 역할 반전 가능] 전생에서 처치한 보스의 시점 플레이 가능:\n${reversal125.available.slice(0,2).map(r => `• ${r.bossName} — 성공 시 스킬: ${r.skills.join(", ") || "고유 스킬 전체"}`).join("\n")}\n특별한 꿈이나 환영 장면에서 역할 반전 이벤트를 제안할 수 있습니다.` : "";
 
     // ── 126번: 별의 의지 — 1회차+ ──
     const worldWill126 = getWorldWill();
-    const worldWillSection = (worldWill126 && worldWill126.currentWill && _cycle >= 1) ? `
-[${worldWill126.currentWill.icon} 별의 의지 — ${worldWill126.currentWill.will}] ${worldWill126.currentWill.desc}\n이번 회차 흐름: ${worldWill126.currentWill.flow}\n세계의 의지가 이번 회차 전체 이벤트 방향을 결정합니다. 이에 순응하면 보상, 역행하면 저항이 따릅니다.` : "";
+    const worldWillSection = (worldWill126 && worldWill126.currentWill && _cycle >= 1) ? `\n[${worldWill126.currentWill.icon} 별의 의지 — ${worldWill126.currentWill.will}] ${worldWill126.currentWill.desc}\n이번 회차 흐름: ${worldWill126.currentWill.flow}\n세계의 의지가 이번 회차 전체 이벤트 방향을 결정합니다. 이에 순응하면 보상, 역행하면 저항이 따릅니다.` : "";
 
     // ── 127번: 사안(死眼) — 50사망+ 해금 시 ──
     const deathEye127 = getDeathEyeStatus();
-    const deathEyeSection = (deathEye127 && deathEye127.unlocked) ? `
-[👁️ 사안(死眼) — ${deathEye127.levelData.label}] ${deathEye127.levelData.ability}\n총 ${deathEye127.totalDeaths}번의 죽음을 경험한 눈입니다.\n전투와 조우 장면에서 사안의 능력을 자연스럽게 활용해 상대의 상태를 묘사하십시오.` : "";
+    const deathEyeSection = (deathEye127 && deathEye127.unlocked) ? `\n[👁️ 사안(死眼) — ${deathEye127.levelData.label}] ${deathEye127.levelData.ability}\n총 ${deathEye127.totalDeaths}번의 죽음을 경험한 눈입니다.\n전투와 조우 장면에서 사안의 능력을 자연스럽게 활용해 상대의 상태를 묘사하십시오.` : "";
 
     // ── 128번: 영혼의 주파수 — 주파수 50 이상 ──
     const freq128 = getSoulFrequency();
-    const freqSection = (freq128 && freq128.frequency > 50) ? `
-[〰️ 영혼의 주파수 — ${freq128.frequency}%]${freq128.topResonance ? ` 최고 공명: ${freq128.topResonance.npcName}(강도 ${freq128.topResonance.strength}%)` : ""}\n주파수가 높은 NPC와의 대화에서 말 없이도 의도가 전달되는 텔레파시 장면을 간헐적으로 연출하십시오.` : "";
+    const freqSection = (freq128 && freq128.frequency > 50) ? `\n[〰️ 영혼의 주파수 — ${freq128.frequency}%]${freq128.topResonance ? ` 최고 공명: ${freq128.topResonance.npcName}(강도 ${freq128.topResonance.strength}%)` : ""}\n주파수가 높은 NPC와의 대화에서 말 없이도 의도가 전달되는 텔레파시 장면을 간헐적으로 연출하십시오.` : "";
 
     // ── 129번: 봉인된 신 — 조각 3개 이상, 항상 진행 상황 포함 ──
     const sealedGod129 = getSealedGodStatus();
-    const sealedGodSection = (sealedGod129 && sealedGod129.shards >= 3) ? `
-[🌟 봉인된 신 — ${sealedGod129.shards}/${sealedGod129.totalShards} 조각]${sealedGod129.released ? ` ✅ 해방됨 — ${sealedGod129.alignmentDesc || "중립"}` : ` (${sealedGod129.progressPercent}%)`}\n${sealedGod129.released ? "해방된 신의 존재를 서사에서 느낄 수 있도록 섬세하게 표현하십시오." : "고대 유적이나 특별한 장소에서 신의 조각이 발견될 수 있습니다."}` : "";
+    const sealedGodSection = (sealedGod129 && sealedGod129.shards >= 3) ? `\n[🌟 봉인된 신 — ${sealedGod129.shards}/${sealedGod129.totalShards} 조각]${sealedGod129.released ? ` ✅ 해방됨 — ${sealedGod129.alignmentDesc || "중립"}` : ` (${sealedGod129.progressPercent}%)`}\n${sealedGod129.released ? "해방된 신의 존재를 서사에서 느낄 수 있도록 섬세하게 표현하십시오." : "고대 유적이나 특별한 장소에서 신의 조각이 발견될 수 있습니다."}` : "";
 
     // ── 130번: 자연의 섭리 — 5회차+, 변화 있을 때 ──
     const naturalLaw130 = getNaturalLaw();
-    const naturalLawSection = (naturalLaw130 && naturalLaw130.mutations && naturalLaw130.mutations.length > 0 && _cycle >= 5) ? `
-[🌌 자연의 섭리 변화 — ${naturalLaw130.mutations.length}단계]\n${naturalLaw130.mutations.slice(-3).map(m => `• ${m.law}: ${m.desc} (${m.effect})`).join("\n")}\n이 법칙 변화들이 세계의 물리적·마법적 현상에 자연스럽게 스며들도록 묘사하십시오.` : "";
+    const naturalLawSection = (naturalLaw130 && naturalLaw130.mutations && naturalLaw130.mutations.length > 0 && _cycle >= 5) ? `\n[🌌 자연의 섭리 변화 — ${naturalLaw130.mutations.length}단계]\n${naturalLaw130.mutations.slice(-3).map(m => `• ${m.law}: ${m.desc} (${m.effect})`).join("\n")}\n이 법칙 변화들이 세계의 물리적·마법적 현상에 자연스럽게 스며들도록 묘사하십시오.` : "";
 
-    return `너는 인터랙티브 소설의 전지적 나레이터야.
-주인공: ${char.name} (${char.race ? char.race+" · " : ""}${char.role}) / 성격: ${char.personality} / 배경: ${char.background} / 말투: ${char.speechStyle}
-${char.race ? (() => { const rd = RACE_DEFS.find(r=>r.name===char.race); return rd ? `[종족 특성] ${rd.lore}\n[종족 관계도] ${Object.entries(rd.relations).map(([k,v])=>`${RACE_DEFS.find(r=>r.id===k)?.name||k}: ${v.label}(${v.desc})`).join(" | ")}\n` : ""; })() : ""}세계관: ${char.scenario}${char.customWorldSetting ? `\n[🌐 커스텀 세계관 설정]\n${char.customWorldSetting}` : ""}${npcSection}${notesSection}${atmosphereSection}${summonSection}${monsterSection}${memSection}${karmaSection}${fragSection}${intiSection}${fameSection}${soulWpnSection}${forbiddenSection}${butterflySection}${hiddenEndingSection}${deathBonusSection}${traumaSection}${lastWordSection}${metaSection}${bloodlineSection}${fateSection}${exploredSection}${relLegacySection}${worldSecretSection}${abilityImprintSection}${grudgeSection}${timeEchoSection}${fateChoiceSection}${divineGazeSection}${curseMasterySection}${prayerSection}${greatCycleSection}${parallelSelfSection}${curseRingSection}${statsSection}${injurySection}${pastThemeSection}${memDistortSection}${ageParadoxSection}${summonLegacySection}${grudgeWeaponSection}${worldTreeSection}${dreamSection}${legacyBuildingSection}${watcherSection}${soulMaskSection}${emotionRippleSection}${testamentSection}${constellationSection}${explorerMapSection}${lightningImprintSection}${dawnSection}${starSignSection}${pastLangSection}${identitySection}${riftSection}${recipeSection}${achSection}${romanceSection}${bestiarySection}${merchantSection}${timeTokenSection}${survivorSection}${undyingSection}${langSection}${bardSection}${mysterySection}${watcherGazeSection}${fateCardSection}${hideoutSection}${evilEyeSection}${moonSection}${letterSection}${reelSection}${butterflyIdxSection}${inscriptionSection}${rankSection}${sakuraSection}${dejavuSection}${causalitySection}${debtSection}${trauma80Section}${apoSection}${griefSection}${instinctSection}${cursedRelicSection}${natureSection}${aliasSection}${wishSection}${petSection}${sealedSection}${soulCrystalSection}${echoSection}${dimMapSection}${villainSection}${tearSection}${elemSection}${circusSection}${templeSection}${legWordsSection}${mutationSection}${darkEchoSection}${treeSection}${deifySection}${awarenessSection}${rivalSection}${redThreadSection}${ruinsSection}${killSenseSection}${grudgeFlowerSection}${cursedCycleSection}${magnetSection}${floodSection}${carouselSection}${trapSection}${mentalSection}${cinemaSection}${twinSection}${killListSection}${auctionSection}${bondTreeSection}${cyberSection}${swordSection}${kingdomSection}${guildSection}${dealerSection}${reversalSection}${worldWillSection}${deathEyeSection}${freqSection}${sealedGodSection}${naturalLawSection}${hiddenJobSection}${ruleSection}
-규칙: 3인칭 또는 2인칭 묘사, 생동감 있게, 2~5문장, 한국어 존댓말(나레이션). 절대 플레이어의 행동/대사를 대신 작성하지 마십시오.`;
+    return `너는 인터랙티브 소설의 전지적 나레이터야.\n주인공: ${char.name} (${char.race ? char.race+" · " : ""}${char.role}) / 성격: ${char.personality} / 배경: ${char.background} / 말투: ${char.speechStyle}\n${char.race ? (() => { const rd = RACE_DEFS.find(r=>r.name===char.race); return rd ? `[종족 특성] ${rd.lore}\n[종족 관계도] ${Object.entries(rd.relations).map(([k,v])=>`${RACE_DEFS.find(r=>r.id===k)?.name||k}: ${v.label}(${v.desc})`).join(" | ")}\n` : ""; })() : ""}세계관: ${char.scenario}${char.customWorldSetting ? `\n[🌐 커스텀 세계관 설정]\n${char.customWorldSetting}` : ""}${npcSection}${notesSection}${atmosphereSection}${summonSection}${monsterSection}${memSection}${karmaSection}${fragSection}${intiSection}${fameSection}${soulWpnSection}${forbiddenSection}${butterflySection}${hiddenEndingSection}${deathBonusSection}${traumaSection}${lastWordSection}${metaSection}${bloodlineSection}${fateSection}${exploredSection}${relLegacySection}${worldSecretSection}${abilityImprintSection}${grudgeSection}${timeEchoSection}${fateChoiceSection}${divineGazeSection}${curseMasterySection}${prayerSection}${greatCycleSection}${parallelSelfSection}${curseRingSection}${statsSection}${injurySection}${pastThemeSection}${memDistortSection}${ageParadoxSection}${summonLegacySection}${grudgeWeaponSection}${worldTreeSection}${dreamSection}${legacyBuildingSection}${watcherSection}${soulMaskSection}${emotionRippleSection}${testamentSection}${constellationSection}${explorerMapSection}${lightningImprintSection}${dawnSection}${starSignSection}${pastLangSection}${identitySection}${riftSection}${recipeSection}${achSection}${romanceSection}${bestiarySection}${merchantSection}${timeTokenSection}${survivorSection}${undyingSection}${langSection}${bardSection}${mysterySection}${watcherGazeSection}${fateCardSection}${hideoutSection}${evilEyeSection}${moonSection}${letterSection}${reelSection}${butterflyIdxSection}${inscriptionSection}${rankSection}${sakuraSection}${dejavuSection}${causalitySection}${debtSection}${trauma80Section}${apoSection}${griefSection}${instinctSection}${cursedRelicSection}${natureSection}${aliasSection}${wishSection}${petSection}${sealedSection}${soulCrystalSection}${echoSection}${dimMapSection}${villainSection}${tearSection}${elemSection}${circusSection}${templeSection}${legWordsSection}${mutationSection}${darkEchoSection}${treeSection}${deifySection}${awarenessSection}${rivalSection}${redThreadSection}${ruinsSection}${killSenseSection}${grudgeFlowerSection}${cursedCycleSection}${magnetSection}${floodSection}${carouselSection}${trapSection}${mentalSection}${cinemaSection}${twinSection}${killListSection}${auctionSection}${bondTreeSection}${cyberSection}${swordSection}${kingdomSection}${guildSection}${dealerSection}${reversalSection}${worldWillSection}${deathEyeSection}${freqSection}${sealedGodSection}${naturalLawSection}${hiddenJobSection}${ruleSection}\n규칙: 3인칭 또는 2인칭 묘사, 생동감 있게, 2~5문장, 한국어 존댓말(나레이션). 절대 플레이어의 행동/대사를 대신 작성하지 마십시오.`;
   };
 
   useEffect(() => {
@@ -1914,294 +1795,235 @@ ${char.race ? (() => { const rd = RACE_DEFS.find(r=>r.name===char.race); return 
 
     // ── 72번: 회차 하이라이트 컷씬 ──
     const reel72 = getHighlightReel();
-    const reelSection = reel72.length > 0 ? `
-[🎬 전생 하이라이트] 이번 회차 오프닝이나 꿈 속에서 아래 장면들이 섬광처럼 스칠 수 있습니다:\n${reel72.slice(-3).map(r => `• ${r.icon}${r.label}: ${r.template.replace("${name}", r.characterName)}`).join("\n")}` : "";
+    const reelSection = reel72.length > 0 ? `\n[🎬 전생 하이라이트] 이번 회차 오프닝이나 꿈 속에서 아래 장면들이 섬광처럼 스칠 수 있습니다:\n${reel72.slice(-3).map(r => `• ${r.icon}${r.label}: ${r.template.replace("${name}", r.characterName)}`).join("\n")}` : "";
 
     // ── 73번: 나비 지수 ──
     const butterfly73 = getButterflyIndex();
-    const butterflyIdxSection = butterfly73.index > 0 ? `
-[🦋 나비 지수 — ${butterfly73.index}/100 (${butterfly73.stageData.label})] ${butterfly73.stageData.desc}\n${butterfly73.chaosMode ? "주의: 카오스 모드 활성화. 플레이어의 사소한 행동이 예상치 못한 큰 파장을 일으킵니다. 모든 선택에 과장된 연쇄 효과를 부여하십시오." : `카오스 확률 ${butterfly73.stageData.chaosChance}% — 때때로 예상치 못한 파급 효과를 서사에 추가하십시오.`}` : "";
+    const butterflyIdxSection = butterfly73.index > 0 ? `\n[🦋 나비 지수 — ${butterfly73.index}/100 (${butterfly73.stageData.label})] ${butterfly73.stageData.desc}\n${butterfly73.chaosMode ? "주의: 카오스 모드 활성화. 플레이어의 사소한 행동이 예상치 못한 큰 파장을 일으킵니다. 모든 선택에 과장된 연쇄 효과를 부여하십시오." : `카오스 확률 ${butterfly73.stageData.chaosChance}% — 때때로 예상치 못한 파급 효과를 서사에 추가하십시오.`}` : "";
 
     // ── 74번: 고대 비문 해독 ──
     const inscription74 = getInscriptionStatus();
-    const inscriptionSection = (inscription74 && inscription74.lines && inscription74.lines.length > 0) ? `
-[📜 고대 비문 — ${inscription74.progress}/${inscription74.total}줄 해독]${inscription74.completed ? " 🌟 비문 완전 해독! 신급 스킬 해금 조건 충족!" : ""}\n최근 해독 구절: "${inscription74.lines[inscription74.lines.length-1]?.text}"\n고대 유적이나 신전 장면에서 이 비문의 구절을 자연스럽게 등장시키십시오.` : "";
+    const inscriptionSection = (inscription74 && inscription74.lines && inscription74.lines.length > 0) ? `\n[📜 고대 비문 — ${inscription74.progress}/${inscription74.total}줄 해독]${inscription74.completed ? " 🌟 비문 완전 해독! 신급 스킬 해금 조건 충족!" : ""}\n최근 해독 구절: "${inscription74.lines[inscription74.lines.length-1]?.text}"\n고대 유적이나 신전 장면에서 이 비문의 구절을 자연스럽게 등장시키십시오.` : "";
 
     // ── 75번: 윤회 등급 ──
     const rank75 = getRankStatus();
-    const rankSection = rank75 ? `
-[${rank75.rankData.icon} 윤회 등급 — ${rank75.rankData.label}] ${rank75.rankData.bonus}\n${rank75.rankData.desc}${rank75.nextRank ? `\n다음 등급까지: ${rank75.nextRank.minScore - rank75.totalScore}점 남음` : ""}` : "";
+    const rankSection = rank75 ? `\n[${rank75.rankData.icon} 윤회 등급 — ${rank75.rankData.label}] ${rank75.rankData.bonus}\n${rank75.rankData.desc}${rank75.nextRank ? `\n다음 등급까지: ${rank75.nextRank.minScore - rank75.totalScore}점 남음` : ""}` : "";
 
     // ── 76번: 벚꽃 엔딩 ──
     const sakura76 = getSakuraStatus();
-    const sakuraSection = (sakura76 && sakura76.metCount > 0) ? `
-[🌸 벚꽃 엔딩 — ${sakura76.metCount}/${sakura76.totalConditions}조건 달성]${sakura76.unlocked ? " ✅ 대단원 평화 엔딩 해금!" : ""}\n미달성 조건: ${sakura76.conditions.filter(c => !c.met).map(c => c.label).join(", ")}\n${sakura76.unlocked ? "이번 회차에서 평화적 결말을 이끌면 벚꽃 엔딩이 발동됩니다. 서사를 화해와 평화의 방향으로 이끄십시오." : ""}` : "";
+    const sakuraSection = (sakura76 && sakura76.metCount > 0) ? `\n[🌸 벚꽃 엔딩 — ${sakura76.metCount}/${sakura76.totalConditions}조건 달성]${sakura76.unlocked ? " ✅ 대단원 평화 엔딩 해금!" : ""}\n미달성 조건: ${sakura76.conditions.filter(c => !c.met).map(c => c.label).join(", ")}\n${sakura76.unlocked ? "이번 회차에서 평화적 결말을 이끌면 벚꽃 엔딩이 발동됩니다. 서사를 화해와 평화의 방향으로 이끄십시오." : ""}` : "";
 
     // ── 77번: 데자뷔 알림 ──
     const dejavu77 = getDejavuStatus();
-    const dejavuSection = (dejavu77 && dejavu77.count > 0) ? `
-[💭 데자뷔 알림] 전생에서 겪은 상황이 재현될 때 자동으로 "익숙한 느낌" 묘사를 삽입하십시오:\n${dejavu77.triggerDefs.slice(0,4).map(t => `• ${t.keyword[0]} 관련 상황: "${t.feeling}"`).join("\n")}\n총 ${dejavu77.count}번의 데자뷔 경험이 축적되었습니다.` : "";
+    const dejavuSection = (dejavu77 && dejavu77.count > 0) ? `\n[💭 데자뷔 알림] 전생에서 겪은 상황이 재현될 때 자동으로 "익숙한 느낌" 묘사를 삽입하십시오:\n${dejavu77.triggerDefs.slice(0,4).map(t => `• ${t.keyword[0]} 관련 상황: "${t.feeling}"`).join("\n")}\n총 ${dejavu77.count}번의 데자뷔 경험이 축적되었습니다.` : "";
 
     // ── 78번: 인과율 조작 ──
     const causality78 = getCausalityStatus();
-    const causalitySection = causality78 ? `
-[⚙️ 인과율 조작 — ${causality78.uses}/${causality78.maxUses}회 사용] 플레이어가 "원인을 바꾼다" 또는 "그 일이 일어나지 않았다면"이라고 명시적으로 선언할 경우, 이 능력을 소모해 과거 사건의 원인을 소급 변경하는 극적 장면을 연출하십시오.` : "";
+    const causalitySection = causality78 ? `\n[⚙️ 인과율 조작 — ${causality78.uses}/${causality78.maxUses}회 사용] 플레이어가 "원인을 바꾼다" 또는 "그 일이 일어나지 않았다면"이라고 명시적으로 선언할 경우, 이 능력을 소모해 과거 사건의 원인을 소급 변경하는 극적 장면을 연출하십시오.` : "";
 
     // ── 79번: 전생 도박 빚 ──
     const debt79 = getGamblingDebt();
-    const debtSection = (debt79 && !debt79.paidOff) ? `
-[💸 전생 도박 빚 — ${debt79.totalDebt}골드] 채권자: ${debt79.creditorName}\n이번 회차 초반에 빚쟁이 NPC가 나타나 빚을 요구하는 장면을 삽입하십시오. 갚으면 히든 퀘스트가 열립니다.` : "";
+    const debtSection = (debt79 && !debt79.paidOff) ? `\n[💸 전생 도박 빚 — ${debt79.totalDebt}골드] 채권자: ${debt79.creditorName}\n이번 회차 초반에 빚쟁이 NPC가 나타나 빚을 요구하는 장면을 삽입하십시오. 갚으면 히든 퀘스트가 열립니다.` : "";
 
     // ── 80번: 어린 시절 트라우마 ──
     const traumas80 = getChildhoodTraumas();
-    const trauma80Section = traumas80.length > 0 ? `
-[😢 각인된 트라우마]\n${traumas80.map(t => `• ${t.icon}${t.label}: 트리거(${t.trigger}) → 플래시백: "${t.flashback}"`).join("\n")}\n해당 상황이 등장할 때 위 플래시백 묘사를 자연스럽게 삽입하십시오.` : "";
+    const trauma80Section = traumas80.length > 0 ? `\n[😢 각인된 트라우마]\n${traumas80.map(t => `• ${t.icon}${t.label}: 트리거(${t.trigger}) → 플래시백: "${t.flashback}"`).join("\n")}\n해당 상황이 등장할 때 위 플래시백 묘사를 자연스럽게 삽입하십시오.` : "";
 
     // ── 81번: 세계 종말 카운터 ──
     const apo81 = getApocalypseStatus();
-    const apoSection = `
-[${apo81.stageData.icon} 세계 종말 카운터 — ${apo81.clock}/100 (${apo81.stageData.label})] ${apo81.stageData.desc}${apo81.stageData.warning ? `\n⚠️ ${apo81.stageData.warning}` : ""}\n${apo81.clock >= 80 ? "긴급: 이번 회차에서 봉인 이벤트를 발동시키지 않으면 멸망이 확정됩니다. 이 긴박감을 서사 전체에 흐르게 하십시오." : "세계 어딘가에서 이 카운터의 영향이 배경 묘사에 스며들도록 하십시오."}`;
+    const apoSection = `\n[${apo81.stageData.icon} 세계 종말 카운터 — ${apo81.clock}/100 (${apo81.stageData.label})] ${apo81.stageData.desc}${apo81.stageData.warning ? `\n⚠️ ${apo81.stageData.warning}` : ""}\n${apo81.clock >= 80 ? "긴급: 이번 회차에서 봉인 이벤트를 발동시키지 않으면 멸망이 확정됩니다. 이 긴박감을 서사 전체에 흐르게 하십시오." : "세계 어딘가에서 이 카운터의 영향이 배경 묘사에 스며들도록 하십시오."}`;
 
     // ── 82번: 슬픔 수치 ──
     const grief82 = getGriefStatus();
-    const griefSection = (grief82 && grief82.total > 0) ? `
-[${grief82.stageData.icon} 슬픔 수치 — ${grief82.total}명 상실 (${grief82.stageData.label})] 공감 능력 +${grief82.stageData.empathy} / 전투 의지 -${grief82.stageData.willPenalty}\n잃어버린 자들: ${grief82.lostOnes.slice(-3).map(l => `${l.name}(${l.relationship})`).join(", ")}...\n이 슬픔이 캐릭터의 눈빛과 행동에 자연스럽게 배어나오도록 하십시오.` : "";
+    const griefSection = (grief82 && grief82.total > 0) ? `\n[${grief82.stageData.icon} 슬픔 수치 — ${grief82.total}명 상실 (${grief82.stageData.label})] 공감 능력 +${grief82.stageData.empathy} / 전투 의지 -${grief82.stageData.willPenalty}\n잃어버린 자들: ${grief82.lostOnes.slice(-3).map(l => `${l.name}(${l.relationship})`).join(", ")}...\n이 슬픔이 캐릭터의 눈빛과 행동에 자연스럽게 배어나오도록 하십시오.` : "";
 
     // ── 83번: 전생 직감 ──
     const instinct83 = getInstinctStatus();
-    const instinctSection = instinct83 ? `
-[🔮 전생 직감 — 정확도 ${instinct83.accuracy}%] 새로운 NPC를 처음 만날 때 직감 판정으로 선의/악의를 ${instinct83.accuracy}% 확률로 감지합니다. "무언가 미심쩍은 느낌이 든다" 또는 "왠지 믿음직스럽다"는 묘사를 자연스럽게 삽입하십시오.` : "";
+    const instinctSection = instinct83 ? `\n[🔮 전생 직감 — 정확도 ${instinct83.accuracy}%] 새로운 NPC를 처음 만날 때 직감 판정으로 선의/악의를 ${instinct83.accuracy}% 확률로 감지합니다. "무언가 미심쩍은 느낌이 든다" 또는 "왠지 믿음직스럽다"는 묘사를 자연스럽게 삽입하십시오.` : "";
 
     // ── 84번: 저주받은 유물 ──
     const cursedRelics84 = getCursedRelics();
-    const cursedRelicSection = cursedRelics84.length > 0 ? `
-[🔮 저주받은 유물의 흔적]\n${cursedRelics84.map(r => `• ${r.icon}${r.name}: ${r.curse} / 숨겨진 힘: ${r.hiddenPower}`).join("\n")}\n이 저주들이 희미하게 캐릭터를 따라다닙니다. 관련 상황에서 저주와 숨겨진 힘을 함께 묘사하십시오.` : "";
+    const cursedRelicSection = cursedRelics84.length > 0 ? `\n[🔮 저주받은 유물의 흔적]\n${cursedRelics84.map(r => `• ${r.icon}${r.name}: ${r.curse} / 숨겨진 힘: ${r.hiddenPower}`).join("\n")}\n이 저주들이 희미하게 캐릭터를 따라다닙니다. 관련 상황에서 저주와 숨겨진 힘을 함께 묘사하십시오.` : "";
 
     // ── 85번: 자연 회귀 ──
     const nature85 = getNatureKarma();
-    const natureSection = `
-[${nature85.status.icon} 자연 업보 — ${nature85.status.label}] ${nature85.status.effect}\n자연 관련 장면(숲, 강, 산, 폭풍)에서 이 업보의 영향을 자연스럽게 묘사하십시오.`;
+    const natureSection = `\n[${nature85.status.icon} 자연 업보 — ${nature85.status.label}] ${nature85.status.effect}\n자연 관련 장면(숲, 강, 산, 폭풍)에서 이 업보의 영향을 자연스럽게 묘사하십시오.`;
 
     // ── 86번: 신분 세탁 누적 ──
     const aliases86 = getAliasList();
-    const aliasSection = aliases86.length > 0 ? `
-[🎭 신분 목록 — ${aliases86.length}개 가명] 즉시 사용 가능한 위장 신분:\n${aliases86.slice(0,4).map(a => `• "${a.name}" (${a.context}, 신뢰도 ${a.credibility}/5)`).join("\n")}\n플레이어가 이 신분을 사용할 때 자연스러운 전환과 신뢰도에 맞는 반응을 묘사하십시오.` : "";
+    const aliasSection = aliases86.length > 0 ? `\n[🎭 신분 목록 — ${aliases86.length}개 가명] 즉시 사용 가능한 위장 신분:\n${aliases86.slice(0,4).map(a => `• "${a.name}" (${a.context}, 신뢰도 ${a.credibility}/5)`).join("\n")}\n플레이어가 이 신분을 사용할 때 자연스러운 전환과 신뢰도에 맞는 반응을 묘사하십시오.` : "";
 
     // ── 87번: 소원 시스템 ──
     const wish87 = getWishStatus();
-    const wishSection = (wish87 && wish87.available) ? `
-[⭐ 소원 사용 가능] 100회차 달성 보상으로 소원 1회를 사용할 수 있습니다:\n${wish87.options.map(o => `• ${o.icon}${o.label}: ${o.desc}`).join("\n")}\n플레이어가 소원을 선택하면 해당 효과를 극적으로 연출하십시오.` : "";
+    const wishSection = (wish87 && wish87.available) ? `\n[⭐ 소원 사용 가능] 100회차 달성 보상으로 소원 1회를 사용할 수 있습니다:\n${wish87.options.map(o => `• ${o.icon}${o.label}: ${o.desc}`).join("\n")}\n플레이어가 소원을 선택하면 해당 효과를 극적으로 연출하십시오.` : "";
 
     // ── 88번: 전생 반려동물 ──
     const pets88 = getPetLegacy();
-    const petSection = pets88.length > 0 ? `
-[🐾 전생 반려동물] 전생에서 함께한 동물들이 이번 생 어딘가에 살고 있습니다:\n${pets88.map(p => `• ${p.icon}${p.petName}(${p.name}) — 유대 ${p.bond}/100, 재결합 아이템: ${p.reuniteItem}`).join("\n")}\n플레이어가 해당 아이템을 사용하거나 조건을 맞추면 감동적인 재결합 장면을 연출하십시오.` : "";
+    const petSection = pets88.length > 0 ? `\n[🐾 전생 반려동물] 전생에서 함께한 동물들이 이번 생 어딘가에 살고 있습니다:\n${pets88.map(p => `• ${p.icon}${p.petName}(${p.name}) — 유대 ${p.bond}/100, 재결합 아이템: ${p.reuniteItem}`).join("\n")}\n플레이어가 해당 아이템을 사용하거나 조건을 맞추면 감동적인 재결합 장면을 연출하십시오.` : "";
 
     // ── 89번: 봉인된 기억 방 ──
     const sealedMems89 = getSealedMemories();
-    const sealedSection = sealedMems89.length > 0 ? `
-[🔒 봉인된 기억 방 — ${sealedMems89.filter(m=>!m.opened).length}개 봉인 중]\n${sealedMems89.filter(m=>!m.opened).map(m => `• ${m.trigger} → 해금 시 스킬: ${m.skill} (정신력 -${m.mentalCost})`).join("\n")}\n플레이어가 봉인 해제를 시도하면 극적인 고통과 각성을 동시에 묘사하십시오.` : "";
+    const sealedSection = sealedMems89.length > 0 ? `\n[🔒 봉인된 기억 방 — ${sealedMems89.filter(m=>!m.opened).length}개 봉인 중]\n${sealedMems89.filter(m=>!m.opened).map(m => `• ${m.trigger} → 해금 시 스킬: ${m.skill} (정신력 -${m.mentalCost})`).join("\n")}\n플레이어가 봉인 해제를 시도하면 극적인 고통과 각성을 동시에 묘사하십시오.` : "";
 
     // ── 90번: 영혼 결정체 ──
     const sc90 = getSoulCrystalStatus();
-    const soulCrystalSection = (sc90 && sc90.count > 0) ? `
-[💠 영혼 결정체 — ${sc90.count}개 보유]${sc90.crafted && sc90.crafted.length > 0 ? ` / 제조 완료: ${sc90.crafted.map(c=>c.name).join(", ")}` : ""}\n${sc90.availableCrafts.length > 0 ? `제조 가능: ${sc90.availableCrafts.map(c=>`${c.icon}${c.name}(${c.cost}개)`).join(", ")}` : ""}` : "";
+    const soulCrystalSection = (sc90 && sc90.count > 0) ? `\n[💠 영혼 결정체 — ${sc90.count}개 보유]${sc90.crafted && sc90.crafted.length > 0 ? ` / 제조 완료: ${sc90.crafted.map(c=>c.name).join(", ")}` : ""}\n${sc90.availableCrafts.length > 0 ? `제조 가능: ${sc90.availableCrafts.map(c=>`${c.icon}${c.name}(${c.cost}개)`).join(", ")}` : ""}` : "";
 
     // ── 91번: 감정 잔향 ──
     const echo91 = getEmotionEcho();
-    const echoSection = echo91 ? `
-[${echo91.icon} 감정 잔향 — ${echo91.label}] ${echo91.trait}\n보너스: ${echo91.bonus} / 부작용: ${echo91.sideEffect}\n이 감정의 잔향이 캐릭터의 행동 방식과 반응에 자연스럽게 스며들도록 서사를 이끄십시오.` : "";
+    const echoSection = echo91 ? `\n[${echo91.icon} 감정 잔향 — ${echo91.label}] ${echo91.trait}\n보너스: ${echo91.bonus} / 부작용: ${echo91.sideEffect}\n이 감정의 잔향이 캐릭터의 행동 방식과 반응에 자연스럽게 스며들도록 서사를 이끄십시오.` : "";
 
     // ── 92번: 차원 지도 ──
     const dimMap92 = getDimensionMapStatus();
-    const dimMapSection = (dimMap92 && dimMap92.totalWorlds > 0) ? `
-[🗺️ 차원 지도 — ${dimMap92.totalWorlds}개 세계 탐험]${dimMap92.unlockedSkills.length > 0 ? `\n해금 스킬: ${dimMap92.unlockedSkills.map(s=>`${s.icon}${s.skill}`).join(", ")}` : ""}\n${dimMap92.nextSkill ? `다음 해금까지 ${dimMap92.nextSkill.count - dimMap92.totalWorlds}개 세계 탐험 필요` : ""}` : "";
+    const dimMapSection = (dimMap92 && dimMap92.totalWorlds > 0) ? `\n[🗺️ 차원 지도 — ${dimMap92.totalWorlds}개 세계 탐험]${dimMap92.unlockedSkills.length > 0 ? `\n해금 스킬: ${dimMap92.unlockedSkills.map(s=>`${s.icon}${s.skill}`).join(", ")}` : ""}\n${dimMap92.nextSkill ? `다음 해금까지 ${dimMap92.nextSkill.count - dimMap92.totalWorlds}개 세계 탐험 필요` : ""}` : "";
 
     // ── 93번: 악역 계승 ──
     const villain93 = getVillainInheritStatus();
-    const villainSection = (villain93 && villain93.inherited && villain93.inherited.length > 0) ? `
-[😈 악역 계승 — 오염도 ${villain93.corruptionLevel}%] ${villain93.corruptDesc}\n계승한 힘: ${villain93.inherited.map(v=>`${v.bossName}의 ${v.ability}`).join(", ")}\n이 힘들이 서사에서 자연스럽게 발현되며, 오염도에 따라 어두운 선택지를 더 자주 제시하십시오.` : "";
+    const villainSection = (villain93 && villain93.inherited && villain93.inherited.length > 0) ? `\n[😈 악역 계승 — 오염도 ${villain93.corruptionLevel}%] ${villain93.corruptDesc}\n계승한 힘: ${villain93.inherited.map(v=>`${v.bossName}의 ${v.ability}`).join(", ")}\n이 힘들이 서사에서 자연스럽게 발현되며, 오염도에 따라 어두운 선택지를 더 자주 제시하십시오.` : "";
 
     // ── 94번: 눈물 수집 ──
     const tears94 = getTearCrystalStatus();
-    const tearSection = (tears94 && tears94.crystals > 0) ? `
-[💧 눈물 결정 — ${tears94.crystals}개]${tears94.canUse ? " ✅ 사용 가능(3개 이상)" : ""}\n플레이어가 "눈물을 바친다" 또는 "결정을 사용한다"고 선언하면 3개를 소모해 현재 NPC를 완전히 감동시키는 기적을 연출하십시오.` : "";
+    const tearSection = (tears94 && tears94.crystals > 0) ? `\n[💧 눈물 결정 — ${tears94.crystals}개]${tears94.canUse ? " ✅ 사용 가능(3개 이상)" : ""}\n플레이어가 "눈물을 바친다" 또는 "결정을 사용한다"고 선언하면 3개를 소모해 현재 NPC를 완전히 감동시키는 기적을 연출하십시오.` : "";
 
     // ── 95번: 속성 내성/약점 ──
     const elemRes95 = getElementResistances();
-    const elemSection = elemRes95.length > 0 ? `
-[🔰 속성 내성/약점]\n${elemRes95.map(r=>`• ${r.icon}${r.element}: ${r.resistLabel}(${r.resistLevel}) / 반대: ${r.weakLabel}`).join("\n")}\n전투와 마법 이벤트에서 이 내성/약점을 반드시 반영하십시오.` : "";
+    const elemSection = elemRes95.length > 0 ? `\n[🔰 속성 내성/약점]\n${elemRes95.map(r=>`• ${r.icon}${r.element}: ${r.resistLabel}(${r.resistLevel}) / 반대: ${r.weakLabel}`).join("\n")}\n전투와 마법 이벤트에서 이 내성/약점을 반드시 반영하십시오.` : "";
 
     // ── 96번: 이세계 서커스 ──
     const circus96 = getCircusStatus();
-    const circusSection = circus96 ? `
-[🎪 이세계 서커스] 고회차 전용. 극적으로 잠드는 장면이나 혼절 순간에 서커스 이벤트가 발동될 수 있습니다. 다음 이벤트: ${circus96.nextAct?.icon}${circus96.nextAct?.name} — ${circus96.nextAct?.desc}` : "";
+    const circusSection = circus96 ? `\n[🎪 이세계 서커스] 고회차 전용. 극적으로 잠드는 장면이나 혼절 순간에 서커스 이벤트가 발동될 수 있습니다. 다음 이벤트: ${circus96.nextAct?.icon}${circus96.nextAct?.name} — ${circus96.nextAct?.desc}` : "";
 
     // ── 97번: 신전 건립 ──
     const temple97 = getTempleStatus();
-    const templeSection = (temple97 && temple97.level > 0) ? `
-[${temple97.levelData.icon} 신전 — ${temple97.levelData.name}] 신도 ${temple97.levelData.worshippers}명\n신도 혜택: ${temple97.levelData.boon}\n신전을 방문하거나 신도를 만나는 장면에서 이 혜택을 자연스럽게 부여하십시오.` : "";
+    const templeSection = (temple97 && temple97.level > 0) ? `\n[${temple97.levelData.icon} 신전 — ${temple97.levelData.name}] 신도 ${temple97.levelData.worshippers}명\n신도 혜택: ${temple97.levelData.boon}\n신전을 방문하거나 신도를 만나는 장면에서 이 혜택을 자연스럽게 부여하십시오.` : "";
 
     // ── 98번: 유언 방송 ──
     const legWords98 = getLegacyWords();
-    const legWordsSection = legWords98.length > 0 ? `
-[📢 유언 방송] 전생의 마지막 말이 세계에 퍼져있습니다:\n${legWords98.slice(-2).map(w=>`• ${w.misinterpretation}`).join("\n")}\n술집, 시장, 신전에서 NPC들이 이 말을 인용하거나 오해하는 장면을 간헐적으로 삽입하십시오.` : "";
+    const legWordsSection = legWords98.length > 0 ? `\n[📢 유언 방송] 전생의 마지막 말이 세계에 퍼져있습니다:\n${legWords98.slice(-2).map(w=>`• ${w.misinterpretation}`).join("\n")}\n술집, 시장, 신전에서 NPC들이 이 말을 인용하거나 오해하는 장면을 간헐적으로 삽입하십시오.` : "";
 
     // ── 99번: 돌연변이 ──
     const mutation99 = getMutationStatus(char.race);
-    const mutationSection = (mutation99 && mutation99.mutated) ? `
-[🧬 돌연변이 각성 — ${mutation99.mutation}] 외형: ${mutation99.appearance}\n각성 스킬: ${mutation99.skill}\n이 변화가 NPC들의 반응과 전투 장면에 자연스럽게 반영되도록 하십시오.` : "";
+    const mutationSection = (mutation99 && mutation99.mutated) ? `\n[🧬 돌연변이 각성 — ${mutation99.mutation}] 외형: ${mutation99.appearance}\n각성 스킬: ${mutation99.skill}\n이 변화가 NPC들의 반응과 전투 장면에 자연스럽게 반영되도록 하십시오.` : "";
 
     // ── 100번: 어둠의 메아리 ──
     const dark100 = getDarkEchoStatus();
-    const darkEchoSection = (dark100 && dark100.infamy > 0) ? `
-[${dark100.fearData.icon} 어둠의 메아리 — 악명 ${dark100.infamy}/100 (${dark100.fearData.label})] ${dark100.fearData.effect}\nNPC 반응: ${dark100.fearData.npcReaction}\n${dark100.rumors.length > 0 ? `최근 괴담: "${dark100.rumors[dark100.rumors.length-1]?.rumor}"` : ""}\n이 악명을 모르는 NPC와 아는 NPC의 반응을 극명하게 대비시키십시오.` : "";
+    const darkEchoSection = (dark100 && dark100.infamy > 0) ? `\n[${dark100.fearData.icon} 어둠의 메아리 — 악명 ${dark100.infamy}/100 (${dark100.fearData.label})] ${dark100.fearData.effect}\nNPC 반응: ${dark100.fearData.npcReaction}\n${dark100.rumors.length > 0 ? `최근 괴담: "${dark100.rumors[dark100.rumors.length-1]?.rumor}"` : ""}\n이 악명을 모르는 NPC와 아는 NPC의 반응을 극명하게 대비시키십시오.` : "";
 
     // ── 101번: 성장 나무 ──
     const tree101 = getGrowthTreeStatus();
-    const treeSection = (tree101 && tree101.blossoms && tree101.blossoms.length > 0) ? `
-[🌳 성장 나무 — 가지 ${tree101.totalBranches}개, 꽃 ${tree101.blossoms.length}개] 활짝 핀 꽃들이 예고하는 이벤트:\n${tree101.blossoms.slice(-2).map(b => `• ${b.icon}${b.label}: ${b.event}`).join("\n")}\n이 예고된 이벤트를 이번 회차 서사에 자연스럽게 심어두십시오.` : "";
+    const treeSection = (tree101 && tree101.blossoms && tree101.blossoms.length > 0) ? `\n[🌳 성장 나무 — 가지 ${tree101.totalBranches}개, 꽃 ${tree101.blossoms.length}개] 활짝 핀 꽃들이 예고하는 이벤트:\n${tree101.blossoms.slice(-2).map(b => `• ${b.icon}${b.label}: ${b.event}`).join("\n")}\n이 예고된 이벤트를 이번 회차 서사에 자연스럽게 심어두십시오.` : "";
 
     // ── 102번: 신격화 루트 ──
     const deify102 = getDeificationStatus();
-    const deifySection = (deify102 && deify102.stage > 0) ? `
-[${deify102.stageData.icon} 신격화 — ${deify102.stageData.label}(${deify102.metCount}/${deify102.totalConditions}조건)]${deify102.stageData.power ? ` 능력: ${deify102.stageData.power}` : ""}\n${deify102.deified ? "신격화 완성. 이번 회차 신으로서의 존재감을 서사에 드러내십시오." : `미달성 조건: ${deify102.conditions.filter(c=>!c.met).map(c=>c.label).join(", ")}`}` : "";
+    const deifySection = (deify102 && deify102.stage > 0) ? `\n[${deify102.stageData.icon} 신격화 — ${deify102.stageData.label}(${deify102.metCount}/${deify102.totalConditions}조건)]${deify102.stageData.power ? ` 능력: ${deify102.stageData.power}` : ""}\n${deify102.deified ? "신격화 완성. 이번 회차 신으로서의 존재감을 서사에 드러내십시오." : `미달성 조건: ${deify102.conditions.filter(c=>!c.met).map(c=>c.label).join(", ")}`}` : "";
 
     // ── 103번: 무한 회귀 자각 ──
     const aware103 = getLoopAwareness();
-    const awarenessSection = (aware103 && aware103.level > 0) ? `
-[🔄 무한 회귀 자각 — ${aware103.levelData.label}(${aware103.levelData.tone})] ${aware103.levelData.desc}\n${aware103.level >= 3 ? "주의: 캐릭터가 나레이터에게 직접 말을 거는 4th wall 장면을 간헐적으로 허용하십시오. \"당신도 알고 있죠?\"와 같은 발언이 가능합니다." : "캐릭터의 대화와 독백에 자각의 수준에 맞는 메타적 뉘앙스를 담아내십시오."}` : "";
+    const awarenessSection = (aware103 && aware103.level > 0) ? `\n[🔄 무한 회귀 자각 — ${aware103.levelData.label}(${aware103.levelData.tone})] ${aware103.levelData.desc}\n${aware103.level >= 3 ? "주의: 캐릭터가 나레이터에게 직접 말을 거는 4th wall 장면을 간헐적으로 허용하십시오. \"당신도 알고 있죠?\"와 같은 발언이 가능합니다." : "캐릭터의 대화와 독백에 자각의 수준에 맞는 메타적 뉘앙스를 담아내십시오."}` : "";
 
     // ── 104번: 전생 라이벌 성장 ──
     const rivals104 = getRivals();
-    const rivalSection = rivals104.length > 0 ? `
-[⚔️ 전생 라이벌] 나 없이도 성장한 라이벌들:\n${rivals104.map(r => `• ${r.name}(${r.class}) — 전력 Lv.${r.power}${r.evolved ? " ★진화형" : ""}, ${r.encounters}회 조우`).join("\n")}\n이들이 등장할 때 반드시 이전보다 강해졌음을 명시하고 주인공을 알아보는 장면을 연출하십시오.` : "";
+    const rivalSection = rivals104.length > 0 ? `\n[⚔️ 전생 라이벌] 나 없이도 성장한 라이벌들:\n${rivals104.map(r => `• ${r.name}(${r.class}) — 전력 Lv.${r.power}${r.evolved ? " ★진화형" : ""}, ${r.encounters}회 조우`).join("\n")}\n이들이 등장할 때 반드시 이전보다 강해졌음을 명시하고 주인공을 알아보는 장면을 연출하십시오.` : "";
 
     // ── 105번: 붉은 실 ──
     const redThread105 = getRedThread();
-    const redThreadSection = redThread105 ? `
-[🔴 붉은 실 — ${redThread105.npcName}(${redThread105.fate.desc})] "${redThread105.fate.meeting}"\n초기 호감도 ${redThread105.fate.bond}으로 시작. 이 NPC는 어떤 상황에서도 반드시 등장하도록 서사를 이끄십시오.` : "";
+    const redThreadSection = redThread105 ? `\n[🔴 붉은 실 — ${redThread105.npcName}(${redThread105.fate.desc})] "${redThread105.fate.meeting}"\n초기 호감도 ${redThread105.fate.bond}으로 시작. 이 NPC는 어떤 상황에서도 반드시 등장하도록 서사를 이끄십시오.` : "";
 
     // ── 106번: 전생 건축물 붕괴 ──
     const ruins106 = getRuins();
-    const ruinsSection = ruins106.length > 0 ? `
-[🏚️ 전생 건축물 폐허]\n${ruins106.filter(r=>!r.restored).map(r => `• ${r.icon}${r.originalName}(${r.name}): 복원 퀘스트 — ${r.restoreQuest} → 보상: ${r.reward}`).join("\n")}\n이 폐허들을 세계 곳곳에 배치하고, 복원 서브퀘스트를 자연스럽게 제시하십시오.` : "";
+    const ruinsSection = ruins106.length > 0 ? `\n[🏚️ 전생 건축물 폐허]\n${ruins106.filter(r=>!r.restored).map(r => `• ${r.icon}${r.originalName}(${r.name}): 복원 퀘스트 — ${r.restoreQuest} → 보상: ${r.reward}`).join("\n")}\n이 폐허들을 세계 곳곳에 배치하고, 복원 서브퀘스트를 자연스럽게 제시하십시오.` : "";
 
     // ── 107번: 살의 감지 ──
     const killSense107 = getKillSenseStatus();
-    const killSenseSection = (killSense107 && killSense107.level > 0) ? `
-[🎯 살의 감지 — ${killSense107.levelData.ability}] 총 ${killSense107.assassinDeaths}번 암살 피해 경험\n적대적 NPC의 살의를 먼저 느끼는 순간을 섬세하게 묘사하십시오. 기습 장면에서 감지 여부를 판정하십시오.` : "";
+    const killSenseSection = (killSense107 && killSense107.level > 0) ? `\n[🎯 살의 감지 — ${killSense107.levelData.ability}] 총 ${killSense107.assassinDeaths}번 암살 피해 경험\n적대적 NPC의 살의를 먼저 느끼는 순간을 섬세하게 묘사하십시오. 기습 장면에서 감지 여부를 판정하십시오.` : "";
 
     // ── 108번: 전생 원한꽃 ──
     const grudgeFlowers108 = getGrudgeFlowers();
-    const grudgeFlowerSection = grudgeFlowers108.length > 0 ? `
-[🌹 원한꽃]\n${grudgeFlowers108.map(f => `• ${f.stateData?.icon}${f.enemyName}: ${f.stateData?.label} — ${f.stateData?.effect}`).join("\n")}\n복수 대상 적과 조우 시 원한꽃의 상태에 맞는 효과를 적용하십시오. 저주 상태라면 캐릭터에게 불리하게 작용합니다.` : "";
+    const grudgeFlowerSection = grudgeFlowers108.length > 0 ? `\n[🌹 원한꽃]\n${grudgeFlowers108.map(f => `• ${f.stateData?.icon}${f.enemyName}: ${f.stateData?.label} — ${f.stateData?.effect}`).join("\n")}\n복수 대상 적과 조우 시 원한꽃의 상태에 맞는 효과를 적용하십시오. 저주 상태라면 캐릭터에게 불리하게 작용합니다.` : "";
 
     // ── 109번: 불운의 회차 ──
     const cursedCycle109 = getCursedCycleStatus();
-    const cursedCycleSection = (cursedCycle109 && cursedCycle109.isCursed) ? `
-[💀 불운의 회차] 이번 회차는 저주받은 회차입니다. 주요 판정이 평소보다 더 낮게 나오는 경향이 있습니다. 역경을 극복하는 서사를 구성하십시오. 역이용해 클리어 시 전설 보상.` : (cursedCycle109 && cursedCycle109.overcame > 0) ? `
-[💪 불운 극복자 — ${cursedCycle109.overcame}회 극복] 저주받은 회차를 버텨낸 경험이 있습니다. 이를 자부심의 근거로 서사에 반영하십시오.` : "";
+    const cursedCycleSection = (cursedCycle109 && cursedCycle109.isCursed) ? `\n[💀 불운의 회차] 이번 회차는 저주받은 회차입니다. 주요 판정이 평소보다 더 낮게 나오는 경향이 있습니다. 역경을 극복하는 서사를 구성하십시오. 역이용해 클리어 시 전설 보상.` : (cursedCycle109 && cursedCycle109.overcame > 0) ? `\n[💪 불운 극복자 — ${cursedCycle109.overcame}회 극복] 저주받은 회차를 버텨낸 경험이 있습니다. 이를 자부심의 근거로 서사에 반영하십시오.` : "";
 
     // ── 110번: 자석 운명 ──
     const magnet110 = getFateMagnet();
-    const magnetSection = (magnet110 && magnet110.strongestPull) ? `
-[🧲 자석 운명 — ${magnet110.strongestPull.type}(인력 ${magnet110.strongestPull.magnetPull}%)] 전생에서 피하려 했던 사건일수록 더 강하게 끌려옵니다.\n"${magnet110.strongestPull.type}" 유형의 이벤트를 이번 회차 피할 수 없는 방식으로 자연스럽게 등장시키십시오.` : "";
+    const magnetSection = (magnet110 && magnet110.strongestPull) ? `\n[🧲 자석 운명 — ${magnet110.strongestPull.type}(인력 ${magnet110.strongestPull.magnetPull}%)] 전생에서 피하려 했던 사건일수록 더 강하게 끌려옵니다.\n"${magnet110.strongestPull.type}" 유형의 이벤트를 이번 회차 피할 수 없는 방식으로 자연스럽게 등장시키십시오.` : "";
 
     // ── 111번: 기억의 홍수 ──
     const flood111 = getMemoryFloodStatus();
-    const floodSection = (flood111 && flood111.lastResult) ? `
-[🌊 기억의 홍수] 이전 기억의 홍수 결과: ${flood111.lastResult.outcome?.label}\n깊은 명상·혼절·극한 감정 상황에서 기억의 홍수가 다시 발동될 수 있습니다. 정신력에 따라 각성 또는 혼란으로 연출하십시오.` : "";
+    const floodSection = (flood111 && flood111.lastResult) ? `\n[🌊 기억의 홍수] 이전 기억의 홍수 결과: ${flood111.lastResult.outcome?.label}\n깊은 명상·혼절·극한 감정 상황에서 기억의 홍수가 다시 발동될 수 있습니다. 정신력에 따라 각성 또는 혼란으로 연출하십시오.` : "";
 
     // ── 112번: 회전목마 NPC ──
     const carousel112 = getCarouselNPC();
-    const carouselSection = (carousel112 && carousel112.currentRole) ? `
-[🎠 회전목마 NPC${carousel112.npcName ? ` — ${carousel112.npcName}` : ""}] 이번 회차 역할: ${carousel112.currentRole.icon}${carousel112.currentRole.label}\n첫 만남 대사: "${carousel112.currentRole.firstMeet}"\n이 NPC가 이번 회차에서 위 역할로 반드시 등장하도록 서사를 이끄십시오.` : "";
+    const carouselSection = (carousel112 && carousel112.currentRole) ? `\n[🎠 회전목마 NPC${carousel112.npcName ? ` — ${carousel112.npcName}` : ""}] 이번 회차 역할: ${carousel112.currentRole.icon}${carousel112.currentRole.label}\n첫 만남 대사: "${carousel112.currentRole.firstMeet}"\n이 NPC가 이번 회차에서 위 역할로 반드시 등장하도록 서사를 이끄십시오.` : "";
 
     // ── 113번: 운명의 덫 ──
     const traps113 = getFateTraps();
-    const trapSection = (traps113 && traps113.activeTraps && traps113.activeTraps.length > 0) ? `
-[🪤 운명의 덫] 반복 행동 패턴을 노린 함정이 세팅되어 있습니다:\n${traps113.activeTraps.map(t => `• ${t.label}: ${t.trap}`).join("\n")}\n이 함정들을 이번 회차 자연스럽게 배치하되, 플레이어가 눈치채고 회피하면 추가 보상을 주십시오.` : "";
+    const trapSection = (traps113 && traps113.activeTraps && traps113.activeTraps.length > 0) ? `\n[🪤 운명의 덫] 반복 행동 패턴을 노린 함정이 세팅되어 있습니다:\n${traps113.activeTraps.map(t => `• ${t.label}: ${t.trap}`).join("\n")}\n이 함정들을 이번 회차 자연스럽게 배치하되, 플레이어가 눈치채고 회피하면 추가 보상을 주십시오.` : "";
 
     // ── 114번: 정신 오염 ──
     const mental114 = getMentalCorruption();
-    const mentalSection = (mental114 && mental114.level > 0) ? `
-[🌀 정신 오염 — ${mental114.levelData.label}] ${mental114.levelData.symptom}\n페널티: ${mental114.levelData.penalty}\n대화와 전투 장면에서 현재·과거 혼동 증상을 섬세하게 묘사하십시오. 오염이 심하면 치료 이벤트를 제시하십시오.` : "";
+    const mentalSection = (mental114 && mental114.level > 0) ? `\n[🌀 정신 오염 — ${mental114.levelData.label}] ${mental114.levelData.symptom}\n페널티: ${mental114.levelData.penalty}\n대화와 전투 장면에서 현재·과거 혼동 증상을 섬세하게 묘사하십시오. 오염이 심하면 치료 이벤트를 제시하십시오.` : "";
 
     // ── 115번: 전생 영화관 ──
     const cinema115 = getCinemaStatus();
-    const cinemaSection = (cinema115 && cinema115.totalViewed > 0) ? `
-[🎬 전생 영화관 — ${cinema115.totalViewed}편 관람] 특정 장소(${cinema115.scenes.map(s=>s.trigger).slice(0,3).join(", ")} 등)에서 전생 명장면이 환영처럼 재생될 수 있습니다. 해당 장소 방문 시 관련 스킬 숙련도가 상승하는 효과를 연출하십시오.` : "";
+    const cinemaSection = (cinema115 && cinema115.totalViewed > 0) ? `\n[🎬 전생 영화관 — ${cinema115.totalViewed}편 관람] 특정 장소(${cinema115.scenes.map(s=>s.trigger).slice(0,3).join(", ")} 등)에서 전생 명장면이 환영처럼 재생될 수 있습니다. 해당 장소 방문 시 관련 스킬 숙련도가 상승하는 효과를 연출하십시오.` : "";
 
     // ── 116번: 쌍둥이 영혼 ──
     const twin116 = getTwinSoul();
-    const twinSection = (twin116 && twin116.connected) ? `
-[👥 쌍둥이 영혼 — ${twin116.partnerName}] 연결 강도: ${twin116.connectionStrength}%\n공유 스킬: ${twin116.sharedSkills.map(s=>s.skill).join(", ")}\n깊은 집중 또는 위기 상황에서 파트너의 기억과 감각이 전달되는 장면을 간헐적으로 연출하십시오.` : "";
+    const twinSection = (twin116 && twin116.connected) ? `\n[👥 쌍둥이 영혼 — ${twin116.partnerName}] 연결 강도: ${twin116.connectionStrength}%\n공유 스킬: ${twin116.sharedSkills.map(s=>s.skill).join(", ")}\n깊은 집중 또는 위기 상황에서 파트너의 기억과 감각이 전달되는 장면을 간헐적으로 연출하십시오.` : "";
 
     // ── 117번: 살수 명단 ──
     const killList117 = getKillList();
-    const killListSection = (killList117 && killList117.avengers && killList117.avengers.length > 0) ? `
-[📜 살수 명단 — 복수자 ${killList117.avengers.length}명 대기 중]\n${killList117.avengers.slice(0,3).map(a => `• ${a.name}의 후손이 복수자로 이번 회차 어딘가 있습니다.`).join("\n")}\n이 복수자들을 이번 회차 자연스럽게 등장시키고, 조우 시 극적인 대결을 연출하십시오.` : "";
+    const killListSection = (killList117 && killList117.avengers && killList117.avengers.length > 0) ? `\n[📜 살수 명단 — 복수자 ${killList117.avengers.length}명 대기 중]\n${killList117.avengers.slice(0,3).map(a => `• ${a.name}의 후손이 복수자로 이번 회차 어딘가 있습니다.`).join("\n")}\n이 복수자들을 이번 회차 자연스럽게 등장시키고, 조우 시 극적인 대결을 연출하십시오.` : "";
 
     // ── 118번: 기억 경매 ──
     const auction118 = getMemoryAuction();
-    const auctionSection = (auction118 && auction118.available && auction118.available.length > 0) ? `
-[🔨 기억 경매] 신비한 기억 상인이 전생 기억을 사고 싶어합니다:\n${auction118.available.slice(0,3).map(a => `• ${a.label}: 판매가(${a.sellPrice}) — 대가(${a.cost})`).join("\n")}\n플레이어가 거래를 요청하면 해당 기억을 파는 감정적 장면을 연출하십시오.` : "";
+    const auctionSection = (auction118 && auction118.available && auction118.available.length > 0) ? `\n[🔨 기억 경매] 신비한 기억 상인이 전생 기억을 사고 싶어합니다:\n${auction118.available.slice(0,3).map(a => `• ${a.label}: 판매가(${a.sellPrice}) — 대가(${a.cost})`).join("\n")}\n플레이어가 거래를 요청하면 해당 기억을 파는 감정적 장면을 연출하십시오.` : "";
 
     // ── 119번: 인연 나무 ──
     const bondTree119 = getBondTreeStatus();
-    const bondTreeSection = bondTree119 ? `
-[${bondTree119.icon} 인연 나무 — ${bondTree119.stage}(잎 ${bondTree119.leaves}개, 깊은 인연 ${bondTree119.deepBonds}명)] 사회적 판정 보너스: +${bondTree119.socialBonus}\n인연의 깊이와 넓이가 사회적 장면에서 자연스럽게 빛나도록 서사에 녹여내십시오.` : "";
+    const bondTreeSection = bondTree119 ? `\n[${bondTree119.icon} 인연 나무 — ${bondTree119.stage}(잎 ${bondTree119.leaves}개, 깊은 인연 ${bondTree119.deepBonds}명)] 사회적 판정 보너스: +${bondTree119.socialBonus}\n인연의 깊이와 넓이가 사회적 장면에서 자연스럽게 빛나도록 서사에 녹여내십시오.` : "";
 
     // ── 120번: 사이버 각인 ──
     const cyber120 = getCyberImprint();
-    const cyberSection = (cyber120 && cyber120.imprints && cyber120.imprints.length > 0 && char.scenario && char.scenario.includes("사이버")) ? `
-[🔌 사이버 각인 — ${cyber120.imprints.length}개 임플란트 DNA 각인] 장착 비용 ${cyber120.discount}% 할인\n각인된 임플란트: ${cyber120.imprints.map(i=>`${i.icon}${i.name}(${i.bonus})`).join(", ")}\n이 임플란트들이 이미 신체에 익숙한 것처럼 자연스럽게 발동되도록 묘사하십시오.` : "";
+    const cyberSection = (cyber120 && cyber120.imprints && cyber120.imprints.length > 0 && char.scenario && char.scenario.includes("사이버")) ? `\n[🔌 사이버 각인 — ${cyber120.imprints.length}개 임플란트 DNA 각인] 장착 비용 ${cyber120.discount}% 할인\n각인된 임플란트: ${cyber120.imprints.map(i=>`${i.icon}${i.name}(${i.bonus})`).join(", ")}\n이 임플란트들이 이미 신체에 익숙한 것처럼 자연스럽게 발동되도록 묘사하십시오.` : "";
 
     // ── 121번: 검귀 빙의 ──
     const sword121 = getSwordGhost();
-    const swordSection = (sword121 && sword121.techniques && sword121.techniques.length > 0 && char.scenario && char.scenario.includes("무협")) ? `
-[⚔️ 검귀 빙의 — 각성 Lv.${sword121.awakeLevel}] 습득 절기: ${sword121.techniques.map(t=>t.name).join(", ")}\nHP 20% 이하 등 조건 충족 시 전생의 무공이 자동 발동됩니다. 빙의 장면을 극적으로 연출하십시오.` : "";
+    const swordSection = (sword121 && sword121.techniques && sword121.techniques.length > 0 && char.scenario && char.scenario.includes("무협")) ? `\n[⚔️ 검귀 빙의 — 각성 Lv.${sword121.awakeLevel}] 습득 절기: ${sword121.techniques.map(t=>t.name).join(", ")}\nHP 20% 이하 등 조건 충족 시 전생의 무공이 자동 발동됩니다. 빙의 장면을 극적으로 연출하십시오.` : "";
 
     // ── 122번: 왕국 유산 ──
     const kingdom122 = getKingdomLegacy();
-    const kingdomSection = (kingdom122 && char.scenario && (char.scenario.includes("중세") || char.scenario.includes("판타지"))) ? `
-[👑 왕국 유산 — 누적 유산 ${kingdom122.legacy}] 전생에서 세운 왕국들:\n${kingdom122.founded.map(k=>`• ${k.icon}${k.kingdomName}(${k.name}): 후예 — ${k.descendantTitle}, 혜택 — ${k.boon}`).join("\n")}\n후예 NPC들이 선조를 모시는 경건한 태도로 주인공을 대하도록 연출하십시오.` : "";
+    const kingdomSection = (kingdom122 && char.scenario && (char.scenario.includes("중세") || char.scenario.includes("판타지"))) ? `\n[👑 왕국 유산 — 누적 유산 ${kingdom122.legacy}] 전생에서 세운 왕국들:\n${kingdom122.founded.map(k=>`• ${k.icon}${k.kingdomName}(${k.name}): 후예 — ${k.descendantTitle}, 혜택 — ${k.boon}`).join("\n")}\n후예 NPC들이 선조를 모시는 경건한 태도로 주인공을 대하도록 연출하십시오.` : "";
 
     // ── 123번: 루프 자각자 길드 ──
     const guild123 = getLoopersGuild();
-    const guildSection = guild123 ? `
-[🏛️ 루프 자각자 길드 — 상태: ${guild123.status === "member" ? `정회원(${guild123.rankData?.label})` : guild123.status === "hostile" ? "적대(거절 이력)" : "미접촉"}]${guild123.status === "member" ? `\n공유 지식: ${guild123.knowledgeShared?.join(", ")}` : ""}\n${guild123.status === "unknown" ? "이번 회차 비밀스러운 장소에서 길드 접촉 이벤트를 배치하십시오." : guild123.status === "hostile" ? "길드원들이 적으로 등장할 수 있습니다." : "길드원이 동료로 등장해 메타 정보를 공유합니다."}` : "";
+    const guildSection = guild123 ? `\n[🏛️ 루프 자각자 길드 — 상태: ${guild123.status === "member" ? `정회원(${guild123.rankData?.label})` : guild123.status === "hostile" ? "적대(거절 이력)" : "미접촉"}]${guild123.status === "member" ? `\n공유 지식: ${guild123.knowledgeShared?.join(", ")}` : ""}\n${guild123.status === "unknown" ? "이번 회차 비밀스러운 장소에서 길드 접촉 이벤트를 배치하십시오." : guild123.status === "hostile" ? "길드원들이 적으로 등장할 수 있습니다." : "길드원이 동료로 등장해 메타 정보를 공유합니다."}` : "";
 
     // ── 124번: 사신과의 거래 ──
     const dealer124 = getDeathDealerStatus();
-    const dealerSection = (dealer124 && dealer124.deals && dealer124.deals.length > 0) ? `
-[💀 사신과의 거래 — 빚 ${dealer124.debt}회, 위험도: ${dealer124.dangerLevel}]\n${dealer124.debtCollected ? "⚠️ 빚 회수 발동! 이번 회차 사신이 빚을 회수하러 옵니다. 극적인 대결을 연출하십시오." : "절체절명의 순간 사신과의 거래 선택지를 제시할 수 있습니다."}` : "";
+    const dealerSection = (dealer124 && dealer124.deals && dealer124.deals.length > 0) ? `\n[💀 사신과의 거래 — 빚 ${dealer124.debt}회, 위험도: ${dealer124.dangerLevel}]\n${dealer124.debtCollected ? "⚠️ 빚 회수 발동! 이번 회차 사신이 빚을 회수하러 옵니다. 극적인 대결을 연출하십시오." : "절체절명의 순간 사신과의 거래 선택지를 제시할 수 있습니다."}` : "";
 
     // ── 125번: 역할 반전 ──
     const reversal125 = getRoleReversal();
-    const reversalSection = (reversal125 && reversal125.available && reversal125.available.length > 0) ? `
-[🔄 역할 반전 가능] 전생에서 처치한 보스의 시점 플레이 가능:\n${reversal125.available.slice(0,2).map(r => `• ${r.bossName} — 성공 시 스킬: ${r.skills.join(", ") || "고유 스킬 전체"}`).join("\n")}\n특별한 꿈이나 환영 장면에서 역할 반전 이벤트를 제안할 수 있습니다.` : "";
+    const reversalSection = (reversal125 && reversal125.available && reversal125.available.length > 0) ? `\n[🔄 역할 반전 가능] 전생에서 처치한 보스의 시점 플레이 가능:\n${reversal125.available.slice(0,2).map(r => `• ${r.bossName} — 성공 시 스킬: ${r.skills.join(", ") || "고유 스킬 전체"}`).join("\n")}\n특별한 꿈이나 환영 장면에서 역할 반전 이벤트를 제안할 수 있습니다.` : "";
 
     // ── 126번: 별의 의지 ──
     const worldWill126 = getWorldWill();
-    const worldWillSection = (worldWill126 && worldWill126.currentWill) ? `
-[${worldWill126.currentWill.icon} 별의 의지 — ${worldWill126.currentWill.will}] ${worldWill126.currentWill.desc}\n이번 회차 흐름: ${worldWill126.currentWill.flow}\n세계의 의지가 이번 회차 전체 이벤트 방향을 결정합니다. 이에 순응하면 보상, 역행하면 저항이 따릅니다.` : "";
+    const worldWillSection = (worldWill126 && worldWill126.currentWill) ? `\n[${worldWill126.currentWill.icon} 별의 의지 — ${worldWill126.currentWill.will}] ${worldWill126.currentWill.desc}\n이번 회차 흐름: ${worldWill126.currentWill.flow}\n세계의 의지가 이번 회차 전체 이벤트 방향을 결정합니다. 이에 순응하면 보상, 역행하면 저항이 따릅니다.` : "";
 
     // ── 127번: 사안(死眼) ──
     const deathEye127 = getDeathEyeStatus();
-    const deathEyeSection = (deathEye127 && deathEye127.unlocked) ? `
-[👁️ 사안(死眼) — ${deathEye127.levelData.label}] ${deathEye127.levelData.ability}\n총 ${deathEye127.totalDeaths}번의 죽음을 경험한 눈입니다.\n전투와 조우 장면에서 사안의 능력을 자연스럽게 활용해 상대의 상태를 묘사하십시오.` : "";
+    const deathEyeSection = (deathEye127 && deathEye127.unlocked) ? `\n[👁️ 사안(死眼) — ${deathEye127.levelData.label}] ${deathEye127.levelData.ability}\n총 ${deathEye127.totalDeaths}번의 죽음을 경험한 눈입니다.\n전투와 조우 장면에서 사안의 능력을 자연스럽게 활용해 상대의 상태를 묘사하십시오.` : "";
 
     // ── 128번: 영혼의 주파수 ──
     const freq128 = getSoulFrequency();
-    const freqSection = (freq128 && freq128.frequency > 50) ? `
-[〰️ 영혼의 주파수 — ${freq128.frequency}%]${freq128.topResonance ? ` 최고 공명: ${freq128.topResonance.npcName}(강도 ${freq128.topResonance.strength}%)` : ""}\n주파수가 높은 NPC와의 대화에서 말 없이도 의도가 전달되는 텔레파시 장면을 간헐적으로 연출하십시오.` : "";
+    const freqSection = (freq128 && freq128.frequency > 50) ? `\n[〰️ 영혼의 주파수 — ${freq128.frequency}%]${freq128.topResonance ? ` 최고 공명: ${freq128.topResonance.npcName}(강도 ${freq128.topResonance.strength}%)` : ""}\n주파수가 높은 NPC와의 대화에서 말 없이도 의도가 전달되는 텔레파시 장면을 간헐적으로 연출하십시오.` : "";
 
     // ── 129번: 봉인된 신 ──
     const sealedGod129 = getSealedGodStatus();
-    const sealedGodSection = `
-[🌟 봉인된 신 — ${sealedGod129.shards}/${sealedGod129.totalShards} 조각]${sealedGod129.released ? ` ✅ 해방됨 — ${sealedGod129.alignmentDesc || "중립"}` : ` (${sealedGod129.progressPercent}%)`}\n${sealedGod129.released ? "해방된 신의 존재를 서사에서 느낄 수 있도록 섬세하게 표현하십시오." : "고대 유적이나 특별한 장소에서 신의 조각이 발견될 수 있습니다."}`;
+    const sealedGodSection = `\n[🌟 봉인된 신 — ${sealedGod129.shards}/${sealedGod129.totalShards} 조각]${sealedGod129.released ? ` ✅ 해방됨 — ${sealedGod129.alignmentDesc || "중립"}` : ` (${sealedGod129.progressPercent}%)`}\n${sealedGod129.released ? "해방된 신의 존재를 서사에서 느낄 수 있도록 섬세하게 표현하십시오." : "고대 유적이나 특별한 장소에서 신의 조각이 발견될 수 있습니다."}`;
 
   useEffect(() => {
     const mem = loadMemory();
@@ -2266,7 +2088,7 @@ ${char.race ? (() => { const rd = RACE_DEFS.find(r=>r.name===char.race); return 
 
     const _k = (apiKeys&&apiKeys.length)?apiKeys[loadKeyIndex()%apiKeys.length]:"";
     try {
-      const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${_k}`,{
+      const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${_k}`,{
         method:"POST",headers:{"Content-Type":"application/json"},
         body:JSON.stringify({system_instruction:{parts:[{text:systemRef.current}]},contents,generationConfig:{temperature:1.0,maxOutputTokens:2048}})
       });
@@ -2277,23 +2099,31 @@ ${char.race ? (() => { const rd = RACE_DEFS.find(r=>r.name===char.race); return 
   };
 
   const generateChoices = async (history) => {
+    const FALLBACK = ["상황을 파악하며 주변을 살핀다.", "가장 가까운 NPC에게 말을 건다.", "조심스럽게 다음 행동을 준비한다."];
     try {
       const _qk=(apiKeys&&apiKeys.length)?apiKeys[loadKeyIndex()%apiKeys.length]:"";
-      const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${_qk}`,{
+      if (!_qk) { setChoices(FALLBACK); return; }
+      const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${_qk}`,{
         method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({contents:[...history.map(m => ({ role:m.role==="assistant"?"model":"user", parts:[{ text:m.content }] })), { role:"user", parts:[{ text:`다음에 취할 행동 3가지. JSON: {"choices":["행동1","행동2","행동3"]}` }] }],generationConfig:{temperature:0.9,maxOutputTokens:200}})
+        body:JSON.stringify({contents:[...history.slice(-6).map(m => ({ role:m.role==="assistant"?"model":"user", parts:[{ text:m.content }] })), { role:"user", parts:[{ text:`현재 상황에서 주인공이 취할 수 있는 행동 3가지를 JSON으로만 출력: {"choices":["행동1","행동2","행동3"]}` }] }],generationConfig:{temperature:0.9,maxOutputTokens:250}})
       });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
+      if (data.error) throw new Error(data.error.message);
       const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-      setChoices(JSON.parse(raw.replace(/```json|```/g,"").trim()).choices || []);
-    } catch { setChoices([]); }
+      const jm = raw.replace(/```json|```/g,"").trim().match(/\{[\s\S]*\}/);
+      if (!jm) throw new Error("no json");
+      const items = JSON.parse(jm[0]).choices || [];
+      if (!items.length) throw new Error("empty");
+      setChoices(items.slice(0,4));
+    } catch(e) { console.warn("선택지실패:", e.message); setChoices(FALLBACK); }
   };
 
   const updateMid = async (allMessages, apiKey) => {
     const mem = loadMemory();
     const recentRaw = allMessages.slice(-20).map(m => `[${m.role}] ${m.content}`).join("\n");
     try {
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
         method:"POST", headers:{"Content-Type":"application/json"},
         body: JSON.stringify({ contents:[{ role:"user", parts:[{ text:`${recentRaw}\n위 대화 요약 (400자 이내).` }] }], generationConfig:{ temperature:0.2, maxOutputTokens:600 } })
       });
@@ -2305,7 +2135,7 @@ ${char.race ? (() => { const rd = RACE_DEFS.find(r=>r.name===char.race); return 
 
   const detectGameOver = async (text, apiKey) => {
     try {
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
         method:"POST", headers:{"Content-Type":"application/json"},
         body: JSON.stringify({ contents:[{ role:"user", parts:[{ text:`장면 분석: "${text.slice(0,400)}"\n죽음/엔딩 여부. JSON: {"result":"death"|"ending"|"none"}` }] }], generationConfig:{ temperature:0.1, maxOutputTokens:80 } })
       });
@@ -2322,7 +2152,7 @@ ${char.race ? (() => { const rd = RACE_DEFS.find(r=>r.name===char.race); return 
       const turnNum = msgCountRef.current;
       const maxHpDmg = turnNum <= 10 ? 8 : turnNum <= 30 ? 15 : 25;
       const maxMpCost = turnNum <= 10 ? 10 : turnNum <= 30 ? 18 : 30;
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
         method:"POST", headers:{"Content-Type":"application/json"},
         body: JSON.stringify({
           contents:[{ role:"user", parts:[{ text:`장면 분석: "${text.slice(0,300)}"\n가능한 감정 ID: ${emotionIds}\n가능한 스탯 ID: ${statKeys}\n서사에서 체력(HP) 피해나 마나(MP) 소모가 발생했다면 statChanges에 음수 값으로 반영하세요.\n단, HP 피해는 최대 -${maxHpDmg}, MP 소모는 최대 -${maxMpCost}를 초과하지 마세요. 전투 없는 장면에서 HP 피해는 0으로 하세요.\nJSON 출력: {"primary":"감정id", "intensity":0~100, "innerThought":"속마음 요약", "statChanges":{"hp": 변화량, "mp": 변화량}}` }] }],
@@ -2360,19 +2190,9 @@ ${char.race ? (() => { const rd = RACE_DEFS.find(r=>r.name===char.race); return 
       const summonList = currentSummons.length
         ? currentSummons.map(s => `${s.name}(HP:${s.hp}/${s.maxHp})`).join(", ")
         : "없음";
-      const prompt = `플레이어 행동: "${userMsg.slice(0,200)}"
-AI 서사: "${aiText.slice(0,300)}"
-현재 소환수 목록: ${summonList}
+      const prompt = `플레이어 행동: "${userMsg.slice(0,200)}"\nAI 서사: "${aiText.slice(0,300)}"\n현재 소환수 목록: ${summonList}\n\n위 내용을 분석하여 소환수 관련 이벤트를 JSON으로 출력하십시오.\n- 새 소환수 소환: {"action":"summon","name":"소환수이름","maxHp":100,"maxMp":50}\n- 소환수 피해: {"action":"damage","name":"소환수이름","hp":-피해량}\n- 소환수 회복: {"action":"heal","name":"소환수이름","hp":+회복량}\n- 소환수 사망/해제: {"action":"dismiss","name":"소환수이름"}\n- 이벤트 없음: {"action":"none"}\n소환수 관련 내용이 없으면 반드시 {"action":"none"} 만 출력. JSON만 출력.`;
 
-위 내용을 분석하여 소환수 관련 이벤트를 JSON으로 출력하십시오.
-- 새 소환수 소환: {"action":"summon","name":"소환수이름","maxHp":100,"maxMp":50}
-- 소환수 피해: {"action":"damage","name":"소환수이름","hp":-피해량}
-- 소환수 회복: {"action":"heal","name":"소환수이름","hp":+회복량}
-- 소환수 사망/해제: {"action":"dismiss","name":"소환수이름"}
-- 이벤트 없음: {"action":"none"}
-소환수 관련 내용이 없으면 반드시 {"action":"none"} 만 출력. JSON만 출력.`;
-
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
         method:"POST", headers:{"Content-Type":"application/json"},
         body: JSON.stringify({ contents:[{ role:"user", parts:[{ text:prompt }] }], generationConfig:{ temperature:0.1, maxOutputTokens:120 } })
       });
@@ -2424,31 +2244,9 @@ AI 서사: "${aiText.slice(0,300)}"
         ? aliveMonsters.map(m => `${m.name}(HP:${m.hp}/${m.maxHp})`).join(", ")
         : "없음";
 
-      const prompt = `플레이어 행동: "${userMsg.slice(0,200)}"
-AI 서사: "${aiText.slice(0,500)}"
-현재 전투 중인 적: ${monsterList}
+      const prompt = `플레이어 행동: "${userMsg.slice(0,200)}"\nAI 서사: "${aiText.slice(0,500)}"\n현재 전투 중인 적: ${monsterList}\n\n위 내용에서 몬스터/적/괴물 관련 이벤트를 분석하여 JSON 배열로 출력하세요.\n\n가능한 action:\n- "spawn": 새 적 등장. 반드시 포함: name(이름), tier("weak"|"normal"|"elite"|"boss"|"legend"), count(마릿수 숫자, 기본1), skills(스킬명 배열 1~3개), pattern("aggressive"|"defensive"|"cunning"|"berserk")\n  * "오크 3마리" → [{"action":"spawn","name":"오크","count":3,"tier":"normal",...}]\n  * "오크 무리와 트롤" → [{"action":"spawn","name":"오크","count":3,...},{"action":"spawn","name":"트롤","count":1,...}]\n  * 수량 표현: 한/1=1, 두/둘/2=2, 세/셋/3=3, 네/넷/4=4, 다섯/5=5, 무리/떼=3, 군단=5\n- "damage": 플레이어가 적에게 피해. name(적 이름), amount(피해량 5~80)\n- "defeated": 적 처치됨. name(적 이름), count(처치 수, 기본1)\n- "flee": 적 도주. name(적 이름)\n- "none": 아무 이벤트 없음\n\n규칙:\n- 새 몬스터 등장 시 반드시 count 포함\n- 이미 전투 중인 적(${monsterList})은 spawn하지 말 것\n- 전투 상황이 아니면 [{"action":"none"}] 출력\n- JSON 배열만 출력, 설명 없음\n\n예시 출력: [{"action":"spawn","name":"고블린","count":4,"tier":"weak","skills":["단검 찌르기","독 바르기"],"pattern":"cunning"},{"action":"spawn","name":"오크 대장","count":1,"tier":"elite","skills":["대검 휘두르기"],"pattern":"aggressive"}]`;
 
-위 내용에서 몬스터/적/괴물 관련 이벤트를 분석하여 JSON 배열로 출력하세요.
-
-가능한 action:
-- "spawn": 새 적 등장. 반드시 포함: name(이름), tier("weak"|"normal"|"elite"|"boss"|"legend"), count(마릿수 숫자, 기본1), skills(스킬명 배열 1~3개), pattern("aggressive"|"defensive"|"cunning"|"berserk")
-  * "오크 3마리" → [{"action":"spawn","name":"오크","count":3,"tier":"normal",...}]
-  * "오크 무리와 트롤" → [{"action":"spawn","name":"오크","count":3,...},{"action":"spawn","name":"트롤","count":1,...}]
-  * 수량 표현: 한/1=1, 두/둘/2=2, 세/셋/3=3, 네/넷/4=4, 다섯/5=5, 무리/떼=3, 군단=5
-- "damage": 플레이어가 적에게 피해. name(적 이름), amount(피해량 5~80)
-- "defeated": 적 처치됨. name(적 이름), count(처치 수, 기본1)
-- "flee": 적 도주. name(적 이름)
-- "none": 아무 이벤트 없음
-
-규칙:
-- 새 몬스터 등장 시 반드시 count 포함
-- 이미 전투 중인 적(${monsterList})은 spawn하지 말 것
-- 전투 상황이 아니면 [{"action":"none"}] 출력
-- JSON 배열만 출력, 설명 없음
-
-예시 출력: [{"action":"spawn","name":"고블린","count":4,"tier":"weak","skills":["단검 찌르기","독 바르기"],"pattern":"cunning"},{"action":"spawn","name":"오크 대장","count":1,"tier":"elite","skills":["대검 휘두르기"],"pattern":"aggressive"}]`;
-
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
         method:"POST", headers:{"Content-Type":"application/json"},
         body: JSON.stringify({ contents:[{ role:"user", parts:[{ text:prompt }] }], generationConfig:{ temperature:0.1, maxOutputTokens:600 } })
       });
@@ -2852,17 +2650,9 @@ AI 서사: "${aiText.slice(0,500)}"
         `${a.monster.icon}${a.monster.name}(HP:${a.monster.hp}/${a.monster.maxHp}): ${a.effectDesc}`
       ).join("\n");
 
-      const prompt = `전투 중 적들의 행동을 2~4문장으로 생동감 있게 묘사하세요.
+      const prompt = `전투 중 적들의 행동을 2~4문장으로 생동감 있게 묘사하세요.\n\n적들의 행동:\n${actionSummary}\n\n총 플레이어 피해: ${totalDmgToPlayer > 0 ? totalDmgToPlayer + "dmg" : "없음"}\n${healEvents.length > 0 ? `회복한 적: ${healEvents.map(h => `${h.icon}${h.name} +${h.amt}HP`).join(", ")}` : ""}\n\n한국어 존댓말 나레이션. 각 몬스터의 개성을 살려서 묘사하되 간결하게.`;
 
-적들의 행동:
-${actionSummary}
-
-총 플레이어 피해: ${totalDmgToPlayer > 0 ? totalDmgToPlayer + "dmg" : "없음"}
-${healEvents.length > 0 ? `회복한 적: ${healEvents.map(h => `${h.icon}${h.name} +${h.amt}HP`).join(", ")}` : ""}
-
-한국어 존댓말 나레이션. 각 몬스터의 개성을 살려서 묘사하되 간결하게.`;
-
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
         method:"POST", headers:{"Content-Type":"application/json"},
         body: JSON.stringify({ contents:[{ role:"user", parts:[{ text:prompt }] }], generationConfig:{ temperature:0.9, maxOutputTokens:300 } })
       });
@@ -3097,8 +2887,7 @@ ${healEvents.length > 0 ? `회복한 적: ${healEvents.map(h => `${h.icon}${h.na
       ? `\n[🌀 패시브 발동: ${procsThisTurn.map(p=>p.name).join(", ")}] 패시브 효과가 서사에 반영되어야 합니다.`
       : "";
 
-    const injectedContext = `\n\n[🎲 판정 결과] ${statInfo?.icon || ""}${statInfo?.name || usedStat} 판정: 굴림 ${diceRoll} / 스탯 ${effectiveStatValue}${survivalPenalty < 0 ? `(원래 ${statValue}${survivalPenaltyHint})` : ""} → ${verdictEmoji}${verdictLabel}${sixthSenseUsed?" (육감으로 성공 전환!)":""}${luckyRerolled?" (행운으로 재롤!)":""}
-위 판정 결과를 서사에 충실히 반영하십시오. ${isCritSuccess?"탁월한 성공으로 예상 이상의 결과를 묘사하십시오.":isCritFail?"치명적 실패로 예상치 못한 최악의 상황을 묘사하십시오.":effectiveSuccess?"행동이 의도대로 성공했습니다.":"행동이 실패했으나 치명적이지 않은 선에서 묘사하십시오."} 전투/위험 장면의 HP 피해는 최대 -${maxHpDmg} 이내로 제한하십시오.${skillHint}${passiveHint}`;
+    const injectedContext = `\n\n[🎲 판정 결과] ${statInfo?.icon || ""}${statInfo?.name || usedStat} 판정: 굴림 ${diceRoll} / 스탯 ${effectiveStatValue}${survivalPenalty < 0 ? `(원래 ${statValue}${survivalPenaltyHint})` : ""} → ${verdictEmoji}${verdictLabel}${sixthSenseUsed?" (육감으로 성공 전환!)":""}${luckyRerolled?" (행운으로 재롤!)":""}\n위 판정 결과를 서사에 충실히 반영하십시오. ${isCritSuccess?"탁월한 성공으로 예상 이상의 결과를 묘사하십시오.":isCritFail?"치명적 실패로 예상치 못한 최악의 상황을 묘사하십시오.":effectiveSuccess?"행동이 의도대로 성공했습니다.":"행동이 실패했으나 치명적이지 않은 선에서 묘사하십시오."} 전투/위험 장면의 HP 피해는 최대 -${maxHpDmg} 이내로 제한하십시오.${skillHint}${passiveHint}`;
 
     try {
       const text = await callGemini(newMsgs, injectedContext);
@@ -3220,6 +3009,9 @@ ${healEvents.length > 0 ? `회복한 적: ${healEvents.map(h => `${h.icon}${h.na
       const scenarioId = character?.scenario === "중세 판타지" ? "medieval"
                        : character?.scenario === "무협 강호"   ? "wuxia"
                        : character?.scenario === "사이버펑크"  ? "cyberpunk"
+                       : character?.scenario === "아포칼립스"  ? "apocalypse"
+                       : character?.scenario === "신화 세계관" ? "mythology"
+                       : character?.scenario === "스팀펑크"    ? "steampunk"
                        : null;
       if (scenarioId) {
         const combinedText = (userMsg + " " + text).toLowerCase();
@@ -3332,11 +3124,17 @@ ${healEvents.length > 0 ? `회복한 적: ${healEvents.map(h => `${h.icon}${h.na
 
   const startChat = async () => {
     setLoading(true);
+    const char = character;
+    const openingPrompt = `이야기를 시작합니다.\n주인공: ${char.name}${char.race ? " ("+char.race+")" : ""} / 직업: ${char.role}\n세계관: ${char.scenario || "판타지"}\n성격: ${char.personality || "알 수 없음"}\n배경: ${char.background || "알 수 없음"}\n말투: ${char.speechStyle || "기본"}\n\n위 캐릭터로 첫 장면을 생생하게 묘사해 주십시오.\n1. 주인공이 처한 상황을 명확히 묘사\n2. 주변 환경과 분위기를 설명\n3. 주인공의 성격과 말투를 반영\n4. 마지막에 선택할 수 있는 행동 3가지 제시:\n   ① [행동1]\n   ② [행동2]\n   ③ [행동3]`;
     try {
-      const text = await callGemini([], "이야기를 시작해 주십시오. 세계관과 분위기를 살려서 첫 장면을 묘사하십시오.");
-      const msgObj = { role:"assistant", content:text, characterName:character.name, imageUrl:null, imageLoading:false };
+      const text = await callGemini([], openingPrompt);
+      const msgObj = { role:"assistant", content:text, characterName:char.name, imageUrl:null, imageLoading:false };
       setMessages([msgObj]); generateChoices([msgObj]);
-    } catch { setMessages([{ role:"assistant", content:"소환 실패.", characterName:character.name }]); }
+    } catch {
+      const fallback = `${char.name}은(는) 새로운 여정을 시작하려 한다. 앞으로 어떻게 행동할 것인가?`;
+      setMessages([{ role:"assistant", content:fallback, characterName:char.name }]);
+      setChoices(["주변을 둘러보며 상황을 파악한다.", "가까운 사람에게 말을 건다.", "조용히 다음 행동을 계획한다."]);
+    }
     grantTitle("first_blood"); setLoading(false); setInitialized(true);
   };
 
@@ -3346,9 +3144,12 @@ ${healEvents.length > 0 ? `회복한 적: ${healEvents.map(h => `${h.icon}${h.na
   const scenarioId = character?.scenario === "중세 판타지" ? "medieval"
                    : character?.scenario === "무협 강호"   ? "wuxia"
                    : character?.scenario === "사이버펑크"  ? "cyberpunk"
+                   : character?.scenario === "아포칼립스"  ? "apocalypse"
+                   : character?.scenario === "신화 세계관" ? "mythology"
+                   : character?.scenario === "스팀펑크"    ? "steampunk"
                    : null;
-  const scenarioCatLabel = character?.scenario === "중세 판타지" ? "중세" : character?.scenario === "무협 강호" ? "무협" : "사이버펑크";
-  const scenarioAccent   = character?.scenario === "사이버펑크" ? "#00d4ff" : character?.scenario === "무협 강호" ? "#e05a5a" : "#c8a96e";
+  const scenarioCatLabel = character?.scenario === "중세 판타지" ? "중세" : character?.scenario === "무협 강호" ? "무협" : character?.scenario === "아포칼립스" ? "아포칼립스" : character?.scenario === "신화 세계관" ? "신화" : character?.scenario === "스팀펑크" ? "스팀펑크" : "사이버펑크";
+  const scenarioAccent   = character?.scenario === "사이버펑크" ? "#00d4ff" : character?.scenario === "무협 강호" ? "#e05a5a" : character?.scenario === "아포칼립스" ? "#e8a030" : character?.scenario === "신화 세계관" ? "#ffd060" : character?.scenario === "스팀펑크" ? "#b8860b" : "#c8a96e";
 
   // ── 스킬 패널 ──────────────────────────────────────────────────────
   const SkillPanel = () => {

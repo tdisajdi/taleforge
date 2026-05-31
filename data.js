@@ -2468,10 +2468,7 @@ const getLegendShards = () => {
 
 // ── 56번: 시간의 메아리 ──
 // 전생에서 한 중요한 선택이 이번 생에 다른 형태로 메아리처럼 돌아옴
-const TIME_ECHO_KEY  = "taleforge-time-echo";
-const loadTimeEchoes = () => { const r = lsGet(TIME_ECHO_KEY); return r ? JSON.parse(r) : []; };
-const saveTimeEchoes = (e) => lsSet(TIME_ECHO_KEY, JSON.stringify(e));
-const clearTimeEchoes = () => lsDel(TIME_ECHO_KEY);
+// (TIME_ECHO_KEY, loadTimeEchoes, saveTimeEchoes, clearTimeEchoes는 위에서 선언됨)
 
 const ECHO_CHOICE_TYPES = {
   mercy:     { icon:"🕊️", label:"자비의 메아리",  echo:"전생에 살려준 자의 후손이 결정적 순간에 은혜를 갚는다.",       bonus:"위기 시 구원자 NPC 1회 등장 보장" },
@@ -2492,11 +2489,6 @@ const recordTimeEcho = (choiceType, context, scenario) => {
   saveTimeEchoes(echoes);
 };
 
-const getTimeEchoes = () => {
-  const cycle = loadCycleCount();
-  if (cycle < 1) return [];
-  return loadTimeEchoes();
-};
 
 // ── 57번: 신화 작가 ──
 // 회차를 거듭할수록 플레이어의 이야기가 세계 신화로 편입되어 NPC들이 전설을 아는 채로 등장
@@ -2536,10 +2528,6 @@ const getMythChapters = () => {
 
 // ── 58번: 혈맥의 유산 ──
 // 전생의 혈통·가문이 이번 생에 가문으로 이어져 귀족·씨족 네트워크와 연결
-const BLOODLINE_KEY  = "taleforge-bloodline";
-const loadBloodline  = () => { const r = lsGet(BLOODLINE_KEY); return r ? JSON.parse(r) : { lineage: [], totalGenerations: 0 }; };
-const saveBloodline  = (b) => lsSet(BLOODLINE_KEY, JSON.stringify(b));
-const clearBloodline = () => lsDel(BLOODLINE_KEY);
 
 const BLOODLINE_TRAITS = [
   { id:"warrior",    icon:"⚔️", label:"전사 혈통",   trait:"무인의 피가 흐른다.",                     bonus:"STR·END 초기값 +5, 전사 계층 NPC 초기 우호" },
@@ -2575,10 +2563,6 @@ const getBloodline = () => {
 
 // ── 59번: 저주의 계보 ──
 // 전생에서 받거나 건 강력한 저주가 이번 생에 변형되어 지속
-const CURSE_LINEAGE_KEY  = "taleforge-curse-lineage";
-const loadCurseLineage   = () => { const r = lsGet(CURSE_LINEAGE_KEY); return r ? JSON.parse(r) : []; };
-const saveCurseLineage   = (c) => lsSet(CURSE_LINEAGE_KEY, JSON.stringify(c));
-const clearCurseLineage  = () => lsDel(CURSE_LINEAGE_KEY);
 
 const CURSE_TYPES = [
   { id:"eternal_thirst",  icon:"💧", label:"영원한 갈증 저주",  effect:"특정 자원이 끊임없이 줄어드는 감각. 단, 결핍을 극복할 때마다 강해진다.",         debuff:"매 30턴 MP -5", hiddenBonus:"저주 극복 시 WIL +10 영구 부여" },

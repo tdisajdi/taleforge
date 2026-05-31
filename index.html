@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#0a0500" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="TaleForge" />
+  <meta name="description" content="AI 롤플레이 RPG — Powered by Gemini" />
+
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <title>Tale Forge</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { margin: 0; padding: 0; height: 100%; background: #0a0500; overflow: hidden; }
+    #root { height: 100dvh; display: flex; flex-direction: column; }
+
+    input, textarea { outline: none; resize: none; -webkit-appearance: none; border-radius: 0; }
+    button { touch-action: manipulation; cursor: pointer; }
+    a { color: #c8a96e; text-decoration: none; }
+
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: #0a0500; }
+    ::-webkit-scrollbar-thumb { background: #5a3e1a; border-radius: 2px; }
+
+    @keyframes fadeIn  { from { opacity:0; transform:translateY(8px);  } to { opacity:1; transform:translateY(0); } }
+    @keyframes fadeUp  { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes pulse   { 0%,100% { opacity:1; transform:scale(1);    } 50% { opacity:0.3; transform:scale(0.75); } }
+    @keyframes flicker { 0%,100% { opacity:1; } 50% { opacity:0.82; } }
+    @keyframes savepop { 0% { opacity:0; transform:translateY(4px); } 20% { opacity:1; transform:translateY(0); } 80% { opacity:1; } 100% { opacity:0; } }
+    @keyframes glow    { 0%,100% { box-shadow:0 0 8px rgba(200,169,110,0.4);  } 50% { box-shadow:0 0 22px rgba(200,169,110,0.9); } }
+    @keyframes shimmer { from { background-position: -200% center; } to { background-position: 200% center; } }
+
+    .choice-btn:active { background: linear-gradient(135deg,#3a2a0a,#5a3e1a) !important; border-color:#c8a96e !important; color:#ffd700 !important; }
+    button:active { filter: brightness(0.82); }
+
+    #install-banner {
+      display: none;
+      position: fixed; bottom: 70px; left: 50%; transform: translateX(-50%);
+      background: linear-gradient(135deg, #1c1108, #2a1f0d);
+      border: 1px solid #c8a96e;
+      box-shadow: 0 0 18px rgba(200,169,110,0.35), 4px 4px 0 #1a0f00;
+      padding: 10px 16px;
+      font-family: 'Cinzel', serif;
+      font-size: 11px;
+      color: #c8a96e;
+      letter-spacing: 1px;
+      z-index: 999;
+      white-space: nowrap;
+      cursor: pointer;
+      animation: fadeIn 0.4s ease;
+    }
+    #install-banner span { color: #ffd700; margin-left: 8px; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<div id="install-banner">📲 홈 화면에 앱 추가<span>설치하기 →</span></div>
+
+<!-- 게임 데이터 (전역 변수로 로드) -->
+<script src="/data.js"></script>
+<!-- 게임 앱 (Vite 빌드) -->
+<script type="module" src="/src/main.jsx"></script>
+
+<script>
+let deferredPrompt = null;
+const banner = document.getElementById("install-banner");
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  setTimeout(() => { banner.style.display = "block"; }, 3000);
+});
+banner.addEventListener("click", async () => {
+  banner.style.display = "none";
+  if (deferredPrompt) { deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt = null; }
+});
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+const isInStandalone = window.matchMedia("(display-mode: standalone)").matches;
+if (isIOS && !isInStandalone) {
+  setTimeout(() => {
+    banner.textContent = "📲 Safari → 공유 → 홈 화면에 추가";
+    banner.style.display = "block";
+    setTimeout(() => { banner.style.display = "none"; }, 5000);
+  }, 3000);
+}
+</script>
+</body>
+</html>

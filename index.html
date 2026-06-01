@@ -60,25 +60,15 @@
 <div id="root"></div>
 <div id="install-banner">📲 홈 화면에 앱 추가<span>설치하기 →</span></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.25.9/babel.min.js"></script>
 
-<script>
-(function() {
-  const noop = () => {};
-  console.log = noop;
-  console.warn = noop;
-  console.info = noop;
-  console.debug = noop;
-})();
-</script>
+
+
 
 <!-- 게임 데이터 (상수, 스킬, 아이템, 업적 등) -->
-<script type="text/babel" src="data.js"></script>
+<script src="data.js"></script>
 
 <!-- 게임 UI & 로직 (React 컴포넌트) -->
-<script type="text/babel" src="app.js"></script>
+<script type="module" src="main.jsx"></script>
 
 <script>
 let deferredPrompt = null; const banner = document.getElementById("install-banner");

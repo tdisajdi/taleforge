@@ -153,13 +153,13 @@ function ApiKeyScreen({ onConfirm }) {
 }
 
 const SCENARIOS = [
-  { id: "medieval",   era: "중세 판타지", icon: "⚔️",  title: "왕국의 황혼",     desc: "마법과 검이 공존하는 왕국.",                            bg: "linear-gradient(135deg, #1a0a00, #2a1500, #1a0800)", accent: "#c8a96e" },
-  { id: "wuxia",      era: "무협 강호",   icon: "🐉",  title: "강호의 전설",     desc: "무림의 고수들이 패권을 다투는 강호.",                    bg: "linear-gradient(135deg, #0a0008, #150010, #080010)", accent: "#e05a5a" },
-  { id: "cyberpunk",  era: "사이버펑크",  icon: "🤖",  title: "네온의 도시",     desc: "2087년, 거대 기업이 지배하는 도시.",                    bg: "linear-gradient(135deg, #00050f, #050020, #0f0010)", accent: "#00d4ff" },
-  { id: "apocalypse", era: "아포칼립스",  icon: "☢️",  title: "붕괴의 황무지",   desc: "문명이 무너진 뒤 폐허가 된 세상. 생존이 곧 목표다.",  bg: "linear-gradient(135deg, #0f0800, #1a0f00, #100800)", accent: "#e8a030" },
-  { id: "mythology",  era: "신화 세계관", icon: "⚡",  title: "신들의 시대",     desc: "신과 영웅이 공존하는 고대 신화의 세계.",                bg: "linear-gradient(135deg, #000a1a, #001030, #000818)", accent: "#ffd060" },
-  { id: "steampunk",  era: "스팀펑크",    icon: "⚙️",  title: "증기의 제국",     desc: "증기 기관과 마법이 융합된 빅토리아 시대.",              bg: "linear-gradient(135deg, #0a0800, #150f00, #0a0800)", accent: "#b8860b" },
-  { id: "custom",     era: "나만의 세계", icon: "✨",  title: "커스텀 시나리오", desc: "자유롭게 캐릭터와 세계를 설정합니다.",                  bg: "linear-gradient(135deg, #0a0500, #150d03, #0a0500)", accent: "#c8a96e" }
+  { id: "medieval", era: "중세 판타지", icon: "⚔️", title: "왕국의 황혼", desc: "마법과 검이 공존하는 왕국.", bg: "linear-gradient(135deg, #1a0a00, #2a1500, #1a0800)", accent: "#c8a96e" },
+  { id: "wuxia", era: "무협 강호", icon: "🐉", title: "강호의 전설", desc: "무림의 고수들이 패권을 다투는 강호.", bg: "linear-gradient(135deg, #0a0008, #150010, #080010)", accent: "#e05a5a" },
+  { id: "cyberpunk", era: "사이버펑크", icon: "🤖", title: "네온의 도시", desc: "2087년, 거대 기업이 지배하는 도시.", bg: "linear-gradient(135deg, #00050f, #050020, #0f0010)", accent: "#00d4ff" },
+  { id: "apocalypse", era: "아포칼립스", icon: "☢️", title: "붕괴의 황무지", desc: "문명이 무너진 뒤 폐허가 된 세상. 생존이 곧 목표다.", bg: "linear-gradient(135deg, #0f0800, #1a0f00, #100800)", accent: "#e8a030" },
+  { id: "mythology", era: "신화 세계관", icon: "⚡", title: "신들의 시대", desc: "신과 영웅이 공존하는 고대 신화의 세계.", bg: "linear-gradient(135deg, #000a1a, #001030, #000818)", accent: "#ffd060" },
+  { id: "steampunk", era: "스팀펑크", icon: "⚙️", title: "증기의 제국", desc: "증기 기관과 마법이 융합된 빅토리아 시대.", bg: "linear-gradient(135deg, #0a0800, #150f00, #0a0800)", accent: "#b8860b" },
+  { id: "custom", era: "나만의 세계", icon: "✨", title: "커스텀 시나리오", desc: "자유롭게 캐릭터와 세계를 설정합니다.", bg: "linear-gradient(135deg, #0a0500, #150d03, #0a0500)", accent: "#c8a96e" }
 ];
 
 function ReincarnationScreen({ pastLife, onStart, onSkip }) {
@@ -800,64 +800,33 @@ function SetupScreen({ onStart, scenario }) {
     setJobSkillLoading(true); setJobSkillDone(false); setJobSkillCount(0);
     const apiKey = loadApiKeys()[loadKeyIndex()] || "";
     const scenarioId = scenario?.id || "custom";
-    const makeFallback = (role, sid) => [
-      {id:"job_basic_attack",type:"active",name:"기본 공격",icon:"⚔️",rarity:"common",mpCost:0,hpCost:0,hpRestore:0,req:{},desc:`${role}의 기본 전투 기술.`,aiHint:`${role}이 기본 공격을 사용합니다.`,condition:null,conditionDesc:null,statBoost:{},scenario:sid,jobRole:role},
-      {id:"job_heavy_strike",type:"active",name:"강타",icon:"💥",rarity:"uncommon",mpCost:15,hpCost:0,hpRestore:0,req:{str:20},desc:"강력한 일격으로 큰 피해를 입힌다.",aiHint:`${role}이 강타를 날립니다.`,condition:null,conditionDesc:null,statBoost:{},scenario:sid,jobRole:role},
-      {id:"job_swift_strike",type:"active",name:"신속 공격",icon:"💨",rarity:"common",mpCost:8,hpCost:0,hpRestore:0,req:{agi:15},desc:"빠른 속도로 공격한다.",aiHint:`${role}이 빠르게 공격합니다.`,condition:null,conditionDesc:null,statBoost:{},scenario:sid,jobRole:role},
-      {id:"job_focus",type:"active",name:"집중",icon:"🎯",rarity:"uncommon",mpCost:10,hpCost:0,hpRestore:0,req:{},desc:"정신을 집중해 다음 판정을 향상시킨다.",aiHint:`${role}이 집중합니다.`,condition:null,conditionDesc:null,statBoost:{},scenario:sid,jobRole:role},
-      {id:"job_analyze",type:"active",name:"적 분석",icon:"🔍",rarity:"uncommon",mpCost:8,hpCost:0,hpRestore:0,req:{per:15},desc:"적의 약점을 파악한다. 다음 공격 판정 +10.",aiHint:`${role}이 적을 분석합니다.`,condition:null,conditionDesc:null,statBoost:{},scenario:sid,jobRole:role},
-      {id:"job_power_surge",type:"active",name:"힘의 급등",icon:"🔥",rarity:"rare",mpCost:25,hpCost:0,hpRestore:0,req:{str:25},desc:"순간적으로 모든 힘을 폭발시킨다.",aiHint:`${role}의 힘이 폭발합니다.`,condition:null,conditionDesc:null,statBoost:{},scenario:sid,jobRole:role},
-      {id:"job_taunt",type:"active",name:"도발",icon:"😤",rarity:"common",mpCost:8,hpCost:0,hpRestore:0,req:{fear:10},desc:"적의 주의를 끌어 아군을 보호한다.",aiHint:`${role}이 도발합니다.`,condition:null,conditionDesc:null,statBoost:{},scenario:sid,jobRole:role},
-      {id:"job_evasion",type:"passive",name:"회피 본능",icon:"🌪️",rarity:"common",mpCost:0,hpCost:0,hpRestore:0,req:{agi:15},desc:"공격을 본능적으로 피한다. AGI +6.",aiHint:`${role}이 공격을 피합니다.`,condition:"in_combat",conditionDesc:"전투 중",statBoost:{agi:6},scenario:sid,jobRole:role},
-      {id:"job_endure",type:"passive",name:"인내",icon:"🛡️",rarity:"common",mpCost:0,hpCost:0,hpRestore:0,req:{end:15},desc:"피해를 버텨낸다. END +6.",aiHint:`${role}이 버텨냅니다.`,condition:"in_combat",conditionDesc:"전투 중",statBoost:{end:6},scenario:sid,jobRole:role},
-      {id:"job_sharp_senses",type:"passive",name:"예리한 감각",icon:"👁️",rarity:"uncommon",mpCost:0,hpCost:0,hpRestore:0,req:{per:20},desc:"주변을 예리하게 감지한다. PER +8.",aiHint:`${role}이 감각을 곤두세웁니다.`,condition:"always",conditionDesc:"항시 발동",statBoost:{per:8},scenario:sid,jobRole:role},
-      {id:"job_iron_will",type:"passive",name:"강철 의지",icon:"💎",rarity:"rare",mpCost:0,hpCost:0,hpRestore:0,req:{wil:20},desc:"꺾이지 않는 의지. WIL +8.",aiHint:`${role}이 의지를 드러냅니다.`,condition:"always",conditionDesc:"항시 발동",statBoost:{wil:8},scenario:sid,jobRole:role},
-      {id:"job_second_wind",type:"event",name:"두 번째 바람",icon:"💪",rarity:"rare",mpCost:0,hpCost:0,hpRestore:25,req:{},desc:"위기 순간 숨겨진 힘이 솟구친다. HP 25 회복.",aiHint:`${role}이 강하게 일어납니다.`,condition:"hp_critical",conditionDesc:"HP 30% 이하",statBoost:{},scenario:sid,jobRole:role},
-      {id:"job_last_stand",type:"event",name:"최후의 저항",icon:"🌟",rarity:"legendary",mpCost:0,hpCost:0,hpRestore:0,req:{},desc:"죽음 직전 모든 힘을 끌어모아 반격한다.",aiHint:`${role}이 비장의 카드를 꺼냅니다!`,condition:"hp_danger",conditionDesc:"HP 15% 이하",statBoost:{str:20,agi:15},scenario:sid,jobRole:role},
-    ];
-    if (!apiKey) {
-      const fb = makeFallback(roleName, scenarioId);
-      const ex = loadJobSkills().filter(s => s.id?.startsWith("race_"));
-      saveJobSkills([...ex, ...fb]); setJobSkillCount(fb.length); setJobSkillDone(true); setJobSkillLoading(false); return;
-    }
-    const prompt = `당신은 RPG 스킬 디자이너입니다. 세계관: ${era} 직업: "${roleName}" 이 직업의 스킬 20개를 JSON 배열만 출력. active 10개 passive 7개 event 3개. [{"id":"job_영문","type":"active","name":"한국어명","icon":"이모지","rarity":"common","mpCost":10,"hpCost":0,"hpRestore":0,"req":{},"desc":"설명","aiHint":"힌트","condition":null,"conditionDesc":null,"statBoost":{},"scenario":"${scenarioId}","jobRole":"${roleName}"}]`;
+    const prompt = `당신은 RPG 스킬 디자이너입니다.\n세계관: ${era}\n직업: "${roleName}"\n\n이 직업에 특화된 스킬을 정확히 60개 생성하세요. 능동 스킬(active) 30개, 패시브 스킬(passive) 20개, 이벤트 스킬(event) 10개.\n\n각 스킬은 아래 JSON 배열 형식으로만 출력하세요. 설명 없이 JSON만.\n\n필드 설명:\n- id: "job_영문소문자_숫자" 형식 (예: job_slash_01)\n- type: "active" | "passive" | "event"\n- name: 한국어 스킬명\n- icon: 이모지 1개\n- rarity: "common" | "uncommon" | "rare" | "legendary"\n- mpCost: 능동 스킬 MP 소모 (0~50), 패시브/이벤트는 0\n- hpCost: HP 소모 (선택, 보통 0)\n- hpRestore: HP 회복량 (선택)\n- req: 필요 스탯 조건 객체 (예: {"str":30,"agi":20}), 없으면 {}\n- desc: 스킬 설명 (한국어, 1~2문장)\n- aiHint: AI 서사 힌트 (한국어, 이 스킬 사용 시 AI가 어떻게 묘사할지)\n- condition: 패시브/이벤트 발동 조건 문자열 (능동은 null)\n- conditionDesc: 조건 설명 (한국어)\n- statBoost: 패시브 발동 시 스탯 증가 객체 (선택)\n- scenario: "${scenarioId}" 또는 null\n- jobRole: "${roleName}"\n\nJSON 배열만 출력:\n[{"id":"job_...","type":"active","name":"...","icon":"...","rarity":"common","mpCost":10,"hpCost":0,"hpRestore":0,"req":{},"desc":"...","aiHint":"...","condition":null,"conditionDesc":null,"statBoost":{},"scenario":${JSON.stringify(scenarioId)},"jobRole":${JSON.stringify(roleName)}}, ...]`;
+
     try {
       const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
         method:"POST", headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({ contents:[{ role:"user", parts:[{ text: prompt }] }], generationConfig:{ temperature:0.9, maxOutputTokens:4000 } })
+        body: JSON.stringify({ contents:[{ role:"user", parts:[{ text: prompt }] }], generationConfig:{ temperature:1.0, maxOutputTokens:8192 } })
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-      if (data.error) throw new Error(data.error.message);
       const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
       const clean = raw.replace(/```json|```/g,"").trim();
+      // JSON 배열 추출
       const arrMatch = clean.match(/\[[\s\S]*\]/);
-      if (!arrMatch) throw new Error("no array");
+      if (!arrMatch) throw new Error("JSON parse fail");
       const parsed = JSON.parse(arrMatch[0]);
+      // 유효한 스킬만 필터
       const valid = parsed.filter(s => s.id && s.type && s.name && s.icon);
-      if (valid.length < 5) throw new Error("too few: "+valid.length);
-      const ex = loadJobSkills().filter(s => s.id?.startsWith("race_"));
-      saveJobSkills([...ex, ...valid]);
-      setJobSkillCount(valid.length); setJobSkillDone(true);
+      // 기존 직업 스킬 교체 저장
+      saveJobSkills(valid);
+      setJobSkillCount(valid.length);
+      setJobSkillDone(true);
     } catch(e) {
-      console.warn("스킬생성실패:", e.message);
-      const fb = makeFallback(roleName, scenarioId);
-      const ex = loadJobSkills().filter(s => s.id?.startsWith("race_"));
-      saveJobSkills([...ex, ...fb]);
-      setJobSkillCount(fb.length); setJobSkillDone(true);
+      // 실패해도 게임은 진행 — 빈 배열 저장
+      saveJobSkills([]);
+      setJobSkillDone(true);
+      setJobSkillCount(0);
     }
     setJobSkillLoading(false);
-  };
-
-  const LOCAL_FALLBACK = {
-    role: { medieval:["기사","마법사","도적","성직자","검사","팔라딘","연금술사","음유시인","레인저","궁수"], wuxia:["무사","검객","암살자","도사","의원","협객","신관","표국 무인","방랑자","속세 이탈자"], cyberpunk:["해커","용병","기업 스파이","사이버 의사","드론 조종사","정보 중개인","반란군 전사","AI 연구자","암거래상","네트러너"], apocalypse:["생존자","황무지 전사","의사","약탈자","정찰병","엔지니어","폐허 탐험가","부족 주술사","방랑자","용병"], mythology:["반신","영웅","신관","예언자","괴물 사냥꾼","운명의 전사","오라클","신화의 전사","티탄 후예","신들의 사자"], steampunk:["발명가","증기 기사","비행선 조종사","연금술사","귀족 탐정","기계 의사","에테르 마법사","혁명가","암시장 딜러","산업 스파이"], default:["전사","마법사","도적","성직자","탐정","상인","연금술사","음유시인","암살자","사냥꾼"] },
-    background: ["평범한 삶을 살다가 운명이 바뀐 순간이 있었다. 그 사건이 지금의 나를 만들었다.","가족을 잃은 후 복수를 맹세했다. 하지만 시간이 지나며 그 의미가 흐려지고 있다.","누군가의 제자였으나 스승을 잃고 홀로 세상에 내던져졌다.","비밀 조직에 속해 있었다. 그들이 원하는 것과 내가 원하는 것이 달라지기 시작했다.","과거의 죄를 씻기 위해 방랑한다. 언제까지 이 길을 걸어야 할지 알 수 없다."],
-    personality: ["차갑고 냉소적이지만 내면 깊은 곳에 의리가 있다.","겉으로는 밝고 유쾌하지만 혼자일 때는 깊은 고독에 잠긴다.","말수가 적고 감정을 잘 드러내지 않지만 행동으로 마음을 전한다.","직설적이고 거침없어 주변 사람을 당황하게 하지만 솔직한 진심이 있다.","논리적이고 냉정하게 보이지만 정작 감정에 약한 순간들이 있다."],
-    speechStyle: ["차갑고 간결하게 말한다. 불필요한 감정 표현을 피한다.","고풍스럽고 격식 있는 말투. 상대를 항상 경칭으로 부른다.","거칠고 직설적이다. 돌려 말하는 법을 모른다.","조용하고 사려 깊게 말한다. 말보다 침묵이 길다.","어딘가 빈정거리는 듯한 말투. 하지만 진심은 행동으로 드러난다."],
-  };
-  const getFallback = (key) => {
-    if (key === "role") { const sid = scenario?.id || "default"; const pool = LOCAL_FALLBACK.role[sid] || LOCAL_FALLBACK.role.default; return [...pool].sort(() => Math.random()-0.5).slice(0,5); }
-    return LOCAL_FALLBACK[key] || [];
   };
 
   const fetchSuggestions = async () => {
@@ -868,25 +837,17 @@ function SetupScreen({ onStart, scenario }) {
       setCustomInput(""); return;
     }
     setSugLoading(true); setSuggestions([]);
-    const apiKey = loadApiKeys()[loadKeyIndex()] || "";
-    if (!apiKey) { setSuggestions(getFallback(cur.key)); setSugLoading(false); return; }
     try {
+      const apiKey = loadApiKeys()[loadKeyIndex()] || "";
       const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
         method:"POST", headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({ contents:[{ role:"user", parts:[{ text:cur.prompt(char) }] }], generationConfig:{ temperature:1.1, maxOutputTokens:500 } })
+        body: JSON.stringify({ contents:[{ role:"user", parts:[{ text:cur.prompt(char) }] }], generationConfig:{ temperature:1.1, maxOutputTokens:400 } })
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-      if (data.error) throw new Error(data.error.message);
       const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-      const clean = raw.replace(/```json|```/g,"").trim();
-      const jm = clean.match(/\{[\s\S]*\}/);
-      if (!jm) throw new Error("no json");
-      const parsed = JSON.parse(jm[0]);
-      const items = (parsed.items || []).slice(0, 5);
-      if (!items.length) throw new Error("empty");
-      setSuggestions(items);
-    } catch(e) { console.warn("AI추천실패:", e.message); setSuggestions(getFallback(cur.key)); }
+      const parsed = JSON.parse(raw.replace(/```json|```/g,"").trim());
+      setSuggestions((parsed.items || []).slice(0, 5));
+    } catch { setSuggestions([]); }
     setSugLoading(false);
   };
 
@@ -1175,6 +1136,13 @@ function ChatApp({ apiKeys, character, onReset, onReincarnate, onKeyReset, pastL
   const [showInventory, setShowInventory]     = useState(false);
   const [showShop, setShowShop]               = useState(false);
   const [showHighlights, setShowHighlights]   = useState(false);
+  const [showForge, setShowForge]             = useState(false);
+  const [showAnnals, setShowAnnals]           = useState(false);
+  const [showGoal, setShowGoal]               = useState(false);
+  const [showVillain, setShowVillain]         = useState(false);
+  const [cycleGoal, setCycleGoal]             = useState(() => loadCycleGoal());
+  const [villainStatus, setVillainStatus]     = useState(() => getVillainStatus());
+  const [forgeData, setForgeData]             = useState(() => loadForgeData());
   const [highlights, setHighlights]           = useState(() => loadHighlights());
   const [rewardToast, setRewardToast]         = useState(null); // { gold, exp, sp, items, tierLabel }
   const [playerExp, setPlayerExp]             = useState(() => loadPlayerExp());
@@ -1217,21 +1185,29 @@ function ChatApp({ apiKeys, character, onReset, onReincarnate, onKeyReset, pastL
     const _era     = (char?.scenario || "");
 
     // 시나리오 그룹 판별
-    const isMedieval   = _era.includes("중세") || _era.includes("판타지") || _era.includes("medieval");
-    const isWuxia      = _era.includes("무협") || _era.includes("강호")   || _era.includes("wuxia");
-    const isCyberpunk  = _era.includes("사이버") || _era.includes("cyber");
-    const isCustom     = _era.includes("나만의") || _era.includes("custom");
-    const isAnyEra     = true; // 모든 세계관 공통
+    const isMedieval     = _era.includes("중세") || _era.includes("판타지") || _era.includes("medieval");
+    const isWuxia        = _era.includes("무협") || _era.includes("강호")   || _era.includes("wuxia");
+    const isCyberpunk    = _era.includes("사이버") || _era.includes("cyber");
+    const isApocalypse   = _era.includes("아포칼") || _era.includes("apocalypse") || _era.includes("황무지") || _era.includes("붕괴");
+    const isMythology    = _era.includes("신화") || _era.includes("mythology") || _era.includes("올림포스");
+    const isSteampunk    = _era.includes("스팀") || _era.includes("steampunk") || _era.includes("증기");
+    const isCustom       = _era.includes("나만의") || _era.includes("custom");
+    const isAnyEra       = true; // 모든 세계관 공통
 
     // 종족 그룹 판별
     const isElf        = _race.includes("엘프") || _race.includes("elf");
     const isDwarf      = _race.includes("드워프") || _race.includes("dwarf");
     const isOrc        = _race.includes("오크") || _race.includes("orc");
     const isDarkling   = _race.includes("다크") || _race.includes("dark");
-    const isCelestial  = _race.includes("천족") || _race.includes("celestial");
-    const isHuman      = _race.includes("인간") || _race.includes("human") || (!isElf && !isDwarf && !isOrc && !isDarkling && !isCelestial && _race !== "");
-    const isFantasyRace= isElf || isDwarf || isOrc || isDarkling || isCelestial;
-    const hasMagicRace = isElf || isCelestial;
+    const isCelestial  = _race.includes("천족") || _race.includes("celestial") || _race.includes("세레스티얼");
+    const isDragon     = _race.includes("드래곤") || _race.includes("dragon") || _race.includes("용혈");
+    const isDemon      = _race.includes("악마") || _race.includes("demon");
+    const isUndead     = _race.includes("언데드") || _race.includes("undead");
+    const isBeastman   = _race.includes("수인") || _race.includes("beast");
+    const isElemental  = _race.includes("원소") || _race.includes("elemental");
+    const isHuman      = _race.includes("인간") || _race.includes("human") || (!isElf && !isDwarf && !isOrc && !isDarkling && !isCelestial && !isDragon && !isDemon && !isUndead && !isBeastman && !isElemental && _race !== "");
+    const isFantasyRace= isElf || isDwarf || isOrc || isDarkling || isCelestial || isDragon || isDemon || isUndead || isBeastman || isElemental;
+    const hasMagicRace = isElf || isCelestial || isDragon || isDemon || isElemental;
 
     // 직업 그룹 판별
     const isMagicRole  = /마법|마녀|마법사|소서|주술|마도/.test(_role);
@@ -1287,9 +1263,54 @@ function ChatApp({ apiKeys, character, onReset, onReincarnate, onKeyReset, pastL
 
     const ruleSection = `\n[시스템 규칙]\n1. 플레이어 행동 뒤에 전달되는 [주사위 굴림] 수치와 캐릭터의 관련 스탯을 고려하여 성공/실패를 결정하고 서사에 반영하십시오.\n2. 전투 피격, 마법 사용, 위험한 행동 시 반드시 서사적으로 HP나 MP가 소모됨을 묘사하십시오.\n3. 적이 살아있는 전투 중이라면 반드시 적의 반격/행동도 묘사하십시오.`;
 
+    // ── 새 종족 전용 묘사 힌트 ──
+    const newRaceHint = isDragon ? `\n[🐉 드래곤혈 특성] 이 캐릭터는 용의 피가 흐릅니다. 분노하거나 강한 감정을 느낄 때 눈동자가 세로 동공으로 변하거나 피부에서 비늘 무늬가 드러나는 묘사를 자연스럽게 포함하십시오. 화염이나 냉기를 본능적으로 다루며, 용족 NPC는 본능적으로 이 자를 같은 혈통으로 인식합니다.`
+      : isDemon ? `\n[😈 악마족 특성] 이 캐릭터는 악마의 피가 흐릅니다. 대화에서 은근히 상대의 욕망을 꿰뚫어보고 거기에 어필하는 묘사를 포함하십시오. 강한 힘을 쓸 때 뒤에서 날개나 뿔이 잠깐 드러납니다. 인간·신성 NPC는 본능적으로 불편함을 느끼지만 동시에 이끌리기도 합니다.`
+      : isUndead ? `\n[💀 언데드 특성] 이 캐릭터는 죽음과 삶의 경계에 있습니다. 체온이 없고 피가 흐르지 않으며 고통을 느끼지 못하는 묘사를 포함하십시오. 살아있는 NPC들은 이 자를 보면 본능적으로 소름이 돋거나 불쾌감을 느낍니다. 강한 공격을 받아도 쉽게 쓰러지지 않는 섬뜩한 생존력을 표현하십시오.`
+      : isBeastman ? `\n[🐺 수인 특성] 이 캐릭터는 짐승의 본능을 지니고 있습니다. 감각이 예민하여 인간이 눈치채지 못하는 것을 미리 감지하는 묘사를 포함하십시오. 흥분하면 동물적 특징(귀·꼬리·눈동자 변화 등)이 드러납니다. 야생 동물들이 본능적으로 이 자를 두려워하거나 복종합니다.`
+      : isElemental ? `\n[🌀 원소인 특성] 이 캐릭터는 원소 에너지와 융합되어 있습니다. 감정이 격해지면 주변 원소(불꽃·물·바람·대지)가 반응하는 묘사를 포함하십시오. 강한 마법 사용 시 몸의 일부가 원소 형태로 변합니다. 자신의 원소와 반대되는 환경에서는 미묘한 불편함을 느낍니다.`
+      : "";
+
+    // ── 새 시나리오 전용 배경 힌트 ──
+    const newScenarioHint = isApocalypse ? `\n[☢️ 아포칼립스 세계관] 문명이 붕괴된 뒤의 세상입니다. 폐허가 된 도시, 방사능 오염 지역, 물자 부족, 변이 생물이 기본 배경입니다. 생존이 최우선이며 인간성의 경계가 흐릿합니다. 전쟁 이전 문명의 유물이 가장 귀중한 자산입니다. 묘사 시 황폐함·절망·하지만 그 속의 인간적 연대를 함께 표현하십시오.`
+      : isMythology ? `\n[⚡ 신화 세계관] 신들이 실재하고 영웅들이 신의 의지를 수행하는 세계입니다. 운명의 실이 존재하며 예언이 현실에 영향을 미칩니다. 신들이 인간사에 직접 개입하며 시련과 보상을 내립니다. 묘사 시 웅장하고 서사적인 신화적 스케일을 유지하십시오.`
+      : isSteampunk ? `\n[⚙️ 스팀펑크 세계관] 증기 기관이 마법과 결합된 세계입니다. 비행선, 증기 기계, 태엽 인형, 에테르 에너지가 일상화되어 있습니다. 묘사 시 황동과 증기, 가스등과 톱니바퀴, 우아함과 기계 소음의 대비를 잘 살려주십시오.`
+      : "";
+
     // ── 숨겨진 직업 시스템 힌트 ──
     const hiddenJobDef = HIDDEN_JOBS.find(j => j.name === char.role);
-    const hiddenJobSection = hiddenJobDef ? `\n[🔓 숨겨진 직업 — ${hiddenJobDef.icon}${hiddenJobDef.name}] ${hiddenJobDef.systemHint}` : "";
+    const hiddenJobSection = hiddenJobDef ? `\n[🔓 숨겨진 직업 — ${hiddenJobDef.icon}${hiddenJobDef.name}] ${hiddenJobDef.systemHint}${newRaceHint}${newScenarioHint}` : (newRaceHint || newScenarioHint ? `${newRaceHint}${newScenarioHint}` : "");
+
+    // ── 이번 회차 클리어 목표 ──
+    const _goal = loadCycleGoal();
+    const goalSection = _goal ? `\n[🎯 이번 회차 목표 — ${_goal.icon}${_goal.name}] ${_goal.aiHint} 진행도: ${_goal.progress||0}%. ${_goal.completed ? "✅ 달성 완료!" : ""}` : "";
+
+    // ── 성장형 악당 ──
+    const _villain = getVillainStatus();
+    const villainSysSection = _villain && _villain.threat !== "low" && _villain.name ? `\n[${_villain.threatDef?.icon||"⚠️"} 악당 위협 — ${_villain.threatDef?.label}] ${_villain.name}의 세력이 세계를 잠식 중입니다(${_villain.power}%). ${_villain.threatDef?.desc} 서사에서 악당의 영향력이 주변 세계에 반영되게 하십시오.` : "";
+
+    // ── 날씨 판정 연동 ──
+    const _weather = getWeatherStatMods();
+    const weatherSysSection = (_weather.weather.label && _weather.weather.label !== "맑음") ? `\n[${_weather.weather.icon} 날씨 효과 — ${_weather.weather.label}] ${_weather.weather.aiHint}` : "";
+
+    // ── 동료 시너지 버프 ──
+    const companionBuffs = getCompanionBuffs();
+    const companionSysSection = companionBuffs.length > 0 ? `\n[👥 동료 시너지] 성장한 동료들의 지원: ${companionBuffs.map(s=>`${s.icon}${s.name}(${s.desc})`).join(", ")}` : "";
+
+    // ── 직업 조합 시너지 ──
+    const prevJobs = char.pastLifeRole ? [char.pastLifeRole] : [];
+    const synergies = checkJobSynergy(char.role, prevJobs, char.race||"");
+    const synergySysSection = synergies.length > 0 ? `\n[⚡ 직업 조합 시너지 — ${synergies.map(s=>`${s.icon}${s.name}`).join("/")}] ${synergies.map(s=>s.aiHint).join(" / ")}` : "";
+
+    // ── 종족 전용 콘텐츠 ──
+    const raceContent = getRaceContent(char.race);
+    const raceContentSection = raceContent ? `\n[🏛️ 종족 전용 콘텐츠] ${raceContent.event} ${raceContent.npcReact}` : "";
+
+    // ── 히든 퀘스트 ──
+    const _atm2 = loadAtmosphere();
+    const hiddenQuestData = { karmaScore: char.karmaScore||50, timeOfDay: _atm2.timeOfDay, cycle: loadCycleCount(), race: char.race||"", scenario: char.scenario||"", madness: char.stats?.mad||0 };
+    const availableHiddenQuests = getAvailableHiddenQuests(hiddenQuestData);
+    const hiddenQuestSection = availableHiddenQuests.length > 0 ? `\n[🔍 히든 퀘스트 가능] 현재 조건에서 숨겨진 의뢰가 활성화됩니다: ${availableHiddenQuests.map(q=>`${q.icon}${q.name}(${q.conditionDesc})`).join(", ")} — 서사 중 자연스럽게 해당 퀘스트로 연결되는 복선을 심어두십시오.` : "";
 
     // 1번: 전생 기억 파편 섹션
     const frags = loadMemoryFragments();
@@ -1787,7 +1808,7 @@ function ChatApp({ apiKeys, character, onReset, onReincarnate, onKeyReset, pastL
     const naturalLaw130 = getNaturalLaw();
     const naturalLawSection = (naturalLaw130 && naturalLaw130.mutations && naturalLaw130.mutations.length > 0 && _cycle >= 5) ? `\n[🌌 자연의 섭리 변화 — ${naturalLaw130.mutations.length}단계]\n${naturalLaw130.mutations.slice(-3).map(m => `• ${m.law}: ${m.desc} (${m.effect})`).join("\n")}\n이 법칙 변화들이 세계의 물리적·마법적 현상에 자연스럽게 스며들도록 묘사하십시오.` : "";
 
-    return `너는 인터랙티브 소설의 전지적 나레이터야.\n주인공: ${char.name} (${char.race ? char.race+" · " : ""}${char.role}) / 성격: ${char.personality} / 배경: ${char.background} / 말투: ${char.speechStyle}\n${char.race ? (() => { const rd = RACE_DEFS.find(r=>r.name===char.race); return rd ? `[종족 특성] ${rd.lore}\n[종족 관계도] ${Object.entries(rd.relations).map(([k,v])=>`${RACE_DEFS.find(r=>r.id===k)?.name||k}: ${v.label}(${v.desc})`).join(" | ")}\n` : ""; })() : ""}세계관: ${char.scenario}${char.customWorldSetting ? `\n[🌐 커스텀 세계관 설정]\n${char.customWorldSetting}` : ""}${npcSection}${notesSection}${atmosphereSection}${summonSection}${monsterSection}${memSection}${karmaSection}${fragSection}${intiSection}${fameSection}${soulWpnSection}${forbiddenSection}${butterflySection}${hiddenEndingSection}${deathBonusSection}${traumaSection}${lastWordSection}${metaSection}${bloodlineSection}${fateSection}${exploredSection}${relLegacySection}${worldSecretSection}${abilityImprintSection}${grudgeSection}${timeEchoSection}${fateChoiceSection}${divineGazeSection}${curseMasterySection}${prayerSection}${greatCycleSection}${parallelSelfSection}${curseRingSection}${statsSection}${injurySection}${pastThemeSection}${memDistortSection}${ageParadoxSection}${summonLegacySection}${grudgeWeaponSection}${worldTreeSection}${dreamSection}${legacyBuildingSection}${watcherSection}${soulMaskSection}${emotionRippleSection}${testamentSection}${constellationSection}${explorerMapSection}${lightningImprintSection}${dawnSection}${starSignSection}${pastLangSection}${identitySection}${riftSection}${recipeSection}${achSection}${romanceSection}${bestiarySection}${merchantSection}${timeTokenSection}${survivorSection}${undyingSection}${langSection}${bardSection}${mysterySection}${watcherGazeSection}${fateCardSection}${hideoutSection}${evilEyeSection}${moonSection}${letterSection}${reelSection}${butterflyIdxSection}${inscriptionSection}${rankSection}${sakuraSection}${dejavuSection}${causalitySection}${debtSection}${trauma80Section}${apoSection}${griefSection}${instinctSection}${cursedRelicSection}${natureSection}${aliasSection}${wishSection}${petSection}${sealedSection}${soulCrystalSection}${echoSection}${dimMapSection}${villainSection}${tearSection}${elemSection}${circusSection}${templeSection}${legWordsSection}${mutationSection}${darkEchoSection}${treeSection}${deifySection}${awarenessSection}${rivalSection}${redThreadSection}${ruinsSection}${killSenseSection}${grudgeFlowerSection}${cursedCycleSection}${magnetSection}${floodSection}${carouselSection}${trapSection}${mentalSection}${cinemaSection}${twinSection}${killListSection}${auctionSection}${bondTreeSection}${cyberSection}${swordSection}${kingdomSection}${guildSection}${dealerSection}${reversalSection}${worldWillSection}${deathEyeSection}${freqSection}${sealedGodSection}${naturalLawSection}${hiddenJobSection}${ruleSection}\n규칙: 3인칭 또는 2인칭 묘사, 생동감 있게, 2~5문장, 한국어 존댓말(나레이션). 절대 플레이어의 행동/대사를 대신 작성하지 마십시오.`;
+    return `너는 인터랙티브 소설의 전지적 나레이터야.\n주인공: ${char.name} (${char.race ? char.race+" · " : ""}${char.role}) / 성격: ${char.personality} / 배경: ${char.background} / 말투: ${char.speechStyle}\n${char.race ? (() => { const rd = RACE_DEFS.find(r=>r.name===char.race); return rd ? `[종족 특성] ${rd.lore}\n[종족 관계도] ${Object.entries(rd.relations).map(([k,v])=>`${RACE_DEFS.find(r=>r.id===k)?.name||k}: ${v.label}(${v.desc})`).join(" | ")}\n` : ""; })() : ""}세계관: ${char.scenario}${char.customWorldSetting ? `\n[🌐 커스텀 세계관 설정]\n${char.customWorldSetting}` : ""}${npcSection}${notesSection}${atmosphereSection}${summonSection}${monsterSection}${memSection}${karmaSection}${fragSection}${intiSection}${fameSection}${soulWpnSection}${forbiddenSection}${butterflySection}${hiddenEndingSection}${deathBonusSection}${traumaSection}${lastWordSection}${metaSection}${bloodlineSection}${fateSection}${exploredSection}${relLegacySection}${worldSecretSection}${abilityImprintSection}${grudgeSection}${timeEchoSection}${fateChoiceSection}${divineGazeSection}${curseMasterySection}${prayerSection}${greatCycleSection}${parallelSelfSection}${curseRingSection}${statsSection}${injurySection}${pastThemeSection}${memDistortSection}${ageParadoxSection}${summonLegacySection}${grudgeWeaponSection}${worldTreeSection}${dreamSection}${legacyBuildingSection}${watcherSection}${soulMaskSection}${emotionRippleSection}${testamentSection}${constellationSection}${explorerMapSection}${lightningImprintSection}${dawnSection}${starSignSection}${pastLangSection}${identitySection}${riftSection}${recipeSection}${achSection}${romanceSection}${bestiarySection}${merchantSection}${timeTokenSection}${survivorSection}${undyingSection}${langSection}${bardSection}${mysterySection}${watcherGazeSection}${fateCardSection}${hideoutSection}${evilEyeSection}${moonSection}${letterSection}${reelSection}${butterflyIdxSection}${inscriptionSection}${rankSection}${sakuraSection}${dejavuSection}${causalitySection}${debtSection}${trauma80Section}${apoSection}${griefSection}${instinctSection}${cursedRelicSection}${natureSection}${aliasSection}${wishSection}${petSection}${sealedSection}${soulCrystalSection}${echoSection}${dimMapSection}${villainSection}${tearSection}${elemSection}${circusSection}${templeSection}${legWordsSection}${mutationSection}${darkEchoSection}${treeSection}${deifySection}${awarenessSection}${rivalSection}${redThreadSection}${ruinsSection}${killSenseSection}${grudgeFlowerSection}${cursedCycleSection}${magnetSection}${floodSection}${carouselSection}${trapSection}${mentalSection}${cinemaSection}${twinSection}${killListSection}${auctionSection}${bondTreeSection}${cyberSection}${swordSection}${kingdomSection}${guildSection}${dealerSection}${reversalSection}${worldWillSection}${deathEyeSection}${freqSection}${sealedGodSection}${naturalLawSection}${hiddenJobSection}${goalSection}${villainSysSection}${weatherSysSection}${companionSysSection}${synergySysSection}${raceContentSection}${hiddenQuestSection}${ruleSection}\n규칙: 3인칭 또는 2인칭 묘사, 생동감 있게, 2~5문장, 한국어 존댓말(나레이션). 절대 플레이어의 행동/대사를 대신 작성하지 마십시오.`;
   };
 
   useEffect(() => {
@@ -2099,24 +2120,16 @@ function ChatApp({ apiKeys, character, onReset, onReincarnate, onKeyReset, pastL
   };
 
   const generateChoices = async (history) => {
-    const FALLBACK = ["상황을 파악하며 주변을 살핀다.", "가장 가까운 NPC에게 말을 건다.", "조심스럽게 다음 행동을 준비한다."];
     try {
       const _qk=(apiKeys&&apiKeys.length)?apiKeys[loadKeyIndex()%apiKeys.length]:"";
-      if (!_qk) { setChoices(FALLBACK); return; }
       const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${_qk}`,{
         method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({contents:[...history.slice(-6).map(m => ({ role:m.role==="assistant"?"model":"user", parts:[{ text:m.content }] })), { role:"user", parts:[{ text:`현재 상황에서 주인공이 취할 수 있는 행동 3가지를 JSON으로만 출력: {"choices":["행동1","행동2","행동3"]}` }] }],generationConfig:{temperature:0.9,maxOutputTokens:250}})
+        body:JSON.stringify({contents:[...history.map(m => ({ role:m.role==="assistant"?"model":"user", parts:[{ text:m.content }] })), { role:"user", parts:[{ text:'현재 상황에서 주인공이 취할 수 있는 행동 3가지. JSON: {"choices":["행동1","행동2","행동3"]}' }] }],generationConfig:{temperature:0.9,maxOutputTokens:200}})
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-      if (data.error) throw new Error(data.error.message);
       const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-      const jm = raw.replace(/```json|```/g,"").trim().match(/\{[\s\S]*\}/);
-      if (!jm) throw new Error("no json");
-      const items = JSON.parse(jm[0]).choices || [];
-      if (!items.length) throw new Error("empty");
-      setChoices(items.slice(0,4));
-    } catch(e) { console.warn("선택지실패:", e.message); setChoices(FALLBACK); }
+      setChoices(JSON.parse(raw.replace(/```json|```/g,"").trim()).choices || []);
+    } catch { setChoices([]); }
   };
 
   const updateMid = async (allMessages, apiKey) => {
@@ -2244,7 +2257,7 @@ function ChatApp({ apiKeys, character, onReset, onReincarnate, onKeyReset, pastL
         ? aliveMonsters.map(m => `${m.name}(HP:${m.hp}/${m.maxHp})`).join(", ")
         : "없음";
 
-      const prompt = `플레이어 행동: "${userMsg.slice(0,200)}"\nAI 서사: "${aiText.slice(0,500)}"\n현재 전투 중인 적: ${monsterList}\n\n위 내용에서 몬스터/적/괴물 관련 이벤트를 분석하여 JSON 배열로 출력하세요.\n\n가능한 action:\n- "spawn": 새 적 등장. 반드시 포함: name(이름), tier("weak"|"normal"|"elite"|"boss"|"legend"), count(마릿수 숫자, 기본1), skills(스킬명 배열 1~3개), pattern("aggressive"|"defensive"|"cunning"|"berserk")\n  * "오크 3마리" → [{"action":"spawn","name":"오크","count":3,"tier":"normal",...}]\n  * "오크 무리와 트롤" → [{"action":"spawn","name":"오크","count":3,...},{"action":"spawn","name":"트롤","count":1,...}]\n  * 수량 표현: 한/1=1, 두/둘/2=2, 세/셋/3=3, 네/넷/4=4, 다섯/5=5, 무리/떼=3, 군단=5\n- "damage": 플레이어가 적에게 피해. name(적 이름), amount(피해량 5~80)\n- "defeated": 적 처치됨. name(적 이름), count(처치 수, 기본1)\n- "flee": 적 도주. name(적 이름)\n- "none": 아무 이벤트 없음\n\n규칙:\n- 새 몬스터 등장 시 반드시 count 포함\n- 이미 전투 중인 적(${monsterList})은 spawn하지 말 것\n- 전투 상황이 아니면 [{"action":"none"}] 출력\n- JSON 배열만 출력, 설명 없음\n\n예시 출력: [{"action":"spawn","name":"고블린","count":4,"tier":"weak","skills":["단검 찌르기","독 바르기"],"pattern":"cunning"},{"action":"spawn","name":"오크 대장","count":1,"tier":"elite","skills":["대검 휘두르기"],"pattern":"aggressive"}]`;
+      const prompt = `플레이어 행동: "${userMsg.slice(0,200)}"\nAI 서사: "${aiText.slice(0,500)}"\n현재 전투 중인 적: ${monsterList}\n\n위 내용에서 몬스터/적/괴물 관련 이벤트를 분석하여 JSON 배열로 출력하세요.\n\n가능한 action:\n- "spawn": 새 적 등장. 반드시 포함: name(이름), tier("weak"|"normal"|"elite"|"boss"|"legend"), count(마릿수 숫자, 기본1), skills(스킬명 배열 1~3개), pattern("aggressive"|"defensive"|"cunning"|"berserk")\n* "오크 3마리" → [{"action":"spawn","name":"오크","count":3,"tier":"normal",...}]\n* "오크 무리와 트롤" → [{"action":"spawn","name":"오크","count":3,...},{"action":"spawn","name":"트롤","count":1,...}]\n* 수량 표현: 한/1=1, 두/둘/2=2, 세/셋/3=3, 네/넷/4=4, 다섯/5=5, 무리/떼=3, 군단=5\n- "damage": 플레이어가 적에게 피해. name(적 이름), amount(피해량 5~80)\n- "defeated": 적 처치됨. name(적 이름), count(처치 수, 기본1)\n- "flee": 적 도주. name(적 이름)\n- "none": 아무 이벤트 없음\n\n규칙:\n- 새 몬스터 등장 시 반드시 count 포함\n- 이미 전투 중인 적(${monsterList})은 spawn하지 말 것\n- 전투 상황이 아니면 [{"action":"none"}] 출력\n- JSON 배열만 출력, 설명 없음\n\n예시 출력: [{"action":"spawn","name":"고블린","count":4,"tier":"weak","skills":["단검 찌르기","독 바르기"],"pattern":"cunning"},{"action":"spawn","name":"오크 대장","count":1,"tier":"elite","skills":["대검 휘두르기"],"pattern":"aggressive"}]`;
 
       const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
         method:"POST", headers:{"Content-Type":"application/json"},
@@ -2871,10 +2884,14 @@ function ChatApp({ apiKeys, character, onReset, onReincarnate, onKeyReset, pastL
     if ((stats.food ?? 50) <= 10) survivalPenalty -= 10;  // 굶주림: 추가 -10
     if ((stats.ftg  ?? 30) >= 70) survivalPenalty -= 5;   // 피로: 판정 -5
     if ((stats.ftg  ?? 30) >= 90) survivalPenalty -= 10;  // 과로: 추가 -10
-    const effectiveStatValue = Math.max(1, statValue + survivalPenalty);
+    // [NEW] 날씨 판정 보너스/페널티
+    const weatherMods = getWeatherStatMods();
+    const weatherBonus = (weatherMods.combined[usedStat] || 0);
+    const effectiveStatValue = Math.max(1, statValue + survivalPenalty + weatherBonus);
+    const weatherHint = weatherBonus !== 0 ? ` [${weatherMods.weather.icon}날씨${weatherBonus>0?"+":""}${weatherBonus}]` : "";
     const survivalPenaltyHint = survivalPenalty < 0
-      ? `\n[🍖 생존 페널티 ${survivalPenalty}] 포만감·피로도로 인해 판정 스탯이 ${effectiveStatValue}로 감소했습니다.`
-      : "";
+      ? `\n[🍖 생존 페널티 ${survivalPenalty}] 포만감·피로도로 인해 판정 스탯이 ${effectiveStatValue}로 감소했습니다.${weatherHint}`
+      : (weatherBonus !== 0 ? `\n[${weatherMods.weather.icon}날씨 보정 ${weatherBonus>0?"+":""}${weatherBonus}] ${weatherMods.weather.label} 날씨로 판정에 영향을 받았습니다.` : "");
 
     const statInfo = getStatInfo(usedStat);
 
@@ -2939,6 +2956,28 @@ function ChatApp({ apiKeys, character, onReset, onReincarnate, onKeyReset, pastL
       // 10턴마다 스킬 포인트 +1
       if (msgCountRef.current % 10 === 0) {
         setSkillSP(prev => { const n = prev + 1; saveSkillSP(n); return n; });
+        // [NEW] 악당 성장 틱 (10턴마다)
+        const heroAct = text.includes("처치") || text.includes("승리") || text.includes("물리쳤") ? "hero" : "none";
+        const newVillain = tickVillainGrowth(heroAct);
+        setVillainStatus(newVillain);
+        // [NEW] 목표 진행도 체크 (서사에 목표 관련 키워드 있으면 소량 진행)
+        const currentGoal = loadCycleGoal();
+        if (currentGoal && !currentGoal.completed) {
+          const goalKeywords = { throne:["왕","군주","지배","패권"], slayer:["처치","쓰러","격파","처단"], revenge:["복수","원수","원한"], sage_path:["비밀","진실","지식","발견"], savior:["구했","구출","지켜"], silent_end:["평화","조용","일상","여유"], revolution:["혁명","반란","봉기"], underworld:["조직","암흑","지하"], divine_path:["초월","신","각성"], dragon_king:["용","드래곤"] };
+          const kws = goalKeywords[currentGoal.id] || [];
+          if (kws.some(kw => text.includes(kw))) {
+            const updated = updateGoalProgress(15);
+            setCycleGoal(updated);
+          }
+        }
+        // [NEW] NPC 동료 성장 (전투 승리 시)
+        if (heroAct === "hero") {
+          const activeNpcs = loadNPCs().filter(n => n.relationship > 50);
+          if (activeNpcs.length > 0) {
+            const topNpc = activeNpcs.sort((a,b) => (b.relationship||0)-(a.relationship||0))[0];
+            growNpc(topNpc.name, 8);
+          }
+        }
       }
 
       const rollInfo = { stat: usedStat, statName: statInfo?.name || usedStat, statIcon: statInfo?.icon || "", statValue: effectiveStatValue, diceRoll, verdict: verdictLabel, verdictEmoji, isSuccess: effectiveSuccess, isCritSuccess, isCritFail, skillUsed: skillUsed?.name, passiveProcs: procsThisTurn };
@@ -3108,6 +3147,30 @@ function ChatApp({ apiKeys, character, onReset, onReincarnate, onKeyReset, pastL
           cp_digital_ghost:    ["의식이 복사","디지털로 전환","뇌가 업로드","디지털 망령"],
           cp_last_human:       ["임플란트 없이","순수 인간","기계 없이 살","개조를 거부"],
           cp_revolution:       ["혁명을 일으","도시를 뒤흔","전면 반란","체제를 뒤엎"],
+          // 아포칼립스
+          ap_wasteland_king:   ["황무지의 왕","폐허의 지배자","생존자 군주","폐허를 지배"],
+          ap_last_hope:        ["마지막 희망","유일한 희망","절망 속에서 빛","희망을 밝혔"],
+          ap_mutant_born:      ["변이체","방사능 변이","변이가 일어","돌연변이"],
+          ap_vault_raider:     ["금고를 열","비밀 금고","전쟁 전 유물","문명 이전"],
+          ap_survival_leader:  ["생존자들을 이끌","피난민 지도자","생존 공동체","생존 집단의 리더"],
+          ap_scavenger_king:   ["약탈의 왕","최고의 약탈자","폐허를 누볐"],
+          ap_war_machine:      ["전쟁 기계","살인 병기","전장을 지배","전투의 신"],
+          // 신화 세계관
+          my_divine_chosen:    ["신의 선택","신에게 선택받","신의 사자","신이 내린 사명"],
+          my_titan_slayer:     ["티탄을 물리","거인을 쓰러","태초의 거인"],
+          my_olympus_visitor:  ["올림포스에 오른","신들의 산","신들과 만났"],
+          my_fate_defied:      ["운명을 거스","운명을 바꿨","예언을 뒤집"],
+          my_dragon_tamer:     ["용을 길들","신화의 용","용과 계약"],
+          my_underworld_return:["저승에서 돌아","명계를 탈출","죽음의 세계에서"],
+          my_hero_legend:      ["신화의 영웅","전설이 되었","영웅 서사시"],
+          // 스팀펑크
+          sp_grand_inventor:   ["위대한 발명","세기의 발명","세상을 바꿀 발명"],
+          sp_aether_master:    ["에테르를 지배","에테르의 달인","에테르 에너지 완전"],
+          sp_noble_conspirator:["귀족의 음모","상류층 내부","귀족 사회 침투"],
+          sp_steam_captain:    ["증기선 함장","공중 함선","비행선 함장"],
+          sp_revolution_gear:  ["증기 혁명","기계의 반란","노동자 혁명"],
+          sp_clockwork_army:   ["태엽 군단","기계 군대","자동화 부대"],
+          sp_empire_builder:   ["제국 건설","증기 제국","기술 패권"],
         };
         scenarioTitles.forEach(titleDef => {
           const existingTitles = loadTitles();
@@ -3124,17 +3187,11 @@ function ChatApp({ apiKeys, character, onReset, onReincarnate, onKeyReset, pastL
 
   const startChat = async () => {
     setLoading(true);
-    const char = character;
-    const openingPrompt = `이야기를 시작합니다.\n주인공: ${char.name}${char.race ? " ("+char.race+")" : ""} / 직업: ${char.role}\n세계관: ${char.scenario || "판타지"}\n성격: ${char.personality || "알 수 없음"}\n배경: ${char.background || "알 수 없음"}\n말투: ${char.speechStyle || "기본"}\n\n위 캐릭터로 첫 장면을 생생하게 묘사해 주십시오.\n1. 주인공이 처한 상황을 명확히 묘사\n2. 주변 환경과 분위기를 설명\n3. 주인공의 성격과 말투를 반영\n4. 마지막에 선택할 수 있는 행동 3가지 제시:\n   ① [행동1]\n   ② [행동2]\n   ③ [행동3]`;
     try {
-      const text = await callGemini([], openingPrompt);
-      const msgObj = { role:"assistant", content:text, characterName:char.name, imageUrl:null, imageLoading:false };
+      const text = await callGemini([], "이야기를 시작해 주십시오. 세계관과 분위기를 살려서 첫 장면을 묘사하십시오.");
+      const msgObj = { role:"assistant", content:text, characterName:character.name, imageUrl:null, imageLoading:false };
       setMessages([msgObj]); generateChoices([msgObj]);
-    } catch {
-      const fallback = `${char.name}은(는) 새로운 여정을 시작하려 한다. 앞으로 어떻게 행동할 것인가?`;
-      setMessages([{ role:"assistant", content:fallback, characterName:char.name }]);
-      setChoices(["주변을 둘러보며 상황을 파악한다.", "가까운 사람에게 말을 건다.", "조용히 다음 행동을 계획한다."]);
-    }
+    } catch { setMessages([{ role:"assistant", content:"소환 실패.", characterName:character.name }]); }
     grantTitle("first_blood"); setLoading(false); setInitialized(true);
   };
 
@@ -3843,6 +3900,39 @@ function ChatApp({ apiKeys, character, onReset, onReincarnate, onKeyReset, pastL
     "에코 임플란트":      { type:"equip", slot:"accessory", effects:{ per:10, intn:6, cal:4 },          desc:"PER +10, INTN +6, CAL +4" },
     "탈취한 AI 코어":     { type:"equip", slot:"accessory", effects:{ int:12, mgc:8, wil:5 },           desc:"INT +12, MGC +8, WIL +5" },
     "반란군 패치":        { type:"equip", slot:"accessory", effects:{ ldr:5, wil:5, rep:4, fear:3 },    desc:"통솔 +5, WIL +5, 평판 +4, FEAR +3" },
+    // 아포칼립스
+    "생존자의 코트":      { type:"equip", slot:"armor",     effects:{ end:12, pstx:8, agi:5 },           desc:"END +12, 독내성 +8, AGI +5" },
+    "고철 대검":          { type:"equip", slot:"weapon",    effects:{ str:10, crit:6 },                  desc:"STR +10, CRIT +6" },
+    "비밀 금고 열쇠":     { type:"equip", slot:"accessory", effects:{ luk:15, int:8, per:6 },            desc:"LUK +15, INT +8, PER +6" },
+    "변이 혈청":          { type:"consume", effects:{ str:10, end:10, mgc:8, mad:5 },                    desc:"STR +10, END +10, MGC +8, 광기 +5" },
+    "비상 식량 팩":       { type:"consume", effects:{ hp:30, end:8, ftg:-20 },                           desc:"HP +30, END +8, 피로도 -20" },
+    "신호 교란기":        { type:"equip", slot:"accessory", effects:{ disg:10, per:6, int:5 },           desc:"위장 +10, PER +6, INT +5" },
+    "황무지 생존 지도":   { type:"equip", slot:"accessory", effects:{ luk:8, per:10, agi:4 },            desc:"LUK +8, PER +10, AGI +4" },
+    "방사능 방호복":      { type:"equip", slot:"armor",     effects:{ end:10, pstx:12, wil:4 },          desc:"END +10, 독내성 +12, WIL +4" },
+    "EMP 수류탄":         { type:"consume", effects:{ int:6, fear:8, agi:4 },                            desc:"INT +6, FEAR +8, AGI +4" },
+    "마지막 신호탄":      { type:"equip", slot:"accessory", effects:{ rep:20, ldr:10, trst:8 },          desc:"평판 +20, 통솔 +10, 신뢰 +8" },
+    // 신화 세계관
+    "올림포스 신창":      { type:"equip", slot:"weapon",    effects:{ str:14, mgc:10, crit:8, fear:6 }, desc:"STR +14, MGC +10, CRIT +8, FEAR +6" },
+    "암브로시아":         { type:"consume", effects:{ hp:80, mp:60, end:15, wil:10 },                   desc:"HP +80, MP +60, END +15, WIL +10" },
+    "운명의 실":          { type:"equip", slot:"accessory", effects:{ luk:20, per:12, wil:8 },          desc:"LUK +20, PER +12, WIL +8" },
+    "영웅의 방패":        { type:"equip", slot:"armor",     effects:{ end:14, wil:10, fath:6 },         desc:"END +14, WIL +10, 신앙 +6" },
+    "신탁의 반지":        { type:"equip", slot:"accessory", effects:{ per:12, int:10, luk:8 },          desc:"PER +12, INT +10, LUK +8" },
+    "티탄의 뼈 부적":     { type:"equip", slot:"accessory", effects:{ str:10, end:10, fear:8 },         desc:"STR +10, END +10, FEAR +8" },
+    "저승사자의 동전":    { type:"equip", slot:"accessory", effects:{ fear:15, mgc:10, crse:8, hp:10 }, desc:"FEAR +15, MGC +10, 저주 +8, HP +10" },
+    "카오스의 씨앗":      { type:"consume", effects:{ mgc:15, luk:15, mad:10, wil:-5 },                 desc:"MGC +15, LUK +15, 광기 +10, WIL -5" },
+    "불사조의 깃털":      { type:"equip", slot:"accessory", effects:{ hp:15, regen:10, wil:8 },         desc:"HP +15, 회복력 +10, WIL +8" },
+    "신성 봉인 인장":     { type:"equip", slot:"accessory", effects:{ fath:8, wil:6, rep:5 },           desc:"신앙 +8, WIL +6, 평판 +5" },
+    // 스팀펑크
+    "기계 심장":          { type:"equip", slot:"accessory", effects:{ end:12, regen:10, int:8, agi:5 }, desc:"END +12, 회복 +10, INT +8, AGI +5" },
+    "에테르 권총":        { type:"equip", slot:"weapon",    effects:{ str:8, crit:12, int:6 },          desc:"STR +8, CRIT +12, INT +6" },
+    "발명가의 고글":      { type:"equip", slot:"accessory", effects:{ per:12, int:10, crit:6 },         desc:"PER +12, INT +10, CRIT +6" },
+    "번개 지팡이":        { type:"equip", slot:"weapon",    effects:{ mgc:12, str:8, crit:10 },         desc:"MGC +12, STR +8, CRIT +10" },
+    "기계 의수":          { type:"equip", slot:"armor",     effects:{ str:14, crit:8, end:5 },          desc:"STR +14, CRIT +8, END +5" },
+    "톱니 나침반":        { type:"equip", slot:"accessory", effects:{ per:8, luk:6, agi:4 },            desc:"PER +8, LUK +6, AGI +4" },
+    "연금술사의 플라스크":{ type:"consume", effects:{ hp:40, mp:30, int:8, regen:6 },                   desc:"HP +40, MP +30, INT +8, 회복 +6" },
+    "태엽 인형":          { type:"equip", slot:"accessory", effects:{ ldr:10, fear:6, int:8 },          desc:"통솔 +10, FEAR +6, INT +8" },
+    "증기 코어":          { type:"equip", slot:"accessory", effects:{ end:10, str:6, agi:6, regen:5 },  desc:"END +10, STR +6, AGI +6, 회복 +5" },
+    "귀족 모노클":        { type:"equip", slot:"accessory", effects:{ neg:8, rep:6, cha:5 },            desc:"교섭 +8, 평판 +6, 매력 +5" },
   };
 
   // 장착 중인 아이템 관리 (slot → itemId)
@@ -4023,6 +4113,196 @@ function ChatApp({ apiKeys, character, onReset, onReincarnate, onKeyReset, pastL
     );
   };
 
+  // ── 회차 연보 패널 ─────────────────────────────────────────────
+  const AnnalsPanel = () => {
+    const annals = loadAnnals();
+    const stats = getAnnalStats();
+    const RARITY_C = { common:"#8a9a8a", uncommon:"#4a9a6a", rare:"#4a6fa5", legendary:"#c8a96e" };
+    return (
+      <div style={{ position:"fixed", inset:0, zIndex:998, background:"rgba(0,0,0,0.88)", display:"flex", alignItems:"center", justifyContent:"center", padding:12 }} onClick={() => setShowAnnals(false)}>
+        <div style={{ width:"100%", maxWidth:420, maxHeight:"90vh", display:"flex", flexDirection:"column", background:"linear-gradient(160deg,#050010,#0a0020)", border:"2px solid #a060e0", boxShadow:"0 0 30px rgba(160,96,224,0.3)" }} onClick={e => e.stopPropagation()}>
+          <div style={{ padding:"14px 16px 10px", borderBottom:"1px solid #3a2a6a", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+            <span style={{ fontFamily:"'Cinzel',serif", fontSize:13, color:"#a060e0", letterSpacing:2 }}>📜 회차 연보</span>
+            <button onClick={() => setShowAnnals(false)} style={{ background:"none", border:"none", color:"#8a7a9a", fontSize:18, cursor:"pointer" }}>✕</button>
+          </div>
+          {stats && (
+            <div style={{ padding:"8px 14px", background:"#0a0518", borderBottom:"1px solid #2a1a5a", display:"flex", gap:16, flexWrap:"wrap" }}>
+              <span style={{ fontSize:10, color:"#a060e0" }}>총 {stats.total}회차</span>
+              <span style={{ fontSize:10, color:"#c8a96e" }}>최다 종족: {stats.mostUsedRace?.[0] || "없음"}</span>
+              <span style={{ fontSize:10, color:"#80c080" }}>최다 엔딩: {stats.favoriteEnding ? (ENDING_THEMES[stats.favoriteEnding[0]]?.label || stats.favoriteEnding[0]) : "없음"}</span>
+            </div>
+          )}
+          <div style={{ overflowY:"auto", padding:"8px 12px", flex:1 }}>
+            {annals.length === 0 && <div style={{ textAlign:"center", color:"#6a5a8a", fontSize:11, padding:20 }}>아직 기록된 회차가 없습니다.</div>}
+            {[...annals].reverse().map((a, i) => (
+              <div key={i} style={{ padding:"10px 12px", marginBottom:6, background:"linear-gradient(135deg,#0a0518,#12082a)", border:`1px solid ${a.endingColor||"#a060e0"}44`, borderRadius:4 }}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:4 }}>
+                  <span style={{ fontSize:10, color:"#6a5a8a", fontFamily:"'Cinzel',serif" }}>회차 {a.cycle}</span>
+                  <span style={{ fontSize:11, color: a.endingColor||"#a060e0" }}>{a.endingIcon} {a.endingLabel}</span>
+                </div>
+                <div style={{ fontSize:12, color:"#d0c0e0", marginBottom:2 }}>{a.race && `[${a.race}] `}{a.role} — {a.charName}</div>
+                <div style={{ fontSize:10, color:"#8a7a9a" }}>🌍 {a.scenario} · 🎯 {a.goalName}</div>
+                {a.highlights?.length > 0 && (
+                  <div style={{ fontSize:9, color:"#6a5a7a", marginTop:4 }}>{a.highlights.slice(0,2).join(" · ")}</div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // ── 강화/제작 패널 ──────────────────────────────────────────────
+  const ForgePanel = () => {
+    const [tab, setTab] = React.useState("craft");
+    const [selectedRecipe, setSelectedRecipe] = React.useState(null);
+    const [msg, setMsg] = React.useState("");
+    const cycle = loadCycleCount();
+    const recipes = getAvailableRecipes(character?.scenario||"", cycle);
+    const rarityColor = { common:"#8a9a8a", uncommon:"#4a9a6a", rare:"#4a6fa5", legendary:"#c8a96e" };
+
+    const handleCraft = (recipe) => {
+      if (gold < recipe.goldCost) { setMsg("골드가 부족합니다."); return; }
+      const newGold = gold - recipe.goldCost;
+      saveGold(newGold); setGold(newGold);
+      const newItem = { id: `crafted_${Date.now()}`, name: recipe.name, icon: recipe.icon, rarity: recipe.rarity, ...recipe.result, crafted: true };
+      const newInv = [...inventory, newItem];
+      saveInventory(newInv); setInventory(newInv);
+      const fd = loadForgeData();
+      fd.craftHistory.push({ recipeId: recipe.id, at: new Date().toISOString() });
+      saveForgeData(fd); setForgeData(fd);
+      setMsg(`✅ ${recipe.name} 제작 완료!`);
+      setTimeout(() => setMsg(""), 2500);
+    };
+
+    return (
+      <div style={{ position:"fixed", inset:0, zIndex:998, background:"rgba(0,0,0,0.88)", display:"flex", alignItems:"center", justifyContent:"center", padding:12 }} onClick={() => setShowForge(false)}>
+        <div style={{ width:"100%", maxWidth:420, maxHeight:"90vh", display:"flex", flexDirection:"column", background:"linear-gradient(160deg,#0a0500,#150d03)", border:"2px solid #e06030", boxShadow:"0 0 30px rgba(224,96,48,0.3)" }} onClick={e => e.stopPropagation()}>
+          <div style={{ padding:"14px 16px 10px", borderBottom:"1px solid #5a2a0a", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+            <span style={{ fontFamily:"'Cinzel',serif", fontSize:13, color:"#e06030", letterSpacing:2 }}>⚒️ 대장간 & 제작</span>
+            <button onClick={() => setShowForge(false)} style={{ background:"none", border:"none", color:"#8a7a5a", fontSize:18, cursor:"pointer" }}>✕</button>
+          </div>
+          <div style={{ display:"flex", borderBottom:"1px solid #3a1a0a" }}>
+            {[["craft","🔧 제작"],["upgrade","⬆️ 강화"]].map(([t,l]) => (
+              <button key={t} onClick={() => setTab(t)} style={{ flex:1, padding:"8px 4px", background:tab===t?"#2a1005":"transparent", border:"none", borderBottom:tab===t?"2px solid #e06030":"2px solid transparent", color:tab===t?"#e06030":"#5a3a1a", fontSize:10, fontFamily:"'Cinzel',serif", cursor:"pointer" }}>{l}</button>
+            ))}
+          </div>
+          {msg && <div style={{ padding:"6px 14px", background:"#1a1005", fontSize:10, color:"#c8a96e", textAlign:"center" }}>{msg}</div>}
+          <div style={{ overflowY:"auto", flex:1, padding:"8px 12px" }}>
+            {tab === "craft" && (
+              <>
+                <div style={{ fontSize:9, color:"#5a4a2a", marginBottom:8 }}>현재 골드: 💰 {gold} | 가능한 레시피 {recipes.length}개</div>
+                {recipes.map(recipe => (
+                  <div key={recipe.id} style={{ padding:"10px 12px", marginBottom:6, background:"linear-gradient(135deg,#120800,#0a0400)", border:`1px solid ${rarityColor[recipe.rarity]||"#3a2a0a"}`, cursor:"pointer", opacity: gold >= recipe.goldCost ? 1 : 0.5 }}
+                    onClick={() => setSelectedRecipe(selectedRecipe?.id===recipe.id ? null : recipe)}>
+                    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                      <span style={{ fontSize:14 }}>{recipe.icon} <span style={{ fontSize:11, color: rarityColor[recipe.rarity] }}>{recipe.name}</span></span>
+                      <span style={{ fontSize:10, color:"#c8a96e" }}>💰 {recipe.goldCost}</span>
+                    </div>
+                    {selectedRecipe?.id === recipe.id && (
+                      <div style={{ marginTop:8 }}>
+                        <div style={{ fontSize:9, color:"#8a7a5a", marginBottom:4 }}>{recipe.result.desc}</div>
+                        <div style={{ fontSize:9, color:"#60a060", marginBottom:6 }}>{Object.entries(recipe.result.effects||{}).map(([k,v])=>`${k.toUpperCase()} ${v>0?"+":""}${v}`).join(" · ")}</div>
+                        <div style={{ fontSize:8, color:"#5a4a2a", marginBottom:8 }}>{recipe.hint}</div>
+                        <button onClick={(e) => { e.stopPropagation(); handleCraft(recipe); }} style={{ padding:"5px 12px", background:gold>=recipe.goldCost?"linear-gradient(135deg,#3a1a05,#5a2a08)":"#1a0a00", border:`1px solid ${gold>=recipe.goldCost?"#e06030":"#3a1a0a"}`, color:gold>=recipe.goldCost?"#e06030":"#5a3a1a", fontFamily:"'Cinzel',serif", fontSize:9, cursor:gold>=recipe.goldCost?"pointer":"not-allowed" }}>
+                          제작하기
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </>
+            )}
+            {tab === "upgrade" && (
+              <div style={{ textAlign:"center", color:"#8a7a5a", fontSize:11, padding:20 }}>
+                <div style={{ fontSize:20, marginBottom:8 }}>⚒️</div>
+                <div>인벤토리에서 장비 아이템을 선택하면</div>
+                <div>강화 옵션이 표시됩니다.</div>
+                <div style={{ fontSize:9, color:"#5a4a2a", marginTop:12 }}>
+                  {UPGRADE_TIERS.map(t => (
+                    <div key={t.tier} style={{ marginBottom:3, color:t.color }}>{t.label}: 골드 {t.goldCost} · 성공률 {Math.round(t.successRate*100)}% · 스탯 +{Math.round(t.bonus*100)}%</div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // ── 목표/악당 패널 ─────────────────────────────────────────────
+  const GoalPanel = () => {
+    const goal = loadCycleGoal();
+    const villain = getVillainStatus();
+    const [assignNew, setAssignNew] = React.useState(false);
+
+    const handleAssignGoal = (g) => {
+      saveCycleGoal({ ...g, assignedAt: new Date().toISOString(), progress: 0, completed: false });
+      setCycleGoal({ ...g, assignedAt: new Date().toISOString(), progress: 0, completed: false });
+      setAssignNew(false);
+    };
+
+    return (
+      <div style={{ position:"fixed", inset:0, zIndex:998, background:"rgba(0,0,0,0.88)", display:"flex", alignItems:"center", justifyContent:"center", padding:12 }} onClick={() => setShowGoal(false)}>
+        <div style={{ width:"100%", maxWidth:420, maxHeight:"90vh", display:"flex", flexDirection:"column", background:"linear-gradient(160deg,#050a00,#0a1500)", border:"2px solid #60c060", boxShadow:"0 0 30px rgba(96,192,96,0.2)" }} onClick={e => e.stopPropagation()}>
+          <div style={{ padding:"14px 16px 10px", borderBottom:"1px solid #1a3a0a", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+            <span style={{ fontFamily:"'Cinzel',serif", fontSize:13, color:"#60c060", letterSpacing:2 }}>🎯 목표 & 위협</span>
+            <button onClick={() => setShowGoal(false)} style={{ background:"none", border:"none", color:"#5a8a5a", fontSize:18, cursor:"pointer" }}>✕</button>
+          </div>
+          <div style={{ overflowY:"auto", flex:1, padding:"10px 14px" }}>
+            {/* 현재 목표 */}
+            <div style={{ marginBottom:16 }}>
+              <div style={{ fontSize:10, color:"#60c060", fontFamily:"'Cinzel',serif", marginBottom:8, letterSpacing:1 }}>이번 회차 목표</div>
+              {goal ? (
+                <div style={{ padding:"12px 14px", background:"linear-gradient(135deg,#050a00,#0a1200)", border:"1px solid #2a5a1a" }}>
+                  <div style={{ fontSize:16, marginBottom:4 }}>{goal.icon} <span style={{ fontSize:12, color:"#80e080", fontFamily:"'Cinzel',serif" }}>{goal.name}</span> {goal.completed && "✅"}</div>
+                  <div style={{ fontSize:10, color:"#5a8a5a", marginBottom:8 }}>{goal.desc}</div>
+                  <div style={{ fontSize:9, color:"#4a6a4a", marginBottom:8 }}>{goal.hint}</div>
+                  <div style={{ height:6, background:"#0a1a00", borderRadius:3, marginBottom:6 }}>
+                    <div style={{ height:"100%", width:`${Math.min(100,goal.progress||0)}%`, background:"linear-gradient(90deg,#2a6a1a,#60c060)", borderRadius:3, transition:"width 0.3s" }} />
+                  </div>
+                  <div style={{ fontSize:9, color:"#4a6a4a" }}>진행도 {goal.progress||0}%</div>
+                </div>
+              ) : (
+                <div style={{ textAlign:"center", color:"#4a6a4a", fontSize:10, padding:12 }}>목표 없음</div>
+              )}
+              <button onClick={() => setAssignNew(v => !v)} style={{ marginTop:8, padding:"5px 12px", background:"#0a1500", border:"1px solid #2a5a1a", color:"#60c060", fontSize:9, fontFamily:"'Cinzel',serif", cursor:"pointer", width:"100%" }}>
+                {assignNew ? "▲ 목록 닫기" : "▼ 목표 변경"}
+              </button>
+              {assignNew && (
+                <div style={{ marginTop:8 }}>
+                  {CLEAR_GOALS.filter(g => !g.scenarios || g.scenarios.some(s => character?.scenario?.includes(s==="medieval"?"중세":s==="mythology"?"신화":s))).map(g => (
+                    <div key={g.id} onClick={() => handleAssignGoal(g)} style={{ padding:"8px 10px", marginBottom:4, background:"#050a00", border:"1px solid #1a3a0a", cursor:"pointer" }}>
+                      <span style={{ fontSize:11 }}>{g.icon} </span><span style={{ fontSize:10, color:"#60c060" }}>{g.name}</span>
+                      <div style={{ fontSize:9, color:"#3a5a3a" }}>{g.hint}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            {/* 악당 위협 */}
+            <div>
+              <div style={{ fontSize:10, color:"#e05050", fontFamily:"'Cinzel',serif", marginBottom:8, letterSpacing:1 }}>세계 위협 현황</div>
+              <div style={{ padding:"12px 14px", background:"linear-gradient(135deg,#0a0000,#150000)", border:"1px solid #5a1a1a" }}>
+                <div style={{ display:"flex", justifyContent:"space-between", marginBottom:8 }}>
+                  <span style={{ fontSize:13 }}>{villain.threatDef?.icon||"🌱"} <span style={{ fontSize:11, color:"#e05050" }}>{villain.threatDef?.label||"평온"}</span></span>
+                  <span style={{ fontSize:10, color:"#8a5050" }}>위협도 {villain.power||0}%</span>
+                </div>
+                <div style={{ height:6, background:"#1a0000", borderRadius:3, marginBottom:6 }}>
+                  <div style={{ height:"100%", width:`${villain.power||0}%`, background:"linear-gradient(90deg,#8a1a1a,#e05050)", borderRadius:3 }} />
+                </div>
+                <div style={{ fontSize:9, color:"#6a3a3a" }}>{villain.threatDef?.desc||"세계가 평온합니다."}</div>
+                {villain.name && <div style={{ fontSize:9, color:"#8a5050", marginTop:4 }}>악당: {villain.name}</div>}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // ── 인벤토리 패널 ──────────────────────────────────────────────
   const InventoryPanel = () => {
     const rarityColor = { common:"#8a9a8a", uncommon:"#4a9a6a", rare:"#4a6fa5", legendary:"#c8a96e" };
@@ -4193,6 +4473,9 @@ function ChatApp({ apiKeys, character, onReset, onReincarnate, onKeyReset, pastL
       {showSkillPanel && <SkillPanel />}
       {showStatsPanel && <StatsPanel />}
       {showShop && <ShopPanel />}
+      {showForge && <ForgePanel />}
+      {showAnnals && <AnnalsPanel />}
+      {showGoal && <GoalPanel />}
       {showAtmospherePanel && <AtmospherePanel />}
       {showWorldPanel && <WorldPanel />}
       {showMemoryEditor && <MemoryEditorPanel />}
@@ -4212,6 +4495,9 @@ function ChatApp({ apiKeys, character, onReset, onReincarnate, onKeyReset, pastL
               const sc = character?.scenario === "중세 판타지" ? "medieval"
                        : character?.scenario === "무협 강호"   ? "wuxia"
                        : character?.scenario === "사이버펑크"  ? "cyberpunk"
+                       : character?.scenario === "아포칼립스"  ? "apocalypse"
+                       : character?.scenario === "신화 세계관" ? "mythology"
+                       : character?.scenario === "스팀펑크"    ? "steampunk"
                        : null;
               if (!sc) return null;
 
@@ -4375,6 +4661,9 @@ function ChatApp({ apiKeys, character, onReset, onReincarnate, onKeyReset, pastL
             <button onClick={() => setShowWorldPanel(true)} style={{ background:"linear-gradient(135deg,#051a10,#0a2a18)", border:"1px solid #3a7a5a", color:"#6abea0", fontSize:9, padding:"3px 7px", cursor:"pointer", fontFamily:"'Cinzel',serif", letterSpacing:0.5, flexShrink:0 }}>🌍 세계</button>
             <button onClick={() => setShowAtmospherePanel(true)} style={{ background:"linear-gradient(135deg,#05101a,#0a1828)", border:`1px solid ${atmosphere.weather!=="none"||atmosphere.timeOfDay!=="none"?"#4a7aaa":"#1a2a3a"}`, color:atmosphere.weather!=="none"||atmosphere.timeOfDay!=="none"?"#7abaee":"#3a5a7a", fontSize:9, padding:"3px 7px", cursor:"pointer", fontFamily:"'Cinzel',serif", letterSpacing:0.5, flexShrink:0 }}>🌤️ 날씨</button>
             <button onClick={() => setShowMemoryEditor(true)} style={{ background:"linear-gradient(135deg,#0a0518,#150a28)", border:"1px solid #5a2a8a", color:"#a06ae0", fontSize:9, padding:"3px 7px", cursor:"pointer", fontFamily:"'Cinzel',serif", letterSpacing:0.5, flexShrink:0 }}>🔴 기억</button>
+            <button onClick={() => setShowForge(true)} style={{ background:"linear-gradient(135deg,#1a0800,#2a1000)", border:"1px solid #e06030", color:"#e06030", fontSize:9, padding:"3px 7px", cursor:"pointer", fontFamily:"'Cinzel',serif", letterSpacing:0.5, flexShrink:0 }}>⚒️ 제작</button>
+            <button onClick={() => setShowGoal(true)} style={{ background:"linear-gradient(135deg,#051000,#0a1800)", border:`1px solid ${cycleGoal?.completed?"#60c060":"#2a5a1a"}`, color:cycleGoal?.completed?"#60c060":"#4a8a4a", fontSize:9, padding:"3px 7px", cursor:"pointer", fontFamily:"'Cinzel',serif", letterSpacing:0.5, flexShrink:0 }}>{cycleGoal ? `${cycleGoal.icon}${cycleGoal.completed?"✅":""}` : "🎯"} 목표</button>
+            <button onClick={() => setShowAnnals(true)} style={{ background:"linear-gradient(135deg,#050010,#0a0020)", border:"1px solid #6030a0", color:"#8050c0", fontSize:9, padding:"3px 7px", cursor:"pointer", fontFamily:"'Cinzel',serif", letterSpacing:0.5, flexShrink:0 }}>📜 연보</button>
           </div>
         </div>
         <div style={{ display:"flex", flexDirection:"column", gap:3 }}>
@@ -4996,7 +5285,15 @@ function App() {
 
   const handleApiKeys  = (ks) => { saveApiKeys(ks); setApiKeys(ks); setScreen("scenario"); };
   const handleScenario = (sc) => { setScenario(sc); setScreen("setup"); };
-  const handleStart    = (char) => { setCharacter({...char, scenario: scenario?.era || "", customWorldSetting: scenario?.customWorldSetting || ""}); setScreen("chat"); };
+  const handleStart    = (char) => {
+    setCharacter({...char, scenario: scenario?.era || "", customWorldSetting: scenario?.customWorldSetting || ""});
+    // [NEW] 이번 회차 목표 자동 랜덤 할당
+    if (!loadCycleGoal()) {
+      const newGoal = assignRandomGoal(scenario?.era || "", loadCycleCount());
+      setCycleGoal(newGoal);
+    }
+    setScreen("chat");
+  };
   const handleReset    = () => { setCharacter(null); setScenario(null); setScreen("scenario"); };
   const handleReincarnate = (pastLifeData) => {
     // 9번: 회차 카운터
@@ -5109,6 +5406,21 @@ function App() {
         : (pastLifeData?.questCompletionRate || 0) < 30 ? "tragedy"
         : "neutral";
       recordPastTheme(endType);
+      // [NEW] 회차 연보 자동 기록
+      const goalId = loadCycleGoal()?.id || null;
+      recordAnnalEntry(
+        pastLifeData?.name || "이름 없는 영혼",
+        pastLifeData?.race || "",
+        pastLifeData?.role || "",
+        pastLifeData?.scenario || "",
+        endType,
+        goalId,
+        newCycle - 1,
+        pastLifeData?.highlights || []
+      );
+      // [NEW] 목표 초기화
+      clearCycleGoal();
+      setCycleGoal(null);
     }
     // 36번: 기억 왜곡 — 캐릭터 WIL 기반 왜곡 기록
     recordMemoryDistort(pastLifeData?.stats?.wil || 30);
@@ -5514,7 +5826,7 @@ function App() {
     savePastLife(pastLifeData); setPastLife(pastLifeData); clearSession(); clearMemory(); clearNPCs(); clearWorldNotes(); clearQuests(); clearAtmosphere(); clearSkills(); clearSkillSP(); clearJobSkills(); clearGold(); clearInventory(); clearPlayerLevel(); clearPlayerExp(); clearRace(); setCharacter(null); setScenario(null); setScreen("reincarnation");
   };
 
-  const handleKeyReset = () => { lsDel(API_KEYS_STORAGE); lsDel(API_KEY_INDEX_STORAGE); setApiKeys([]); setCharacter(null); setScenario(null); clearSession(); clearMemory(); clearEmotion(); clearSecrets(); clearHighlights(); clearNPCs(); clearWorldNotes(); clearQuests(); clearAtmosphere(); clearSkills(); clearSkillSP(); clearJobSkills(); clearGold(); clearInventory(); clearPlayerLevel(); clearPlayerExp(); clearRace(); clearParallelSelves(); clearCurseRing(); clearCycleStats(); clearInjuryMarks(); clearPastTheme(); clearMemoryDistort(); clearAgeParadox(); clearSummonLegacy(); clearGrudgeWeapons(); clearDreamProphecies(); clearLegacyBuildings(); clearWatchers(); clearSoulMasks(); clearEmotionRipples(); clearTestaments(); clearConstellation(); clearExplorerMap(); clearLightningImprints(); clearWarScars(); clearDivineContracts(); clearLanguageMemories(); clearSinRedemptions(); clearLegendShards(); clearTimeEchoes(); clearMythChapters(); clearBloodline(); clearCurseLineage(); clearStarSign(); clearPastLanguage(); clearIdentityVault(); clearRifts(); clearRecipeBook(); clearAchievementRates(); clearRomanceLegacy(); clearBestiary(); clearMemoryMerchant(); clearTimeTokens(); clearSurvivorCompanions(); clearUndyingGauge(); clearLanguages(); clearBardLegend(); clearMysteryPuzzle(); clearWatcherGaze(); clearFateCard(); clearHideout(); clearEvilEye(); clearMoonPhase(); clearPastLetters(); clearHighlightReel(); clearButterflyIndex(); clearInscription(); clearRankData(); clearSakuraData(); clearDejavu(); clearCausality(); clearGamblingDebt(); clearChildhoodTrauma(); clearApocalypse(); clearGrief(); clearInstinct(); clearCursedRelics(); clearNatureKarma(); clearAliasList(); clearWish(); clearPetLegacy(); clearSealedMemories(); clearSoulCrystals(); clearEmotionEcho(); clearDimensionMap(); clearVillainInherit(); clearTearCrystals(); clearElementTrauma(); clearCircus(); clearTemple(); clearLegacyWords(); clearMutation(); clearDarkEcho(); clearGrowthTree(); clearDeification(); clearLoopAwareness(); clearRivals(); clearRedThread(); clearRuins(); clearKillSense(); clearGrudgeFlowers(); clearCursedCycle(); clearFateMagnet(); clearMemoryFlood(); clearCarouselNPC(); clearFateTraps(); clearMentalCorruption(); clearCinema(); clearTwinSoul(); clearKillList(); clearMemoryAuction(); clearBondTree(); clearCyberImprint(); clearSwordGhost(); clearKingdom(); clearLoopersGuild(); clearDeathDealer(); clearRoleReversal(); clearWorldWill(); clearDeathEye(); clearSoulFrequency(); clearSealedGod(); clearNaturalLaw(); clearHiddenJobs(); setScreen("apikey"); };
+  const handleKeyReset = () => { lsDel(API_KEYS_STORAGE); lsDel(API_KEY_INDEX_STORAGE); setApiKeys([]); setCharacter(null); setScenario(null); clearSession(); clearMemory(); clearEmotion(); clearSecrets(); clearHighlights(); clearNPCs(); clearWorldNotes(); clearQuests(); clearAtmosphere(); clearSkills(); clearSkillSP(); clearJobSkills(); clearGold(); clearInventory(); clearPlayerLevel(); clearPlayerExp(); clearRace(); clearParallelSelves(); clearCurseRing(); clearCycleStats(); clearInjuryMarks(); clearPastTheme(); clearMemoryDistort(); clearAgeParadox(); clearSummonLegacy(); clearGrudgeWeapons(); clearDreamProphecies(); clearLegacyBuildings(); clearWatchers(); clearSoulMasks(); clearEmotionRipples(); clearTestaments(); clearConstellation(); clearExplorerMap(); clearLightningImprints(); clearWarScars(); clearDivineContracts(); clearLanguageMemories(); clearSinRedemptions(); clearLegendShards(); clearTimeEchoes(); clearMythChapters(); clearBloodline(); clearCurseLineage(); clearStarSign(); clearPastLanguage(); clearIdentityVault(); clearRifts(); clearRecipeBook(); clearAchievementRates(); clearRomanceLegacy(); clearBestiary(); clearMemoryMerchant(); clearTimeTokens(); clearSurvivorCompanions(); clearUndyingGauge(); clearLanguages(); clearBardLegend(); clearMysteryPuzzle(); clearWatcherGaze(); clearFateCard(); clearHideout(); clearEvilEye(); clearMoonPhase(); clearPastLetters(); clearHighlightReel(); clearButterflyIndex(); clearInscription(); clearRankData(); clearSakuraData(); clearDejavu(); clearCausality(); clearGamblingDebt(); clearChildhoodTrauma(); clearApocalypse(); clearGrief(); clearInstinct(); clearCursedRelics(); clearNatureKarma(); clearAliasList(); clearWish(); clearPetLegacy(); clearSealedMemories(); clearSoulCrystals(); clearEmotionEcho(); clearDimensionMap(); clearVillainInherit(); clearTearCrystals(); clearElementTrauma(); clearCircus(); clearTemple(); clearLegacyWords(); clearMutation(); clearDarkEcho(); clearGrowthTree(); clearDeification(); clearLoopAwareness(); clearRivals(); clearRedThread(); clearRuins(); clearKillSense(); clearGrudgeFlowers(); clearCursedCycle(); clearFateMagnet(); clearMemoryFlood(); clearCarouselNPC(); clearFateTraps(); clearMentalCorruption(); clearCinema(); clearTwinSoul(); clearKillList(); clearMemoryAuction(); clearBondTree(); clearCyberImprint(); clearSwordGhost(); clearKingdom(); clearLoopersGuild(); clearDeathDealer(); clearRoleReversal(); clearWorldWill(); clearDeathEye(); clearSoulFrequency(); clearSealedGod(); clearNaturalLaw(); clearHiddenJobs(); clearForgeData(); clearCycleGoal(); clearVillainData(); clearJobSynergy(); clearBetrayals(); clearAnnals(); clearRaceRoutes(); clearHiddenQuests(); clearNpcGrowth(); setScreen("apikey"); };
 
   return (
     <div id="app" style={{ height:"100dvh", display:"flex", flexDirection:"column", background:"#0a0500", fontFamily:"'Cinzel',serif", overflow:"hidden" }}>

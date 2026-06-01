@@ -129,6 +129,42 @@ const CLEAR_ITEMS = {
     { id:"ci_cp_ai_core",       name:"탈취한 AI 코어",       icon:"🤖",  rarity:"legendary", type:"equip",  slot:"accessory", effects:{ int:12, mgc:8, wil:5 },                 desc:"자의식이 깃든 AI 코어. 착용자의 지능과 판단력을 크게 강화.", clearDesc:"사이버펑크 클리어 보상" },
     { id:"ci_cp_rebel_patch",   name:"반란군 패치",          icon:"✊",  rarity:"uncommon",  type:"equip",  slot:"accessory", effects:{ ldr:5, wil:5, rep:4, fear:3 },          desc:"반란을 이끈 자들의 표식. 하층민들에게 강한 카리스마를 발휘.", clearDesc:"사이버펑크 클리어 보상" },
   ],
+  apocalypse: [
+    { id:"ci_ap_survivor_coat",  name:"생존자의 코트",         icon:"🧥",  rarity:"rare",      type:"equip",  slot:"armor",     effects:{ end:12, pstx:8, agi:5 },                desc:"폐허를 살아남은 자의 코트. 방사능·독에 강한 저항력.", clearDesc:"아포칼립스 클리어 보상" },
+    { id:"ci_ap_scrap_blade",    name:"고철 대검",             icon:"🗡️", rarity:"uncommon",  type:"equip",  slot:"weapon",    effects:{ str:10, crit:6 },                        desc:"폐허에서 주워 만든 거대한 고철 검. 투박하지만 파괴력이 크다.", clearDesc:"아포칼립스 클리어 보상" },
+    { id:"ci_ap_vault_key",      name:"비밀 금고 열쇠",        icon:"🗝️", rarity:"legendary", type:"equip",  slot:"accessory", effects:{ luk:15, int:8, per:6 },                 desc:"전쟁 이전 문명의 비밀 금고 열쇠. 숨겨진 자원에 접근 가능.", clearDesc:"아포칼립스 클리어 보상" },
+    { id:"ci_ap_mutagen",        name:"변이 혈청",             icon:"🧬",  rarity:"legendary", type:"consume", effects:{ str:10, end:10, mgc:8, mad:5 },                          desc:"방사능으로 변이된 혈청. 신체를 극단적으로 강화하지만 부작용이 있다.", clearDesc:"아포칼립스 클리어 보상" },
+    { id:"ci_ap_ration_pack",    name:"비상 식량 팩",          icon:"🥫",  rarity:"common",    type:"consume", effects:{ hp:30, end:8, ftg:-20 },                                 desc:"전쟁 전 비축된 비상 식량. 생존에 필요한 모든 것이 들어있다.", clearDesc:"아포칼립스 클리어 보상" },
+    { id:"ci_ap_signal_jammer",  name:"신호 교란기",           icon:"📡",  rarity:"rare",      type:"equip",  slot:"accessory", effects:{ disg:10, per:6, int:5 },                desc:"적의 탐지 장비를 교란하는 장치. 은신과 잠입에 유용하다.", clearDesc:"아포칼립스 클리어 보상" },
+    { id:"ci_ap_wasteland_map",  name:"황무지 생존 지도",      icon:"🗺️", rarity:"rare",      type:"equip",  slot:"accessory", effects:{ luk:8, per:10, agi:4 },                 desc:"살아남은 자들이 손으로 그린 지도. 안전한 루트와 위험 구역이 표시되어 있다.", clearDesc:"아포칼립스 클리어 보상" },
+    { id:"ci_ap_fallout_armor",  name:"방사능 방호복",         icon:"☢️",  rarity:"rare",      type:"equip",  slot:"armor",     effects:{ end:10, pstx:12, wil:4 },               desc:"방사능 피해를 완전히 차단하는 특수 방호복.", clearDesc:"아포칼립스 클리어 보상" },
+    { id:"ci_ap_emp_grenade",    name:"EMP 수류탄",            icon:"💣",  rarity:"rare",      type:"consume", effects:{ int:6, fear:8, agi:4 },                                  desc:"전자기 펄스로 기계 적을 순간 마비시키는 수류탄.", clearDesc:"아포칼립스 클리어 보상" },
+    { id:"ci_ap_last_beacon",    name:"마지막 신호탄",         icon:"🔦",  rarity:"legendary", type:"equip",  slot:"accessory", effects:{ rep:20, ldr:10, trst:8 },                desc:"문명 이전의 빛. 절망 속에서 희망을 밝히는 신호탄.", clearDesc:"아포칼립스 클리어 보상" },
+  ],
+  mythology: [
+    { id:"ci_my_olympus_spear",  name:"올림포스 신창",         icon:"⚡",  rarity:"legendary", type:"equip",  slot:"weapon",    effects:{ str:14, mgc:10, crit:8, fear:6 },       desc:"신들의 산에서 내려온 창. 번개를 다루는 신성한 무기.", clearDesc:"신화 세계관 클리어 보상" },
+    { id:"ci_my_ambrosia",       name:"암브로시아",            icon:"🏺",  rarity:"legendary", type:"consume", effects:{ hp:80, mp:60, end:15, wil:10 },                          desc:"신들의 음식. 인간이 먹으면 일시적으로 신에 가까운 능력을 얻는다.", clearDesc:"신화 세계관 클리어 보상" },
+    { id:"ci_my_fate_thread",    name:"운명의 실",             icon:"🧵",  rarity:"legendary", type:"equip",  slot:"accessory", effects:{ luk:20, per:12, wil:8 },                desc:"운명의 여신이 자아낸 실. 사용자의 운명을 미세하게 조작한다.", clearDesc:"신화 세계관 클리어 보상" },
+    { id:"ci_my_hero_shield",    name:"영웅의 방패",           icon:"🛡️", rarity:"rare",      type:"equip",  slot:"armor",     effects:{ end:14, wil:10, fath:6 },               desc:"전설의 영웅이 사용하던 방패. 신성한 가호가 깃들어 있다.", clearDesc:"신화 세계관 클리어 보상" },
+    { id:"ci_my_oracle_ring",    name:"신탁의 반지",           icon:"💍",  rarity:"rare",      type:"equip",  slot:"accessory", effects:{ per:12, int:10, luk:8 },                desc:"신의 말씀을 전하는 반지. 착용자에게 예언의 단편이 보인다.", clearDesc:"신화 세계관 클리어 보상" },
+    { id:"ci_my_titan_bone",     name:"티탄의 뼈 부적",        icon:"💀",  rarity:"rare",      type:"equip",  slot:"accessory", effects:{ str:10, end:10, fear:8 },               desc:"태초의 거인 티탄의 뼈로 만든 부적. 압도적인 기세를 발산한다.", clearDesc:"신화 세계관 클리어 보상" },
+    { id:"ci_my_hades_coin",     name:"저승사자의 동전",       icon:"🪙",  rarity:"legendary", type:"equip",  slot:"accessory", effects:{ fear:15, mgc:10, crse:8, hp:10 },       desc:"죽음의 신과 거래할 때 쓰는 동전. 죽음을 한 번 미룰 수 있다.", clearDesc:"신화 세계관 클리어 보상" },
+    { id:"ci_my_chaos_seed",     name:"카오스의 씨앗",         icon:"🌀",  rarity:"legendary", type:"consume", effects:{ mgc:15, luk:15, mad:10, wil:-5 },                        desc:"세계의 시작인 혼돈에서 온 씨앗. 예측 불가능한 힘이 폭발한다.", clearDesc:"신화 세계관 클리어 보상" },
+    { id:"ci_my_phoenix_feather",name:"불사조의 깃털",         icon:"🔥",  rarity:"rare",      type:"equip",  slot:"accessory", effects:{ hp:15, regen:10, wil:8 },                desc:"불사조에게서 얻은 깃털. 착용자의 생명력을 강화한다.", clearDesc:"신화 세계관 클리어 보상" },
+    { id:"ci_my_divine_seal",    name:"신성 봉인 인장",        icon:"⚜️",  rarity:"uncommon",  type:"equip",  slot:"accessory", effects:{ fath:8, wil:6, rep:5 },                 desc:"신이 내린 봉인의 인장. 악한 존재를 억제하는 힘이 있다.", clearDesc:"신화 세계관 클리어 보상" },
+  ],
+  steampunk: [
+    { id:"ci_sp_gear_heart",     name:"기계 심장",             icon:"⚙️",  rarity:"legendary", type:"equip",  slot:"accessory", effects:{ end:12, regen:10, int:8, agi:5 },        desc:"증기 동력 기계 심장. 신체 능력을 지속적으로 강화한다.", clearDesc:"스팀펑크 클리어 보상" },
+    { id:"ci_sp_aether_gun",     name:"에테르 권총",           icon:"🔫",  rarity:"rare",      type:"equip",  slot:"weapon",    effects:{ str:8, crit:12, int:6 },                 desc:"에테르 에너지를 탄환으로 발사하는 권총. 마법과 기술이 결합된 무기.", clearDesc:"스팀펑크 클리어 보상" },
+    { id:"ci_sp_inventors_goggles",name:"발명가의 고글",       icon:"🥽",  rarity:"rare",      type:"equip",  slot:"accessory", effects:{ per:12, int:10, crit:6 },                desc:"증기 구동 분석 고글. 대상의 약점과 구조를 파악한다.", clearDesc:"스팀펑크 클리어 보상" },
+    { id:"ci_sp_lightning_rod",  name:"번개 지팡이",           icon:"⚡",  rarity:"legendary", type:"equip",  slot:"weapon",    effects:{ mgc:12, str:8, crit:10 },                desc:"번개를 모아 방전하는 지팡이. 전도성 적에게 치명적.", clearDesc:"스팀펑크 클리어 보상" },
+    { id:"ci_sp_mechanical_arm", name:"기계 의수",             icon:"🦾",  rarity:"rare",      type:"equip",  slot:"armor",     effects:{ str:14, crit:8, end:5 },                 desc:"증기 동력 기계 팔. 인간의 한계를 넘는 악력과 정밀성.", clearDesc:"스팀펑크 클리어 보상" },
+    { id:"ci_sp_cogwork_compass",name:"톱니 나침반",           icon:"🧭",  rarity:"uncommon",  type:"equip",  slot:"accessory", effects:{ per:8, luk:6, agi:4 },                   desc:"어떤 목적지든 찾아주는 마법 나침반. 황동 톱니바퀴로 구동된다.", clearDesc:"스팀펑크 클리어 보상" },
+    { id:"ci_sp_alchemist_flask",name:"연금술사의 플라스크",   icon:"🧪",  rarity:"rare",      type:"consume", effects:{ hp:40, mp:30, int:8, regen:6 },                          desc:"만능 연금술 플라스크. 부상 회복과 능력 향상에 모두 사용 가능.", clearDesc:"스팀펑크 클리어 보상" },
+    { id:"ci_sp_clockwork_puppet",name:"태엽 인형",            icon:"🤖",  rarity:"legendary", type:"equip",  slot:"accessory", effects:{ ldr:10, fear:6, int:8 },                 desc:"자율적으로 움직이는 태엽 인형 부하. 명령에 충실히 따른다.", clearDesc:"스팀펑크 클리어 보상" },
+    { id:"ci_sp_steam_core",     name:"증기 코어",             icon:"💨",  rarity:"rare",      type:"equip",  slot:"accessory", effects:{ end:10, str:6, agi:6, regen:5 },         desc:"고압 증기 에너지 코어. 착용자의 체력과 움직임을 강화한다.", clearDesc:"스팀펑크 클리어 보상" },
+    { id:"ci_sp_noble_monocle",  name:"귀족 모노클",           icon:"🔎",  rarity:"uncommon",  type:"equip",  slot:"accessory", effects:{ neg:8, rep:6, cha:5 },                   desc:"상류층을 위한 고급 단안경. 착용자의 사회적 지위를 높여 보인다.", clearDesc:"스팀펑크 클리어 보상" },
+  ],
 };
 
 // 시나리오별 클리어 특수 스킬 (10개씩)
@@ -168,6 +204,42 @@ const CLEAR_SKILLS = {
     { id:"cs_cp_deep_scan",     type:"passive", name:"딥 스캔",       icon:"👁️", rarity:"rare",      mpCost:0,  req:{}, scenario:"cyberpunk", desc:"감각 임플란트 최고 등급 업그레이드. PER·INTN +14 상시 효과.",                  aiHint:"딥 스캔 발동! 모든 정보가 선명하게 스캔됩니다.", clearDesc:"사이버펑크 클리어 보상", condition:"always", conditionDesc:"항시 발동", statBoost:{per:14, intn:14} },
     { id:"cs_cp_ghost_mode",    type:"event",   name:"고스트 모드",   icon:"🌫️", rarity:"legendary", mpCost:30, req:{}, scenario:"cyberpunk", desc:"완전 투명화 + 전파 차단 + 발소리 소거. 2턴간 완벽 은신.",                    aiHint:"고스트 모드 발동! 완전한 투명화로 모든 탐지 수단을 무력화합니다.", clearDesc:"사이버펑크 클리어 보상", condition:"activate", conditionDesc:"직접 발동", statBoost:{} },
     { id:"cs_cp_iron_will",     type:"passive", name:"강철 정신",     icon:"🔩", rarity:"rare",      mpCost:0,  req:{}, scenario:"cyberpunk", desc:"사이버화된 정신. 해킹·공포·조종 완전 면역. WIL·MAD저항 +15.",               aiHint:"강철 정신 발동! 기계화된 의지가 모든 정신 공격을 차단합니다.", clearDesc:"사이버펑크 클리어 보상", condition:"always", conditionDesc:"항시 발동", statBoost:{wil:15} },
+  ],
+  apocalypse: [
+    { id:"cs_ap_last_stand2",   type:"active",  name:"최후의 항전",   icon:"🔫", rarity:"legendary", mpCost:0,  req:{}, scenario:"apocalypse", desc:"죽을 것 같은 상황에서 오히려 전투력이 폭발. HP가 낮을수록 STR·AGI·END +20.", aiHint:"최후의 항전 발동! 폐허의 생존자가 한계를 넘어 싸웁니다!", clearDesc:"아포칼립스 클리어 보상", condition:"hp_low", conditionDesc:"HP 25% 이하", statBoost:{str:20,agi:15,end:15} },
+    { id:"cs_ap_survivor_will", type:"passive", name:"생존자의 의지", icon:"💪", rarity:"rare",      mpCost:0,  req:{}, scenario:"apocalypse", desc:"폐허를 살아남은 자의 의지. END·WIL +15 상시 강화. 굶주림·독·방사능 저항.", aiHint:"생존자의 의지 발동! 폐허의 의지가 모든 것을 견뎌냅니다.", clearDesc:"아포칼립스 클리어 보상", condition:"always", conditionDesc:"항시 발동", statBoost:{end:15,wil:15} },
+    { id:"cs_ap_scavenger",     type:"active",  name:"약탈자의 직감", icon:"🗺️", rarity:"rare",      mpCost:15, req:{}, scenario:"apocalypse", desc:"폐허에서 자원을 탐지. 주변 아이템 발견 확률 +50%, LUK +10.", aiHint:"약탈자의 직감 발동! 폐허 속 숨겨진 자원이 눈에 들어옵니다.", clearDesc:"아포칼립스 클리어 보상", condition:null, conditionDesc:null, statBoost:{} },
+    { id:"cs_ap_rad_immunity",  type:"passive", name:"방사능 면역",   icon:"☢️", rarity:"rare",      mpCost:0,  req:{}, scenario:"apocalypse", desc:"변이가 진행된 몸. 방사능·독 완전 면역. END +10, HP 최대치 +15 상시.", aiHint:"방사능 면역 발동! 이미 변이된 몸은 방사능을 두려워하지 않습니다.", clearDesc:"아포칼립스 클리어 보상", condition:"always", conditionDesc:"항시 발동", statBoost:{end:10,hp:5} },
+    { id:"cs_ap_war_cry",       type:"active",  name:"전쟁의 절규",   icon:"😱", rarity:"legendary", mpCost:30, req:{}, scenario:"apocalypse", desc:"폐허의 절망을 절규로 바꾼다. 범위 내 적 FEAR -25, 아군 STR·END +10.", aiHint:"전쟁의 절규 발동! 폐허를 가르는 절규가 전장을 뒤흔듭니다!", clearDesc:"아포칼립스 클리어 보상", condition:null, conditionDesc:null, statBoost:{} },
+    { id:"cs_ap_tunnel_vision", type:"passive", name:"생존 본능",     icon:"👁️", rarity:"rare",      mpCost:0,  req:{}, scenario:"apocalypse", desc:"위험을 미리 감지하는 생존 본능. PER +15, 기습 공격 당하지 않음.", aiHint:"생존 본능 발동! 폐허의 감각이 위험을 미리 감지합니다.", clearDesc:"아포칼립스 클리어 보상", condition:"always", conditionDesc:"항시 발동", statBoost:{per:15} },
+    { id:"cs_ap_hope_beacon",   type:"event",   name:"희망의 봉화",   icon:"🔦", rarity:"legendary", mpCost:40, req:{}, scenario:"apocalypse", desc:"절망 속에서 희망의 빛을 밝힌다. 아군 모두 HP 완전 회복. 한 번만 사용 가능.", aiHint:"희망의 봉화 발동! 폐허 속 빛이 모든 상처를 치유합니다.", clearDesc:"아포칼립스 클리어 보상", condition:"activate", conditionDesc:"직접 발동 1회", statBoost:{} },
+    { id:"cs_ap_mutation",      type:"event",   name:"변이 폭발",     icon:"🧬", rarity:"legendary", mpCost:45, req:{}, scenario:"apocalypse", desc:"방사능 변이가 극적으로 폭발. STR·MGC·END +25, 2턴 지속. 부작용: HP -10.", aiHint:"변이 폭발 발동! 방사능이 몸을 완전히 장악하며 힘이 폭발합니다!", clearDesc:"아포칼립스 클리어 보상", condition:"activate", conditionDesc:"직접 발동", statBoost:{} },
+    { id:"cs_ap_dead_reckoning",type:"passive", name:"폐허의 항법",   icon:"🧭", rarity:"rare",      mpCost:0,  req:{}, scenario:"apocalypse", desc:"지도 없이도 길을 찾는다. 탐색·탈출 판정 +20. 함정 자동 감지.", aiHint:"폐허의 항법 발동! 폐허 속에서도 길을 잃지 않습니다.", clearDesc:"아포칼립스 클리어 보상", condition:"always", conditionDesc:"항시 발동", statBoost:{per:8} },
+    { id:"cs_ap_warlord_aura",  type:"passive", name:"황무지 군주",   icon:"⚔️", rarity:"legendary", mpCost:0,  req:{}, scenario:"apocalypse", desc:"폐허의 지배자 기운. REP·LDR·FEAR +15 상시. 생존자 NPC들이 자발적으로 따른다.", aiHint:"황무지 군주의 기운! 폐허의 지배자가 모습을 드러냅니다.", clearDesc:"아포칼립스 클리어 보상", condition:"always", conditionDesc:"항시 발동", statBoost:{rep:15,ldr:15,fear:15} },
+  ],
+  mythology: [
+    { id:"cs_my_divine_wrath",  type:"active",  name:"신의 분노",     icon:"⚡", rarity:"legendary", mpCost:50, req:{}, scenario:"mythology", desc:"신들의 분노를 지상에 소환. 번개로 범위 공격. 신성 존재에 2배 피해.", aiHint:"신의 분노 발동! 하늘에서 번개가 내려쳐 대지를 불태웁니다!", clearDesc:"신화 세계관 클리어 보상", condition:null, conditionDesc:null, statBoost:{} },
+    { id:"cs_my_fate_read",     type:"active",  name:"운명 독해",     icon:"🔮", rarity:"rare",      mpCost:20, req:{}, scenario:"mythology", desc:"운명의 실을 읽어 다음 판정 결과를 미리 안다. LUK +15, 다음 판정 대성공.", aiHint:"운명 독해 발동! 운명의 여신이 귓속에 속삭입니다.", clearDesc:"신화 세계관 클리어 보상", condition:null, conditionDesc:null, statBoost:{} },
+    { id:"cs_my_immortal_body", type:"passive", name:"불멸의 육체",   icon:"✨", rarity:"legendary", mpCost:0,  req:{}, scenario:"mythology", desc:"신의 피가 섞인 몸. 모든 피해 20% 감소, HP 자동 회복 가속, 독·저주 면역.", aiHint:"불멸의 육체 발동! 신의 피가 상처를 봉합합니다.", clearDesc:"신화 세계관 클리어 보상", condition:"always", conditionDesc:"항시 발동", statBoost:{end:12,fath:10} },
+    { id:"cs_my_prophecy_eyes", type:"passive", name:"예언의 눈",     icon:"👁️", rarity:"rare",      mpCost:0,  req:{}, scenario:"mythology", desc:"운명을 미리 보는 눈. PER·INT +15 상시. 함정·매복·배신 자동 감지.", aiHint:"예언의 눈 발동! 아직 일어나지 않은 일이 보입니다.", clearDesc:"신화 세계관 클리어 보상", condition:"always", conditionDesc:"항시 발동", statBoost:{per:15,int:15} },
+    { id:"cs_my_titan_strength",type:"active",  name:"티탄의 힘",     icon:"💪", rarity:"legendary", mpCost:40, req:{}, scenario:"mythology", desc:"태초 거인의 힘을 일시 각성. STR·END +30, 주변 모든 것을 날려버린다.", aiHint:"티탄의 힘 발동! 대지가 흔들리며 태초의 힘이 해방됩니다!", clearDesc:"신화 세계관 클리어 보상", condition:null, conditionDesc:null, statBoost:{} },
+    { id:"cs_my_divine_charm",  type:"passive", name:"신성의 카리스마",icon:"💛", rarity:"rare",      mpCost:0,  req:{}, scenario:"mythology", desc:"신의 후예가 지닌 카리스마. CHA·REP +15 상시. 신성한 존재들이 호감을 갖는다.", aiHint:"신성의 카리스마 발동! 주변이 자연스럽게 이 존재에게 이끌립니다.", clearDesc:"신화 세계관 클리어 보상", condition:"always", conditionDesc:"항시 발동", statBoost:{cha:15,rep:15} },
+    { id:"cs_my_chaos_unleash", type:"event",   name:"카오스 해방",   icon:"🌀", rarity:"legendary", mpCost:0,  req:{}, scenario:"mythology", desc:"세계의 혼돈을 해방. 1회 발동, 모든 스탯 +20, 3턴간 판정 결과 예측 불가.", aiHint:"카오스 해방! 세계의 질서가 무너지며 카오스가 흘러넘칩니다!", clearDesc:"신화 세계관 클리어 보상", condition:"activate", conditionDesc:"직접 발동 1회", statBoost:{} },
+    { id:"cs_my_underworld_pact",type:"event",  name:"명계의 계약",   icon:"💀", rarity:"legendary", mpCost:35, req:{}, scenario:"mythology", desc:"죽음의 신과 계약. 죽음 직전 HP 완전 회복. 대신 수명이 줄어든다는 묘사.", aiHint:"명계의 계약 발동! 죽음의 신이 한 번의 죽음을 되돌려 줍니다.", clearDesc:"신화 세계관 클리어 보상", condition:"death", conditionDesc:"사망 직전 1회", statBoost:{} },
+    { id:"cs_my_olympian_aura", type:"passive", name:"올림포스의 기운",icon:"🏛️", rarity:"rare",      mpCost:0,  req:{}, scenario:"mythology", desc:"신들의 산 올림포스에서 온 기운. FATH·WIL +15 상시 강화. 악한 존재를 본능적으로 꺼려하게 만든다.", aiHint:"올림포스의 기운 발동! 신들의 위엄이 주변을 압도합니다.", clearDesc:"신화 세계관 클리어 보상", condition:"always", conditionDesc:"항시 발동", statBoost:{fath:15,wil:15} },
+    { id:"cs_my_myth_born",     type:"passive", name:"신화의 탄생",   icon:"🌟", rarity:"legendary", mpCost:0,  req:{}, scenario:"mythology", desc:"신화의 주인공으로 태어난 자의 운명. REP·LDR·LUK +15 상시. 세계가 이 자를 중심으로 돌아간다.", aiHint:"신화의 탄생 발동! 이 존재의 이름이 전설이 됩니다.", clearDesc:"신화 세계관 클리어 보상", condition:"always", conditionDesc:"항시 발동", statBoost:{rep:15,ldr:15,luk:15} },
+  ],
+  steampunk: [
+    { id:"cs_sp_steam_blast",   type:"active",  name:"증기 폭발",     icon:"💨", rarity:"rare",      mpCost:25, req:{}, scenario:"steampunk", desc:"고압 증기를 폭발적으로 방출. 범위 공격 및 적 이동 봉쇄.", aiHint:"증기 폭발 발동! 고압 증기가 폭발적으로 분출됩니다!", clearDesc:"스팀펑크 클리어 보상", condition:null, conditionDesc:null, statBoost:{} },
+    { id:"cs_sp_overclock2",    type:"active",  name:"기계 오버드라이브",icon:"⚙️",rarity:"legendary",mpCost:30, req:{}, scenario:"steampunk", desc:"기계 신체를 한계 이상으로 가동. STR·AGI·INT +20, 2턴 지속. 과열 위험.", aiHint:"기계 오버드라이브 발동! 모든 기계가 한계를 초과하여 가동됩니다!", clearDesc:"스팀펑크 클리어 보상", condition:null, conditionDesc:null, statBoost:{} },
+    { id:"cs_sp_gadgeteer",     type:"passive", name:"발명가의 직관", icon:"🔧", rarity:"rare",      mpCost:0,  req:{}, scenario:"steampunk", desc:"어떤 기계도 즉석에서 수리·개조. INT +12 상시. 기계 장치 판정 +20.", aiHint:"발명가의 직관 발동! 기계의 구조가 한눈에 들어옵니다.", clearDesc:"스팀펑크 클리어 보상", condition:"always", conditionDesc:"항시 발동", statBoost:{int:12} },
+    { id:"cs_sp_aether_surge",  type:"active",  name:"에테르 폭풍",   icon:"⚡", rarity:"legendary", mpCost:45, req:{}, scenario:"steampunk", desc:"에테르 에너지를 폭주시켜 거대한 전기 폭풍 소환. 범위 내 모든 적 마비.", aiHint:"에테르 폭풍 발동! 전기 에너지가 폭주하며 폭풍이 몰아칩니다!", clearDesc:"스팀펑크 클리어 보상", condition:null, conditionDesc:null, statBoost:{} },
+    { id:"cs_sp_clockwork_army",type:"event",   name:"태엽 군단",     icon:"🤖", rarity:"legendary", mpCost:50, req:{}, scenario:"steampunk", desc:"미리 제작한 태엽 인형 군단 소환. 1회 발동, 3턴간 강력한 기계 부하 3체 소환.", aiHint:"태엽 군단 발동! 자동화 태엽 인형들이 전장에 나타납니다!", clearDesc:"스팀펑크 클리어 보상", condition:"activate", conditionDesc:"직접 발동 1회", statBoost:{} },
+    { id:"cs_sp_analysis",      type:"active",  name:"전술 분석",     icon:"🔭", rarity:"rare",      mpCost:18, req:{}, scenario:"steampunk", desc:"상대를 분석해 약점 파악. 다음 공격 치명타 확정, INT 판정 +15.", aiHint:"전술 분석 발동! 고글이 빛나며 대상의 약점이 표시됩니다.", clearDesc:"스팀펑크 클리어 보상", condition:null, conditionDesc:null, statBoost:{} },
+    { id:"cs_sp_noble_protocol",type:"passive", name:"귀족 의전",     icon:"🎩", rarity:"rare",      mpCost:0,  req:{}, scenario:"steampunk", desc:"상류층의 예절과 권위. CHA·NEG·REP +12 상시 효과. 귀족 NPC와의 교섭 +20.", aiHint:"귀족 의전 발동! 우아한 태도가 상대를 압도합니다.", clearDesc:"스팀펑크 클리어 보상", condition:"always", conditionDesc:"항시 발동", statBoost:{cha:12,neg:12,rep:12} },
+    { id:"cs_sp_iron_resolve",  type:"passive", name:"강철 의지",     icon:"🔩", rarity:"rare",      mpCost:0,  req:{}, scenario:"steampunk", desc:"기계처럼 냉정한 의지. WIL·CAL +15 상시 강화. 감정 조작·공포·혼란 면역.", aiHint:"강철 의지 발동! 기계 같은 냉정함이 정신적 공격을 차단합니다.", clearDesc:"스팀펑크 클리어 보상", condition:"always", conditionDesc:"항시 발동", statBoost:{wil:15,cal:15} },
+    { id:"cs_sp_patent_master", type:"event",   name:"특허 발동",     icon:"📜", rarity:"legendary", mpCost:0,  req:{}, scenario:"steampunk", desc:"비장의 발명품 특허를 발동. 1회 사용, 불가능한 기술적 문제를 즉시 해결.", aiHint:"특허 발동! 아무도 본 적 없는 발명품이 세상에 등장합니다!", clearDesc:"스팀펑크 클리어 보상", condition:"activate", conditionDesc:"직접 발동 1회", statBoost:{} },
+    { id:"cs_sp_grand_design",  type:"passive", name:"위대한 설계",   icon:"📐", rarity:"legendary", mpCost:0,  req:{}, scenario:"steampunk", desc:"모든 것을 설계도로 보는 눈. INT·PER +18 상시 강화. 모든 구조물·기계의 약점 자동 파악.", aiHint:"위대한 설계 발동! 세계가 설계도로 보이기 시작합니다.", clearDesc:"스팀펑크 클리어 보상", condition:"always", conditionDesc:"항시 발동", statBoost:{int:18,per:18} },
   ],
 };
 
@@ -665,6 +737,126 @@ const RACE_DEFS = [
       { id:"race_celestial_light",  type:"active",  name:"성광 치유",     icon:"💛", rarity:"uncommon", req:{fath:25}, mpCost:20, hpRestore:20, desc:"신성한 빛으로 HP +20 회복. 저주와 독도 동시에 정화한다.", scenario:null, aiHint:"성광 치유 발동! 세레스티얼의 빛이 상처와 저주를 정화합니다." },
       { id:"race_celestial_aura",   type:"passive", name:"신성의 오라",   icon:"✨", rarity:"rare",     req:{fath:30}, desc:"아군 전체에 신성 방어막 부여. 저주/독/어둠 피해 30% 감소.", condition:"always", conditionDesc:"항시 발동", statBoost:{fath:5}, scenario:null, mpCost:0, aiHint:"신성의 오라 발동! 세레스티얼의 신성한 기운이 아군을 보호합니다." },
       { id:"race_celestial_grace",  type:"event",   name:"신의 가호",     icon:"🌟", rarity:"legendary", req:{}, mpCost:0, desc:"위기의 순간 신의 가호가 내려와 모든 스탯 +15, 1턴간 무적.", unlockTitle:"mf_holy_light", scenario:null, aiHint:"신의 가호 발동! 신성한 빛이 세레스티얼을 감싸며 기적이 일어납니다." },
+    ],
+  },
+  {
+    id: "dragon",
+    name: "드래곤혈",
+    icon: "🐉",
+    color: "#e06030",
+    accent: "#1a0800",
+    desc: "용의 피가 흐르는 반룡 종족. 화염과 냉기를 자유롭게 다루며 압도적인 존재감을 발산한다.",
+    lore: "먼 옛날 인간과 고룡의 결합에서 탄생한 종족. 완전한 드래곤도, 완전한 인간도 아니지만 그 어느 쪽보다 강렬하게 세상을 불태우는 존재들이다. 분노할수록 드래곤의 본능이 눈을 뜬다.",
+    statBonus: { str:8, mgc:8, fear:8, end:5, crit:5 },
+    statPenalty: { trst:-6, cha:-3, cal:-5 },
+    relations: {
+      human: { score: -20, label: "공포의 대상", desc: "인간은 드래곤혈을 경외하며 두려워한다." },
+      elf: { score: -10, label: "고대의 라이벌", desc: "고대부터 용과 엘프는 마법의 패권을 다퉜다." },
+      dwarf: { score: -30, label: "숙적", desc: "드워프는 용의 보물을 탐내고, 용은 드워프의 탐욕을 혐오한다." },
+      orc: { score: 30, label: "힘의 경외", desc: "오크는 드래곤혈의 힘을 진심으로 존경한다." },
+      darkling: { score: -10, label: "어둠과 불꽃", desc: "서로의 파괴적 본성을 인정하나 협력은 드물다." },
+      celestial: { score: -50, label: "천상과 용의 대립", desc: "천상의 질서와 용의 혼돈 본능은 충돌한다." },
+    },
+    skills: [
+      { id:"race_dragon_breath", type:"active", name:"용의 숨결", icon:"🔥", rarity:"rare", req:{mgc:25}, mpCost:25, desc:"화염 혹은 냉기 숨결을 내뿜어 범위 피해. 적에게 공포 상태를 부여한다.", scenario:null, aiHint:"용의 숨결 발동! 드래곤의 불꽃이 적을 집어삼킵니다." },
+      { id:"race_dragon_scale",  type:"passive", name:"용린 방어", icon:"🐉", rarity:"rare",   req:{end:25}, desc:"용의 비늘이 물리·마법 피해를 15% 감소. STR, END 판정 +6 상시 보너스.", condition:"always", conditionDesc:"항시 발동", statBoost:{str:6,end:6}, scenario:null, mpCost:0, aiHint:"용린 방어 발동! 비늘이 빛나며 피해를 흡수합니다." },
+      { id:"race_dragon_awaken", type:"event", name:"용신 각성", icon:"🌋", rarity:"legendary", req:{}, mpCost:0, desc:"HP 25% 이하에서 진정한 드래곤 혈통이 깨어난다. STR·MGC·FEAR +20, 2턴 지속.", unlockTitle:"mf_dragon_blood", scenario:null, aiHint:"용신 각성! 드래곤의 진혈이 폭발적으로 해방됩니다!" },
+    ],
+  },
+  {
+    id: "demon",
+    name: "악마족",
+    icon: "😈",
+    color: "#cc2244",
+    accent: "#1a0005",
+    desc: "심연에서 온 계약의 종족. 욕망과 거래를 통해 힘을 쌓으며 강렬한 카리스마로 타인을 지배한다.",
+    lore: "악마족은 탄생부터 계약의 존재다. 원하는 것을 얻기 위해 반드시 무언가를 내주어야 한다는 불변의 법칙 속에서 살아간다. 가장 위험한 것은 그들의 날카로운 지성과 말재주다.",
+    statBonus: { mgc:7, neg:8, cha:7, fear:6, mad:5 },
+    statPenalty: { fath:-12, trst:-8, wil:-3 },
+    relations: {
+      human: { score: -30, label: "먹잇감과 계약자", desc: "악마에게 인간은 계약 대상이자 욕망의 원천." },
+      elf: { score: -50, label: "순수함의 적", desc: "엘프의 순수한 마법과 악마의 부패한 힘은 상극." },
+      dwarf: { score: -20, label: "거래 상대", desc: "드워프의 탐욕은 악마에게 좋은 협상 카드가 된다." },
+      orc: { score: 10, label: "힘의 동맹", desc: "오크의 폭력성과 악마의 잔혹함은 때때로 맞닿는다." },
+      darkling: { score: 50, label: "어둠의 동족", desc: "같은 어둠에서 태어난 동족. 음모를 공유한다." },
+      celestial: { score: -100, label: "영원한 적", desc: "천상과 심연은 존재 자체로 충돌한다." },
+    },
+    skills: [
+      { id:"race_demon_contract", type:"active", name:"계약 강요", icon:"📜", rarity:"rare",    req:{neg:30,cha:25}, mpCost:20, desc:"대화 중 상대에게 불리한 계약을 강요. NEG +20, CHA +15 판정 보너스.", scenario:null, aiHint:"계약 강요 발동! 악마의 말이 상대의 의지를 옥죄기 시작합니다." },
+      { id:"race_demon_corrupt",  type:"passive", name:"부패의 오라", icon:"😈", rarity:"rare",   req:{mad:25}, desc:"주변 적의 신앙(FATH)과 의지(WIL)를 매 턴 -3씩 약화시킨다.", condition:"in_combat", conditionDesc:"전투 중 항시", statBoost:{fear:5}, scenario:null, mpCost:0, aiHint:"부패의 오라 발동! 주변의 의지와 신앙심이 서서히 썩어갑니다." },
+      { id:"race_demon_pureform", type:"event",  name:"진상 해방", icon:"🔴", rarity:"legendary", req:{}, mpCost:0, desc:"HP 15 이하 시 악마의 진짜 모습으로 변신. 모든 스탯 +15, 저주·공포 면역, 1회 사용.", unlockTitle:"mf_dark_pact", scenario:null, aiHint:"진상 해방! 악마의 본 모습이 드러나며 공기가 부패합니다!" },
+    ],
+  },
+  {
+    id: "undead",
+    name: "언데드",
+    icon: "💀",
+    color: "#7788aa",
+    accent: "#050810",
+    desc: "죽음과 삶의 경계를 넘나드는 존재. 고통을 느끼지 못하며 저주와 독에 완전 면역이다.",
+    lore: "언데드는 강렬한 집착이나 비극적 죽음으로 인해 저승의 문을 통과하지 못한 존재들이다. 죽음을 이미 경험했기에 두려움이란 없다. 그러나 그 대가로 살아있는 존재와의 깊은 유대는 불가능에 가깝다.",
+    statBonus: { end:10, pstx:15, wil:6, crse:6, hp:10 },
+    statPenalty: { cha:-8, trst:-10, fath:-8, regen:-5 },
+    relations: {
+      human: { score: -70, label: "공포의 원천", desc: "살아있는 인간들은 언데드를 본능적으로 혐오한다." },
+      elf: { score: -60, label: "삶의 적", desc: "생명의 수호자인 엘프는 언데드를 정화 대상으로 본다." },
+      dwarf: { score: -50, label: "지하의 공포", desc: "지하에서 자주 마주치는 위협. 드워프의 주요 적." },
+      orc: { score: -20, label: "무서운 존재", desc: "오크도 언데드를 쉽게 대하지 못한다." },
+      darkling: { score: 60, label: "죽음의 동족", desc: "죽음과 가장 친숙한 다크링은 언데드를 이해한다." },
+      celestial: { score: -100, label: "정화 대상", desc: "천상의 존재에게 언데드는 반드시 소멸시켜야 할 존재." },
+    },
+    skills: [
+      { id:"race_undead_undying",  type:"passive", name:"죽지 않는 몸", icon:"💀", rarity:"rare",    req:{end:20}, desc:"독·저주 완전 면역. HP가 0이 되어도 1회 자동으로 HP 5로 부활.", condition:"death", conditionDesc:"사망 직전 1회", statBoost:{end:8}, scenario:null, mpCost:0, aiHint:"죽지 않는 몸 발동! 언데드는 쉽게 죽지 않습니다." },
+      { id:"race_undead_drain",    type:"active",  name:"생명 흡수", icon:"🩸", rarity:"uncommon",  req:{mgc:20}, mpCost:15, desc:"적의 생명력을 흡수. 적 HP -10, 자신 HP +10. 저주 판정 +12.", scenario:null, aiHint:"생명 흡수 발동! 언데드의 손에서 차가운 기운이 뻗어나갑니다." },
+      { id:"race_undead_terror",   type:"event",   name:"죽음의 위압", icon:"☠️", rarity:"legendary", req:{}, mpCost:0, desc:"진정한 공포를 발산. 범위 내 모든 적 FEAR 판정 -20, 적이 공격 포기 가능.", unlockTitle:"hidden_silence", scenario:null, aiHint:"죽음의 위압 발동! 죽음의 기운이 적들의 전의를 꺾습니다." },
+    ],
+  },
+  {
+    id: "beastman",
+    name: "수인",
+    icon: "🐺",
+    color: "#aa8844",
+    accent: "#100a00",
+    desc: "짐승의 본능과 인간의 이성을 겸비한 종족. 뛰어난 감각과 야생 전투 능력을 가진다.",
+    lore: "수인은 인간과 짐승의 혼혈로 탄생한 다양한 종족을 통칭한다. 늑대인간, 호랑이인간, 독수리인간 등 그 형태는 다양하지만 공통적으로 날카로운 감각과 야생의 전투 본능을 공유한다.",
+    statBonus: { str:7, agi:8, per:8, end:5, crit:5 },
+    statPenalty: { mgc:-6, neg:-4, spk:-3 },
+    relations: {
+      human: { score: 10, label: "불안한 공존", desc: "인간 사회와 공존하지만 차별과 편견이 존재한다." },
+      elf: { score: 30, label: "자연의 친족", desc: "자연과 가까운 두 종족은 의외로 잘 어울린다." },
+      dwarf: { score: -20, label: "문화 충돌", desc: "기계적인 드워프 문명과 야생 수인 문화가 충돌한다." },
+      orc: { score: 50, label: "야생의 동족", desc: "같은 전사 종족으로서 서로를 강자로 인정한다." },
+      darkling: { score: -30, label: "어둠의 위협", desc: "야생의 본능이 어둠의 존재에 강한 경계심을 보낸다." },
+      celestial: { score: 20, label: "순수함의 인정", desc: "야생의 순수함을 천상도 어느 정도 인정한다." },
+    },
+    skills: [
+      { id:"race_beast_instinct", type:"passive", name:"야생의 직감", icon:"🐺", rarity:"uncommon", req:{per:25}, desc:"기습·매복 당할 확률 0. 선제공격 시 CRIT +10 보너스.", condition:"always", conditionDesc:"항시 발동", statBoost:{per:5,crit:5}, scenario:null, mpCost:0, aiHint:"야생의 직감 발동! 수인의 날카로운 감각이 위험을 미리 감지합니다." },
+      { id:"race_beast_frenzy",   type:"active",  name:"야수 광란", icon:"🔴", rarity:"rare",    req:{str:30}, mpCost:0, desc:"야수의 본능으로 광란. STR +15, AGI +10. 하지만 이성 판정 -10.", scenario:null, aiHint:"야수 광란 발동! 수인의 야성이 완전히 해방되어 날뛰기 시작합니다." },
+      { id:"race_beast_hunt",     type:"event",   name:"사냥꾼의 표식", icon:"🎯", rarity:"legendary", req:{}, mpCost:0, desc:"한 적을 '사냥감'으로 지정. 해당 적에 대한 모든 판정 +20, 도주 불가 상태 부여.", unlockTitle:"duel_winner", scenario:null, aiHint:"사냥꾼의 표식 발동! 수인의 눈에 사냥감이 포착되었습니다." },
+    ],
+  },
+  {
+    id: "elemental",
+    name: "원소인",
+    icon: "🌀",
+    color: "#44aacc",
+    accent: "#001520",
+    desc: "자연 원소와 융합된 존재. 불·물·바람·대지 중 하나와 공명하며 그 원소를 자유롭게 다룬다.",
+    lore: "원소인은 고대 마법 실험이나 강렬한 원소 노출로 인해 원소 에너지가 체내에 스며든 존재들이다. 자신이 공명하는 원소에선 무적에 가깝지만 반대 원소에는 치명적인 약점을 가진다.",
+    statBonus: { mgc:10, mp:15, per:6, agi:5 },
+    statPenalty: { end:-5, hp:-5, trst:-3 },
+    relations: {
+      human: { score: 20, label: "신기함과 경외", desc: "인간은 원소인을 신기하면서도 무서워한다." },
+      elf: { score: 60, label: "자연의 친족", desc: "자연과 가까운 엘프는 원소인과 깊이 교감한다." },
+      dwarf: { score: -20, label: "위험한 존재", desc: "불을 다루는 원소인은 드워프 광산에 위협이 된다." },
+      orc: { score: -10, label: "낯선 힘", desc: "오크는 원소인의 힘을 이해하기 어렵다." },
+      darkling: { score: -20, label: "빛과 원소의 충돌", desc: "자연의 순수한 힘은 어둠을 밀어낸다." },
+      celestial: { score: 40, label: "자연의 신성", desc: "자연 원소의 순수함을 천상이 인정한다." },
+    },
+    skills: [
+      { id:"race_elem_resonance", type:"passive", name:"원소 공명", icon:"🌀", rarity:"rare",    req:{mgc:25}, desc:"자신의 원소 속성 스킬 사용 시 효과 +30%. MP 소모 -8.", condition:"magic_use", conditionDesc:"원소 스킬 사용 시", statBoost:{mgc:8}, scenario:null, mpCost:0, aiHint:"원소 공명 발동! 몸 속 원소 에너지가 공명하며 증폭됩니다." },
+      { id:"race_elem_burst",     type:"active",  name:"원소 폭발", icon:"💥", rarity:"rare",    req:{mgc:30,mp:30}, mpCost:30, desc:"내재된 원소를 폭발시켜 범위 공격. 마법 피해 최대화.", scenario:null, aiHint:"원소 폭발 발동! 원소 에너지가 한꺼번에 해방되며 폭발합니다!" },
+      { id:"race_elem_form",      type:"event",   name:"원소 변신", icon:"⚡", rarity:"legendary", req:{}, mpCost:0, desc:"3턴간 순수 원소 형태로 변신. 모든 원소 피해 무효, MGC·PER +20.", unlockTitle:"wx_qi_awakened", scenario:null, aiHint:"원소 변신 발동! 육체가 사라지고 순수한 원소 에너지체가 됩니다!" },
     ],
   },
 ];
@@ -1693,12 +1885,20 @@ const savePastTheme    = (t) => lsSet(PAST_THEME_KEY, JSON.stringify(t));
 const clearPastTheme   = () => lsDel(PAST_THEME_KEY);
 
 const ENDING_THEMES = {
-  hero:     { label:"영웅의 귀환",   icon:"🌟", openingMood:"웅장하고 장엄한", openingLine:"전설이 된 영웅의 혼이 다시 한 번 세상에 깃든다. 어디선가 광명이 비치는 듯하다.", color:"#ffd700" },
-  tragedy:  { label:"비극적 최후",   icon:"💔", openingMood:"암울하고 애잔한", openingLine:"슬픔을 간직한 영혼이 다시 눈을 떴다. 아직 끝나지 않은 무언가가 남아있는 것 같다.", color:"#8888ff" },
-  villain:  { label:"악의 화신",     icon:"💀", openingMood:"불길하고 음울한", openingLine:"어둠 속에서 잠들었던 혼이 다시 깨어났다. 세상이 두려워해야 할 존재가 돌아왔다.", color:"#ff4444" },
-  neutral:  { label:"평범한 삶",     icon:"🌿", openingMood:"잔잔하고 평온한", openingLine:"지난 생의 기억이 스쳐 지나간다. 새로운 삶이 조용히 시작된다.", color:"#80c080" },
-  sacrifice:{ label:"희생과 헌신",   icon:"✨", openingMood:"숭고하고 신성한", openingLine:"모든 것을 바친 영혼이 다시 태어났다. 그 희생의 빛이 새 생에도 깃들어 있다.", color:"#e0c0ff" },
-  mystery:  { label:"미지의 결말",   icon:"🌀", openingMood:"신비롭고 기묘한", openingLine:"기억 속 무언가가 흐릿하다. 알 수 없는 힘이 이번 생을 인도하려는 것 같다.", color:"#80e0ff" },
+  hero:        { label:"영웅의 귀환",     icon:"🌟", openingMood:"웅장하고 장엄한", openingLine:"전설이 된 영웅의 혼이 다시 한 번 세상에 깃든다. 어디선가 광명이 비치는 듯하다.", color:"#ffd700" },
+  tragedy:     { label:"비극적 최후",     icon:"💔", openingMood:"암울하고 애잔한", openingLine:"슬픔을 간직한 영혼이 다시 눈을 떴다. 아직 끝나지 않은 무언가가 남아있는 것 같다.", color:"#8888ff" },
+  villain:     { label:"악의 화신",       icon:"💀", openingMood:"불길하고 음울한", openingLine:"어둠 속에서 잠들었던 혼이 다시 깨어났다. 세상이 두려워해야 할 존재가 돌아왔다.", color:"#ff4444" },
+  neutral:     { label:"평범한 삶",       icon:"🌿", openingMood:"잔잔하고 평온한", openingLine:"지난 생의 기억이 스쳐 지나간다. 새로운 삶이 조용히 시작된다.", color:"#80c080" },
+  sacrifice:   { label:"희생과 헌신",     icon:"✨", openingMood:"숭고하고 신성한", openingLine:"모든 것을 바친 영혼이 다시 태어났다. 그 희생의 빛이 새 생에도 깃들어 있다.", color:"#e0c0ff" },
+  mystery:     { label:"미지의 결말",     icon:"🌀", openingMood:"신비롭고 기묘한", openingLine:"기억 속 무언가가 흐릿하다. 알 수 없는 힘이 이번 생을 인도하려는 것 같다.", color:"#80e0ff" },
+  revenge:     { label:"복수 완수",       icon:"⚔️", openingMood:"냉혹하고 결연한", openingLine:"이루어진 복수의 잔향이 새 생에도 남아있다. 분노가 식어도 그 힘은 사라지지 않는다.", color:"#cc4444" },
+  redemption:  { label:"속죄의 여정",     icon:"🌸", openingMood:"따뜻하고 애틋한", openingLine:"지난 죄를 씻어낸 영혼이 가볍게 깨어났다. 이번 생은 다르게 살아보리라.", color:"#ffb0c0" },
+  conquest:    { label:"정복자의 귀환",   icon:"⚡", openingMood:"강렬하고 압도적인", openingLine:"모든 것을 정복한 자가 다시 눈을 떴다. 세상이 다시 이 존재 앞에 무릎을 꿇게 될 것이다.", color:"#ffaa00" },
+  ascension:   { label:"신격 상승",       icon:"👑", openingMood:"초월적이고 신성한", openingLine:"인간의 한계를 넘어선 자가 다시 태어났다. 이번 생에는 더 높은 곳을 향하리라.", color:"#ffe090" },
+  wanderer:    { label:"방랑자의 길",     icon:"🌙", openingMood:"쓸쓸하고 고독한", openingLine:"정처 없이 걷던 영혼이 다시 길 위에 섰다. 이번에도 어디론가 걷기 시작할 것이다.", color:"#6080aa" },
+  stealth:     { label:"그림자 속으로",   icon:"🌑", openingMood:"조용하고 날카로운", openingLine:"아무도 모르게 사라진 자가 다시 그림자 속에서 깨어났다. 이번에도 아무도 모르게.", color:"#445566" },
+  revolutionary:{ label:"혁명가의 부활",  icon:"🔥", openingMood:"격렬하고 뜨거운", openingLine:"세상을 뒤집은 불꽃이 다시 타오른다. 또 다른 혁명이 이 손에서 시작될 것이다.", color:"#ff6020" },
+  sage_end:    { label:"현자의 은퇴",     icon:"📚", openingMood:"깊고 사려깊은", openingLine:"모든 것을 알게 된 자가 조용히 눈을 감았다. 그 지식이 새 생에도 흐릿하게 남아있다.", color:"#80c0c0" },
 };
 
 const recordPastTheme = (endingType) => {
@@ -2468,7 +2668,7 @@ const getLegendShards = () => {
 
 // ── 56번: 시간의 메아리 ──
 // 전생에서 한 중요한 선택이 이번 생에 다른 형태로 메아리처럼 돌아옴
-// (TIME_ECHO_KEY, loadTimeEchoes, saveTimeEchoes, clearTimeEchoes는 위에서 선언됨)
+// (TIME_ECHO_KEY, loadTimeEchoes, saveTimeEchoes, clearTimeEchoes 위에서 이미 선언됨)
 
 const ECHO_CHOICE_TYPES = {
   mercy:     { icon:"🕊️", label:"자비의 메아리",  echo:"전생에 살려준 자의 후손이 결정적 순간에 은혜를 갚는다.",       bonus:"위기 시 구원자 NPC 1회 등장 보장" },
@@ -2489,6 +2689,7 @@ const recordTimeEcho = (choiceType, context, scenario) => {
   saveTimeEchoes(echoes);
 };
 
+// getTimeEchoes는 위(1559번 줄)에서 이미 선언됨
 
 // ── 57번: 신화 작가 ──
 // 회차를 거듭할수록 플레이어의 이야기가 세계 신화로 편입되어 NPC들이 전설을 아는 채로 등장
@@ -2528,6 +2729,7 @@ const getMythChapters = () => {
 
 // ── 58번: 혈맥의 유산 ──
 // 전생의 혈통·가문이 이번 생에 가문으로 이어져 귀족·씨족 네트워크와 연결
+// (BLOODLINE_KEY, loadBloodline, saveBloodline, clearBloodline 위에서 이미 선언됨)
 
 const BLOODLINE_TRAITS = [
   { id:"warrior",    icon:"⚔️", label:"전사 혈통",   trait:"무인의 피가 흐른다.",                     bonus:"STR·END 초기값 +5, 전사 계층 NPC 초기 우호" },
@@ -2563,6 +2765,7 @@ const getBloodline = () => {
 
 // ── 59번: 저주의 계보 ──
 // 전생에서 받거나 건 강력한 저주가 이번 생에 변형되어 지속
+// (CURSE_LINEAGE_KEY, loadCurseLineage, saveCurseLineage, clearCurseLineage 위에서 이미 선언됨)
 
 const CURSE_TYPES = [
   { id:"eternal_thirst",  icon:"💧", label:"영원한 갈증 저주",  effect:"특정 자원이 끊임없이 줄어드는 감각. 단, 결핍을 극복할 때마다 강해진다.",         debuff:"매 30턴 MP -5", hiddenBonus:"저주 극복 시 WIL +10 영구 부여" },
@@ -3557,11 +3760,16 @@ const saveSakuraData     = (d) => lsSet(SAKURA_ENDING_KEY, JSON.stringify(d));
 const clearSakuraData    = () => lsDel(SAKURA_ENDING_KEY);
 
 const SAKURA_CONDITIONS = [
-  { id:"all_scenarios",    label:"모든 시나리오 클리어",  desc:"모든 세계관에서 최소 1회 생존 엔딩" },
-  { id:"karma_balance",    label:"업보의 균형",           desc:"카르마 점수 40~60 사이로 엔딩 3회 이상" },
-  { id:"no_grudge",        label:"원한 없는 엔딩",        desc:"적을 용서하고 마무리한 엔딩 2회 이상" },
-  { id:"companion_saved",  label:"모두를 지킨 자",        desc:"동료를 한 명도 잃지 않은 회차 1회 이상" },
-  { id:"cycle_twenty",     label:"스무 번의 삶",          desc:"20회차 이상 도달" },
+  { id:"all_scenarios",     label:"모든 시나리오 클리어",   desc:"모든 세계관에서 최소 1회 생존 엔딩" },
+  { id:"karma_balance",     label:"업보의 균형",             desc:"카르마 점수 40~60 사이로 엔딩 3회 이상" },
+  { id:"no_grudge",         label:"원한 없는 엔딩",          desc:"적을 용서하고 마무리한 엔딩 2회 이상" },
+  { id:"companion_saved",   label:"모두를 지킨 자",          desc:"동료를 한 명도 잃지 않은 회차 1회 이상" },
+  { id:"cycle_twenty",      label:"스무 번의 삶",            desc:"20회차 이상 도달" },
+  { id:"all_new_scenarios", label:"새 세계관 개척자",        desc:"아포칼립스·신화·스팀펑크 모두 1회 이상 클리어" },
+  { id:"villain_end",       label:"악당의 길",               desc:"악당 루트로 엔딩 2회 이상 달성" },
+  { id:"sacrifice_end",     label:"희생자의 길",             desc:"자기희생 엔딩 2회 이상 달성" },
+  { id:"all_races",         label:"모든 종족 체험",          desc:"6종 이상의 다른 종족으로 플레이" },
+  { id:"hidden_job_ten",    label:"비밀 수집가",             desc:"숨겨진 직업 10개 이상 해금" },
 ];
 
 const updateSakuraProgress = (scenario, karmaScore, companionsSaved, grudgesLeft, cycleCount) => {
@@ -5647,6 +5855,172 @@ const HIDDEN_JOBS = [
     unlockCondition:{ reincarnationRank:3, minCycle:20 },
     hint:"수많은 삶을 거쳐 최고의 윤회자가 되어야 한다.",
     systemHint:"이 직업의 캐릭터는 전생의 모든 기억과 힘을 자유롭게 사용합니다. 어떤 전생의 기술도 꺼내 쓸 수 있는 전능한 묘사를 사용하십시오." },
+
+  // ════ 새로운 각성형 (일반 직업 → 각성) ════
+
+  { id:"soul_reaper",      icon:"⛓️", name:"영혼 수확자",      rarity:"legendary",
+    type:"awakening",     baseJob:["성직자","사제","신관","주술사","무당","영매"],  scenario:[null],
+    desc:"죽은 자의 영혼을 수확하고 봉인하는 자. 산 자와 죽은 자 사이의 경계에 선다.",
+    lore:"수많은 죽음을 목격하고, 마침내 죽음의 신이 이 자에게 일을 부탁하기 시작했다. 영혼을 인도하는 자는 결코 홀로가 아니다.",
+    bonus:{ mgc:15, per:12, mad:8, fear:10, wil:5 },
+    unlockType:"npc_death_count", unlockDesc:"NPC 동료 사망 10회 이상 경험",
+    unlockCondition:{ npcDeathCount:10, baseJobMatch:true },
+    hint:"죽음을 충분히 곁에서 지켜봐야 한다.",
+    systemHint:"이 직업은 주변에서 죽은 영혼들이 따라다니며, 전투 외에도 죽은 NPC의 목소리를 듣거나 메시지를 전달하는 묘사를 포함하십시오." },
+
+  { id:"cursed_blade",     icon:"🩸", name:"저주 검사",         rarity:"legendary",
+    type:"awakening",     baseJob:["검사","기사","팔라딘","전사","검객","무사"],  scenario:["중세 판타지","무협 강호",null],
+    desc:"검에 저주가 깃든 자. 강력하지만 서서히 무기에 잠식당한다.",
+    lore:"봉인된 마검을 너무 오래 쥐었다. 이제 검이 이 자를 선택한 것인지, 이 자가 검을 선택한 것인지 알 수 없다.",
+    bonus:{ str:18, crit:15, mgc:8, mad:12, hp:-15 },
+    unlockType:"dark_weapon_use", unlockDesc:"저주받은 무기 장착 상태로 전투 15회 이상",
+    unlockCondition:{ darkActs:15, baseJobMatch:true },
+    hint:"저주받은 힘에 의존하면 할수록 그 경지에 가까워진다.",
+    systemHint:"검사의 몸에 저주 문양이 퍼져 있으며, 강한 공격을 할수록 자신에게도 대가가 따르는 묘사를 항상 포함하십시오." },
+
+  { id:"star_caller",      icon:"🌠", name:"별의 부름자",       rarity:"rare",
+    type:"awakening",     baseJob:["마법사","마도사","점성술사","학자","탐정"],  scenario:[null],
+    desc:"별의 힘을 끌어내리는 자. 운명의 흐름을 읽고 별자리의 힘을 무기로 삼는다.",
+    lore:"밤마다 하늘을 올려다보다 어느 날 별들이 말을 걸어오기 시작했다. 이제 그 자에게 밤하늘은 무기이자 지도다.",
+    bonus:{ mgc:15, luk:15, per:12, int:8 },
+    unlockType:"cycle_knowledge", unlockDesc:"3회차 이상 + 다양한 세계관 탐험",
+    unlockCondition:{ minCycle:3, baseJobMatch:true },
+    hint:"오랜 시간 하늘을 올려다보며 지식을 쌓아야 한다.",
+    systemHint:"별빛이 이 캐릭터를 감싸며, 별자리에 따라 다른 힘을 사용하는 묘사를 포함하십시오. 별자리 판단은 그날의 운세처럼 묘사하면 좋습니다." },
+
+  { id:"wandering_ghost",  icon:"👻", name:"방랑 검귀",         rarity:"rare",
+    type:"awakening",     baseJob:["검사","자객","암살자","도적","레인저","검객"],  scenario:["무협 강호","중세 판타지",null],
+    desc:"죽은 검사의 혼이 깃든 몸. 두 개의 의식이 동거하며 서로의 기술을 공유한다.",
+    lore:"격렬한 전투 후 쓰러진 그 순간, 전설의 검귀가 몸에 깃들었다. 하나의 몸에 두 개의 검혼. 때로는 공존하고 때로는 갈등한다.",
+    bonus:{ str:14, agi:14, crit:12, mad:10, per:5 },
+    unlockType:"low_hp_survive", unlockDesc:"HP 10% 이하에서 강자와의 1:1 전투 3회 생존",
+    unlockCondition:{ lowHpWins:3, baseJobMatch:true },
+    hint:"죽음 직전까지 가는 일대일 결투를 반복해야 한다.",
+    systemHint:"캐릭터 안에 검귀가 때때로 목소리를 내거나 행동을 조언하는 묘사를 포함하십시오. 광기 수치가 높을수록 검귀의 목소리가 강해집니다." },
+
+  { id:"blood_dancer",     icon:"💃", name:"혈무 무도가",        rarity:"rare",
+    type:"awakening",     baseJob:["도적","암살자","자객","닌자","곡예사"],  scenario:[null],
+    desc:"피와 춤을 섞어 예술로 만드는 자. 전투가 곧 공연이다.",
+    lore:"춤꾼이었던 그는 어느 날 전투와 춤이 다르지 않음을 깨달았다. 이제 그의 전투는 처절하면서도 아름답다.",
+    bonus:{ agi:18, crit:14, cha:10, disg:8 },
+    unlockType:"scenario_clear", unlockDesc:"은신/잠입 스타일로 전투 승리 12회 이상",
+    unlockCondition:{ stealthEndings:2, baseJobMatch:true },
+    hint:"아름답게 싸워야 한다. 거칠지 않게.",
+    systemHint:"이 캐릭터의 전투는 항상 춤처럼 묘사하십시오. 발놀림, 손짓, 몸의 움직임이 예술적으로 보이도록 하되 그 결과는 치명적입니다." },
+
+  { id:"iron_monk",        icon:"🪨", name:"철혈 수도승",        rarity:"rare",
+    type:"awakening",     baseJob:["수도사","승려","무도가","격투가","팔라딘"],  scenario:["무협 강호","중세 판타지",null],
+    desc:"육체를 극한까지 단련한 자. 어떤 무기도 이 몸을 뚫을 수 없다.",
+    lore:"수천 번의 명상과 수련 끝에 육체가 강철을 넘어섰다. 이제 맨손이 최강의 무기다.",
+    bonus:{ end:20, str:12, wil:12, hp:20, mgc:-5 },
+    unlockType:"battle_wins", unlockDesc:"무기 없이(맨손) 전투 승리 10회 이상",
+    unlockCondition:{ battleWins:10, baseJobMatch:true },
+    hint:"끊임없이 수련하고 명상해야 한다.",
+    systemHint:"이 캐릭터는 무기를 사용하지 않을 때 가장 강하며, 맨몸 전투 장면에서 바위를 부수고 창을 맨손으로 막는 초인적 묘사를 사용하십시오." },
+
+  { id:"runic_carver",     icon:"🔣", name:"룬 각인사",          rarity:"rare",
+    type:"awakening",     baseJob:["마법사","연금술사","학자","발명가","마법학자"],  scenario:["중세 판타지","나만의 세계",null],
+    desc:"룬 문자를 피부에 새겨 힘을 끌어내는 자. 몸 전체가 마법의 매개체가 된다.",
+    lore:"수천 개의 룬을 분석하다 결국 자신의 피부를 마법 양피지로 삼기 시작했다. 각인할수록 강해지지만 원래의 자신은 잃어간다.",
+    bonus:{ mgc:16, int:12, crit:10, str:6, hp:-8 },
+    unlockType:"skill_use", unlockDesc:"마법·룬 계열 스킬 총 25회 이상 사용",
+    unlockCondition:{ skillUseCount:25, baseJobMatch:true },
+    hint:"룬을 끊임없이 연구하고 각인해야 한다.",
+    systemHint:"이 캐릭터의 피부에는 빛나는 룬 문자가 새겨져 있으며, 스킬 사용 시 특정 룬이 활성화되는 묘사를 포함하십시오." },
+
+  { id:"chain_breaker",    icon:"🔓", name:"속박 해방자",         rarity:"rare",
+    type:"awakening",     baseJob:["성직자","팔라딘","기사","전사","혁명가"],  scenario:[null],
+    desc:"억압받는 자들의 구원자. 모든 속박과 봉인을 깨뜨리는 자.",
+    lore:"수많은 봉인과 저주를 해제하다 보니 이제 세상의 모든 구속이 눈에 보이기 시작했다. 감옥도, 계약도, 법도 이 자에겐 깨뜨릴 대상일 뿐이다.",
+    bonus:{ wil:15, str:10, ldr:12, fath:8, crse:-20 },
+    unlockType:"karma_pure", unlockDesc:"피억압자를 구한 선택 누적 15회",
+    unlockCondition:{ pureKarmaEndings:2, baseJobMatch:true },
+    hint:"약자를 돕고 억압에 맞서야 한다.",
+    systemHint:"이 캐릭터 앞에서 사슬, 봉인, 계약 같은 속박이 자연스럽게 풀리며, 억압받는 NPC들이 본능적으로 이 자를 따르는 묘사를 사용하십시오." },
+
+  // ════ 새로운 진화형 ════
+
+  { id:"reaper_lord",      icon:"💀", name:"사령 군주",          rarity:"legendary",
+    type:"evolution",     baseJob:["영혼 수확자","죽음의 기사","사신"],  scenario:[null],
+    desc:"죽음을 다스리는 군주. 자신의 의지대로 생사를 결정한다.",
+    lore:"영혼을 거두는 것을 넘어 이제 생사의 법칙 자체를 쥐게 되었다. 이 자가 살라 하면 살고, 죽으라 하면 죽는다.",
+    bonus:{ mgc:25, fear:20, per:18, wil:15, hp:20 },
+    unlockType:"awakened_evolution", unlockDesc:"영혼 수확자 or 죽음의 기사로 8회차 이상 + 사안 해금",
+    unlockCondition:{ baseJobMatch:true, minCycle:8, deathEyeUnlocked:true },
+    hint:"영혼을 다루는 직업으로 충분한 생을 쌓아야 한다.",
+    systemHint:"이 캐릭터 앞에서는 살아있는 존재도 죽음을 느끼며, 생명의 불꽃이 얼마나 남아있는지 수치로 보이는 능력을 자연스럽게 묘사하십시오." },
+
+  { id:"divine_sovereign",  icon:"👑", name:"신격 군주",           rarity:"legendary",
+    type:"evolution",     baseJob:["신화의 영웅","환생 지배자","신살자"],  scenario:[null],
+    desc:"신을 능가한 자. 새로운 신화의 시작.",
+    lore:"신을 죽이고 그 자리를 차지했다. 아니면 스스로 신이 되었다. 어느 쪽이든 이제 세계는 이 자를 중심으로 돈다.",
+    bonus:{ str:20, mgc:20, wil:25, rep:30, luk:20 },
+    unlockType:"awakened_evolution", unlockDesc:"신화의 영웅으로 12회차 이상 + 신전 레벨 최대",
+    unlockCondition:{ baseJobMatch:true, minCycle:12, templeLevel:5 },
+    hint:"신화의 영웅이 신화를 넘어서야 한다.",
+    systemHint:"이 캐릭터 앞에서 NPC들은 본능적으로 무릎을 꿇거나 기도하는 자세를 취하며, 자연 현상도 이 존재의 의지에 반응하는 묘사를 사용하십시오." },
+
+  { id:"cursed_sovereign",  icon:"🔴", name:"저주의 군주",          rarity:"legendary",
+    type:"evolution",     baseJob:["저주 검사","혈마법사","어둠의 마법사"],  scenario:[null],
+    desc:"저주를 완전히 지배하게 된 자. 이제 저주는 형벌이 아니라 무기다.",
+    lore:"저주에 잠식당하는 대신 역으로 저주를 삼켰다. 모든 저주를 흡수하고 재활용하는 최강의 저주술사.",
+    bonus:{ mgc:22, crit:18, fear:15, crse:25, mad:10 },
+    unlockType:"awakened_evolution", unlockDesc:"저주 검사 or 혈마법사로 7회차 이상 + 어둠 행동 30회",
+    unlockCondition:{ baseJobMatch:true, minCycle:7, darkActs:30 },
+    hint:"저주받은 직업으로 어둠의 길을 오래 걸어야 한다.",
+    systemHint:"이 캐릭터는 저주를 먹고 자라며, 다른 존재의 저주를 흡수해 더 강해지는 묘사를 사용하십시오. 몸 주변에 항상 어두운 기운이 소용돌이칩니다." },
+
+  // ════ 새로운 발견형 (특수 조건) ════
+
+  { id:"fool_sage",        icon:"🃏", name:"광인 현자",           rarity:"legendary",
+    type:"secret",        baseJob:null,  scenario:[null],
+    desc:"미쳤다고 불리지만 가장 깊은 진리를 아는 자. 광기와 지혜는 종이 한 장 차이다.",
+    lore:"광기 수치가 한계를 넘어섰지만 붕괴하는 대신 새로운 인식의 문이 열렸다. 이제 이 자만이 볼 수 있는 것들이 있다.",
+    bonus:{ int:20, per:18, luk:15, mad:20, wil:-10 },
+    unlockType:"high_madness_survive", unlockDesc:"광기 수치 90 이상에서 생존 3회 이상",
+    unlockCondition:{ loopAwarenessLevel:2, totalDeaths:10 },
+    hint:"광기의 끝에서도 살아남아야 한다.",
+    systemHint:"이 캐릭터는 언뜻 말이 안 되는 소리를 하지만 그 말 속에 진리가 담겨있습니다. 예언적이고 역설적인 발언을 자주 사용하십시오." },
+
+  { id:"echo_of_past",     icon:"🔁", name:"과거의 메아리",        rarity:"legendary",
+    type:"secret",        baseJob:null,  scenario:[null],
+    desc:"전생의 자신들이 모두 공존하는 자. 수십 개의 자아가 하나의 몸에 깃들어 있다.",
+    lore:"전생 기억이 너무 강렬하게 각성되어 역대 자아들이 모두 현생의 몸 안에서 목소리를 내기 시작했다. 혼란스럽지만 그만큼 강력하다.",
+    bonus:{ str:8, mgc:8, int:8, agi:8, per:8, wil:-5, mad:15 },
+    unlockType:"loop_awareness", unlockDesc:"전생 기억 완전 각성 + 회차 12회 이상",
+    unlockCondition:{ loopAwarenessLevel:3, minCycle:12 },
+    hint:"오래 환생하며 기억을 모두 끌어올려야 한다.",
+    systemHint:"이 캐릭터는 상황에 따라 다른 전생 자아의 목소리와 전투 스타일을 드러냅니다. 대화 중 갑자기 과거의 말투나 습관이 나오는 묘사를 사용하십시오." },
+
+  { id:"shadow_sovereign",  icon:"🌑", name:"그림자 지배자",        rarity:"legendary",
+    type:"secret",        baseJob:null,  scenario:[null],
+    desc:"모든 그림자를 지배하는 자. 빛이 있는 곳이라면 어디든 자신의 영역이다.",
+    lore:"은신과 잠입을 너무나 완벽하게 수행한 끝에 그림자 자체가 이 자를 주인으로 섬기기 시작했다.",
+    bonus:{ disg:20, agi:18, per:15, crit:15, fear:10 },
+    unlockType:"scenario_clear", unlockDesc:"완벽한 은신 엔딩 3회 이상 + 그림자 무도가 해금",
+    unlockCondition:{ stealthEndings:3, pastLanguageUnlocked:true },
+    hint:"발각되지 않고 완벽한 은신에 성공해야 한다.",
+    systemHint:"이 캐릭터가 원하면 어떠한 그림자에서도 출몰할 수 있으며, 그림자가 독립적으로 움직여 정보를 수집하거나 공격하는 묘사를 사용하십시오." },
+
+  { id:"dragon_sovereign",  icon:"🐉", name:"용왕",                rarity:"legendary",
+    type:"secret",        baseJob:null,  scenario:["중세 판타지","무협 강호",null],
+    desc:"모든 용을 지배하는 자. 용의 왕으로 군림한다.",
+    lore:"드래곤과 싸우고, 계약하고, 친해진 경험이 쌓여 결국 용들이 이 자를 자신들의 왕으로 인정했다.",
+    bonus:{ str:18, mgc:18, fear:20, ldr:15, rep:15 },
+    unlockType:"sealed_god", unlockDesc:"드래곤 관련 이벤트 누적 20회 + 용의 피 칭호 보유",
+    unlockCondition:{ sealedGodComplete:false, villainInheritCount:2, bardFame:50 },
+    hint:"용과 충분히 교류하고 용의 피를 얻어야 한다.",
+    systemHint:"이 캐릭터 앞에서 모든 용은 복종하거나 도전합니다. 용과의 대화가 가능하며 용족의 힘을 빌려 쓸 수 있는 묘사를 포함하십시오." },
+
+  { id:"concept_breaker",   icon:"❌", name:"개념 파괴자",          rarity:"legendary",
+    type:"secret",        baseJob:null,  scenario:[null],
+    desc:"세계의 개념과 법칙을 직접 부수는 자. '불가능'이라는 단어가 이 자에겐 없다.",
+    lore:"루프를 깨고 신을 죽이고 차원을 건너며 결국 세계의 법칙 자체를 부수기 시작했다. 이제 이 자 앞에서 '이건 안 된다'는 없다.",
+    bonus:{ wil:25, int:20, luk:20, per:15, mgc:15 },
+    unlockType:"legend_complete", unlockDesc:"루프 파괴자 + 신살자 + 시간 직조자 모두 해금",
+    unlockCondition:{ bardFame:90, templeLevel:4 },
+    hint:"세계의 규칙을 어기는 세 가지 직업을 모두 해금해야 한다.",
+    systemHint:"이 캐릭터는 게임의 규칙 자체를 무시하는 행동이 가능합니다. '그건 불가능하다'는 묘사가 나와도 이 캐릭터는 그냥 해버리는 결과를 보여주십시오." },
 ];
 
 // ─── 해금 조건 체크 함수 ───────────────────────────────────────
@@ -5661,6 +6035,7 @@ const checkHiddenJobUnlock = (job, gameData) => {
     pastLanguageUnlocked = false, causalityUnlocked = false,
     twinSoulConnected = false, deathEyeUnlocked = false,
     currentRole = "", battleWinHistory = 0,
+    npcDeathCount = 0,
   } = gameData;
 
   const cond = job.unlockCondition;
@@ -5696,6 +6071,9 @@ const checkHiddenJobUnlock = (job, gameData) => {
     case "legend_complete":     return bardFame >= (cond.bardFame || 80) && templeLevel >= (cond.templeLevel || 3);
     case "undying_extreme":     return undyingMaxed && totalDeaths >= (cond.totalDeaths || 30);
     case "reincarnation_rank":  return reincarnationRank >= (cond.reincarnationRank || 3) && cycle >= (cond.minCycle || 20);
+    case "npc_death_count":     return npcDeathCount >= (cond.npcDeathCount || 10);
+    case "dark_weapon_use":     return darkActs >= (cond.darkActs || 15);
+    case "high_madness_survive":return loopAwarenessLevel >= 2 && totalDeaths >= 10;
     default: return false;
   }
 };
@@ -5738,5 +6116,572 @@ const getHiddenJobProgress = (gameData) => {
     const canUnlock = !isUnlocked && checkHiddenJobUnlock(job, gameData);
     return { ...job, isUnlocked, canUnlock };
   });
+};
+
+
+// ══════════════════════════════════════════════════════
+//  [NEW] 아이템 강화/제작 시스템
+// ══════════════════════════════════════════════════════
+const FORGE_KEY       = "taleforge-forge";
+const loadForgeData   = () => { const r = lsGet(FORGE_KEY); return r ? JSON.parse(r) : { upgrades:{}, craftHistory:[] }; };
+const saveForgeData   = (d) => lsSet(FORGE_KEY, JSON.stringify(d));
+const clearForgeData  = () => lsDel(FORGE_KEY);
+
+// 강화 단계별 비용·효과 (최대 +5)
+const UPGRADE_TIERS = [
+  { tier:1, goldCost:50,  matCost:1, successRate:0.95, bonus:0.15, label:"+1 강화",  color:"#80c080" },
+  { tier:2, goldCost:120, matCost:2, successRate:0.85, bonus:0.25, label:"+2 강화",  color:"#60a0e0" },
+  { tier:3, goldCost:250, matCost:3, successRate:0.70, bonus:0.40, label:"+3 강화",  color:"#a060e0" },
+  { tier:4, goldCost:500, matCost:5, successRate:0.50, bonus:0.60, label:"+4 강화",  color:"#e06030" },
+  { tier:5, goldCost:900, matCost:8, successRate:0.30, bonus:0.85, label:"+5 전설",  color:"#c8a96e" },
+];
+
+const FORGE_MATERIALS = [
+  { id:"iron_shard",   name:"강철 파편",    icon:"🔩", rarity:"common",    desc:"기본 강화 재료. 어디서나 구할 수 있다." },
+  { id:"magic_crystal",name:"마법 수정",    icon:"💎", rarity:"uncommon",  desc:"마법 강화에 필요한 수정. 마법사 상점이나 던전에서 출현." },
+  { id:"dragon_scale", name:"용의 비늘",    icon:"🐉", rarity:"rare",      desc:"드래곤에게서만 얻을 수 있는 희귀 강화재." },
+  { id:"void_ore",     name:"공허 광석",    icon:"🌑", rarity:"legendary", desc:"차원 균열에서만 채취되는 전설급 재료." },
+  { id:"titan_bone",   name:"티탄 뼈 가루", icon:"🦴", rarity:"rare",      desc:"고대 거인의 뼈를 갈아만든 강화 재료." },
+  { id:"steam_alloy",  name:"증기 합금",    icon:"⚙️", rarity:"uncommon",  desc:"스팀펑크 세계의 특수 합금. 기계 장비 강화에 탁월." },
+  { id:"stardust",     name:"별의 가루",    icon:"✨", rarity:"rare",      desc:"별이 떨어진 자리에서 모은 신비한 가루." },
+];
+
+// 제작 레시피 테이블
+const CRAFT_RECIPES = [
+  { id:"holy_blade",   name:"성광 검",      icon:"✨", rarity:"legendary",
+    materials:["iron_shard","magic_crystal","iron_shard"], goldCost:300,
+    result:{ type:"equip", slot:"weapon", effects:{ str:15, mgc:10, fath:8, crit:8 }, desc:"신성한 빛이 깃든 검. 어둠 속에서 스스로 빛을 발한다." },
+    scenarios:["medieval"], hint:"중세 판타지 세계관에서만 제작 가능." },
+  { id:"shadow_knife",  name:"그림자 단검", icon:"🌑", rarity:"rare",
+    materials:["iron_shard","magic_crystal"], goldCost:180,
+    result:{ type:"equip", slot:"weapon", effects:{ agi:12, crit:15, disg:8 }, desc:"어둠에 녹아드는 단검. 적이 눈치채기 전에 이미 끝난다." },
+    scenarios:null, hint:"모든 세계관에서 제작 가능." },
+  { id:"dragon_armor",  name:"용린 갑옷",   icon:"🐉", rarity:"legendary",
+    materials:["dragon_scale","iron_shard","iron_shard"], goldCost:600,
+    result:{ type:"equip", slot:"armor", effects:{ end:20, str:10, fear:10, hp:15 }, desc:"용의 비늘로 만든 갑옷. 화염과 냉기에 강한 저항을 지닌다." },
+    scenarios:["medieval","mythology"], hint:"용 관련 세계관 전용." },
+  { id:"cyber_implant", name:"신경 강화 임플란트", icon:"🧠", rarity:"legendary",
+    materials:["magic_crystal","magic_crystal","iron_shard"], goldCost:500,
+    result:{ type:"equip", slot:"accessory", effects:{ int:15, per:12, agi:8, wil:6 }, desc:"최첨단 신경 강화 임플란트. 반응속도와 지능이 극한으로 상승한다." },
+    scenarios:["cyberpunk","steampunk"], hint:"기술 세계관 전용." },
+  { id:"survivors_kit", name:"생존자 키트",  icon:"🎒", rarity:"uncommon",
+    materials:["iron_shard","iron_shard"], goldCost:80,
+    result:{ type:"consume", effects:{ hp:40, end:10, pstx:8, ftg:-25 }, desc:"황무지 생존에 필요한 모든 것이 담긴 키트." },
+    scenarios:["apocalypse"], hint:"아포칼립스 전용." },
+  { id:"myth_crown",    name:"신화의 왕관",  icon:"👑", rarity:"legendary",
+    materials:["stardust","magic_crystal","titan_bone"], goldCost:800,
+    result:{ type:"equip", slot:"accessory", effects:{ ldr:20, rep:15, wil:12, luk:12, fath:8 }, desc:"신화의 왕들이 쓰던 왕관의 복제품. 착용자에게 왕의 위엄이 깃든다." },
+    scenarios:["mythology","medieval"], hint:"신화·중세 전용." },
+  { id:"steam_cannon",  name:"증기 대포",    icon:"💥", rarity:"rare",
+    materials:["steam_alloy","steam_alloy","iron_shard"], goldCost:400,
+    result:{ type:"equip", slot:"weapon", effects:{ str:16, crit:12, fear:8, int:5 }, desc:"고압 증기로 강철탄을 발사하는 대포. 거대한 위력을 자랑한다." },
+    scenarios:["steampunk"], hint:"스팀펑크 전용." },
+  { id:"void_cloak",    name:"공허의 망토",  icon:"🌌", rarity:"legendary",
+    materials:["void_ore","magic_crystal"], goldCost:700,
+    result:{ type:"equip", slot:"armor", effects:{ disg:20, agi:15, per:10, mgc:8 }, desc:"공허를 짜서 만든 망토. 착용자의 존재감이 희미해진다." },
+    scenarios:null, hint:"고회차(5회차+) 전용. 차원 균열 세계에서 재료 수급." },
+  { id:"elixir_grand",  name:"대 영약",      icon:"🧪", rarity:"legendary",
+    materials:["stardust","magic_crystal","dragon_scale"], goldCost:1000,
+    result:{ type:"consume", effects:{ hp:100, mp:80, str:10, mgc:10, end:10, wil:10 }, desc:"전설의 연금술사가 남긴 레시피로 만든 대 영약. 모든 것이 회복된다." },
+    scenarios:null, hint:"모든 세계관. 재료가 매우 희귀하다." },
+];
+
+const getAvailableRecipes = (scenario, cycle) => {
+  return CRAFT_RECIPES.filter(r => {
+    if (r.scenarios && !r.scenarios.some(s => scenario && scenario.includes(s === "medieval" ? "중세" : s === "cyberpunk" ? "사이버" : s === "apocalypse" ? "아포칼" : s === "mythology" ? "신화" : s === "steampunk" ? "스팀" : s))) return false;
+    if (r.id === "void_cloak" && cycle < 5) return false;
+    return true;
+  });
+};
+
+const upgradeItem = (itemId, currentTier, gold, materials) => {
+  const nextTier = UPGRADE_TIERS.find(t => t.tier === currentTier + 1);
+  if (!nextTier) return { success: false, reason: "최대 강화 단계입니다." };
+  if (gold < nextTier.goldCost) return { success: false, reason: `골드 ${nextTier.goldCost} 필요.` };
+  const roll = Math.random();
+  const success = roll <= nextTier.successRate;
+  const fd = loadForgeData();
+  if (!fd.upgrades[itemId]) fd.upgrades[itemId] = 0;
+  if (success) fd.upgrades[itemId] = currentTier + 1;
+  saveForgeData(fd);
+  return { success, newTier: success ? currentTier + 1 : currentTier, roll, tier: nextTier };
+};
+
+// ══════════════════════════════════════════════════════
+//  [NEW] 동적 클리어 목표 시스템
+// ══════════════════════════════════════════════════════
+const CYCLE_GOAL_KEY    = "taleforge-cycle-goal";
+const loadCycleGoal     = () => { const r = lsGet(CYCLE_GOAL_KEY); return r ? JSON.parse(r) : null; };
+const saveCycleGoal     = (g) => lsSet(CYCLE_GOAL_KEY, JSON.stringify(g));
+const clearCycleGoal    = () => lsDel(CYCLE_GOAL_KEY);
+
+const CLEAR_GOALS = [
+  { id:"throne",       icon:"👑", name:"왕좌 쟁취",      desc:"어떤 방법으로든 최고 권력자가 되어라.",
+    hint:"통솔·평판·카르마를 쌓고 권력의 정점에 오르면 달성. 방법은 불문.",
+    bonusEndingType:"conquest", statBonus:{ ldr:8, rep:8 },
+    aiHint:"이 캐릭터의 목표는 권력 정점 달성입니다. 권력과 관련된 선택지와 기회를 자주 제시하십시오." },
+  { id:"slayer",       icon:"⚔️", name:"마왕 처단",       desc:"이번 회차의 최강 악의 존재를 처단하라.",
+    hint:"강력한 적 보스를 처치하면 달성. 전투력과 전략이 핵심.",
+    bonusEndingType:"hero", statBonus:{ str:8, crit:6 },
+    aiHint:"이 캐릭터의 목표는 최강 악을 처단하는 것입니다. 강력한 악당을 서사 중반부터 등장시키고 맞대결 기회를 만들어주십시오." },
+  { id:"revenge",      icon:"🩸", name:"복수 완수",        desc:"과거의 원한을 갚아라.",
+    hint:"원한 관계의 NPC를 처단하거나 굴복시키면 달성.",
+    bonusEndingType:"revenge", statBonus:{ str:6, wil:8 },
+    aiHint:"이 캐릭터는 복수를 목표로 합니다. 원한의 대상이나 그 세력을 서사에 자주 등장시키고 점점 원한이 쌓이는 묘사를 포함하십시오." },
+  { id:"sage_path",    icon:"📚", name:"현자의 길",        desc:"세계의 숨겨진 진실을 모두 밝혀라.",
+    hint:"비밀 정보·금서·고대 유물 5개 이상 수집 시 달성.",
+    bonusEndingType:"sage_end", statBonus:{ int:8, per:8 },
+    aiHint:"이 캐릭터는 지식과 진실 탐구가 목표입니다. 비밀스러운 정보, 금지된 지식, 숨겨진 단서를 서사 전반에 배치하십시오." },
+  { id:"savior",       icon:"🌟", name:"구원자",           desc:"위기에 처한 사람들을 구하라.",
+    hint:"NPC 5명 이상을 위기에서 구하면 달성. 희생 여부는 불문.",
+    bonusEndingType:"hero", statBonus:{ fath:8, ldr:6 },
+    aiHint:"이 캐릭터의 목표는 다수를 구원하는 것입니다. 도움이 필요한 사람들과 위기 상황을 자주 배치하고 구출 선택지를 제공하십시오." },
+  { id:"silent_end",   icon:"🌙", name:"조용한 은퇴",      desc:"아무도 모르게 조용히 평범한 삶을 살아라.",
+    hint:"전투·갈등을 최대한 피하고 평화로운 생활 장면을 쌓으면 달성.",
+    bonusEndingType:"wanderer", statBonus:{ cal:8, luk:8 },
+    aiHint:"이 캐릭터의 목표는 조용한 은퇴입니다. 평온한 일상, 소박한 인간관계를 중심으로 서사를 전개하십시오. 큰 사건보다 소소한 이야기에 집중하십시오." },
+  { id:"revolution",   icon:"🔥", name:"혁명가",           desc:"낡은 체제를 뒤엎고 새로운 세상을 만들어라.",
+    hint:"기존 세력·권력구조에 정면으로 맞서 반란을 성공시키면 달성.",
+    bonusEndingType:"revolutionary", statBonus:{ ldr:8, fear:6 },
+    aiHint:"이 캐릭터의 목표는 혁명입니다. 억압적인 권력구조를 보여주고, 변화를 원하는 민중과 저항 세력을 서사에 배치하십시오." },
+  { id:"underworld",   icon:"🌑", name:"지하세계 지배",    desc:"어둠의 조직과 지하경제를 손에 넣어라.",
+    hint:"암흑가 조직 3개 이상 장악 또는 흡수 시 달성.",
+    bonusEndingType:"villain", statBonus:{ disg:8, neg:8 },
+    aiHint:"이 캐릭터의 목표는 지하세계 장악입니다. 범죄 조직, 암시장, 부패한 세력을 서사에 배치하고 이권 다툼 선택지를 자주 제시하십시오." },
+  { id:"divine_path",  icon:"✨", name:"신격화",           desc:"인간의 한계를 넘어 신에 가까운 존재가 되어라.",
+    hint:"윤회 등급 상승 + 신전 레벨 3 이상 + 전설급 업적 5개 이상.",
+    bonusEndingType:"ascension", statBonus:{ wil:8, mgc:8 },
+    aiHint:"이 캐릭터의 목표는 신격화입니다. 신비로운 초월 경험, 인간 한계를 넘는 순간들을 서사에 배치하십시오. 다른 NPC들이 이 자에게서 신성함을 느끼는 묘사를 포함하십시오." },
+  { id:"dragon_king",  icon:"🐉", name:"용왕 등극",         desc:"용들의 왕으로 군림하라.",
+    hint:"드래곤 관련 이벤트 10회 + 용의 피 칭호 + 용족 NPC 3명 이상 복속.",
+    bonusEndingType:"conquest", statBonus:{ str:8, fear:10 },
+    scenarios:["medieval","mythology"],
+    aiHint:"이 캐릭터의 목표는 용왕이 되는 것입니다. 용·드래곤 관련 이벤트를 자주 등장시키고 용족과의 대결·계약·복속 기회를 만들어주십시오." },
+];
+
+const assignRandomGoal = (scenario, cycle) => {
+  const eligible = CLEAR_GOALS.filter(g => {
+    if (g.scenarios) return g.scenarios.some(s => scenario && scenario.includes(s === "medieval" ? "중세" : s === "mythology" ? "신화" : s));
+    return true;
+  });
+  const idx = Math.floor(Math.random() * eligible.length);
+  const goal = { ...eligible[idx], assignedAt: new Date().toISOString(), progress: 0, completed: false };
+  saveCycleGoal(goal);
+  return goal;
+};
+
+const updateGoalProgress = (amount = 1) => {
+  const goal = loadCycleGoal();
+  if (!goal || goal.completed) return goal;
+  goal.progress = (goal.progress || 0) + amount;
+  if (goal.progress >= 100) goal.completed = true;
+  saveCycleGoal(goal);
+  return goal;
+};
+
+// ══════════════════════════════════════════════════════
+//  [NEW] NPC 성장 시스템 (동료 레벨업 + 버프)
+// ══════════════════════════════════════════════════════
+const NPC_GROWTH_KEY    = "taleforge-npc-growth";
+const loadNpcGrowth     = () => { const r = lsGet(NPC_GROWTH_KEY); return r ? JSON.parse(r) : {}; };
+const saveNpcGrowth     = (d) => lsSet(NPC_GROWTH_KEY, JSON.stringify(d));
+const clearNpcGrowth    = () => lsDel(NPC_GROWTH_KEY);
+
+const NPC_GROWTH_SKILLS = [
+  { level:2, id:"npc_cover",    name:"동료 방어",   icon:"🛡️", desc:"동료가 피격 순간 앞에 나서 피해를 반감한다. END +5 버프." },
+  { level:3, id:"npc_assist",   name:"측면 지원",   icon:"⚔️", desc:"동료가 적의 빈틈을 공략. 주인공 CRIT +8 버프." },
+  { level:4, id:"npc_rally",    name:"사기 고취",   icon:"📣", desc:"동료의 외침이 주인공을 북돋운다. WIL +8, CAL +5 버프." },
+  { level:5, id:"npc_synergy",  name:"완전 공조",   icon:"✨", desc:"호흡이 완전히 맞은 동료와의 협공. 모든 판정 +10 버프." },
+];
+
+const growNpc = (npcName, bondIncrease = 5) => {
+  const data = loadNpcGrowth();
+  if (!data[npcName]) data[npcName] = { level: 1, exp: 0, totalBond: 0, skills: [] };
+  const npc = data[npcName];
+  npc.exp += bondIncrease;
+  npc.totalBond += bondIncrease;
+  // 레벨업 체크 (exp 임계치: 20, 50, 90, 150)
+  const thresholds = [0, 20, 50, 90, 150];
+  const newLevel = thresholds.filter(t => npc.exp >= t).length;
+  const didLevelUp = newLevel > npc.level;
+  if (didLevelUp) {
+    npc.level = newLevel;
+    const newSkill = NPC_GROWTH_SKILLS.find(s => s.level === newLevel);
+    if (newSkill && !npc.skills.find(s => s.id === newSkill.id)) npc.skills.push(newSkill);
+  }
+  saveNpcGrowth(data);
+  return { npc, didLevelUp, newLevel };
+};
+
+const getNpcGrowthData = (npcName) => {
+  const data = loadNpcGrowth();
+  return data[npcName] || { level: 1, exp: 0, totalBond: 0, skills: [] };
+};
+
+const getCompanionBuffs = () => {
+  // 최고 레벨 동료의 스킬 버프를 합산
+  const data = loadNpcGrowth();
+  const allSkills = [];
+  Object.values(data).forEach(npc => {
+    if (npc.skills) npc.skills.forEach(s => { if (!allSkills.find(x => x.id === s.id)) allSkills.push(s); });
+  });
+  return allSkills;
+};
+
+// ══════════════════════════════════════════════════════
+//  [NEW] 날씨/계절 판정 연동 시스템
+// ══════════════════════════════════════════════════════
+const WEATHER_EFFECTS = {
+  none:        { label:"맑음",     icon:"☀️",  bonuses:{}, penalties:{}, aiHint:"맑은 날씨. 특별한 날씨 효과 없음." },
+  rain:        { label:"비",       icon:"🌧️", bonuses:{ disg:8, agi:5 },     penalties:{ str:-3, crit:-3, per:-5 },  aiHint:"비가 내립니다. 잠입과 은신에 유리하나 시야와 힘이 약간 감소합니다." },
+  storm:       { label:"폭풍",     icon:"⛈️",  bonuses:{ mgc:10, fear:8 },    penalties:{ agi:-8, per:-10, spk:-5 },  aiHint:"폭풍이 몰아칩니다. 마법과 위압에 유리하나 기동력과 소통이 크게 제한됩니다." },
+  snow:        { label:"눈",       icon:"❄️",  bonuses:{ cal:5, wil:5 },      penalties:{ agi:-5, ftg:10 },           aiHint:"눈이 내립니다. 정신이 맑아지나 체력 소모가 증가합니다." },
+  fog:         { label:"안개",     icon:"🌫️", bonuses:{ disg:15, per:5 },    penalties:{ per:-8, crit:-5 },          aiHint:"짙은 안개가 낍니다. 위장에 매우 유리하나 탐지 능력이 감소합니다." },
+  scorching:   { label:"폭염",     icon:"🔥",  bonuses:{ str:5, fear:5 },     penalties:{ end:-5, cal:-5, ftg:10 },   aiHint:"찌는 더위입니다. 공격적인 상황에 유리하나 지구력과 냉정함이 감소합니다." },
+  blizzard:    { label:"눈보라",   icon:"🌨️", bonuses:{ wil:10, end:5 },     penalties:{ agi:-10, per:-12 },         aiHint:"맹렬한 눈보라가 몰아칩니다. 의지와 인내가 강해지나 기동과 시야가 크게 제한됩니다." },
+  sandstorm:   { label:"모래폭풍", icon:"🏜️", bonuses:{ end:5, cal:5 },      penalties:{ per:-15, disg:-5 },         aiHint:"모래폭풍이 휩쓸고 있습니다. 방향 감각을 잃기 쉽고 시야가 거의 없습니다." },
+  acid_rain:   { label:"산성비",   icon:"☢️",  bonuses:{ mgc:8, pstx:10 },    penalties:{ end:-8, hp:-2 },            aiHint:"산성비가 내립니다(아포칼립스). 독내성에 유리하나 지속적으로 HP가 소모됩니다." },
+  divine_light:{ label:"신성광",   icon:"✨",  bonuses:{ fath:15, mgc:10 },   penalties:{ mad:-5, fear:-5 },          aiHint:"신성한 빛이 내립니다(신화). 신앙과 마법이 강화되나 어둠의 존재는 약화됩니다." },
+};
+
+const TIME_EFFECTS = {
+  none:     { label:"",      icon:"",   bonuses:{}, penalties:{} },
+  dawn:     { label:"새벽",  icon:"🌅", bonuses:{ per:5, cal:5 },      penalties:{} },
+  morning:  { label:"아침",  icon:"☀️", bonuses:{ wil:5, luk:3 },     penalties:{} },
+  midday:   { label:"정오",  icon:"🌞", bonuses:{ str:5, end:3 },      penalties:{ mgc:-3 } },
+  afternoon:{ label:"오후",  icon:"🌤️",bonuses:{},                    penalties:{} },
+  evening:  { label:"저녁",  icon:"🌆", bonuses:{ spk:5, cha:3 },      penalties:{} },
+  night:    { label:"밤",    icon:"🌙", bonuses:{ mgc:8, disg:8 },      penalties:{ per:-5, luk:-3 } },
+  midnight: { label:"자정",  icon:"🌑", bonuses:{ mgc:15, mad:5 },      penalties:{ fath:-5, per:-8 } },
+};
+
+const getWeatherStatMods = () => {
+  const atm = loadAtmosphere();
+  const w = WEATHER_EFFECTS[atm.weather] || WEATHER_EFFECTS.none;
+  const t = TIME_EFFECTS[atm.timeOfDay] || TIME_EFFECTS.none;
+  const combined = {};
+  [...Object.entries(w.bonuses), ...Object.entries(t.bonuses)].forEach(([k,v]) => combined[k] = (combined[k]||0)+v);
+  [...Object.entries(w.penalties), ...Object.entries(t.penalties)].forEach(([k,v]) => combined[k] = (combined[k]||0)+v);
+  return { weather:w, time:t, combined };
+};
+
+// ══════════════════════════════════════════════════════
+//  [NEW] 배신 가능한 동료 시스템
+// ══════════════════════════════════════════════════════
+const BETRAYAL_KEY    = "taleforge-betrayal";
+const loadBetrayals   = () => { const r = lsGet(BETRAYAL_KEY); return r ? JSON.parse(r) : []; };
+const saveBetrayals   = (b) => lsSet(BETRAYAL_KEY, JSON.stringify(b));
+const clearBetrayals  = () => lsDel(BETRAYAL_KEY);
+
+const BETRAYAL_TRIGGERS = [
+  { id:"greed",       label:"탐욕",     threshold:30,  icon:"💰", desc:"주인공이 자원을 독점하거나 동료에게 보상을 주지 않을 때.",   consequence:"동료가 보물을 들고 도주. 이후 적으로 등장." },
+  { id:"betrayed",    label:"먼저 배신",threshold:20,  icon:"🗡️",desc:"주인공이 동료를 먼저 이용하고 버릴 때.",                     consequence:"동료가 복수를 다짐하고 적 세력과 손잡음." },
+  { id:"jealousy",    label:"질투",     threshold:40,  icon:"😤", desc:"주인공이 너무 강해져 동료가 소외감을 느낄 때.",              consequence:"동료가 다른 집단에 합류하거나 사보타주." },
+  { id:"ideological", label:"이념 갈등",threshold:50,  icon:"⚖️", desc:"주인공의 선택이 동료의 신념과 정면 충돌할 때.",              consequence:"동료가 자신의 신념에 따라 적대 세력으로." },
+  { id:"redemption",  label:"개과천선", threshold:-30, icon:"💙", desc:"부정적 NPC가 주인공의 영향으로 선의를 회복할 때.",            consequence:"적 NPC가 동료로 전환. 특수 스킬 보유." },
+];
+
+const recordBetrayal = (npcName, triggerType, isRedemption = false) => {
+  const list = loadBetrayals();
+  const trigger = BETRAYAL_TRIGGERS.find(t => t.id === triggerType);
+  if (!trigger) return;
+  list.push({ npcName, triggerType, isRedemption, trigger, occurredAt: new Date().toISOString() });
+  saveBetrayals(list);
+  return trigger;
+};
+
+// ══════════════════════════════════════════════════════
+//  [NEW] 세계관별 고유 이벤트 테이블
+// ══════════════════════════════════════════════════════
+const SCENARIO_EVENTS = {
+  apocalypse: [
+    { id:"ap_rad_storm",    icon:"☢️", name:"방사능 폭풍",       weight:20, desc:"거대한 방사능 폭풍이 접근 중이다. 대피처를 찾거나 정면 돌파해야 한다.", effect:"end:-10 또는 disg+15", aiHint:"방사능 폭풍 이벤트! 황무지를 가로지르는 치명적인 방사능 구름이 접근 중입니다. 대피 시도와 강행 돌파 선택지를 제시하십시오." },
+    { id:"ap_supply_drop",  icon:"📦", name:"보급 낙하물",        weight:15, desc:"전쟁 전 시대의 군용 보급품이 낙하산에 매달려 떨어졌다. 하지만 다른 생존자들도 본 것 같다.", effect:"loot 또는 전투", aiHint:"보급 낙하물 이벤트! 희귀 군용 물자가 하늘에서 떨어졌습니다. 먼저 도착하거나 다른 생존자들과 경쟁하는 선택지를 제시하십시오." },
+    { id:"ap_mutant_horde", icon:"🧟", name:"변이체 무리",         weight:25, desc:"방사능에 변이된 인간들의 무리가 냄새를 맡고 접근한다. 싸우거나 조용히 피해야 한다.", effect:"전투 또는 disg판정", aiHint:"변이체 무리 이벤트! 이성을 잃은 변이 인간들이 몰려옵니다. 격렬한 전투 또는 은신 탈출 선택지를 제시하십시오." },
+    { id:"ap_survivor_camp",icon:"🏕️", name:"생존자 캠프 발견",    weight:20, desc:"소규모 생존자 집단이 살고 있는 캠프를 발견했다. 합류, 약탈, 무시 중 하나를 선택해야 한다.", effect:"사회적 선택", aiHint:"생존자 캠프 이벤트! 작은 공동체를 발견했습니다. 합류·교역·약탈·무시 선택지를 제시하고 선택에 따른 카르마 변화를 반영하십시오." },
+    { id:"ap_old_tech",     icon:"💾", name:"전쟁 전 기술 유물",    weight:10, desc:"문명 붕괴 이전의 기술 장치를 발견했다. 작동시키면 엄청난 이점이 있지만 위험을 끌어당길 수도 있다.", effect:"int판정", aiHint:"고대 기술 이벤트! 전쟁 이전 문명의 장치를 발견했습니다. 작동 시도와 안전 폐기 선택지를 제시하십시오." },
+    { id:"ap_raider_toll",  icon:"💀", name:"약탈자의 통행료",      weight:15, desc:"무장 약탈자 집단이 길목을 막고 통행료를 요구한다. 지불, 전투, 협상, 우회 중 선택해야 한다.", effect:"neg 또는 전투", aiHint:"약탈자 통행료 이벤트! 무장 세력이 길을 막고 있습니다. 다양한 해결책(전투·협상·뇌물·우회)을 선택지로 제시하십시오." },
+    { id:"ap_fresh_water",  icon:"💧", name:"정화된 수원 발견",     weight:10, desc:"방사능에 오염되지 않은 깨끗한 물 원천을 발견했다. 이 정보는 생명과도 같다.", effect:"hp+20, 거래 재료", aiHint:"정화 수원 이벤트! 오염되지 않은 물을 발견했습니다. 독점하거나 공유하거나 거래하는 선택지를 제시하십시오." },
+    { id:"ap_vault_signal", icon:"📡", name:"금고 신호 포착",       weight:5,  desc:"전쟁 전 비밀 금고의 신호를 포착했다. 내부에 무엇이 있는지 알 수 없다.", effect:"탐험 이벤트", aiHint:"비밀 금고 신호 이벤트! 전쟁 이전 시설의 신호를 감지했습니다. 탐험에 따른 보상과 위험을 제시하십시오." },
+  ],
+  mythology: [
+    { id:"my_divine_trial",  icon:"⚡", name:"신의 시험",           weight:20, desc:"신 중 하나가 주인공을 시험하기 위해 나타났다. 통과하면 신성한 힘을 얻고 실패하면 저주가 따른다.", effect:"fath판정", aiHint:"신의 시험 이벤트! 신이 직접 나타나 시험을 내립니다. 시험 내용과 성공/실패 결과를 신화적으로 묘사하십시오." },
+    { id:"my_oracle",        icon:"🔮", name:"신탁의 예언",          weight:15, desc:"신전의 신탁사가 주인공에 관한 예언을 전한다. 예언의 해석에 따라 행동이 달라진다.", effect:"luk+10, 방향 제시", aiHint:"신탁 이벤트! 신탁사가 주인공의 운명에 관한 모호한 예언을 전합니다. 예언은 두 가지 이상 해석이 가능하게 구성하십시오." },
+    { id:"my_monster_siege", icon:"🐉", name:"신화 괴물 습격",       weight:25, desc:"히드라·키마이라·미노타우로스 등 신화 속 괴물이 습격한다. 전투 또는 신성한 힘으로 물리쳐야 한다.", effect:"전투(신화급)", aiHint:"신화 괴물 이벤트! 고대 신화의 괴물이 등장합니다. 괴물의 특성과 약점을 신화에서 따와 묘사하고 영웅적 전투를 연출하십시오." },
+    { id:"my_hero_meeting",  icon:"🌟", name:"다른 영웅과의 만남",   weight:15, desc:"또 다른 신화의 영웅이 주인공과 마주쳤다. 경쟁자일 수도, 동료일 수도, 라이벌일 수도 있다.", effect:"사회적 판정", aiHint:"영웅 조우 이벤트! 이 세계의 또 다른 전설적 인물이 등장합니다. 협력·경쟁·결투 선택지를 제시하십시오." },
+    { id:"my_olympus_call",  icon:"🏛️", name:"신들의 소환",          weight:10, desc:"신들의 회의에 소환되었다. 신들 앞에서 자신의 행동을 변호하거나 청원할 수 있다.", effect:"rep판정", aiHint:"신들의 소환 이벤트! 주인공이 신들의 모임에 나타났습니다. 신들과의 대화와 협상, 간청 선택지를 신화적으로 묘사하십시오." },
+    { id:"my_cursed_relic",  icon:"💀", name:"저주받은 유물",        weight:15, desc:"강력한 힘이 깃든 저주받은 유물을 발견했다. 사용하면 강해지지만 저주도 함께 받는다.", effect:"mgc+10 또는 crse+15", aiHint:"저주 유물 이벤트! 어둠의 힘이 깃든 유물을 발견했습니다. 획득과 파괴, 봉인 선택지를 제시하고 각각의 대가를 명확히 하십시오." },
+    { id:"my_fate_thread",   icon:"🧵", name:"운명의 실 교차",       weight:10, desc:"운명의 실이 눈에 보이기 시작했다. 잠깐 동안 앞으로 일어날 두 가지 운명 중 하나를 선택할 수 있다.", effect:"운명 선택", aiHint:"운명 선택 이벤트! 두 갈래의 운명이 눈앞에 보입니다. 두 가지 미래 선택지를 제시하고 각각의 결과를 암시하십시오." },
+    { id:"my_titan_ruin",    icon:"🗿", name:"티탄의 유적 발견",     weight:10, desc:"태초 거인 티탄이 남긴 거대한 유적을 발견했다. 그 안에는 잠든 힘과 위험이 공존한다.", effect:"탐험 이벤트", aiHint:"티탄 유적 이벤트! 신화 시대 거인의 거대한 유적을 탐험합니다. 규모의 웅장함과 오래된 위험을 묘사하십시오." },
+  ],
+  steampunk: [
+    { id:"sp_airship_crash", icon:"✈️", name:"비행선 추락",          weight:20, desc:"상공에서 비행선이 추락한다. 승객 구조, 화물 약탈, 현장 도주 중 선택해야 한다.", effect:"전투 또는 str판정", aiHint:"비행선 추락 이벤트! 거대한 증기 비행선이 추락하고 있습니다. 인명 구조와 화물 확보, 탈출 선택지를 긴박하게 묘사하십시오." },
+    { id:"sp_gear_revolution",icon:"⚙️",name:"기계 혁명가의 시위",  weight:15, desc:"노동자들이 자동화 기계에 맞서 파업하고 있다. 어느 편에 설지 선택해야 한다.", effect:"카르마 분기", aiHint:"기계 혁명 이벤트! 노동자 시위가 일어났습니다. 자본가·노동자·중립 선택지를 제시하고 각 선택에 따른 사회적 결과를 묘사하십시오." },
+    { id:"sp_noble_masquerade",icon:"🎭",name:"귀족 가면무도회",     weight:15, desc:"상류층의 비밀 모임에 초대받았다. 정보를 수집하거나, 동맹을 맺거나, 음모에 휘말릴 수 있다.", effect:"cha·neg 판정", aiHint:"가면무도회 이벤트! 화려한 귀족 파티에 참석했습니다. 사교·정보 수집·음모 선택지를 우아하게 묘사하십시오." },
+    { id:"sp_aether_surge",  icon:"⚡", name:"에테르 과부하",        weight:20, desc:"도시 에테르 공급 장치가 과부하됐다. 통제하지 않으면 폭발로 많은 사람이 위험에 처한다.", effect:"int판정", aiHint:"에테르 과부하 이벤트! 기술 시설이 폭주하고 있습니다. 기술적 해결과 대피 유도, 차단 폭파 선택지를 긴박하게 묘사하십시오." },
+    { id:"sp_black_market",  icon:"🏴", name:"암시장 정보 입수",     weight:10, desc:"금지된 기술과 마법을 거래하는 암시장의 위치를 알게 됐다. 방문하면 희귀 물건을 구할 수 있다.", effect:"rare loot", aiHint:"암시장 이벤트! 불법 기술 거래 시장에 접근했습니다. 거래 선택지와 위험(경비·함정)을 제시하십시오." },
+    { id:"sp_automaton_revolt",icon:"🤖",name:"자동 인형 반란",      weight:15, desc:"자의식이 생긴 태엽 자동 인형들이 반란을 일으켰다. 제압, 협상, 해방 중 선택해야 한다.", effect:"wil 또는 int판정", aiHint:"자동 인형 반란 이벤트! 기계들이 의식을 가지고 반란을 일으켰습니다. 제압·협상·해방 선택지와 철학적 선택의 무게를 묘사하십시오." },
+    { id:"sp_secret_society",icon:"🔍", name:"비밀 결사의 초대",     weight:10, desc:"고대 비밀 결사에서 접근해 왔다. 가입하면 강력한 인맥을 얻지만 그들의 목적은 불분명하다.", effect:"사회 판정", aiHint:"비밀 결사 이벤트! 신비로운 조직이 접촉해왔습니다. 가입 조건과 조직의 이면을 서서히 드러내며 선택지를 제시하십시오." },
+    { id:"sp_inventor_duel", icon:"🔧", name:"발명가 결투",          weight:10, desc:"라이벌 발명가가 기술 결투를 신청했다. 자신의 발명품으로 상대를 이겨야 한다.", effect:"int·crit 판정", aiHint:"발명가 결투 이벤트! 두 발명가의 기술 배틀입니다. 창의적인 발명품 사용과 기발한 전략 선택지를 제시하십시오." },
+  ],
+};
+
+const getScenarioEvent = (scenario) => {
+  const key = scenario && (
+    scenario.includes("아포칼") ? "apocalypse" :
+    scenario.includes("신화") ? "mythology" :
+    scenario.includes("스팀") ? "steampunk" : null
+  );
+  if (!key || !SCENARIO_EVENTS[key]) return null;
+  const pool = SCENARIO_EVENTS[key];
+  const totalWeight = pool.reduce((s, e) => s + e.weight, 0);
+  let roll = Math.random() * totalWeight;
+  for (const event of pool) {
+    roll -= event.weight;
+    if (roll <= 0) return event;
+  }
+  return pool[0];
+};
+
+// ══════════════════════════════════════════════════════
+//  [NEW] 직업 조합 시너지 시스템
+// ══════════════════════════════════════════════════════
+const JOB_SYNERGY_KEY   = "taleforge-job-synergy";
+const loadJobSynergy    = () => { const r = lsGet(JOB_SYNERGY_KEY); return r ? JSON.parse(r) : []; };
+const saveJobSynergy    = (s) => lsSet(JOB_SYNERGY_KEY, JSON.stringify(s));
+const clearJobSynergy   = () => lsDel(JOB_SYNERGY_KEY);
+
+const JOB_SYNERGIES = [
+  { id:"death_blood",   jobs:["죽음의 기사","혈마법사"],      icon:"💀🩸", name:"피의 죽음",       desc:"피로 소환된 언데드 부하가 자동 등장. STR +12, MGC +12, FEAR +10.", bonus:{ str:12, mgc:12, fear:10 }, aiHint:"피의 죽음 시너지! 죽음의 기사와 혈마법사의 힘이 합쳐져 피로 빚어진 언데드 군단을 소환합니다." },
+  { id:"shadow_death",  jobs:["그림자 무도가","죽음의 기사"], icon:"🌑💀", name:"죽음의 그림자",   desc:"그림자 속에서 죽음의 낫을 휘두른다. AGI +15, CRIT +15.", bonus:{ agi:15, crit:15 }, aiHint:"죽음의 그림자 시너지! 그림자처럼 움직이며 죽음의 낫으로 기습하는 완벽한 암살 기술을 구사합니다." },
+  { id:"arcane_time",   jobs:["대마법사","시간 직조자"],      icon:"⚡⏳", name:"시공간 마법",     desc:"시간과 마법이 융합. 과거 턴의 마법 효과 재발동. MGC +15, INT +12.", bonus:{ mgc:15, int:12 }, aiHint:"시공간 마법 시너지! 과거의 마법 주문이 현재에 다시 울려 퍼집니다. 같은 마법이 두 번 발동되는 듯한 묘사를 사용하십시오." },
+  { id:"berserker_soul",jobs:["광전사","영혼 수확자"],        icon:"🔴⛓️", name:"분노의 수확",     desc:"쓰러진 적의 영혼이 분노를 더 강하게 만든다. STR +18, END +8.", bonus:{ str:18, end:8 }, aiHint:"분노의 수확 시너지! 쓰러진 적마다 영혼이 전사를 더욱 강하게 만듭니다. 전투할수록 폭발적으로 강해지는 묘사를 사용하십시오." },
+  { id:"star_sage",     jobs:["별의 부름자","현자"],          icon:"🌠📚", name:"천문 현자",       desc:"별의 지혜와 학문이 융합. 모든 판정 +8, LUK +12, INT +12.", bonus:{ luk:12, int:12 }, aiHint:"천문 현자 시너지! 별의 이치와 세상의 이치가 하나로 합쳐집니다. 어떤 상황도 별의 지혜로 꿰뚫는 묘사를 사용하십시오." },
+  { id:"loop_god",      jobs:["루프 파괴자","신살자"],        icon:"🔄⚡", name:"신의 파괴자",     desc:"신의 규칙과 환생의 규칙 모두를 부순다. 모든 스탯 +10.", bonus:{ str:10, mgc:10, int:10, per:10, wil:10 }, aiHint:"신의 파괴자 시너지! 신과 운명의 규칙 모두를 동시에 무시합니다. 불가능한 것을 당연하게 해내는 압도적인 묘사를 사용하십시오." },
+  { id:"iron_undying",  jobs:["철혈 수도승","공허 보행자"],   icon:"🪨🌑", name:"불괴 허공",       desc:"육체와 허공이 하나. 공격이 통하지 않는 몸. END +20, HP +20.", bonus:{ end:20, hp:20 }, aiHint:"불괴 허공 시너지! 완벽히 단련된 몸이 반쯤 허공에 속해 있어 공격이 닿지 않습니다. 피해를 흘려내는 신비로운 묘사를 사용하십시오." },
+  { id:"karma_god",     jobs:["업보 화신","신격 군주"],       icon:"⚖️👑", name:"심판의 군주",     desc:"선악의 업보로 신격에 이른 자. REP +20, WIL +15, LUK +15.", bonus:{ rep:20, wil:15, luk:15 }, aiHint:"심판의 군주 시너지! 선과 악의 모든 업보를 신격으로 승화시킨 자입니다. 어떤 행동에도 응당한 인과가 따르는 묘사를 사용하십시오." },
+  { id:"dragon_demon",  jobs:["드래곤혈(종족)","악마족(종족)"], icon:"🐉😈", name:"혼돈의 화신",  desc:"용의 본능과 악마의 교활함. STR +10, MGC +10, FEAR +12, NEG +8.", bonus:{ str:10, mgc:10, fear:12, neg:8 }, aiHint:"혼돈의 화신 시너지! 용의 폭력성과 악마의 교활함이 공존합니다. 힘으로도 머리로도 압도하는 이중적 묘사를 사용하십시오." },
+  { id:"phantom_rune",  jobs:["방랑 검귀","룬 각인사"],       icon:"👻🔣", name:"검귀의 룬",      desc:"검귀의 혼이 룬을 새기다. CRIT +15, MGC +10, STR +8.", bonus:{ crit:15, mgc:10, str:8 }, aiHint:"검귀의 룬 시너지! 검귀의 혼이 직접 몸에 룬을 새겨넣는 신비로운 묘사를 사용하십시오. 검격마다 룬이 빛납니다." },
+];
+
+const checkJobSynergy = (currentJob, prevJobs = [], race = "") => {
+  return JOB_SYNERGIES.filter(syn => {
+    const allJobs = [currentJob, ...prevJobs, race].map(j => (j||"").toLowerCase());
+    return syn.jobs.every(j => allJobs.some(pj => pj.includes(j.replace(/\(.*\)/,"").trim().toLowerCase())));
+  });
+};
+
+// ══════════════════════════════════════════════════════
+//  [NEW] 성장형 악당 시스템
+// ══════════════════════════════════════════════════════
+const VILLAIN_KEY       = "taleforge-villain-growth";
+const loadVillainData   = () => { const r = lsGet(VILLAIN_KEY); return r ? JSON.parse(r) : { name:null, power:0, dominion:0, minions:[], threat:"low" }; };
+const saveVillainData   = (v) => lsSet(VILLAIN_KEY, JSON.stringify(v));
+const clearVillainData  = () => lsDel(VILLAIN_KEY);
+
+const VILLAIN_THREAT_LEVELS = [
+  { id:"low",     threshold:0,   label:"성장 중",    icon:"🌱", desc:"아직 알려지지 않은 위협. 세계는 평온하다.",                worldPenalty:{} },
+  { id:"medium",  threshold:25,  label:"위협 증대",  icon:"⚠️", desc:"마을 몇 곳이 점령당했다. 사람들이 두려움에 떤다.",           worldPenalty:{ rep:-5, trst:-3 } },
+  { id:"high",    threshold:50,  label:"세계 위기",  icon:"🔥", desc:"주요 도시까지 위협받는다. 왕국이 흔들린다.",                 worldPenalty:{ rep:-10, ldr:-5, fath:-5 } },
+  { id:"critical",threshold:75,  label:"멸망 직전",  icon:"💀", desc:"악의 군주가 세계의 절반을 지배한다. 희망이 보이지 않는다.",  worldPenalty:{ rep:-15, ldr:-10, fath:-10, wil:-5 } },
+  { id:"omega",   threshold:100, label:"종말",       icon:"☠️", desc:"세계가 완전히 잠식됐다. 이제 역전하지 않으면 모든 것이 끝난다.", worldPenalty:{ str:-10, mgc:-10, rep:-20 } },
+];
+
+const tickVillainGrowth = (playerAction = "none") => {
+  const villain = loadVillainData();
+  let powerGain = 5; // 기본 성장
+  if (playerAction === "hero") powerGain = 0;        // 영웅 행동 시 성장 멈춤
+  if (playerAction === "retreat") powerGain = 10;    // 도주 시 빠른 성장
+  if (playerAction === "idle") powerGain = 8;        // 아무것도 안 할 때
+  villain.power = Math.min(100, (villain.power||0) + powerGain);
+  villain.dominion = Math.min(100, (villain.dominion||0) + Math.floor(powerGain * 0.7));
+  // 위협 단계 업데이트
+  const newThreat = [...VILLAIN_THREAT_LEVELS].reverse().find(t => villain.power >= t.threshold);
+  villain.threat = newThreat?.id || "low";
+  saveVillainData(villain);
+  return villain;
+};
+
+const getVillainStatus = () => {
+  const villain = loadVillainData();
+  const threat = VILLAIN_THREAT_LEVELS.find(t => t.id === villain.threat) || VILLAIN_THREAT_LEVELS[0];
+  return { ...villain, threatDef: threat };
+};
+
+// ══════════════════════════════════════════════════════
+//  [NEW] 회차 연보 (엔딩 히스토리 갤러리)
+// ══════════════════════════════════════════════════════
+const ANNALS_KEY      = "taleforge-annals";
+const loadAnnals      = () => { const r = lsGet(ANNALS_KEY); return r ? JSON.parse(r) : []; };
+const saveAnnals      = (a) => lsSet(ANNALS_KEY, JSON.stringify(a));
+const clearAnnals     = () => lsDel(ANNALS_KEY);
+
+const recordAnnalEntry = (charName, race, role, scenario, endingType, goalId, cycle, highlights = []) => {
+  const annals = loadAnnals();
+  const theme = ENDING_THEMES[endingType] || ENDING_THEMES.neutral;
+  const goal = CLEAR_GOALS.find(g => g.id === goalId);
+  annals.push({
+    cycle, charName, race, role, scenario,
+    endingType, endingLabel: theme.label, endingIcon: theme.icon, endingColor: theme.color,
+    goalId, goalName: goal?.name || "자유 플레이",
+    highlights: highlights.slice(0, 5),
+    recordedAt: new Date().toISOString(),
+  });
+  if (annals.length > 30) annals.splice(0, annals.length - 30); // 최대 30회차 보존
+  saveAnnals(annals);
+  return annals;
+};
+
+const getAnnalStats = () => {
+  const annals = loadAnnals();
+  if (!annals.length) return null;
+  const endingCounts = {};
+  const raceCounts = {};
+  const roleCounts = {};
+  const scenarioCounts = {};
+  annals.forEach(a => {
+    endingCounts[a.endingType] = (endingCounts[a.endingType] || 0) + 1;
+    raceCounts[a.race] = (raceCounts[a.race] || 0) + 1;
+    roleCounts[a.role] = (roleCounts[a.role] || 0) + 1;
+    scenarioCounts[a.scenario] = (scenarioCounts[a.scenario] || 0) + 1;
+  });
+  const mostUsedRace = Object.entries(raceCounts).sort((a,b)=>b[1]-a[1])[0];
+  const favoriteEnding = Object.entries(endingCounts).sort((a,b)=>b[1]-a[1])[0];
+  return { total: annals.length, endingCounts, raceCounts, roleCounts, scenarioCounts, mostUsedRace, favoriteEnding };
+};
+
+// ══════════════════════════════════════════════════════
+//  [NEW] 종족 전용 스토리 루트
+// ══════════════════════════════════════════════════════
+const RACE_ROUTES_KEY   = "taleforge-race-routes";
+const loadRaceRoutes    = () => { const r = lsGet(RACE_ROUTES_KEY); return r ? JSON.parse(r) : {}; };
+const saveRaceRoutes    = (d) => lsSet(RACE_ROUTES_KEY, JSON.stringify(d));
+const clearRaceRoutes   = () => lsDel(RACE_ROUTES_KEY);
+
+const RACE_EXCLUSIVE_CONTENT = {
+  "드래곤혈": {
+    dungeon:   { name:"용의 무덤",        icon:"🐉", desc:"고룡들이 잠든 성지. 드래곤혈만 입장 가능하며 용의 정수와 고대 기억이 깃든 곳.", reward:"용신 각성 스킬 강화 + 용족 동료 획득 가능" },
+    event:     "고룡 장로를 만나 용의 계보를 묻고 혈통을 증명하는 이벤트가 발생합니다.",
+    npcReact:  "용 관련 NPC들이 드래곤혈을 알아보고 경외 또는 도전 반응을 보입니다.",
+    language:  "용어(龍語)를 구사할 수 있어 용족 NPC와 직접 대화 가능합니다.",
+  },
+  "악마족": {
+    dungeon:   { name:"심연의 계약 시장", icon:"😈", desc:"악마들이 모여 욕망을 거래하는 비밀 시장. 악마족만 안전하게 출입 가능.", reward:"금지 스킬 구매 + 강력한 계약 체결 가능" },
+    event:     "악마 귀족들이 접근해 거래와 계약을 제안합니다. 조건이 매혹적이나 함정이 있을 수 있습니다.",
+    npcReact:  "인간 NPC들이 악마족을 보면 본능적 불안을 느끼며, 악마족 NPC들은 동족으로 인정합니다.",
+    language:  "심연어를 구사해 악마 계약 직접 협상이 가능합니다.",
+  },
+  "언데드": {
+    dungeon:   { name:"저승의 문",         icon:"💀", desc:"살아있는 자는 돌아오지 못하는 죽음의 경계. 언데드는 자유롭게 넘나들 수 있다.", reward:"죽음 관련 비밀 지식 획득 + 망자의 기억 열람" },
+    event:     "죽은 NPC들의 영혼이 언데드에게 말을 걸어옵니다. 전생 정보를 얻거나 의뢰를 받을 수 있습니다.",
+    npcReact:  "살아있는 NPC들이 강한 불쾌감을 느끼며, 죽음 관련 존재들이 친근하게 반응합니다.",
+    language:  "망자의 언어로 죽은 자와 대화가 가능합니다.",
+  },
+  "수인": {
+    dungeon:   { name:"야수의 숲",         icon:"🐺", desc:"수인 종족이 신성시하는 원초의 숲. 인간은 발을 들일 수 없는 성지.", reward:"야생 동물 동료 영구 획득 + 수인 전용 무공 전수" },
+    event:     "야생 동물들이 주인공을 군주로 인정하고 무리를 이끌어달라는 이벤트가 발생합니다.",
+    npcReact:  "야생 동물들이 복종하고, 수인 NPC들이 동족 대우를 합니다. 문명 NPC들은 야성을 경계합니다.",
+    language:  "야생어로 모든 짐승과 의사소통이 가능합니다.",
+  },
+  "원소인": {
+    dungeon:   { name:"원소 수렴점",       icon:"🌀", desc:"네 원소가 교차하는 세계의 요충지. 원소인만이 힘을 흡수하지 않고 접근 가능.", reward:"원소 형태 변신 강화 + 새로운 원소 속성 각성" },
+    event:     "자신의 원소가 폭주하거나 다른 원소와 충돌하는 특수 이벤트가 발생합니다.",
+    npcReact:  "마법사들이 원소인을 연구 대상으로 여기거나 협력을 요청합니다. 자연 NPC들이 친근하게 반응합니다.",
+    language:  "원소의 언어로 자연 정령과 직접 교감이 가능합니다.",
+  },
+};
+
+const unlockRaceRoute = (race, routeId) => {
+  const routes = loadRaceRoutes();
+  if (!routes[race]) routes[race] = [];
+  if (!routes[race].includes(routeId)) routes[race].push(routeId);
+  saveRaceRoutes(routes);
+};
+
+const getRaceContent = (race) => {
+  return RACE_EXCLUSIVE_CONTENT[race] || null;
+};
+
+// ══════════════════════════════════════════════════════
+//  [NEW] 히든 퀘스트 시스템
+// ══════════════════════════════════════════════════════
+const HIDDEN_QUEST_KEY  = "taleforge-hidden-quests";
+const loadHiddenQuests  = () => { const r = lsGet(HIDDEN_QUEST_KEY); return r ? JSON.parse(r) : []; };
+const saveHiddenQuests  = (q) => lsSet(HIDDEN_QUEST_KEY, JSON.stringify(q));
+const clearHiddenQuests = () => lsDel(HIDDEN_QUEST_KEY);
+
+const HIDDEN_QUEST_POOL = [
+  { id:"hq_shadow_merchant", icon:"🌑", name:"그림자 상인의 의뢰",
+    condition:"night",     conditionDesc:"밤 시간대",
+    desc:"어둠 속에서 정체불명의 상인이 접근한다. 남들이 볼 수 없는 물건을 팔거나 의뢰를 건넨다.",
+    reward:"희귀 아이템 + 숨겨진 직업 진행도 상승",
+    aiHint:"그림자 상인 히든 퀘스트! 어둠 속에서만 나타나는 신비로운 상인이 등장합니다. 위험하지만 매혹적인 거래를 제안하십시오." },
+  { id:"hq_cursed_bloodline", icon:"🩸", name:"저주받은 혈통의 고백",
+    condition:"high_karma_evil", conditionDesc:"카르마 70 이상(악)",
+    desc:"어둠에 물든 전생의 혈통에 관한 비밀이 드러난다. 과거의 죄가 현재에 되돌아오려 한다.",
+    reward:"혈마법사 각성 진행도 급상승",
+    aiHint:"저주 혈통 히든 퀘스트! 과거 생의 죄가 현재로 돌아옵니다. 속죄하거나 더 어둡게 빠져드는 분기를 제시하십시오." },
+  { id:"hq_ancient_prophecy", icon:"🔮", name:"잊혀진 예언",
+    condition:"cycle5",    conditionDesc:"5회차 이상",
+    desc:"세계 어딘가에 봉인된 고대 예언서가 있다. 예언의 내용은 주인공과 직결된다.",
+    reward:"운명 직조자 각성 진행도 + LUK +15",
+    aiHint:"고대 예언 히든 퀘스트! 오래된 예언서가 이 존재를 지목합니다. 예언의 모호한 내용을 천천히 해석하며 전개하십시오." },
+  { id:"hq_dragon_egg",       icon:"🥚", name:"용의 알",
+    condition:"dragon_race",   conditionDesc:"드래곤혈 종족",
+    desc:"외딴 곳에서 버려진 용의 알을 발견했다. 부화시키면 용 동료가 생기지만 관심을 끌 수도 있다.",
+    reward:"용 동료 획득 + 용왕 목표 진행도",
+    aiHint:"용의 알 히든 퀘스트! 드래곤혈인이 용의 알을 발견했습니다. 부화와 포기, 숨기기 선택지를 제시하고 용 동료를 섬세하게 묘사하십시오." },
+  { id:"hq_lost_technology",  icon:"💾", name:"소실된 기술",
+    condition:"steampunk",     conditionDesc:"스팀펑크 세계",
+    desc:"발명가의 비밀 일지에 이미 소실된 전설의 기술이 적혀있다. 재현할 수 있을까?",
+    reward:"발명가 각성 진행도 + 전설급 제작 해금",
+    aiHint:"소실 기술 히든 퀘스트! 전설적 기술의 재현을 시도합니다. 연구 과정의 시행착오와 발견의 경이를 묘사하십시오." },
+  { id:"hq_gods_judgment",    icon:"⚡", name:"신의 심판",
+    condition:"mythology",     conditionDesc:"신화 세계관",
+    desc:"신들이 주인공의 행동을 두고 의견이 갈렸다. 특정 신의 편을 들거나 중립을 지켜야 한다.",
+    reward:"신화 직업 각성 진행도 + 신성 스킬",
+    aiHint:"신의 심판 히든 퀘스트! 두 신 사이의 갈등에 주인공이 휘말립니다. 어느 편을 들어도 그 신의 가호와 다른 신의 노여움이 따릅니다." },
+  { id:"hq_void_message",     icon:"🌌", name:"공허의 속삭임",
+    condition:"high_mad",      conditionDesc:"광기 50 이상",
+    desc:"광기 속에서 공허의 존재가 말을 걸어온다. 그 속삭임은 불안하지만 강력한 지식을 담고 있다.",
+    reward:"공허 보행자 진행도 + MGC +12, MAD +10",
+    aiHint:"공허의 속삭임 히든 퀘스트! 광기 속에서만 들리는 목소리가 있습니다. 지식과 광기 사이의 경계에서 선택을 제시하십시오." },
+  { id:"hq_survivor_child",   icon:"🧒", name:"황무지의 아이",
+    condition:"apocalypse",    conditionDesc:"아포칼립스 세계",
+    desc:"폐허 속에서 혼자 살아남은 어린아이를 발견했다. 데리고 다닐지, 안전한 곳을 찾아줄지, 내버려 둘지.",
+    reward:"카르마 분기 + 동료 가능성",
+    aiHint:"황무지 아이 히든 퀘스트! 폐허에서 혼자 살아남은 아이를 발견했습니다. 이 선택이 카르마와 이후 스토리에 깊이 영향을 미치도록 묘사하십시오." },
+];
+
+const checkHiddenQuestCondition = (questId, gameData) => {
+  const quest = HIDDEN_QUEST_POOL.find(q => q.id === questId);
+  if (!quest) return false;
+  const { karmaScore = 50, timeOfDay = "none", cycle = 0, race = "", scenario = "", madness = 0 } = gameData;
+  switch(quest.condition) {
+    case "night": return ["night","midnight"].includes(timeOfDay);
+    case "high_karma_evil": return karmaScore >= 70;
+    case "cycle5": return cycle >= 5;
+    case "dragon_race": return race.includes("드래곤") || race.includes("dragon");
+    case "steampunk": return scenario.includes("스팀") || scenario.includes("steampunk");
+    case "mythology": return scenario.includes("신화") || scenario.includes("mythology");
+    case "apocalypse": return scenario.includes("아포칼") || scenario.includes("apocalypse");
+    case "high_mad": return madness >= 50;
+    default: return false;
+  }
+};
+
+const getAvailableHiddenQuests = (gameData) => {
+  const completed = loadHiddenQuests();
+  return HIDDEN_QUEST_POOL.filter(q =>
+    !completed.includes(q.id) && checkHiddenQuestCondition(q.id, gameData)
+  );
+};
+
+const completeHiddenQuest = (questId) => {
+  const completed = loadHiddenQuests();
+  if (!completed.includes(questId)) {
+    completed.push(questId);
+    saveHiddenQuests(completed);
+  }
 };
 

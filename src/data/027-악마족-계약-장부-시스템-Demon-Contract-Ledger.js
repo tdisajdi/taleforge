@@ -1,0 +1,45 @@
+// 📜  악마족 계약 장부 시스템 (Demon Contract Ledger) — data
+// Pure data split out of race/027-악마족-계약-장부-시스템-Demon-Contract-Ledger.js (see generate.js).
+
+export const DEMON_RANK_STAGES = [
+  { rank:0, name:"무명의 악마",   icon:"😈",   color:"#806080", threshold:0,
+    desc:"계약 경험이 없는 신참. 동족에게서 무시당한다.",
+    bonus:{}, penalty:{},
+    aura:"동족 NPC들이 관심을 보이지 않는다.",
+    aiHint:"이 캐릭터는 악마 사회에서 지위가 없다. 동족 악마들이 하대한다." },
+  { rank:1, name:"약정자",        icon:"📄😈",  color:"#a07840", threshold:30,
+    desc:"첫 계약을 맺었다. 악마 사회에서 존재를 인정받기 시작한다.",
+    bonus:{neg:5, cha:4},      penalty:{},
+    aura:"하위 악마 NPC들이 인사를 건넨다.",
+    aiHint:"약정자 지위. 하위 악마들이 이 캐릭터를 동료로 인정한다." },
+  { rank:2, name:"계약사",        icon:"📜😈",  color:"#c09030", threshold:80,
+    desc:"교묘한 계약으로 명성을 쌓았다. 정보와 청탁이 찾아온다.",
+    bonus:{neg:12, cha:10, int:6, fear:5}, penalty:{trst:-5},
+    aura:"중위 악마들이 청탁과 정보를 가져온다.",
+    aiHint:"계약사 지위. 악마 정보 네트워크에 접근할 수 있다." },
+  { rank:3, name:"협약 군주",     icon:"⚖️😈", color:"#e0a020", threshold:160,
+    desc:"악마 사회에서 손꼽히는 협상가. 상위 악마조차 의뢰를 맡긴다.",
+    bonus:{neg:22, cha:20, int:14, fear:14, mgc:10}, penalty:{trst:-10, fath:-8},
+    aura:"상위 악마들도 예의를 갖춘다. 악마 의회 초대를 받는다.",
+    aiHint:"협약 군주 지위. 강력한 악마들도 이 캐릭터를 경쟁자로 대한다." },
+  { rank:4, name:"심연의 공증인", icon:"🔱😈",  color:"#ffc020", threshold:280,
+    desc:"계약의 법을 다루는 심연의 권위자. 악마 계약 자체에 신성이 깃든다.",
+    bonus:{neg:36, cha:32, int:24, fear:26, mgc:20, disg:16}, penalty:{trst:-18, fath:-15},
+    aura:"계약을 목격한 존재에게 저주 봉인 효과 발동. 악마 사절단이 찾아온다.",
+    aiHint:"심연의 공증인 지위. 이 존재가 맺은 계약은 마계 법정에서 효력을 가진다." },
+  { rank:5, name:"원계약자",      icon:"👑📜",  color:"#ffd700", threshold:440,
+    desc:"태초의 첫 계약을 맺은 자와 동등한 지위. 악마 사회의 정점.",
+    bonus:{neg:55, cha:50, int:36, fear:40, mgc:32, disg:28, str:20}, penalty:{trst:-28, fath:-22},
+    aura:"모든 악마가 자발적으로 복종한다. 마계 전역에 이름이 울린다.",
+    aiHint:"원계약자 지위. 악마 종족의 최상위 권위자. NPC 악마들이 자발적으로 따른다." },
+];
+
+export const DEMON_CONTRACT_TYPES = [
+  { id:"advantage",  label:"유리한 계약",   icon:"✅", rankGain:8,  desc:"상대에게 불리한 조건으로 계약 성사." },
+  { id:"trap",       label:"함정 계약",     icon:"🪤", rankGain:15, desc:"상대가 나중에야 함정임을 깨닫는 계약." },
+  { id:"soul",       label:"영혼 담보",     icon:"💜", rankGain:22, desc:"상대의 영혼 일부 또는 전부를 담보로 잡음." },
+  { id:"forbidden",  label:"금기 계약",     icon:"⛧",  rankGain:30, desc:"마계에서도 금기시되는 극단적 조건의 계약." },
+  { id:"fulfilled",  label:"계약 이행",     icon:"🤝", rankGain:10, desc:"맺은 계약을 완벽하게 이행하여 신뢰도 상승." },
+  { id:"violated",   label:"계약 위반 (상대)", icon:"💥", rankGain:5, desc:"상대방이 계약을 위반함 → 제재 권한 획득." },
+  { id:"nullify",    label:"계약 파기",     icon:"❌", rankGain:-20, desc:"스스로 계약을 파기함 → 지위 하락 위험." },
+];

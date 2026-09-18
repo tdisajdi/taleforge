@@ -1,0 +1,7 @@
+{
+  "_사용법": "이 파일에 적어둔 항목은 AI 텍스트 분석 호출을 아예 건너뛰고 여기 적힌 값을 그대로 씁니다. 키는 게임 데이터의 entity id(예: wp_001) 또는 정확한 이름(예: '녹슨 검')입니다. subtype/element는 생략 가능(생략하면 기존 기본 로직 — 아이콘/슬롯 기반 추측, 등급 색상 — 이 대신 적용됨, AI가 대신 채워주진 않음). prompt를 적으면 이미지 생성 프롬프트 전체를 이걸로 완전히 대체합니다(subtype/element 문구도 자동으로 안 붙음 — 원하는 문장을 직접 다 쓰세요). 예시는 아래 '_예시'를 지우고 실제 id로 바꿔서 쓰면 됩니다.",
+  "_예시": {
+    "wp_099": { "subtype": "sword", "element": "fire" },
+    "monster_boss_01": { "prompt": "A colossal ancient dragon made of obsidian and molten lava, full body visible coiled in a spiral, glowing red eyes, flat game-icon style, no gradients, thick black outlines, centered on plain white background." }
+  }
+}

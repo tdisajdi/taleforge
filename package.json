@@ -1,0 +1,13 @@
+{
+  "name": "taleforge",
+  "version": "7.4.0",
+  "private": true,
+  "description": "TaleForge — modular source, builds back to a single playable HTML file.",
+  "scripts": {
+    "build": "node build.js"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "pngjs": "^7.0.0"
+  }
+}

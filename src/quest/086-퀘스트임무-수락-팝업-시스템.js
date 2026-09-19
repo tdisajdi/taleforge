@@ -811,7 +811,16 @@ export function composeLocalTurnText(history, injectedContext){
   // 이미 실제 AI가 쓴 문장이니 덧붙이지 않는다.
   const identityFrag = (!learned && Math.random()<0.2) ? composeIdentityFlavorFragment(S.character) : '';
   const lastUserMsg = [...history].reverse().find(m=>m.role==='user');
-  if(dice){
+  // [16번 라운드, 필드↔스토리 연결 #10] world/320(실시간 필드 이동)에서
+  // 대화로 돌아온 직후 딱 한 턴만, "방금 필드에서 뭘 했는지"를 먼저
+  // 짚어준다 — 지금까지 이 뱅크 자체는 S.system(AI 전용)을 안 읽어서
+  // 필드에 다녀와도 서사가 아무 일 없었다는 듯 이어졌었다(사용자 지적:
+  // "사냥하고 마을 갔다왔는데 이어서 대화를 진행하는 게 맞아?"). 여기서
+  // 소비 즉시 지워서 다음 턴부터는 평소대로 돌아간다.
+  if(!learned && S._pendingFieldReturnHint){
+    const fieldHint = S._pendingFieldReturnHint; S._pendingFieldReturnHint = null;
+    prose = identityFrag + fieldHint;
+  } else if(dice){
     const cat = _turnStatToCategory(dice.stat);
     const vk = _turnVerdictKey(dice.verdict);
     const bank = TURN_REACT_BANK[cat][vk];

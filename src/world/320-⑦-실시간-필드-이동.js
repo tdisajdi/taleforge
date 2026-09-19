@@ -997,8 +997,31 @@ export function enterFieldMode(continentKey){
 }
 window.enterFieldMode = enterFieldMode;
 
+// [16번 라운드, #10 착수] 필드에서 대화로 돌아올 때 아무 신호도 안
+// 남기던 문제 — S._pendingTravelHint(economy/255, 8~11번 섹션)와 같은
+// 패턴을 재사용해 "방금 필드에서 뭘 했는지"를 다음 턴 서사에 흘려보낸다.
+// 단, 13번 섹션에서 확인한 대로 이 힌트는 AI가 있을 때만 읽는
+// S.system이 아니라, composeLocalTurnText(완전 하드코딩 폴백)가
+// 직접 읽도록 연결해야 AI 유무와 무관하게 항상 반영된다 — 아래
+// quest/086의 소비 지점 참고.
+function buildFieldReturnHint(){
+  if(!RT) return null;
+  const loc = (typeof loadCurrentLocation==='function') ? loadCurrentLocation() : null;
+  const locName = loc?.name || '들판';
+  if(RT.hadCombat && (RT.combatWins||0)>0 && !(RT.combatLosses>0)){
+    return `${locName} 인근에서 마주친 무리와 싸워 이기고 돌아왔다.`;
+  }
+  if(RT.hadCombat && RT.combatLosses>0){
+    return `${locName} 인근에서 거친 싸움을 겪고, 상처를 추스르며 돌아왔다.`;
+  }
+  if(RT.sawRaidThreat){
+    return `${locName}이(가) 위협받고 있는 걸 직접 보고 왔다 — 마음이 편치 않다.`;
+  }
+  return `${locName} 주변을 둘러보고 돌아왔다.`;
+}
 export function exitFieldMode(){
   if(RT){
+    try{ S._pendingFieldReturnHint = buildFieldReturnHint(); }catch(e){}
     if(RT.raf) cancelAnimationFrame(RT.raf);
     RT.listeners.forEach(([el,ev,fn])=>el.removeEventListener(ev,fn));
     RT = null;
@@ -1259,7 +1282,14 @@ function showEncounterBattle(enemyUnits, onDone){
     const logEl = document.getElementById('tf-battle-log'); if(logEl) logEl.scrollTop = logEl.scrollHeight;
   }
   setBattleUiRefresh(refresh);
-  startFieldBattle(enemyUnits, (win)=>{ if(typeof onDone==='function') onDone(win); });
+  // [16번 라운드, 필드↔스토리 연결 #10 착수] 필드에서 무슨 일이 있었는지
+  // 순수 관측용으로만 기록해둔다(전투 판정 로직 자체는 손 안 댐) —
+  // exitFieldMode()가 이걸 읽어 대화로 돌아왔을 때 서술이 "방금 뭘 하고
+  // 왔는지"를 반영하게 하기 위함.
+  startFieldBattle(enemyUnits, (win)=>{
+    if(RT){ RT.hadCombat = true; if(win) RT.combatWins = (RT.combatWins||0)+1; else RT.combatLosses = (RT.combatLosses||0)+1; }
+    if(typeof onDone==='function') onDone(win);
+  });
 }
 window.closeFieldEncounter = function(){
   const wrap = document.getElementById('tf-field-encounter');
@@ -1349,6 +1379,7 @@ function enterScreen(nodeId, fromNodeId){
     const raidRec = isRaidVulnerable(screen.node.loc) ? loadRaidState()[screen.node.loc.id] : null;
     if(raidRec && raidRec.state==='threatened'){
       showFieldToast(`🔥 ${screen.node.loc.name}이(가) 습격당하고 있다! 경비병들과 함께 막아내야 한다`);
+      if(RT) RT.sawRaidThreat = true;
     } else {
       showFieldToast(`📍 ${screen.node.loc.name}`);
     }

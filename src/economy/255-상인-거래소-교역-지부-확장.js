@@ -1763,13 +1763,17 @@ window.tickLandTravel = tickLandTravel;
 
 export function getWorldMapSection(){
   const travel = loadTravelState();
-  if(!travel && !S._pendingTravelHint) return '';
+  if(!travel && !S._pendingTravelHint && !S._pendingFieldReturnHint) return '';
   let lines=[];
   if(travel){
     lines.push(`[🚶 여행 중] ${travel.destName}을(를) 향해 이동 중 (잔여 ${travel.daysLeft}일).`);
     if(travel.activeEncounter) lines.push(`[👥 여행 중 조우] ${travel.activeEncounter.desc} 이 만남을 서사에 자연스럽게 반영하라.`);
   }
   if(S._pendingTravelHint){ lines.push(`[📜 여행 사건] ${S._pendingTravelHint}`); S._pendingTravelHint=null; }
+  // [16번 라운드, #10] 실시간 필드 이동(world/320)에서 대화로 복귀할 때
+  // 남기는 힌트 — AI 경로는 여기서, 완전 로컬 경로는 composeLocalTurnText가
+  // 직접 소비한다(13번 섹션 발견: 로컬 폴백은 S.system을 안 읽음).
+  if(S._pendingFieldReturnHint){ lines.push(`[🗺️ 필드 복귀] ${S._pendingFieldReturnHint} 대화가 끊겼던 것처럼 다루지 말고, 이 일을 자연스럽게 이어서 서술하라.`); S._pendingFieldReturnHint=null; }
   return lines.length ? '\n'+lines.join('\n') : '';
 }
 window.getWorldMapSection = getWorldMapSection;

@@ -35,7 +35,7 @@ import { S } from '../data/084-TaleForge-순수-JS-엔진.js';
 import { getAllLandLocations, getLocationCoord } from '../economy/255-상인-거래소-교역-지부-확장.js';
 import { CONTINENT_TERRAIN, CONTINENT_PROPER_NAME_ICON } from '../data/255-상인-거래소-교역-지부-확장.js';
 import { loadCurrentLocation, saveCurrentLocation, getLocationLevelBand } from './052-동대륙-추가-장소-4.js';
-import { getPlayerMaxHp, calcMonsterAttackDamage, loadParty } from '../misc/054-이동수단-시스템.js';
+import { getPlayerMaxHp, calcMonsterAttackDamage, loadParty, saveParty } from '../misc/054-이동수단-시스템.js';
 import { TRANSPORT_CONFIG } from '../data/054-이동수단-시스템.js';
 import { rollLoot } from '../items/007-동적-아이템-생성-시스템-무제한-영구-캐시.js';
 import { triggerLoopIfDead } from '../progression/220-18-회차루프-시스템.js';
@@ -815,6 +815,22 @@ function calcFieldPlayerDamage(){
   const isCrit = Math.random() < critChance;
   return { dmg: isCrit ? Math.round(base*1.6) : base, isCrit };
 }
+// [16번 라운드, [대기] #13 완료 — 파티원 실전투 참가] 파티원은 `statBonus`
+// 델타(예: 전사 str+25)만 갖고 있고 플레이어처럼 0~100대 절대 스탯이 없다
+// — 그래서 "평범한 사람 기준치(50)에 그 동료의 특기 보너스를 얹는다"는
+// 가정으로 계산한다. calcFieldPlayerDamage와 같은 계수(0.28)를 그대로
+// 쓰지 않고 살짝 낮춘(0.26) 이유: 이 필드 전투 자체가 원래 "주인공이
+// 주력, 동료는 거드는 존재"라는 기존 설계(칭호/스킬 텍스트에 "지원",
+// "탱커" 같은 표현이 이미 있음)를 유지하기 위함 — 파티원이 플레이어보다
+// 세면 안 된다고 판단.
+function calcPartyMemberDamage(member){
+  const sb = member.statBonus || {};
+  const atkStat = 50 + Math.max(sb.str||0, sb.mgc||0, sb.fath||0, sb.agi||0);
+  const variance = 0.8 + Math.random()*0.4;
+  const base = Math.max(2, Math.round(atkStat*0.26*variance));
+  const isCrit = Math.random() < 0.12;
+  return { dmg: isCrit ? Math.round(base*1.6) : base, isCrit };
+}
 
 let battleState = null;
 let battleUiRefresh = null; // 렌더 콜백(패널이 설정)
@@ -823,8 +839,18 @@ let battleDoneCb = null;
 export function startFieldBattle(enemyPackUnits, onDone){
   const maxHp = getPlayerMaxHp();
   S.stats.hp = Math.min(S.stats.hp ?? maxHp, maxHp);
+  const playerUnit = { name: S.character?.name||'플레이어', icon:'🧑', hp: Math.max(1,S.stats.hp||maxHp), maxHp, atk:0, side:'ally', intellect:'sapient', weapon:'blade', isPlayer:true };
+  // [16번 라운드, [대기] #13 완료] 파티원을 실제 전투원으로 끼워넣는다 —
+  // 최대 3명(밸런스+전투 로그 가독성, 새로 정한 값). 살아있고
+  // (alive!==false) 전투 불능이 아닌(hp>0 또는 아직 hp 필드가 없는 신규
+  // 동료) 파티원만. `_partyName`은 전투 종료 후 loadParty()에서 같은
+  // 동료를 다시 찾아 HP를 저장하기 위한 내부용 키.
+  const partyUnits = ((typeof loadParty==='function') ? (loadParty()||[]) : [])
+    .filter(m=>m.alive!==false && (m.hp==null || m.hp>0))
+    .slice(0,3)
+    .map(m=>({ name:m.name, icon:m.icon||'🧑', hp:Math.max(1,m.hp??100), maxHp:m.maxHp||100, atk:0, side:'ally', intellect:'sapient', weapon:'blade', isPlayer:false, statBonus:m.statBonus||{}, _partyName:m.name }));
   battleState = {
-    allies: [{ name: S.character?.name||'플레이어', icon:'🧑', hp: Math.max(1,S.stats.hp||maxHp), maxHp, atk:0, side:'ally', intellect:'sapient', weapon:'blade' }],
+    allies: [playerUnit, ...partyUnits],
     enemies: enemyPackUnits.map(e=>({ ...e, side:'enemy' })),
     log: [], round:0, prevCat:{ally:null,enemy:null}, win:null,
   };
@@ -838,7 +864,7 @@ function resolveHit(atk, tgt){
   const bs = battleState;
   let dealt, isCrit=false, cat;
   if(atk.side==='ally'){
-    const r = calcFieldPlayerDamage();
+    const r = atk.isPlayer ? calcFieldPlayerDamage() : calcPartyMemberDamage(atk);
     if(Math.random() < 0.04){ bs.log.push({ text: composeLine('miss', atk, tgt), cat:'miss' }); return; }
     dealt = r.dmg; isCrit = r.isCrit;
     tgt.hp = Math.max(0, tgt.hp-dealt);
@@ -849,9 +875,15 @@ function resolveHit(atk, tgt){
     isCrit = Math.random() < (0.15+(mods.critBonus||0));
     if(isCrit) dealt = Math.round(dealt*1.4);
     tgt.hp = Math.max(0, tgt.hp-dealt);
-    // 실제 플레이어 HP에 즉시 반영 — 여기서 이기든 지든 실제 상태가 바뀐다.
-    S.stats.hp = tgt.hp;
-    S._tookDamageThisCombat = true;
+    // [버그 수정, 16번 라운드] 예전엔 "아군이 맞으면 무조건 S.stats.hp에
+    // 덮어쓴다"였다 — 아군이 플레이어 한 명뿐이던 시절엔 안전했지만,
+    // 파티원을 아군에 추가하면서 파티원이 맞을 때도 플레이어의 진짜
+    // HP가 파티원 HP로 잘못 바뀌는 버그가 됐다. 실제 플레이어 유닛일
+    // 때만 반영하도록 좁힌다.
+    if(tgt.isPlayer){
+      S.stats.hp = tgt.hp;
+      S._tookDamageThisCombat = true;
+    }
   }
   const killed = tgt.hp<=0;
   const atkSide = atk.side==='ally' ? bs.allies : bs.enemies;
@@ -865,33 +897,71 @@ function resolveHit(atk, tgt){
   }
   bs.log.push({ text: composeLine(cat, atk, tgt) + (killed?'':` (${dealt} 피해)`), cat });
 }
+// [16번 라운드, [대기] #13 완료 — 파티원 실전투 참가] 예전엔 "아군은
+// allies[0](=플레이어) 한 명뿐"이라는 가정으로, 라운드마다 그 한 명만
+// 공격하고 패배 판정도 allies[0].hp<=0 하나로 고정돼 있었다. 이제
+// allies에 파티원이 최대 3명 더 들어오므로: (1) 살아있는 아군 전원이
+// 각자 한 번씩 공격(그때그때 가장 약한 적을 골라 집중포화 — 안 그러면
+// 적이 흩어져 죽는 게 느려서 필드 전투가 늘어짐), (2) 적은 60% 확률로
+// 플레이어를, 나머지는 살아있는 파티원 중 무작위 1명을 노린다(플레이어만
+// 계속 맞으면 "동료가 있는 의미"가 없고, 반대로 플레이어가 전혀 안 맞으면
+// 긴장감이 사라짐 — 그래서 확률로 분산), (3) 패배 판정은 반드시
+// "플레이어 유닛"을 isPlayer로 직접 찾아서 그 HP만 본다 — allies[0]
+// 포지션 가정을 없애 파티 구성 순서가 바뀌어도 안전하다.
 function stepFieldBattle(){
   const bs = battleState; if(!bs) return;
-  const aliveAllies = bs.allies.filter(u=>u.hp>0);
-  const aliveEnemies = bs.enemies.filter(u=>u.hp>0);
-  if(!aliveAllies.length || !aliveEnemies.length){ finishFieldBattle(); return; }
+  const playerUnit = bs.allies.find(u=>u.isPlayer);
+  let aliveAllies = bs.allies.filter(u=>u.hp>0);
+  let aliveEnemies = bs.enemies.filter(u=>u.hp>0);
+  if(!aliveAllies.length || !aliveEnemies.length || !playerUnit || playerUnit.hp<=0){ finishFieldBattle(); return; }
   bs.round++;
-  const weakest = aliveEnemies.slice().sort((a,b)=>a.hp-b.hp)[0];
-  resolveHit(aliveAllies[0], weakest);
-  if(bs.allies[0].hp<=0){ finishFieldBattle(); return; }
+  for(const ally of aliveAllies){
+    if(ally.hp<=0) continue;
+    aliveEnemies = bs.enemies.filter(u=>u.hp>0);
+    if(!aliveEnemies.length) break;
+    const weakest = aliveEnemies.slice().sort((a,b)=>a.hp-b.hp)[0];
+    resolveHit(ally, weakest);
+    if(playerUnit.hp<=0) break;
+  }
+  if(playerUnit.hp<=0){ finishFieldBattle(); return; }
   for(const e of bs.enemies){
     if(e.hp<=0) continue;
-    const aliveA = bs.allies.filter(u=>u.hp>0);
-    if(!aliveA.length) break;
-    resolveHit(e, aliveA[0]);
-    if(bs.allies[0].hp<=0) break;
+    aliveAllies = bs.allies.filter(u=>u.hp>0);
+    if(!aliveAllies.length) break;
+    const others = aliveAllies.filter(u=>!u.isPlayer);
+    const target = (playerUnit.hp>0 && (Math.random()<0.6 || !others.length))
+      ? playerUnit
+      : others[Math.floor(Math.random()*others.length)];
+    resolveHit(e, target);
+    if(playerUnit.hp<=0) break;
   }
   if(battleUiRefresh) battleUiRefresh(bs, false);
-  if(!bs.allies.some(u=>u.hp>0) || !bs.enemies.some(u=>u.hp>0)) setTimeout(finishFieldBattle, 450);
+  if(playerUnit.hp<=0 || !bs.enemies.some(u=>u.hp>0)) setTimeout(finishFieldBattle, 450);
   else setTimeout(stepFieldBattle, 850);
 }
 function finishFieldBattle(){
   const bs = battleState; if(!bs) return;
-  const win = bs.allies.some(u=>u.hp>0);
+  const playerUnit = bs.allies.find(u=>u.isPlayer);
+  const win = !!playerUnit && playerUnit.hp>0 && bs.enemies.every(u=>u.hp<=0);
   bs.win = win;
   bs.log.push({ text: win ? '마지막 적이 쓰러지고, 전장에 정적이 감돈다. 승리했다.' : '더 이상 버틸 힘이 남아있지 않다... 눈앞이 흐려진다.', cat:'outcome' });
   // ── 실제 게임 상태에 반영 ──
-  S.stats.hp = Math.max(0, bs.allies[0].hp);
+  S.stats.hp = Math.max(0, playerUnit ? playerUnit.hp : 0);
+  // [16번 라운드] 필드 전투에 참가했던 파티원들의 HP를 실제 저장 데이터
+  // (tf-party)에 되돌려 쓴다. 필드 전투에서 파티원은 "영구 사망"하지
+  // 않는다는 설계(도시 전투와 다르게 필드 몹은 파티 전멸을 의도한 난이도가
+  // 아님)라서, 0까지 떨어졌어도 최소 1로 바닥을 깐다 — "빈사 상태로
+  // 실려나감"에 해당. alive 플래그는 건드리지 않는다(원래도 true).
+  const partyCombatants = bs.allies.filter(u=>!u.isPlayer && u._partyName);
+  if(partyCombatants.length && typeof loadParty==='function' && typeof saveParty==='function'){
+    const party = loadParty()||[];
+    let changed = false;
+    partyCombatants.forEach(pu=>{
+      const rec = party.find(m=>m.name===pu._partyName);
+      if(rec){ rec.hp = Math.max(1, pu.hp); changed = true; }
+    });
+    if(changed) saveParty(party);
+  }
   if(typeof window.updateHeader==='function') window.updateHeader();
   if(win){
     const avgLv = bs.enemies.reduce((s,e)=>s+(e.srcLevel||10),0)/Math.max(1,bs.enemies.length);

@@ -131685,14 +131685,24 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
     const isCrit = Math.random() < critChance;
     return { dmg: isCrit ? Math.round(base * 1.6) : base, isCrit };
   }
+  function calcPartyMemberDamage(member) {
+    const sb = member.statBonus || {};
+    const atkStat = 50 + Math.max(sb.str || 0, sb.mgc || 0, sb.fath || 0, sb.agi || 0);
+    const variance = 0.8 + Math.random() * 0.4;
+    const base = Math.max(2, Math.round(atkStat * 0.26 * variance));
+    const isCrit = Math.random() < 0.12;
+    return { dmg: isCrit ? Math.round(base * 1.6) : base, isCrit };
+  }
   var battleState = null;
   var battleUiRefresh = null;
   var battleDoneCb = null;
   function startFieldBattle(enemyPackUnits, onDone) {
     const maxHp = getPlayerMaxHp();
     S.stats.hp = Math.min(S.stats.hp ?? maxHp, maxHp);
+    const playerUnit = { name: S.character?.name || "\uD50C\uB808\uC774\uC5B4", icon: "\u{1F9D1}", hp: Math.max(1, S.stats.hp || maxHp), maxHp, atk: 0, side: "ally", intellect: "sapient", weapon: "blade", isPlayer: true };
+    const partyUnits = (typeof loadParty === "function" ? loadParty() || [] : []).filter((m) => m.alive !== false && (m.hp == null || m.hp > 0)).slice(0, 3).map((m) => ({ name: m.name, icon: m.icon || "\u{1F9D1}", hp: Math.max(1, m.hp ?? 100), maxHp: m.maxHp || 100, atk: 0, side: "ally", intellect: "sapient", weapon: "blade", isPlayer: false, statBonus: m.statBonus || {}, _partyName: m.name }));
     battleState = {
-      allies: [{ name: S.character?.name || "\uD50C\uB808\uC774\uC5B4", icon: "\u{1F9D1}", hp: Math.max(1, S.stats.hp || maxHp), maxHp, atk: 0, side: "ally", intellect: "sapient", weapon: "blade" }],
+      allies: [playerUnit, ...partyUnits],
       enemies: enemyPackUnits.map((e) => ({ ...e, side: "enemy" })),
       log: [],
       round: 0,
@@ -131709,7 +131719,7 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
     const bs = battleState;
     let dealt, isCrit = false, cat;
     if (atk.side === "ally") {
-      const r = calcFieldPlayerDamage();
+      const r = atk.isPlayer ? calcFieldPlayerDamage() : calcPartyMemberDamage(atk);
       if (Math.random() < 0.04) {
         bs.log.push({ text: composeLine("miss", atk, tgt), cat: "miss" });
         return;
@@ -131727,8 +131737,10 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
       isCrit = Math.random() < 0.15 + (mods.critBonus || 0);
       if (isCrit) dealt = Math.round(dealt * 1.4);
       tgt.hp = Math.max(0, tgt.hp - dealt);
-      S.stats.hp = tgt.hp;
-      S._tookDamageThisCombat = true;
+      if (tgt.isPlayer) {
+        S.stats.hp = tgt.hp;
+        S._tookDamageThisCombat = true;
+      }
     }
     const killed = tgt.hp <= 0;
     const atkSide = atk.side === "ally" ? bs.allies : bs.enemies;
@@ -131749,37 +131761,60 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
   function stepFieldBattle() {
     const bs = battleState;
     if (!bs) return;
-    const aliveAllies = bs.allies.filter((u) => u.hp > 0);
-    const aliveEnemies = bs.enemies.filter((u) => u.hp > 0);
-    if (!aliveAllies.length || !aliveEnemies.length) {
+    const playerUnit = bs.allies.find((u) => u.isPlayer);
+    let aliveAllies = bs.allies.filter((u) => u.hp > 0);
+    let aliveEnemies = bs.enemies.filter((u) => u.hp > 0);
+    if (!aliveAllies.length || !aliveEnemies.length || !playerUnit || playerUnit.hp <= 0) {
       finishFieldBattle();
       return;
     }
     bs.round++;
-    const weakest = aliveEnemies.slice().sort((a, b) => a.hp - b.hp)[0];
-    resolveHit(aliveAllies[0], weakest);
-    if (bs.allies[0].hp <= 0) {
+    for (const ally of aliveAllies) {
+      if (ally.hp <= 0) continue;
+      aliveEnemies = bs.enemies.filter((u) => u.hp > 0);
+      if (!aliveEnemies.length) break;
+      const weakest = aliveEnemies.slice().sort((a, b) => a.hp - b.hp)[0];
+      resolveHit(ally, weakest);
+      if (playerUnit.hp <= 0) break;
+    }
+    if (playerUnit.hp <= 0) {
       finishFieldBattle();
       return;
     }
     for (const e of bs.enemies) {
       if (e.hp <= 0) continue;
-      const aliveA = bs.allies.filter((u) => u.hp > 0);
-      if (!aliveA.length) break;
-      resolveHit(e, aliveA[0]);
-      if (bs.allies[0].hp <= 0) break;
+      aliveAllies = bs.allies.filter((u) => u.hp > 0);
+      if (!aliveAllies.length) break;
+      const others = aliveAllies.filter((u) => !u.isPlayer);
+      const target = playerUnit.hp > 0 && (Math.random() < 0.6 || !others.length) ? playerUnit : others[Math.floor(Math.random() * others.length)];
+      resolveHit(e, target);
+      if (playerUnit.hp <= 0) break;
     }
     if (battleUiRefresh) battleUiRefresh(bs, false);
-    if (!bs.allies.some((u) => u.hp > 0) || !bs.enemies.some((u) => u.hp > 0)) setTimeout(finishFieldBattle, 450);
+    if (playerUnit.hp <= 0 || !bs.enemies.some((u) => u.hp > 0)) setTimeout(finishFieldBattle, 450);
     else setTimeout(stepFieldBattle, 850);
   }
   function finishFieldBattle() {
     const bs = battleState;
     if (!bs) return;
-    const win = bs.allies.some((u) => u.hp > 0);
+    const playerUnit = bs.allies.find((u) => u.isPlayer);
+    const win = !!playerUnit && playerUnit.hp > 0 && bs.enemies.every((u) => u.hp <= 0);
     bs.win = win;
     bs.log.push({ text: win ? "\uB9C8\uC9C0\uB9C9 \uC801\uC774 \uC4F0\uB7EC\uC9C0\uACE0, \uC804\uC7A5\uC5D0 \uC815\uC801\uC774 \uAC10\uB3C8\uB2E4. \uC2B9\uB9AC\uD588\uB2E4." : "\uB354 \uC774\uC0C1 \uBC84\uD2F8 \uD798\uC774 \uB0A8\uC544\uC788\uC9C0 \uC54A\uB2E4... \uB208\uC55E\uC774 \uD750\uB824\uC9C4\uB2E4.", cat: "outcome" });
-    S.stats.hp = Math.max(0, bs.allies[0].hp);
+    S.stats.hp = Math.max(0, playerUnit ? playerUnit.hp : 0);
+    const partyCombatants = bs.allies.filter((u) => !u.isPlayer && u._partyName);
+    if (partyCombatants.length && typeof loadParty === "function" && typeof saveParty === "function") {
+      const party = loadParty() || [];
+      let changed = false;
+      partyCombatants.forEach((pu) => {
+        const rec = party.find((m) => m.name === pu._partyName);
+        if (rec) {
+          rec.hp = Math.max(1, pu.hp);
+          changed = true;
+        }
+      });
+      if (changed) saveParty(party);
+    }
     if (typeof window.updateHeader === "function") window.updateHeader();
     if (win) {
       const avgLv = bs.enemies.reduce((s, e) => s + (e.srcLevel || 10), 0) / Math.max(1, bs.enemies.length);

@@ -724,6 +724,43 @@ function _turnPickTarget(){
   }catch(e){}
   return '상대';
 }
+// [14번 라운드 2단계] 판정 결과를 순수 텍스트로만 끝내지 않고, 실제
+// NPC 호감도(updateNpcRelationship, items/065 — 퀘스트 수락/완료 등
+// 여러 곳에서 이미 쓰이는 라이브 시스템)에 반영한다. persuade(설득)/
+// social(사교)/fear(위협) 세 카테고리만 대상으로 한다 — attack/defend/
+// move/magic/stealth/search는 NPC 호감도와 자연스럽게 이어지는 기존
+// 시스템이 없어서(예: "탐색 성공 → 장소 경제"는 억지로 지어내는 연결이라
+// 11번 섹션의 "연결이 없으면 억지 매핑 만들지 말고 보류" 원칙을 그대로
+// 따라 손대지 않는다). 위협(fear)은 판정이 "먹혔어도" 우호도가 오르지
+// 않고 오히려 떨어지도록 설계했다 — 겁을 줘서 통했다고 그 상대가 나를
+// 더 좋아하게 되는 건 아니기 때문.
+const TURN_NPC_RELATION_DELTA = {
+  persuade: { crit: 8, success: 3, fail: -1, critfail: -6 },
+  social:   { crit: 6, success: 2, fail: -1, critfail: -4 },
+  fear:     { crit: -1, success: -2, fail: -3, critfail: -8 },
+};
+const TURN_RELATION_REASON = {
+  persuade: { crit:'설득 대성공', success:'설득 성공', fail:'설득 실패', critfail:'설득 대실패' },
+  social:   { crit:'대화 대성공', success:'대화 성공', fail:'대화 어색함', critfail:'대화 대실패' },
+  fear:     { crit:'위협 대성공(반감)', success:'위협 성공(반감)', fail:'위협 실패', critfail:'위협 역효과' },
+};
+function applyTurnRelationEffect(cat, vk, target){
+  try{
+    const delta = TURN_NPC_RELATION_DELTA[cat]?.[vk];
+    if(!delta || !target) return;
+    if(typeof updateNpcRelationship==='function') updateNpcRelationship(target, delta, TURN_RELATION_REASON[cat][vk]);
+    // 세력 평판 — persuade/social만, 대상이 특정 세력 소속 NPC일 때만
+    // 소폭(개인 호감도 델타의 1/3, 반올림) 연동한다. fear는 개인 반감이지
+    // 세력 전체 평판에 옮길 근거가 약하다고 판단해 제외.
+    if((cat==='persuade' || cat==='social') && typeof loadNPCs==='function'){
+      const npc = (loadNPCs()||[]).find(n=>n.name===target);
+      if(npc?.faction && typeof updateFactionRep==='function'){
+        const factionDelta = Math.round(delta/3);
+        if(factionDelta) updateFactionRep(npc.faction, factionDelta);
+      }
+    }
+  }catch(e){}
+}
 export function composeLocalTurnText(history, injectedContext){
   // [패턴 학습] 실제 AI가 쓴 서사가 충분히 쌓였으면 35% 확률로 그
   // 패턴으로 즉석 생성한 문장을 뱅크 대신 사용.
@@ -756,7 +793,9 @@ export function composeLocalTurnText(history, injectedContext){
     const vk = _turnVerdictKey(dice.verdict);
     const bank = TURN_REACT_BANK[cat][vk];
     const tpl = bank[Math.floor(Math.random()*bank.length)];
-    prose = learned || (identityFrag + _fillTargetSlots(tpl, _turnPickTarget()));
+    const target = _turnPickTarget();
+    applyTurnRelationEffect(cat, vk, target);
+    prose = learned || (identityFrag + _fillTargetSlots(tpl, target));
   } else if(!learned && _isLocArrivalMsg(lastUserMsg?.content)){
     const loc = (typeof loadCurrentLocation==='function') ? loadCurrentLocation() : null;
     const tpl = LOC_ARRIVAL_BANK[Math.floor(Math.random()*LOC_ARRIVAL_BANK.length)];

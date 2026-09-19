@@ -27124,8 +27124,8 @@ ${hist.map((h) => {
   }
   window.renderFactionInteract = renderFactionInteract;
   function doFactionInteract(nameA, nameB, actionId, relChange, repA, repB) {
-    updateFactionRep(nameA, repA);
-    updateFactionRep(nameB, repB);
+    updateFactionRep2(nameA, repA);
+    updateFactionRep2(nameB, repB);
     if (relChange) setFactionRelation(nameA, nameB, relChange);
     const labels = {
       trade: "\u{1F4B1} \uAD50\uC5ED \uD611\uC815",
@@ -50961,7 +50961,7 @@ ${lines.join("\n")}
     return NPC_EMOTIONS.hostile;
   }
   window.getNpcEmotion = getNpcEmotion;
-  function updateNpcRelationship(npcName, delta, reason = "") {
+  function updateNpcRelationship2(npcName, delta, reason = "") {
     const npcs = loadNPCs() || [];
     const npc = npcs.find((n) => n.name === npcName);
     if (!npc) return;
@@ -51016,7 +51016,7 @@ ${lines.join("\n")}
     propagateRelationship(npcName, delta);
     return newRel;
   }
-  window.updateNpcRelationship = updateNpcRelationship;
+  window.updateNpcRelationship = updateNpcRelationship2;
   function detectNpcRelationshipChange(aiText, userAction) {
     const npcs = loadNPCs() || [];
     const lc = (aiText || "").toLowerCase();
@@ -51029,7 +51029,7 @@ ${lines.join("\n")}
       let delta = 0;
       if (positive.some((k) => lc.includes(k) || ua.includes(k))) delta += 5;
       if (negative.some((k) => lc.includes(k) || ua.includes(k))) delta -= 8;
-      if (delta !== 0) updateNpcRelationship(npc.name, delta, delta > 0 ? "\uC6B0\uD638\uC801 \uD589\uB3D9" : "\uC801\uB300\uC801 \uD589\uB3D9");
+      if (delta !== 0) updateNpcRelationship2(npc.name, delta, delta > 0 ? "\uC6B0\uD638\uC801 \uD589\uB3D9" : "\uC801\uB300\uC801 \uD589\uB3D9");
     });
   }
   window.detectNpcRelationshipChange = detectNpcRelationshipChange;
@@ -51127,7 +51127,7 @@ ${lines.join("\n")}
         S.gold += r.gold;
         saveGold(S.gold);
       }
-      if (r.relBonus) updateNpcRelationship(quest.npcName, r.relBonus, "\uD018\uC2A4\uD2B8 \uC644\uB8CC");
+      if (r.relBonus) updateNpcRelationship2(quest.npcName, r.relBonus, "\uD018\uC2A4\uD2B8 \uC644\uB8CC");
       if (r.exp) window.updateStats("totalExp", r.exp);
       if (r.titleId) grantTitle(r.titleId);
       if (r.item && typeof rollEventReward === "function") {
@@ -51280,7 +51280,7 @@ ${lines.join("\n")}
     S.inventory = inv.filter((i) => i !== item);
     saveInventory(S.inventory);
     const bonus = item.rarity === "primal" ? 30 : item.rarity === "legendary" ? 20 : item.rarity === "rare" ? 12 : item.rarity === "uncommon" ? 7 : 4;
-    updateNpcRelationship(npcName, bonus, `${item.name} \uC120\uBB3C`);
+    updateNpcRelationship2(npcName, bonus, `${item.name} \uC120\uBB3C`);
     toast(`\u{1F381} ${npcName}\uC5D0\uAC8C ${item.name}\uC744 \uC120\uBB3C\uD588\uB2E4! \uAD00\uACC4+${bonus}`, 3e3);
     renderNpcs();
   }
@@ -56025,7 +56025,7 @@ ${lines.join("\n")}
     setTimeout(() => {
       const npc = window._nqd.npc;
       _nqdAddMsg(`"...\uADF8\uB807\uAD70\uC694. \uC5B8\uC81C\uB4E0 \uB9C8\uC74C\uC774 \uBC14\uB00C\uBA74 \uCC3E\uC544\uC624\uC2DC\uC624."`, "npc");
-      if (typeof updateNpcRelationship === "function") updateNpcRelationship(npc.name, -3, "\uC758\uB8B0 \uAC70\uC808");
+      if (typeof updateNpcRelationship2 === "function") updateNpcRelationship2(npc.name, -3, "\uC758\uB8B0 \uAC70\uC808");
     }, 500);
     setTimeout(() => {
       _nqdSetActions(`<button class="nqd-btn-close" style="flex:1;padding:10px" onclick="_closeNpcQuestDlg()">\uB300\uD654 \uC885\uB8CC</button>`);
@@ -56078,7 +56078,7 @@ ${lines.join("\n")}
             toastHTML(`\u{1F381} ${typeof getEntityIconHTML === "function" ? getEntityIconHTML(item, { size: 14 }) : item.icon} ${esc2(item.name)} \uD68D\uB4DD!`, 2500);
           }
         }
-        if (typeof updateNpcRelationship === "function") updateNpcRelationship(q.npcName, 20, "\uC758\uB8B0 \uC644\uB8CC");
+        if (typeof updateNpcRelationship2 === "function") updateNpcRelationship2(q.npcName, 20, "\uC758\uB8B0 \uC644\uB8CC");
         if (typeof window.updateHeader === "function") window.updateHeader();
         toastHTML(`\u{1F3C6} [${esc2(q.npcIcon)}${esc2(q.npcName)}] \uC758\uB8B0 \uC644\uB8CC: ${typeof getEntityIconHTML === "function" ? getEntityIconHTML(q, { size: 14 }) : q.icon} ${esc2(q.title)}`, 3500);
         if (typeof unlockAchievement === "function") unlockAchievement("npc_quest_done");
@@ -56087,7 +56087,7 @@ ${lines.join("\n")}
         q.status = "failed";
         q.failedAt = (/* @__PURE__ */ new Date()).toISOString();
         changed = true;
-        if (typeof updateNpcRelationship === "function") updateNpcRelationship(q.npcName, -10, "\uC758\uB8B0 \uC2E4\uD328");
+        if (typeof updateNpcRelationship2 === "function") updateNpcRelationship2(q.npcName, -10, "\uC758\uB8B0 \uC2E4\uD328");
         toast(`\u274C [${q.npcIcon}${q.npcName}] \uC758\uB8B0 \uC2E4\uD328: ${q.title}`, 2500);
       }
     });
@@ -57827,7 +57827,7 @@ export default TALEFORGE_HARDCODE_RULES;
       const all = loadNpcDlgQuests();
       all.push(newQuest);
       saveNpcDlgQuests(all);
-      if (typeof updateNpcRelationship === "function") updateNpcRelationship(npc.name, 5, "\uC758\uB8B0 \uC218\uB77D");
+      if (typeof updateNpcRelationship2 === "function") updateNpcRelationship2(npc.name, 5, "\uC758\uB8B0 \uC218\uB77D");
       if (typeof updateQuestBadge === "function") updateQuestBadge();
       if (typeof toast === "function") toastHTML(`\u{1F4DC} [${esc2(npc.name)}]\uC758 \uC758\uB8B0 \uC218\uB77D: ${typeof getEntityIconHTML === "function" ? getEntityIconHTML(q, { size: 14 }) : q.icon} ${esc2(q.title)}`, 3500);
       setTimeout(() => {
@@ -65614,7 +65614,7 @@ ${cycleStatus} | ${chapterStatus} | ${sealStatus} | ${treeStatus}`;
     }
   }
   window.saveFactionRep = saveFactionRep;
-  function updateFactionRep(factionName, delta) {
+  function updateFactionRep2(factionName, delta) {
     const rep = loadFactionRep();
     rep[factionName] = Math.max(-100, Math.min(100, (rep[factionName] || 0) + delta));
     const factions = getCurrentFactions();
@@ -65629,7 +65629,7 @@ ${cycleStatus} | ${chapterStatus} | ${sealStatus} | ${treeStatus}`;
     if (Math.abs(delta) >= 5)
       toastHTML(`${esc2(factions[factionName]?.icon || "")} ${esc2(factionName)}: ${esc2(level)} (${esc2(rep[factionName] > 0 ? "+" : "")}${esc2(rep[factionName])})`, 2500);
   }
-  window.updateFactionRep = updateFactionRep;
+  window.updateFactionRep = updateFactionRep2;
   function getFactionDesc() {
     const rep = loadFactionRep();
     const factions = getCurrentFactions();
@@ -65645,9 +65645,9 @@ ${simDesc}` : playerRep;
     Object.entries(factions).forEach(([name, f]) => {
       if (!lc.includes(name.toLowerCase())) return;
       if (lc.includes("\uB3C4\uC6C0") || lc.includes("\uAD6C\uD588") || lc.includes("\uC9C0\uC9C0"))
-        updateFactionRep(name, 5);
+        updateFactionRep2(name, 5);
       else if (lc.includes("\uACF5\uACA9") || lc.includes("\uBC30\uC2E0") || lc.includes("\uC801\uB300"))
-        updateFactionRep(name, -8);
+        updateFactionRep2(name, -8);
     });
   }
   window.detectFactionChanges = detectFactionChanges;
@@ -68177,7 +68177,7 @@ ${simDesc}` : playerRep;
         entry.absorbedOrg = target;
       } else if (def.org !== "__any__") {
         S._lastContractOrg = def.org;
-        updateFactionRep && updateFactionRep(CONTRACT_ORGS[def.org].factionName, 5);
+        updateFactionRep2 && updateFactionRep2(CONTRACT_ORGS[def.org].factionName, 5);
       }
       if (def.recruitChance > 0 && Math.random() < def.recruitChance) {
         const scouted = def.id !== "merc_band";
@@ -68770,7 +68770,7 @@ ${simDesc}` : playerRep;
         orgCtrl.push(lord.faction);
         saveOrgControl(orgCtrl);
       }
-      if (typeof updateFactionRep === "function") updateFactionRep(lord.faction, 80);
+      if (typeof updateFactionRep2 === "function") updateFactionRep2(lord.faction, 80);
       S._mercDomainTitle = lord.domainTitle;
       toast(`\u{1F451} ${lord.leaderName}(${lord.leaderTitle})\uC744 \uC4F0\uB7EC\uB728\uB9AC\uACE0 ${lord.faction}\uC744 \uC7A5\uC545\uD588\uC2B5\uB2C8\uB2E4! \uC774\uC81C "${lord.domainTitle}"\uC785\uB2C8\uB2E4.`, 6e3);
       S._pendingContractHint = `${band.members.map((m) => m.name).join(", ")}\uC774 \uC774\uB044\uB294 \uBD80\uB300\uAC00 ${lord.leaderName}\uACFC\uC758 \uACB0\uC804\uC5D0\uC11C \uC2B9\uB9AC\uD574 ${lord.faction}\uC744 \uC644\uC804\uD788 \uC7A5\uC545\uD588\uB2E4. \uC8FC\uC778\uACF5\uC740 \uC774\uC81C "${lord.domainTitle}"\uB85C \uBD88\uB9B0\uB2E4. \uC774 \uC0AC\uAC74\uC740 \uB300\uB959 \uC804\uC5ED\uC5D0 \uC18C\uC2DD\uC73C\uB85C \uD37C\uC838\uB098\uAC00\uC57C \uD55C\uB2E4.`;
@@ -69294,8 +69294,8 @@ ${simDesc}` : playerRep;
           const next = cur + mission.notorietyGain;
           if (typeof saveMercNotoriety === "function") saveMercNotoriety(next);
           const crimeLord = typeof getMercCrimeLord === "function" ? getMercCrimeLord() : null;
-          if (crimeLord && typeof updateFactionRep === "function" && crimeLord.lawFaction) {
-            updateFactionRep(crimeLord.lawFaction, -2);
+          if (crimeLord && typeof updateFactionRep2 === "function" && crimeLord.lawFaction) {
+            updateFactionRep2(crimeLord.lawFaction, -2);
           }
           const tier = typeof getMercNotorietyTier === "function" ? getMercNotorietyTier(next) : null;
           if (tier) extraHint = ` \uC545\uBA85\uC774 \uC313\uC5EC \uC774\uC81C "${tier.label}"(\uC73C)\uB85C \uBD88\uB9B0\uB2E4.`;
@@ -80140,7 +80140,7 @@ ${esc2(sk.desc || "")}">
         choices: ["\uC74C\uC2DD\uC744 \uB098\uB220\uC900\uB2E4", "\uACE8\uB4DC\uB97C \uC900\uB2E4(20)", "\uBABB \uBCF8 \uCC99 \uC9C0\uB098\uAC04\uB2E4"],
         effects: {
           "\uC74C\uC2DD\uC744 \uB098\uB220\uC900\uB2E4": () => {
-            updateFactionRep("\uAD50\uD68C", 3);
+            updateFactionRep2("\uAD50\uD68C", 3);
             updateReputation(8);
             toast("\u{1F474} \uB178\uC778\uC774 \uACE0\uB9C8\uC6CC\uD55C\uB2E4. \uD3C9\uD310+8", 2e3);
           },
@@ -80149,7 +80149,7 @@ ${esc2(sk.desc || "")}">
               S.gold -= 20;
               saveGold(S.gold);
               updateReputation(12);
-              updateFactionRep("\uAD50\uD68C", 5);
+              updateFactionRep2("\uAD50\uD68C", 5);
               toast("\u{1F4B0} \uC120\uD589. \uD3C9\uD310+12", 2e3);
             } else toast("\uACE8\uB4DC\uAC00 \uBD80\uC871\uD558\uB2E4");
           },
@@ -80401,12 +80401,12 @@ ${esc2(sk.desc || "")}">
         choices: ["\uD3B8\uC9C0\uB97C \uC77D\uB294\uB2E4", "\uC758\uC2EC\uC2A4\uB7EC\uC6CC \uAC70\uC808\uD55C\uB2E4"],
         effects: {
           "\uD3B8\uC9C0\uB97C \uC77D\uB294\uB2E4": () => {
-            updateFactionRep("\uC655\uAD6D \uAE30\uC0AC\uB2E8", 10);
+            updateFactionRep2("\uC655\uAD6D \uAE30\uC0AC\uB2E8", 10);
             addExp(80);
             toast("\u{1F4DC} \uC655\uAD6D\uC5D0\uC11C \uC0AC\uC808 \uC784\uBB34\uB97C \uC694\uCCAD\uD588\uB2E4. EXP+80", 2500);
           },
           "\uC758\uC2EC\uC2A4\uB7EC\uC6CC \uAC70\uC808\uD55C\uB2E4": () => {
-            updateFactionRep("\uC655\uAD6D \uAE30\uC0AC\uB2E8", -5);
+            updateFactionRep2("\uC655\uAD6D \uAE30\uC0AC\uB2E8", -5);
             toast("\u{1F624} \uC804\uB839\uC774 \uBB34\uB840\uD558\uB2E4\uBA70 \uB5A0\uB0AC\uB2E4", 2e3);
           }
         }
@@ -84885,8 +84885,8 @@ ${lines.join("\n")}
         id: "evil_rumor",
         condition: () => (ws.evilActs || 0) >= 5 && !fired.has("evil_rumor"),
         effect: () => {
-          updateFactionRep("\uC655\uAD6D \uAE30\uC0AC\uB2E8", -15);
-          updateFactionRep("\uAD50\uD68C", -10);
+          updateFactionRep2("\uC655\uAD6D \uAE30\uC0AC\uB2E8", -15);
+          updateFactionRep2("\uAD50\uD68C", -10);
           return "\uB124 \uC545\uD589\uC5D0 \uB300\uD55C \uC18C\uBB38\uC774 \uD37C\uC9C0\uAE30 \uC2DC\uC791\uD588\uB2E4. \uC655\uAD6D \uAE30\uC0AC\uB2E8\uACFC \uAD50\uD68C\uAC00 \uACBD\uACC4\uB97C \uB192\uC778\uB2E4.";
         }
       },
@@ -84894,7 +84894,7 @@ ${lines.join("\n")}
         id: "evil_wanted",
         condition: () => (ws.evilActs || 0) >= 15 && !fired.has("evil_wanted"),
         effect: () => {
-          updateFactionRep("\uC655\uAD6D \uAE30\uC0AC\uB2E8", -30);
+          updateFactionRep2("\uC655\uAD6D \uAE30\uC0AC\uB2E8", -30);
           return "\uD604\uC0C1\uC218\uBC30 \uBA85\uB2E8\uC5D0 \uC774\uB984\uC774 \uC62C\uB790\uB2E4! \uAE30\uC0AC\uB2E8\uC774 \uCD94\uC801\uC744 \uC2DC\uC791\uD55C\uB2E4.";
         }
       },
@@ -84903,8 +84903,8 @@ ${lines.join("\n")}
         id: "hero_rumor",
         condition: () => (ws.goodActs || 0) >= 5 && !fired.has("hero_rumor"),
         effect: () => {
-          updateFactionRep("\uC655\uAD6D \uAE30\uC0AC\uB2E8", 10);
-          updateFactionRep("\uAD50\uD68C", 8);
+          updateFactionRep2("\uC655\uAD6D \uAE30\uC0AC\uB2E8", 10);
+          updateFactionRep2("\uAD50\uD68C", 8);
           return "\uC120\uD589\uC758 \uC18C\uBB38\uC774 \uD37C\uC84C\uB2E4. \uC0AC\uB78C\uB4E4\uC774 \uB2F9\uC2E0\uC744 \uC758\uC778\uC73C\uB85C \uBD80\uB974\uAE30 \uC2DC\uC791\uD55C\uB2E4.";
         }
       },
@@ -84912,7 +84912,7 @@ ${lines.join("\n")}
         id: "hero_champion",
         condition: () => (ws.goodActs || 0) >= 20 && !fired.has("hero_champion"),
         effect: () => {
-          updateFactionRep("\uC655\uAD6D \uAE30\uC0AC\uB2E8", 25);
+          updateFactionRep2("\uC655\uAD6D \uAE30\uC0AC\uB2E8", 25);
           updateReputation(50);
           return "\uC655\uAD6D \uC804\uC5ED\uC5D0 \uC601\uC6C5\uC73C\uB85C \uC774\uB984\uC744 \uB5A8\uCCE4\uB2E4! \uC655\uC774 \uC54C\uD604\uC744 \uC694\uCCAD\uD55C\uB2E4.";
         }
@@ -84939,7 +84939,7 @@ ${lines.join("\n")}
         id: "betrayal_mark",
         condition: () => (ws.did_\uBC30\uC2E0 || 0) >= 2 && !fired.has("betrayal_mark"),
         effect: () => {
-          updateFactionRep("\uC0C1\uC778 \uC870\uD569", -10);
+          updateFactionRep2("\uC0C1\uC778 \uC870\uD569", -10);
           return "\uBC30\uC2E0\uC790\uB77C\uB294 \uB099\uC778\uC774 \uCC0D\uD614\uB2E4. \uC0AC\uB78C\uB4E4\uC774 \uB2F9\uC2E0\uC744 \uBBFF\uAE30 \uAEBC\uB9B0\uB2E4.";
         }
       }
@@ -86211,6 +86211,31 @@ ${lines.join("\n")}
     }
     return "\uC0C1\uB300";
   }
+  var TURN_NPC_RELATION_DELTA = {
+    persuade: { crit: 8, success: 3, fail: -1, critfail: -6 },
+    social: { crit: 6, success: 2, fail: -1, critfail: -4 },
+    fear: { crit: -1, success: -2, fail: -3, critfail: -8 }
+  };
+  var TURN_RELATION_REASON = {
+    persuade: { crit: "\uC124\uB4DD \uB300\uC131\uACF5", success: "\uC124\uB4DD \uC131\uACF5", fail: "\uC124\uB4DD \uC2E4\uD328", critfail: "\uC124\uB4DD \uB300\uC2E4\uD328" },
+    social: { crit: "\uB300\uD654 \uB300\uC131\uACF5", success: "\uB300\uD654 \uC131\uACF5", fail: "\uB300\uD654 \uC5B4\uC0C9\uD568", critfail: "\uB300\uD654 \uB300\uC2E4\uD328" },
+    fear: { crit: "\uC704\uD611 \uB300\uC131\uACF5(\uBC18\uAC10)", success: "\uC704\uD611 \uC131\uACF5(\uBC18\uAC10)", fail: "\uC704\uD611 \uC2E4\uD328", critfail: "\uC704\uD611 \uC5ED\uD6A8\uACFC" }
+  };
+  function applyTurnRelationEffect(cat, vk, target) {
+    try {
+      const delta = TURN_NPC_RELATION_DELTA[cat]?.[vk];
+      if (!delta || !target) return;
+      if (typeof updateNpcRelationship === "function") updateNpcRelationship(target, delta, TURN_RELATION_REASON[cat][vk]);
+      if ((cat === "persuade" || cat === "social") && typeof loadNPCs === "function") {
+        const npc = (loadNPCs() || []).find((n) => n.name === target);
+        if (npc?.faction && typeof updateFactionRep === "function") {
+          const factionDelta = Math.round(delta / 3);
+          if (factionDelta) updateFactionRep(npc.faction, factionDelta);
+        }
+      }
+    } catch (e) {
+    }
+  }
   function composeLocalTurnText(history, injectedContext) {
     const learned = Math.random() < 0.35 ? getLearnedText("turn_narrative") : null;
     if (!history || !history.length) {
@@ -86232,7 +86257,9 @@ ${lines.join("\n")}
       const vk = _turnVerdictKey(dice.verdict);
       const bank = TURN_REACT_BANK[cat][vk];
       const tpl = bank[Math.floor(Math.random() * bank.length)];
-      prose = learned || identityFrag + _fillTargetSlots(tpl, _turnPickTarget());
+      const target = _turnPickTarget();
+      applyTurnRelationEffect(cat, vk, target);
+      prose = learned || identityFrag + _fillTargetSlots(tpl, target);
     } else if (!learned && _isLocArrivalMsg(lastUserMsg?.content)) {
       const loc = typeof loadCurrentLocation === "function" ? loadCurrentLocation() : null;
       const tpl = LOC_ARRIVAL_BANK[Math.floor(Math.random() * LOC_ARRIVAL_BANK.length)];

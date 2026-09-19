@@ -3619,7 +3619,18 @@ function renderWorldMapPanel(){
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;flex-shrink:0">
       <div style="font-size:8px;color:#577">${_curMode==='continent' ? (S._landMapSelectedContinent ? (CONTINENT_PROPER_NAME_ICON[S._landMapSelectedContinent]||'') : (S._landMapSelectedGroup ? '🗺️ '+(CONTINENT_GROUP_NAME[S._landMapSelectedGroup]||'') : '')) : ''}</div>
       <div style="display:flex;gap:5px">
-      ${(_curMode==='continent' && S._landMapSelectedContinent) ? `<button onclick="S._fieldModeContinent='${S._landMapSelectedContinent}';openP('fieldmove')" style="padding:3px 10px;background:#0a0805;border:1px solid #6a4a1a;color:#e0b060;font-size:8px;cursor:pointer;border-radius:3px">🎮 실시간 필드 이동</button>` : ''}
+      ${(_curMode==='continent' && S._landMapSelectedContinent) ? (
+        (S._fieldEntryWindowUntil && Date.now() < S._fieldEntryWindowUntil)
+          ? `<button onclick="S._fieldModeContinent='${S._landMapSelectedContinent}';openP('fieldmove')" style="padding:3px 10px;background:#0a0805;border:1px solid #6a4a1a;color:#e0b060;font-size:8px;cursor:pointer;border-radius:3px">🎮 실시간 필드 이동</button>`
+          // [19번 라운드, [대기] #10 나머지 — 필드 진입 게이팅] 사용자 확정
+          // 지시("막아줘"): 이야기 속에서 주변을 살펴보거나 움직이는
+          // 선택을 성공시킨 직후(quest/086 sendMsg가 세팅하는
+          // S._fieldEntryWindowUntil)에만 이 버튼이 활성화된다 — 그
+          // 전에는 눌러도 안내만 뜨는 비활성 버튼으로 보여준다(완전히
+          // 안 보이게 숨기면 "그런 기능이 있는지조차 모름"이 되어
+          // 오히려 발견성이 떨어진다고 판단).
+          : `<button onclick="toast('🔒 이야기 속에서 주변을 살펴보거나 움직이는 선택을 골라야 필드로 나갈 수 있습니다', 2800)" style="padding:3px 10px;background:#0a0a0a;border:1px dashed #4a4a3a;color:#6a6455;font-size:8px;cursor:pointer;border-radius:3px">🔒 실시간 필드 이동</button>`
+      ) : ''}
       <button onclick="toggleLandMapViewMode()" style="padding:3px 10px;background:#050a05;border:1px solid #1a4a2a;color:#7aaa6a;font-size:8px;cursor:pointer;border-radius:3px">${_curMode==='world' ? '📍 현재 위치로' : (S._landMapSelectedGroup && S._landMapSelectedContinent) ? `← ${CONTINENT_GROUP_NAME[S._landMapSelectedGroup]||''}` : '← 세계 지도'}</button>
       </div>
     </div>

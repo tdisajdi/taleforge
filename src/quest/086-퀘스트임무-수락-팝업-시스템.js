@@ -2016,6 +2016,24 @@ export async function sendMsg(userMsg, isChoice=false){
     }
   } // ── if(!isCasual) 닫기 ──────────────────────────────────────
 
+  // [19번 라운드, [대기] #10 나머지 — 필드 진입 게이팅] 사용자 확정
+  // 지시("막아줘"): 필드(world/320)는 이야기 속에서 실제로 주변을
+  // 살펴보거나 움직이는 선택을 골라 성공한 직후에만 나갈 수 있게
+  // 막는다. 이 판정을 composeLocalTurnText(로컬 폴백 서사 전용) 안에
+  // 넣으면 클라우드/로컬 AI 모델 응답이 한 번이라도 성공하는 한 절대
+  // 실행되지 않는다 — sendMsg가 주사위 판정을 실제로 끝내는 지점인
+  // 여기서 바로 처리해야 AI 사용 여부와 무관하게 항상 동작한다(3번
+  // 섹션 방법론: 로컬 폴백에만 걸면 "AI 없이도 돌아가는 게임"이라는
+  // 대전제와 어긋남). move 카테고리(agi 판정) 성공/대성공만 자격을
+  // 준다 — 실패/대실패는 "주변을 제대로 못 살폈다"는 뜻이라 제외.
+  if(!isCasual){
+    const _entryCat = _turnStatToCategory(usedStat);
+    if(_entryCat==='move' && (verdictLabel==='성공'||verdictLabel==='대성공')){
+      const FIELD_ENTRY_WINDOW_MS = 3*60*1000; // 3분 — 추격자 포기(2분)/습격 threatened(60초)와 같은 성격의 실제 벽시계 타이머
+      S._fieldEntryWindowUntil = Date.now() + FIELD_ENTRY_WINDOW_MS;
+    }
+  }
+
   // 10턴마다 또는 중요 PM 이벤트(배신·비밀) 발생 시 시스템 프롬프트 갱신
   if(S.msgCount%10===0||!S.system||window._pmSystemDirty){
     S.system=window.buildLightSystem(char,loadTitles(),loadMemory(),S.npcs);

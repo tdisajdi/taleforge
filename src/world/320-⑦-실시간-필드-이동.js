@@ -1061,7 +1061,23 @@ const REF_FRAME_MS = 1000/60;
 // 쫓아오지도 않는" 느낌을 노림.
 const PURSUER_GIVE_UP_MS = 120000;
 
+// [19번 라운드, [대기] #10 나머지 — 필드 진입 게이팅] 사용자 확정 지시
+// ("막아줘"): 지금까지는 월드맵에서 아무 서사적 맥락 없이 아무 때나
+// "🎮 실시간 필드 이동" 버튼을 누를 수 있었다. quest/086의
+// composeLocalTurnText가 move(agi) 판정 성공 시
+// S._fieldEntryWindowUntil(타임스탬프)을 세팅해주는 걸 여기서 읽어
+// "이야기 속에서 실제로 주변을 살펴보거나 움직이는 선택을 골라 성공한
+// 직후 한동안"만 진입을 허용한다. 버튼 쪽(economy/255)도 이 값을 보고
+// 아예 비활성으로 그려주지만, enterFieldMode 자체에도 방어적으로
+// 같은 검사를 둔다(다른 경로로 호출돼도 안전하도록).
+function hasFieldEntryEligibility(){
+  return !!(S._fieldEntryWindowUntil && Date.now() < S._fieldEntryWindowUntil);
+}
 export function enterFieldMode(continentKey){
+  if(!hasFieldEntryEligibility()){
+    toast('🔒 이야기 속에서 주변을 살펴보거나 움직이는 선택을 골라야 필드로 나갈 수 있습니다', 2800);
+    return;
+  }
   const graph = buildKingdomGraph(continentKey);
   if(!graph){ toast('이 왕국은 아직 실시간 필드로 옮길 장소 데이터가 없습니다', 2500); return; }
   const canvas = document.getElementById('tf-field-canvas');
@@ -1124,7 +1140,26 @@ function buildFieldReturnHint(){
   }
   return `${locName} 주변을 둘러보고 돌아왔다.`;
 }
+// [19번 라운드, [대기] #10 나머지 — 필드 퇴장 게이팅] 사용자 확정 지시
+// ("막아줘"): 위협이 안 풀린 채로 그냥 나가버릴 수 없게 막는다.
+// "위협"은 (1) 진행 중인 필드 전투(battleState가 아직 안 끝남) 또는
+// (2) 현재 화면에 아직 포기하지 않고 쫓아오는 무리(state==='chasing',
+// 경비병 제외 — 경비병의 chasing은 습격대를 요격하는 것이지 플레이어를
+// 위협하는 게 아니라서 기존 추격자 포기 로직(16번 섹션)과 같은
+// 기준으로 제외) 중 하나라도 있는 경우. (1)은 사실 실제 구멍이었다 —
+// 전투 오버레이(#tf-field-encounter)가 canvas 영역만 덮고 상단 헤더의
+// "✕ 필드 나가기" 버튼은 항상 눌리는 상태였는데, 지금까지는 아무도
+// 막지 않고 있었다.
+function hasUnresolvedFieldThreat(){
+  if(battleState) return true;
+  if(!RT || !RT.screen) return false;
+  return RT.screen.packs.some(p=>p.state==='chasing' && !p.isGuard);
+}
 export function exitFieldMode(){
+  if(hasUnresolvedFieldThreat()){
+    showFieldToast('⚠️ 위협이 아직 풀리지 않았다 — 지금은 이 자리를 뜰 수 없다');
+    return;
+  }
   if(RT){
     try{ S._pendingFieldReturnHint = buildFieldReturnHint(); }catch(e){}
     if(RT.raf) cancelAnimationFrame(RT.raf);
@@ -1863,6 +1898,18 @@ window.__tfDebugForcePursuerChase = function(){
   if(!m) return false;
   m.state = 'chasing';
   return { name: m.name };
+};
+// [19번 라운드, [대기] #10 나머지 검증 전용] 위 강제-추격 훅의 반대 —
+// exitFieldMode()의 "위협이 안 풀리면 못 나간다" 게이팅이 위협이 실제로
+// 풀렸을 때는(정상적으로 idle로 돌아간 경우와 동일한 상태) 다시 나가기를
+// 허용하는지 확인하기 위한 훅. hasUnresolvedFieldThreat() 자체는 안
+// 건드리고, 그 판정이 보는 입력값(pack.state)만 정상적으로 idle이 되는
+// 실제 경로(updateMonsters의 noticed=false 분기)와 동일한 값으로 되돌린다.
+window.__tfDebugResolvePursuer = function(){
+  if(!RT || !RT.screen) return false;
+  const chasing = RT.screen.packs.filter(p=>p.state==='chasing' && !p.isGuard);
+  chasing.forEach(p=>{ p.state='idle'; });
+  return { resolved: chasing.map(p=>p.name) };
 };
 window.__tfDebugMarkPursuerLeft = function(msAgo){
   if(!RT || !RT.screen) return false;

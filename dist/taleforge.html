@@ -48883,7 +48883,7 @@ ${lines.join("\n")}
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;flex-shrink:0">
       <div style="font-size:8px;color:#577">${_curMode === "continent" ? S._landMapSelectedContinent ? CONTINENT_PROPER_NAME_ICON[S._landMapSelectedContinent] || "" : S._landMapSelectedGroup ? "\u{1F5FA}\uFE0F " + (CONTINENT_GROUP_NAME[S._landMapSelectedGroup] || "") : "" : ""}</div>
       <div style="display:flex;gap:5px">
-      ${_curMode === "continent" && S._landMapSelectedContinent ? `<button onclick="S._fieldModeContinent='${S._landMapSelectedContinent}';openP('fieldmove')" style="padding:3px 10px;background:#0a0805;border:1px solid #6a4a1a;color:#e0b060;font-size:8px;cursor:pointer;border-radius:3px">\u{1F3AE} \uC2E4\uC2DC\uAC04 \uD544\uB4DC \uC774\uB3D9</button>` : ""}
+      ${_curMode === "continent" && S._landMapSelectedContinent ? S._fieldEntryWindowUntil && Date.now() < S._fieldEntryWindowUntil ? `<button onclick="S._fieldModeContinent='${S._landMapSelectedContinent}';openP('fieldmove')" style="padding:3px 10px;background:#0a0805;border:1px solid #6a4a1a;color:#e0b060;font-size:8px;cursor:pointer;border-radius:3px">\u{1F3AE} \uC2E4\uC2DC\uAC04 \uD544\uB4DC \uC774\uB3D9</button>` : `<button onclick="toast('\u{1F512} \uC774\uC57C\uAE30 \uC18D\uC5D0\uC11C \uC8FC\uBCC0\uC744 \uC0B4\uD3B4\uBCF4\uAC70\uB098 \uC6C0\uC9C1\uC774\uB294 \uC120\uD0DD\uC744 \uACE8\uB77C\uC57C \uD544\uB4DC\uB85C \uB098\uAC08 \uC218 \uC788\uC2B5\uB2C8\uB2E4', 2800)" style="padding:3px 10px;background:#0a0a0a;border:1px dashed #4a4a3a;color:#6a6455;font-size:8px;cursor:pointer;border-radius:3px">\u{1F512} \uC2E4\uC2DC\uAC04 \uD544\uB4DC \uC774\uB3D9</button>` : ""}
       <button onclick="toggleLandMapViewMode()" style="padding:3px 10px;background:#050a05;border:1px solid #1a4a2a;color:#7aaa6a;font-size:8px;cursor:pointer;border-radius:3px">${_curMode === "world" ? "\u{1F4CD} \uD604\uC7AC \uC704\uCE58\uB85C" : S._landMapSelectedGroup && S._landMapSelectedContinent ? `\u2190 ${CONTINENT_GROUP_NAME[S._landMapSelectedGroup] || ""}` : "\u2190 \uC138\uACC4 \uC9C0\uB3C4"}</button>
       </div>
     </div>
@@ -87230,6 +87230,13 @@ ${lines.join("\n")}
           verdictLabel = isCritSuccess ? "\uB300\uC131\uACF5" : isCritFail ? "\uB300\uC2E4\uD328" : effectiveSuccess ? "\uC131\uACF5" : "\uC2E4\uD328";
           verdictEmoji = isCritSuccess ? "\u2728" : isCritFail ? "\u{1F4A5}" : effectiveSuccess ? "\u2705" : "\u274C";
         }
+      }
+    }
+    if (!isCasual) {
+      const _entryCat = _turnStatToCategory(usedStat);
+      if (_entryCat === "move" && (verdictLabel === "\uC131\uACF5" || verdictLabel === "\uB300\uC131\uACF5")) {
+        const FIELD_ENTRY_WINDOW_MS = 3 * 60 * 1e3;
+        S._fieldEntryWindowUntil = Date.now() + FIELD_ENTRY_WINDOW_MS;
       }
     }
     if (S.msgCount % 10 === 0 || !S.system || window._pmSystemDirty) {
@@ -131877,7 +131884,14 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
   var MONSTER_FLEE_SPEED = FIELD_BASE_SPEED * (1.8 / 1.15);
   var REF_FRAME_MS = 1e3 / 60;
   var PURSUER_GIVE_UP_MS = 12e4;
+  function hasFieldEntryEligibility() {
+    return !!(S._fieldEntryWindowUntil && Date.now() < S._fieldEntryWindowUntil);
+  }
   function enterFieldMode(continentKey) {
+    if (!hasFieldEntryEligibility()) {
+      toast("\u{1F512} \uC774\uC57C\uAE30 \uC18D\uC5D0\uC11C \uC8FC\uBCC0\uC744 \uC0B4\uD3B4\uBCF4\uAC70\uB098 \uC6C0\uC9C1\uC774\uB294 \uC120\uD0DD\uC744 \uACE8\uB77C\uC57C \uD544\uB4DC\uB85C \uB098\uAC08 \uC218 \uC788\uC2B5\uB2C8\uB2E4", 2800);
+      return;
+    }
     const graph = buildKingdomGraph(continentKey);
     if (!graph) {
       toast("\uC774 \uC655\uAD6D\uC740 \uC544\uC9C1 \uC2E4\uC2DC\uAC04 \uD544\uB4DC\uB85C \uC62E\uAE38 \uC7A5\uC18C \uB370\uC774\uD130\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4", 2500);
@@ -131945,7 +131959,16 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
     }
     return `${locName} \uC8FC\uBCC0\uC744 \uB458\uB7EC\uBCF4\uACE0 \uB3CC\uC544\uC654\uB2E4.`;
   }
+  function hasUnresolvedFieldThreat() {
+    if (battleState) return true;
+    if (!RT || !RT.screen) return false;
+    return RT.screen.packs.some((p) => p.state === "chasing" && !p.isGuard);
+  }
   function exitFieldMode() {
+    if (hasUnresolvedFieldThreat()) {
+      showFieldToast("\u26A0\uFE0F \uC704\uD611\uC774 \uC544\uC9C1 \uD480\uB9AC\uC9C0 \uC54A\uC558\uB2E4 \u2014 \uC9C0\uAE08\uC740 \uC774 \uC790\uB9AC\uB97C \uB730 \uC218 \uC5C6\uB2E4");
+      return;
+    }
     if (RT) {
       try {
         S._pendingFieldReturnHint = buildFieldReturnHint();
@@ -132692,6 +132715,14 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
     if (!m) return false;
     m.state = "chasing";
     return { name: m.name };
+  };
+  window.__tfDebugResolvePursuer = function() {
+    if (!RT || !RT.screen) return false;
+    const chasing = RT.screen.packs.filter((p) => p.state === "chasing" && !p.isGuard);
+    chasing.forEach((p) => {
+      p.state = "idle";
+    });
+    return { resolved: chasing.map((p) => p.name) };
   };
   window.__tfDebugMarkPursuerLeft = function(msAgo) {
     if (!RT || !RT.screen) return false;

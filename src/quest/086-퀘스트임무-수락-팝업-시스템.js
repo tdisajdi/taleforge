@@ -428,7 +428,7 @@ const LOCAL_FLAVOR_TEMPLATES = {
     '발견한 흔적을 곰곰이 분석하며 조사한다',
     '숨겨진 것이 없는지 서랍을 열어 조사한다',
     '주변 상황을 침착하게 분석하고 조사한다',
-    '{t}가 남긴 자취를 조사한다',
+    '{t:이가} 남긴 자취를 조사한다',
   ],
   social: [
     '{t}에게 다가가 먼저 말을 건다',
@@ -452,7 +452,7 @@ const LOCAL_FLAVOR_FALLBACK_TARGETS = {
   attack: ['눈앞의 위협', '가로막은 무언가', '적대적인 기척'],
   defend: ['날아드는 공격', '눈앞의 위협', '다가오는 기척'],
   fear: ['앞을 막아선 이', '위협적인 존재', '수상한 자'],
-  stealth: ['주변의 시선', '지켜보는 눈길', '경계하는 이들'],
+  stealth: ['가까이 있는 이', '지켜보는 이', '경계하는 이들'],
   move: ['위험한 상황', '눈앞의 위협', '이 자리'],
   magic: ['눈앞의 상황', '주변의 기운', '위태로운 순간'],
   persuade: ['가까이 있는 사람', '상대', '눈앞의 인물'],
@@ -643,6 +643,29 @@ const LOC_ARRIVAL_BANK = [
   '{icon} {loc}에 도착했다. 오는 길의 피로를 잠시 내려놓고 주변을 둘러본다.',
   '긴 여정 끝에 {icon} {loc}에 이르렀다. 이곳에서 무엇을 마주하게 될지 아직은 알 수 없다.',
 ];
+// [15번 라운드, 필드↔스토리 연결 #14] 위 범용 도착 문구는 그 장소의
+// 습격/경제 상태(11번 섹션에서 만든 economy/332, 10번 섹션의 습격
+// 시스템)를 전혀 반영하지 않았다 — 습격으로 파괴된 마을에 도착해도
+// "낯선 거리와 사람들의 기척이 스며든다"는 평온한 문장이 그대로
+// 나왔다. AI 프롬프트에 힌트를 꽂는 방식(13번 섹션에서 기각된 접근 —
+// 완전 하드코딩 폴백은 S.system을 안 읽음)이 아니라, 이 로컬 뱅크
+// 자체가 `loadRaidState()`/`getLocationEconomySummary()`를 직접 읽어
+// 분기하도록 만들어 AI 유무와 무관하게 항상 반영되게 했다.
+const LOC_ARRIVAL_THREATENED_BANK = [
+  '{icon} {loc}에 들어서자마자 심상치 않은 공기가 느껴진다 — 습격의 그림자가 아직 이 마을 위를 맴돌고 있다.',
+  '{icon} {loc}의 거리는 평소보다 긴장돼 있다. 사람들이 불안한 눈으로 성문 쪽을 흘끔거린다.',
+  '{icon} {loc}에 도착하니 경비병들이 분주히 오가고 있다 — 이 마을이 위협받고 있다는 소문이 사실이었다.',
+];
+const LOC_ARRIVAL_DAMAGED_BANK = [
+  '{icon} {loc}에 들어서자 불에 그을린 지붕과 무너진 담벼락이 먼저 눈에 들어온다 — 얼마 전 습격의 흔적이 아직 그대로다.',
+  '{icon} {loc}은 습격의 상처가 채 가시지 않은 모습이다. 주민들이 무거운 얼굴로 잔해를 치우고 있다.',
+  '{icon} {loc}에 도착하니 활기는 온데간데없고, 복구 작업에 지친 사람들만 눈에 띈다.',
+];
+const LOC_ARRIVAL_DEPRESSED_BANK = [
+  '{icon} {loc}에 들어선다. 거리는 한산하고 상점 문은 대부분 닫혀 있다 — 이 마을 형편이 그리 좋지 않은 듯하다.',
+  '{icon} {loc}의 분위기는 가라앉아 있다. 오가는 사람도, 팔려는 물건도 눈에 띄게 적다.',
+  '{icon} {loc}에 도착했지만 반겨주는 활기는 없다. 침체된 거리가 그대로 드러난다.',
+];
 function _isLocArrivalMsg(text){
   return typeof text==='string' && text.includes('에 도착해 주변을 둘러본다');
 }
@@ -798,7 +821,15 @@ export function composeLocalTurnText(history, injectedContext){
     prose = learned || (identityFrag + _fillTargetSlots(tpl, target));
   } else if(!learned && _isLocArrivalMsg(lastUserMsg?.content)){
     const loc = (typeof loadCurrentLocation==='function') ? loadCurrentLocation() : null;
-    const tpl = LOC_ARRIVAL_BANK[Math.floor(Math.random()*LOC_ARRIVAL_BANK.length)];
+    let arrivalBank = LOC_ARRIVAL_BANK;
+    try{
+      const raid = (loc?.id && typeof loadRaidState==='function') ? (loadRaidState()[loc.id]) : null;
+      const econ = (loc?.id && typeof getLocationEconomySummary==='function') ? getLocationEconomySummary(loc.id) : null;
+      if(raid && raid.state==='threatened') arrivalBank = LOC_ARRIVAL_THREATENED_BANK;
+      else if(raid && raid.state==='resolved' && (raid.outcome==='damaged'||raid.outcome==='destroyed')) arrivalBank = LOC_ARRIVAL_DAMAGED_BANK;
+      else if(econ && (econ.prosLabel==='피폐'||econ.prosLabel==='침체')) arrivalBank = LOC_ARRIVAL_DEPRESSED_BANK;
+    }catch(e){}
+    const tpl = arrivalBank[Math.floor(Math.random()*arrivalBank.length)];
     prose = identityFrag + tpl.replace(/\{icon\}/g, loc?.icon||'📍').replace(/\{loc\}/g, loc?.name||'낯선 곳');
   } else {
     prose = learned || (identityFrag + TURN_CASUAL_BANK[Math.floor(Math.random()*TURN_CASUAL_BANK.length)]);

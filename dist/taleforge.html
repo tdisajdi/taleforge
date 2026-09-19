@@ -78352,7 +78352,7 @@ ${simDesc}` : playerRep;
     return items.slice(0, keep);
   }
   window.applyLocationStockCut = applyLocationStockCut;
-  function getLocationEconomySummary(locId) {
+  function getLocationEconomySummary2(locId) {
     if (!locId) return null;
     const rec = getLocationEconomy(locId);
     const prosLabel = rec.prosperity >= 75 ? "\uBC88\uC601" : rec.prosperity >= 50 ? "\uD3C9\uC628" : rec.prosperity >= 25 ? "\uCE68\uCCB4" : "\uD53C\uD3D0";
@@ -78365,7 +78365,7 @@ ${simDesc}` : playerRep;
       tradeRouteStatus: rec.tradeRouteStatus
     };
   }
-  window.getLocationEconomySummary = getLocationEconomySummary;
+  window.getLocationEconomySummary = getLocationEconomySummary2;
   window.__tfDebugLocEconomy = function(locId) {
     return locId ? getLocationEconomy(locId) : null;
   };
@@ -85976,7 +85976,7 @@ ${lines.join("\n")}
       "\uBC1C\uACAC\uD55C \uD754\uC801\uC744 \uACF0\uACF0\uC774 \uBD84\uC11D\uD558\uBA70 \uC870\uC0AC\uD55C\uB2E4",
       "\uC228\uACA8\uC9C4 \uAC83\uC774 \uC5C6\uB294\uC9C0 \uC11C\uB78D\uC744 \uC5F4\uC5B4 \uC870\uC0AC\uD55C\uB2E4",
       "\uC8FC\uBCC0 \uC0C1\uD669\uC744 \uCE68\uCC29\uD558\uAC8C \uBD84\uC11D\uD558\uACE0 \uC870\uC0AC\uD55C\uB2E4",
-      "{t}\uAC00 \uB0A8\uAE34 \uC790\uCDE8\uB97C \uC870\uC0AC\uD55C\uB2E4"
+      "{t:\uC774\uAC00} \uB0A8\uAE34 \uC790\uCDE8\uB97C \uC870\uC0AC\uD55C\uB2E4"
     ],
     social: [
       "{t}\uC5D0\uAC8C \uB2E4\uAC00\uAC00 \uBA3C\uC800 \uB9D0\uC744 \uAC74\uB2E4",
@@ -85995,7 +85995,7 @@ ${lines.join("\n")}
     attack: ["\uB208\uC55E\uC758 \uC704\uD611", "\uAC00\uB85C\uB9C9\uC740 \uBB34\uC5B8\uAC00", "\uC801\uB300\uC801\uC778 \uAE30\uCC99"],
     defend: ["\uB0A0\uC544\uB4DC\uB294 \uACF5\uACA9", "\uB208\uC55E\uC758 \uC704\uD611", "\uB2E4\uAC00\uC624\uB294 \uAE30\uCC99"],
     fear: ["\uC55E\uC744 \uB9C9\uC544\uC120 \uC774", "\uC704\uD611\uC801\uC778 \uC874\uC7AC", "\uC218\uC0C1\uD55C \uC790"],
-    stealth: ["\uC8FC\uBCC0\uC758 \uC2DC\uC120", "\uC9C0\uCF1C\uBCF4\uB294 \uB208\uAE38", "\uACBD\uACC4\uD558\uB294 \uC774\uB4E4"],
+    stealth: ["\uAC00\uAE4C\uC774 \uC788\uB294 \uC774", "\uC9C0\uCF1C\uBCF4\uB294 \uC774", "\uACBD\uACC4\uD558\uB294 \uC774\uB4E4"],
     move: ["\uC704\uD5D8\uD55C \uC0C1\uD669", "\uB208\uC55E\uC758 \uC704\uD611", "\uC774 \uC790\uB9AC"],
     magic: ["\uB208\uC55E\uC758 \uC0C1\uD669", "\uC8FC\uBCC0\uC758 \uAE30\uC6B4", "\uC704\uD0DC\uB85C\uC6B4 \uC21C\uAC04"],
     persuade: ["\uAC00\uAE4C\uC774 \uC788\uB294 \uC0AC\uB78C", "\uC0C1\uB300", "\uB208\uC55E\uC758 \uC778\uBB3C"],
@@ -86137,6 +86137,21 @@ ${lines.join("\n")}
     "{icon} {loc}\uC5D0 \uB3C4\uCC29\uD588\uB2E4. \uC624\uB294 \uAE38\uC758 \uD53C\uB85C\uB97C \uC7A0\uC2DC \uB0B4\uB824\uB193\uACE0 \uC8FC\uBCC0\uC744 \uB458\uB7EC\uBCF8\uB2E4.",
     "\uAE34 \uC5EC\uC815 \uB05D\uC5D0 {icon} {loc}\uC5D0 \uC774\uB974\uB800\uB2E4. \uC774\uACF3\uC5D0\uC11C \uBB34\uC5C7\uC744 \uB9C8\uC8FC\uD558\uAC8C \uB420\uC9C0 \uC544\uC9C1\uC740 \uC54C \uC218 \uC5C6\uB2E4."
   ];
+  var LOC_ARRIVAL_THREATENED_BANK = [
+    "{icon} {loc}\uC5D0 \uB4E4\uC5B4\uC11C\uC790\uB9C8\uC790 \uC2EC\uC0C1\uCE58 \uC54A\uC740 \uACF5\uAE30\uAC00 \uB290\uAEF4\uC9C4\uB2E4 \u2014 \uC2B5\uACA9\uC758 \uADF8\uB9BC\uC790\uAC00 \uC544\uC9C1 \uC774 \uB9C8\uC744 \uC704\uB97C \uB9F4\uB3CC\uACE0 \uC788\uB2E4.",
+    "{icon} {loc}\uC758 \uAC70\uB9AC\uB294 \uD3C9\uC18C\uBCF4\uB2E4 \uAE34\uC7A5\uB3FC \uC788\uB2E4. \uC0AC\uB78C\uB4E4\uC774 \uBD88\uC548\uD55C \uB208\uC73C\uB85C \uC131\uBB38 \uCABD\uC744 \uD758\uB054\uAC70\uB9B0\uB2E4.",
+    "{icon} {loc}\uC5D0 \uB3C4\uCC29\uD558\uB2C8 \uACBD\uBE44\uBCD1\uB4E4\uC774 \uBD84\uC8FC\uD788 \uC624\uAC00\uACE0 \uC788\uB2E4 \u2014 \uC774 \uB9C8\uC744\uC774 \uC704\uD611\uBC1B\uACE0 \uC788\uB2E4\uB294 \uC18C\uBB38\uC774 \uC0AC\uC2E4\uC774\uC5C8\uB2E4."
+  ];
+  var LOC_ARRIVAL_DAMAGED_BANK = [
+    "{icon} {loc}\uC5D0 \uB4E4\uC5B4\uC11C\uC790 \uBD88\uC5D0 \uADF8\uC744\uB9B0 \uC9C0\uBD95\uACFC \uBB34\uB108\uC9C4 \uB2F4\uBCBC\uB77D\uC774 \uBA3C\uC800 \uB208\uC5D0 \uB4E4\uC5B4\uC628\uB2E4 \u2014 \uC5BC\uB9C8 \uC804 \uC2B5\uACA9\uC758 \uD754\uC801\uC774 \uC544\uC9C1 \uADF8\uB300\uB85C\uB2E4.",
+    "{icon} {loc}\uC740 \uC2B5\uACA9\uC758 \uC0C1\uCC98\uAC00 \uCC44 \uAC00\uC2DC\uC9C0 \uC54A\uC740 \uBAA8\uC2B5\uC774\uB2E4. \uC8FC\uBBFC\uB4E4\uC774 \uBB34\uAC70\uC6B4 \uC5BC\uAD74\uB85C \uC794\uD574\uB97C \uCE58\uC6B0\uACE0 \uC788\uB2E4.",
+    "{icon} {loc}\uC5D0 \uB3C4\uCC29\uD558\uB2C8 \uD65C\uAE30\uB294 \uC628\uB370\uAC04\uB370\uC5C6\uACE0, \uBCF5\uAD6C \uC791\uC5C5\uC5D0 \uC9C0\uCE5C \uC0AC\uB78C\uB4E4\uB9CC \uB208\uC5D0 \uB748\uB2E4."
+  ];
+  var LOC_ARRIVAL_DEPRESSED_BANK = [
+    "{icon} {loc}\uC5D0 \uB4E4\uC5B4\uC120\uB2E4. \uAC70\uB9AC\uB294 \uD55C\uC0B0\uD558\uACE0 \uC0C1\uC810 \uBB38\uC740 \uB300\uBD80\uBD84 \uB2EB\uD600 \uC788\uB2E4 \u2014 \uC774 \uB9C8\uC744 \uD615\uD3B8\uC774 \uADF8\uB9AC \uC88B\uC9C0 \uC54A\uC740 \uB4EF\uD558\uB2E4.",
+    "{icon} {loc}\uC758 \uBD84\uC704\uAE30\uB294 \uAC00\uB77C\uC549\uC544 \uC788\uB2E4. \uC624\uAC00\uB294 \uC0AC\uB78C\uB3C4, \uD314\uB824\uB294 \uBB3C\uAC74\uB3C4 \uB208\uC5D0 \uB744\uAC8C \uC801\uB2E4.",
+    "{icon} {loc}\uC5D0 \uB3C4\uCC29\uD588\uC9C0\uB9CC \uBC18\uACA8\uC8FC\uB294 \uD65C\uAE30\uB294 \uC5C6\uB2E4. \uCE68\uCCB4\uB41C \uAC70\uB9AC\uAC00 \uADF8\uB300\uB85C \uB4DC\uB7EC\uB09C\uB2E4."
+  ];
   function _isLocArrivalMsg(text) {
     return typeof text === "string" && text.includes("\uC5D0 \uB3C4\uCC29\uD574 \uC8FC\uBCC0\uC744 \uB458\uB7EC\uBCF8\uB2E4");
   }
@@ -86262,7 +86277,16 @@ ${lines.join("\n")}
       prose = learned || identityFrag + _fillTargetSlots(tpl, target);
     } else if (!learned && _isLocArrivalMsg(lastUserMsg?.content)) {
       const loc = typeof loadCurrentLocation === "function" ? loadCurrentLocation() : null;
-      const tpl = LOC_ARRIVAL_BANK[Math.floor(Math.random() * LOC_ARRIVAL_BANK.length)];
+      let arrivalBank = LOC_ARRIVAL_BANK;
+      try {
+        const raid = loc?.id && typeof loadRaidState === "function" ? loadRaidState()[loc.id] : null;
+        const econ = loc?.id && typeof getLocationEconomySummary === "function" ? getLocationEconomySummary(loc.id) : null;
+        if (raid && raid.state === "threatened") arrivalBank = LOC_ARRIVAL_THREATENED_BANK;
+        else if (raid && raid.state === "resolved" && (raid.outcome === "damaged" || raid.outcome === "destroyed")) arrivalBank = LOC_ARRIVAL_DAMAGED_BANK;
+        else if (econ && (econ.prosLabel === "\uD53C\uD3D0" || econ.prosLabel === "\uCE68\uCCB4")) arrivalBank = LOC_ARRIVAL_DEPRESSED_BANK;
+      } catch (e) {
+      }
+      const tpl = arrivalBank[Math.floor(Math.random() * arrivalBank.length)];
       prose = identityFrag + tpl.replace(/\{icon\}/g, loc?.icon || "\u{1F4CD}").replace(/\{loc\}/g, loc?.name || "\uB0AF\uC120 \uACF3");
     } else {
       prose = learned || identityFrag + TURN_CASUAL_BANK[Math.floor(Math.random() * TURN_CASUAL_BANK.length)];
@@ -131381,14 +131405,14 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
   }
   window.buildField = buildField;
   var SETTLEMENT_RAID_KEY = "tf-settlement-raids";
-  function loadRaidState() {
+  function loadRaidState2() {
     try {
       return JSON.parse(lsGet(SETTLEMENT_RAID_KEY) || "{}") || {};
     } catch (e) {
       return {};
     }
   }
-  window.loadRaidState = loadRaidState;
+  window.loadRaidState = loadRaidState2;
   function saveRaidState(d) {
     try {
       lsSet(SETTLEMENT_RAID_KEY, JSON.stringify(d));
@@ -131478,7 +131502,7 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
   }
   function syncRaidPacksForScreen(screen, loc) {
     if (!loc || !isRaidVulnerable(loc)) return;
-    const rec = loadRaidState()[loc.id];
+    const rec = loadRaidState2()[loc.id];
     const hasRaiders = screen.packs.some((p) => p.isRaider);
     if (rec && rec.state === "threatened") {
       if (!hasRaiders) spawnRaidersOnScreen(screen, loc, rec);
@@ -131529,7 +131553,7 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
     }
   }
   function finalizeLiveRaidDefense(locId, bySelf = false) {
-    const st = loadRaidState();
+    const st = loadRaidState2();
     const rec = st[locId];
     if (!rec || rec.state !== "threatened") return false;
     const now = Date.now();
@@ -131548,7 +131572,7 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
       try {
         const locs = getAllLandLocations().filter(isRaidVulnerable);
         if (!locs.length) return;
-        const st = loadRaidState();
+        const st = loadRaidState2();
         let changed = false;
         for (const loc of locs) {
           const ev = advanceRaidIfDue(loc, st, Date.now());
@@ -132073,7 +132097,7 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
   }
   function _fmtLocEconLine(z) {
     if (!z || !SETTLEMENT_TYPES.has(z.type)) return "";
-    const sum = getLocationEconomySummary(z.id);
+    const sum = getLocationEconomySummary2(z.id);
     if (!sum) return "";
     const prosColor = sum.prosperity >= 75 ? "#8fd06a" : sum.prosperity >= 50 ? "#c8a96e" : sum.prosperity >= 25 ? "#d0a060" : "#c0503a";
     const repColor = sum.reputation >= 50 ? "#8fd06a" : sum.reputation >= 15 ? "#c8a96e" : sum.reputation >= -14 ? "#948a6f" : "#c0503a";
@@ -132211,7 +132235,7 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
     RT._prevNodeId = nodeId;
     if (screen.node.kind === "location") {
       saveCurrentLocation(screen.node.loc);
-      const raidRec = isRaidVulnerable(screen.node.loc) ? loadRaidState()[screen.node.loc.id] : null;
+      const raidRec = isRaidVulnerable(screen.node.loc) ? loadRaidState2()[screen.node.loc.id] : null;
       if (raidRec && raidRec.state === "threatened") {
         showFieldToast(`\u{1F525} ${screen.node.loc.name}\uC774(\uAC00) \uC2B5\uACA9\uB2F9\uD558\uACE0 \uC788\uB2E4! \uACBD\uBE44\uBCD1\uB4E4\uACFC \uD568\uAED8 \uB9C9\uC544\uB0B4\uC57C \uD55C\uB2E4`);
       } else {
@@ -132521,7 +132545,7 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
     return { nodeId: RT.screen.nodeId, kind: RT.screen.node.kind };
   };
   window.__tfDebugForceRaidStart = function(locId) {
-    const st = loadRaidState();
+    const st = loadRaidState2();
     const now = Date.now();
     st[locId] = { state: "threatened", threatenedAt: now, resolveAt: now + RAID_THREAT_MS, raiderCount: 3, nextEligibleAt: now };
     saveRaidState(st);
@@ -132534,7 +132558,7 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
     const locs = typeof getAllLandLocations === "function" ? getAllLandLocations() : [];
     const loc = locs.find((l) => l.id === locId);
     if (!loc) return false;
-    const st = loadRaidState();
+    const st = loadRaidState2();
     const rec = st[locId];
     if (!rec) return false;
     rec.resolveAt = Date.now() - 1;
@@ -132544,7 +132568,7 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
     return ev;
   };
   window.__tfDebugRaidState = function(locId) {
-    return loadRaidState()[locId] || null;
+    return loadRaidState2()[locId] || null;
   };
 
   // src/main.js

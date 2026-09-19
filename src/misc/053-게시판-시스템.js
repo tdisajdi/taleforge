@@ -4,7 +4,7 @@ import { startAIDungeonExplore } from '../combat/257-renderMiniMap-던전-미니
 import { BULLETIN_INFO_POOL, BULLETIN_QUEST_POOL, BULLETIN_SIZE_CONFIG, LOC_NPC_POOL, SCENARIO_NPC_EXTRA } from '../data/053-게시판-시스템.js';
 import { MATERIALS } from '../data/075-파트2-C-크래프팅-시스템.js';
 import { S } from '../data/084-TaleForge-순수-JS-엔진.js';
-import { calcTameSuccessChance, loadHunterTameLog, loadHunterTrophies, saveHunterTameLog, saveHunterTrophies } from '../economy/255-상인-거래소-교역-지부-확장.js';
+import { calcTameSuccessChance, getAllLandLocations, getLocationCoord, loadHunterTameLog, loadHunterTrophies, saveHunterTameLog, saveHunterTrophies } from '../economy/255-상인-거래소-교역-지부-확장.js';
 import { getOrCreateEnemyMaterials, rollDynamicScavenge, rollEventReward, saveGold, saveInventory } from '../items/007-동적-아이템-생성-시스템-무제한-영구-캐시.js';
 import { saveSkillSP } from '../job/002-스킬-시스템.js';
 import { loadPlayerLevel } from '../job/008-클리어-보상-시스템-시나리오-클리어-시-영구-아이템스킬.js';
@@ -21,6 +21,31 @@ import { enqueueAITask } from '../world/085-대륙-스타팅-시스템.js';
 import { loadBulletin, loadNPCs, loadQuests, saveBulletin, saveNPCs, saveQuests, saveSession } from './001-block0-preamble.js';
 import { getPlayerMaxHp, getPlayerMaxMp, loadLocations, loadParty, openTransportPanel, saveLocations, saveParty, updateReputation } from './054-이동수단-시스템.js';
 import { loadMaterials, saveMaterials } from './075-파트2-C-크래프팅-시스템.js';
+
+// [19번 라운드, [대기] #15 — 퀘스트 위치 표시, 새 시스템] 사용자 확정
+// 지시("기워붙이지 말고 새 시스템을 만들자"): 의뢰 텍스트에서 장소
+// 이름을 추측하는 방식(문자열 매칭)은 쓰지 않는다 — 대신 실제 좌표
+// 데이터(getLocationCoord, 이미 월드맵이 쓰는 진짜 지리 정보)만으로
+// "게시판이 있는 장소에서 가까운 실제 장소" 중 하나를 시드 기반으로
+// 결정론적으로 고른다. 같은 uid(의뢰 고유 ID)는 항상 같은 장소를
+// 가리킨다 — AI 호출 없이 재현 가능하고, 게시판 자체가 이미 쓰고
+// 있는 seededRand와 같은 성격의 결정론적 해시.
+function pickQuestTargetLocation(boardLoc, seedStr){
+  try{
+    const all = (typeof getAllLandLocations==='function') ? getAllLandLocations() : [];
+    const candidates = all.filter(l=>l.continent===boardLoc.continent && l.id!==boardLoc.id);
+    if(!candidates.length) return null;
+    const bc = (typeof getLocationCoord==='function') ? getLocationCoord(boardLoc) : null;
+    const withDist = candidates.map(l=>{
+      const c = (typeof getLocationCoord==='function') ? getLocationCoord(l) : null;
+      const d = (bc && c) ? Math.hypot(bc.x-c.x, bc.y-c.y) : Number.MAX_SAFE_INTEGER;
+      return { l, d };
+    }).sort((a,b)=>a.d-b.d).slice(0, 6); // 가장 가까운 6곳 중에서만 고른다 — "인근"이라는 의뢰 서술과 실제로 맞아떨어지게
+    let h = 0; for(let i=0;i<seedStr.length;i++) h = (Math.imul(31,h)+seedStr.charCodeAt(i))|0;
+    const idx = Math.abs(h) % withDist.length;
+    return withDist[idx].l;
+  }catch(e){ return null; }
+}
 
 export function generateBulletinData(loc) {
   const cfg = BULLETIN_SIZE_CONFIG[loc.type] || BULLETIN_SIZE_CONFIG.village;
@@ -51,7 +76,9 @@ export function generateBulletinData(loc) {
     usedQ.add(idx);
     const q = eligibleQuests[idx];
     const rewardGold = q.rewardMin + Math.floor(seededRand(seed, 200+i) * (q.rewardMax - q.rewardMin));
-    pickedQuests.push({ ...q, rewardGold, uid: locId+'_q_'+i });
+    const uid = locId+'_q_'+i;
+    const target = pickQuestTargetLocation(loc, uid);
+    pickedQuests.push({ ...q, rewardGold, uid, targetLocationId: target?.id||null, targetLocationName: target?.name||null, targetLocationIcon: target?.icon||null });
   }
 
   // 정보글: 장소 규모에 따라 희귀 정보 확률 다름
@@ -82,6 +109,19 @@ export const ACCEPTED_BULLETIN_KEY = 'taleforge-bulletin-accepted';
 export const loadAcceptedBulletin = () => { try{ return JSON.parse(lsGet(ACCEPTED_BULLETIN_KEY)||'[]'); }catch(e){ return []; } };
 
 export const saveAcceptedBulletin = (d) => { try{ lsSet(ACCEPTED_BULLETIN_KEY, JSON.stringify(d)); }catch(e){} };
+
+// [19번 라운드, [대기] #15 — 새 시스템] 아직 완료 안 된 수락 의뢰들의
+// 실제 목표 장소 목록. 월드맵(economy/255)과 실시간 필드(world/320)가
+// 둘 다 이 함수 하나만 읽어서 마커를 그린다 — 두 곳에서 각자 다른
+// 방식으로 "장소 추측"을 하지 않도록 단일 진실 공급원으로 둔다.
+export function getActiveBulletinQuestTargets(){
+  try{
+    return loadAcceptedBulletin()
+      .filter(a=>!a.completed && a.targetLocationId)
+      .map(a=>({ locationId:a.targetLocationId, name:a.targetLocationName, icon:a.targetLocationIcon, questTitle:a.title }));
+  }catch(e){ return []; }
+}
+window.getActiveBulletinQuestTargets = getActiveBulletinQuestTargets;
 
 export function manualCompleteBulletin(uid, title, rewardGold, icon, tier){
   // [A-4 FIX] 수락하지 않은 의뢰는 완료 처리 불가
@@ -869,6 +909,7 @@ function renderBulletinBoard(loc) {
                 <span style="font-size:8px;color:${tc};background:${tc}22;padding:1px 5px;border-radius:1px">${tierLabel[q.tier]||q.tier}</span>
               </div>
               <div style="font-size:10px;color:var(--dim);line-height:1.5;margin-bottom:5px">${esc(q.desc)}</div>
+              ${q.targetLocationName?`<div style="font-size:9px;color:#8fb0c8;margin-bottom:5px">📍 예상 현장: ${esc(q.targetLocationIcon||'')} ${esc(q.targetLocationName)}</div>`:''}
               <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
                 <span style="font-size:10px;color:#f1c40f">💰 보상: ${q.rewardGold}G</span>
                 ${q.rewardExtra?`<span style="font-size:9px;color:#80c080">✦ ${esc(q.rewardExtra)}</span>`:''}
@@ -958,8 +999,25 @@ function acceptBulletinQuest(uid, title, rewardGold, icon, desc, tier) {
       };
       quests.push(newQ);
       saveQuests(quests);
+      // [19번 라운드, [대기] #15 — 새 시스템] generateBulletinData가 이미
+      // 결정론적으로 골라둔 targetLocationId를, 지금 게시판에 캐시된
+      // 원본 데이터에서 uid로 다시 찾아 수락 기록에도 옮겨 적는다 —
+      // 이걸로 "수락한 의뢰"가 실제 구조화된 장소 참조를 갖게 된다
+      // (기존엔 {uid,title,rewardGold,acceptedAt}뿐이라 장소 정보가
+      // 전혀 없었다).
+      let targetLocationId=null, targetLocationName=null, targetLocationIcon=null;
+      try{
+        const loc0 = window.currentLocation || loadCurrentLocation();
+        if(loc0){
+          const locId0 = loc0.id || loc0.name;
+          const cacheKey0 = locId0 + '_' + Math.floor(Date.now() / (1000*60*60*6));
+          const bulletinCache = loadBulletin();
+          const qInfo = bulletinCache[cacheKey0]?.quests?.find(x=>x.uid===uid);
+          if(qInfo){ targetLocationId=qInfo.targetLocationId; targetLocationName=qInfo.targetLocationName; targetLocationIcon=qInfo.targetLocationIcon; }
+        }
+      }catch(e){}
       // 수락 목록에 추가
-      accepted2.push({ uid, title, rewardGold, acceptedAt: Date.now() });
+      accepted2.push({ uid, title, rewardGold, acceptedAt: Date.now(), targetLocationId, targetLocationName, targetLocationIcon });
       saveAcceptedBulletin(accepted2);
       toast(`📋 의뢰 수락: ${title} (보상 ${rewardGold}G)`, 2500);
       // 연관 장소 생성

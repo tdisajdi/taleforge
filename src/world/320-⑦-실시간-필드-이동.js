@@ -1527,7 +1527,19 @@ function enterScreen(nodeId, fromNodeId){
     } else {
       showFieldToast(`📍 ${screen.node.loc.name}`);
     }
+    // [19번 라운드, [대기] #15 — 퀘스트 위치 표시, 새 시스템] misc/053이
+    // 결정론적으로 골라둔(텍스트 추측 아님) 수락 의뢰의 실제 목표 장소와
+    // 지금 도착한 화면이 같은 장소면, 도착 토스트에 이어서(16번 섹션과
+    // 같은 겹침 방지 패턴 — 3.2초 지연) 알려준다. RT.currentQuestTargetHere는
+    // renderFieldCanvas의 HUD가 매 프레임 참고한다.
+    try{
+      const targets = (typeof window.getActiveBulletinQuestTargets==='function') ? window.getActiveBulletinQuestTargets() : [];
+      const hit = targets.find(t=>t.locationId===screen.node.loc.id);
+      RT.currentQuestTargetHere = hit || null;
+      if(hit) setTimeout(()=>showFieldToast(`❗ 의뢰 목표 지점: ${hit.questTitle}`), 3200);
+    }catch(e){ RT.currentQuestTargetHere = null; }
   } else {
+    RT.currentQuestTargetHere = null; // 정착지 화면을 벗어났으니 HUD 표시도 같이 지운다
     const forkNote = screen.exits.length>=3 ? ' — 여러 갈래로 길이 나뉩니다' : '';
     showFieldToast((screen.biome==='mountain'?'⛰️ 산길':screen.biome==='forest'?'🌲 숲길':screen.isWaterScreen?'🌊 물길':'🌾 들길')+forkNote);
   }
@@ -1758,7 +1770,10 @@ function renderFieldCanvas(){
   if(tc.icon && RT.transportType!=='walk'){ ctx.font='13px serif'; ctx.textAlign='left'; ctx.fillText(tc.icon, ppx+8, ppy-8); ctx.textAlign='center'; }
 
   const hud = document.getElementById('tf-field-hud');
-  if(hud) hud.textContent = `${tc.icon} ${tc.name} · HP ${Math.max(0,Math.round(S.stats?.hp||0))}/${getPlayerMaxHp()}`;
+  if(hud){
+    const questTag = RT.currentQuestTargetHere ? ` · ❗의뢰 목표` : '';
+    hud.textContent = `${tc.icon} ${tc.name} · HP ${Math.max(0,Math.round(S.stats?.hp||0))}/${getPlayerMaxHp()}${questTag}`;
+  }
 }
 
 // ── 패널 렌더(진입점) ──

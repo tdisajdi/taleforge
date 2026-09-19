@@ -2165,8 +2165,18 @@ export function renderLandMapSVG(){
       m.labelY = y;
     });
 
+  // [19번 라운드, [대기] #15 — 퀘스트 위치 표시, 새 시스템] misc/053이
+  // 관리하는 "수락됐지만 아직 안 끝난 게시판 의뢰의 실제 목표 장소"
+  // 목록을 읽어, 그 장소의 마커에 ❗ 배지를 얹는다. 텍스트 추측이
+  // 아니라 misc/053에서 실제 좌표 데이터로 결정론적으로 고른
+  // targetLocationId를 그대로 신뢰한다.
+  const questTargetIds = new Set(
+    (typeof window.getActiveBulletinQuestTargets==='function' ? window.getActiveBulletinQuestTargets() : [])
+      .map(q=>q.locationId)
+  );
   markerList.forEach(m=>{
     const { loc, c, isCurrent, isDungeon, dTier, color, baseSize, shapePath, labelText, fontSize, labelY } = m;
+    const hasQuestTarget = questTargetIds.has(loc.id);
     // [버그 수정] world/315(대륙 정치 지도)·combat/257(던전 미니맵)·
     // npc/226(관계도)은 전부 PIXEL_ART_MANIFEST에서 이 장소의 도트 그림을
     // 찾아 마커 안에 깔아주는데, 이 지도(월드맵)만 그 로직이 빠진 채
@@ -2203,6 +2213,7 @@ export function renderLandMapSVG(){
         ? '' /* [8-20] "링도 정신사나워" — 도트 그림 둘레의 색 테두리 링도 뺐다. 클릭 영역은 위의 배경 채움 원(opacity 0.15)이 그대로 담당. */
         : `<circle cx="${c.x}" cy="${c.y}" r="${baseSize*0.55}" fill="${color}" stroke="${color}" stroke-width="${1*k}" opacity="0.9"/>`}
       ${isCurrent?`<circle cx="${c.x}" cy="${c.y}" r="${baseSize*0.95}" fill="none" stroke="${color}" stroke-width="${1*k}"><animate attributeName="r" values="${baseSize*0.8};${baseSize*1.15};${baseSize*0.8}" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.9;0.3;0.9" dur="2s" repeatCount="indefinite"/></circle>`:''}
+      ${hasQuestTarget?`<text x="${c.x+baseSize*0.7}" y="${c.y-baseSize*0.6}" font-size="${13*k}" text-anchor="middle">❗</text>`:''}
       <rect x="${c.x-labelText.length*fontSize*0.5-1.5*k}" y="${labelY-fontSize*0.85}" width="${labelText.length*fontSize+3*k}" height="${fontSize*1.15}" fill="#050a05" opacity="0.5" rx="${2*k}"/>
       <text x="${c.x}" y="${labelY}" font-size="${fontSize}" fill="${color}" text-anchor="middle" style="font-family:'Cinzel',serif">${esc(labelText)}</text>
     </g>`;

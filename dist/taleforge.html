@@ -40494,6 +40494,25 @@ ${lines.join("\n")}
   window._drainQueue = _drainQueue;
 
   // src/misc/053-게시판-시스템.js
+  function pickQuestTargetLocation(boardLoc, seedStr) {
+    try {
+      const all = typeof getAllLandLocations === "function" ? getAllLandLocations() : [];
+      const candidates = all.filter((l) => l.continent === boardLoc.continent && l.id !== boardLoc.id);
+      if (!candidates.length) return null;
+      const bc = typeof getLocationCoord === "function" ? getLocationCoord(boardLoc) : null;
+      const withDist = candidates.map((l) => {
+        const c = typeof getLocationCoord === "function" ? getLocationCoord(l) : null;
+        const d = bc && c ? Math.hypot(bc.x - c.x, bc.y - c.y) : Number.MAX_SAFE_INTEGER;
+        return { l, d };
+      }).sort((a, b) => a.d - b.d).slice(0, 6);
+      let h = 0;
+      for (let i = 0; i < seedStr.length; i++) h = Math.imul(31, h) + seedStr.charCodeAt(i) | 0;
+      const idx = Math.abs(h) % withDist.length;
+      return withDist[idx].l;
+    } catch (e) {
+      return null;
+    }
+  }
   function generateBulletinData(loc) {
     const cfg = BULLETIN_SIZE_CONFIG[loc.type] || BULLETIN_SIZE_CONFIG.village;
     const locId = loc.id || loc.name;
@@ -40519,7 +40538,9 @@ ${lines.join("\n")}
       usedQ.add(idx);
       const q = eligibleQuests[idx];
       const rewardGold = q.rewardMin + Math.floor(seededRand(seed, 200 + i) * (q.rewardMax - q.rewardMin));
-      pickedQuests.push({ ...q, rewardGold, uid: locId + "_q_" + i });
+      const uid = locId + "_q_" + i;
+      const target = pickQuestTargetLocation(loc, uid);
+      pickedQuests.push({ ...q, rewardGold, uid, targetLocationId: target?.id || null, targetLocationName: target?.name || null, targetLocationIcon: target?.icon || null });
     }
     const specialChance = loc.type === "capital" ? 0.55 : loc.type === "city" ? 0.35 : loc.type === "town" ? 0.22 : loc.type === "village" ? 0.12 : 0.05;
     const usefulChance = loc.type === "capital" ? 0.4 : loc.type === "city" ? 0.45 : loc.type === "town" ? 0.4 : loc.type === "village" ? 0.35 : 0.25;
@@ -40558,6 +40579,14 @@ ${lines.join("\n")}
     } catch (e) {
     }
   };
+  function getActiveBulletinQuestTargets() {
+    try {
+      return loadAcceptedBulletin().filter((a) => !a.completed && a.targetLocationId).map((a) => ({ locationId: a.targetLocationId, name: a.targetLocationName, icon: a.targetLocationIcon, questTitle: a.title }));
+    } catch (e) {
+      return [];
+    }
+  }
+  window.getActiveBulletinQuestTargets = getActiveBulletinQuestTargets;
   function manualCompleteBulletin(uid, title, rewardGold, icon, tier) {
     const accepted = loadAcceptedBulletin();
     const acc = accepted.find((a) => a.uid === uid);
@@ -41512,6 +41541,7 @@ ${lines.join("\n")}
                 <span style="font-size:8px;color:${tc};background:${tc}22;padding:1px 5px;border-radius:1px">${tierLabel[q.tier] || q.tier}</span>
               </div>
               <div style="font-size:10px;color:var(--dim);line-height:1.5;margin-bottom:5px">${esc2(q.desc)}</div>
+              ${q.targetLocationName ? `<div style="font-size:9px;color:#8fb0c8;margin-bottom:5px">\u{1F4CD} \uC608\uC0C1 \uD604\uC7A5: ${esc2(q.targetLocationIcon || "")} ${esc2(q.targetLocationName)}</div>` : ""}
               <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
                 <span style="font-size:10px;color:#f1c40f">\u{1F4B0} \uBCF4\uC0C1: ${q.rewardGold}G</span>
                 ${q.rewardExtra ? `<span style="font-size:9px;color:#80c080">\u2726 ${esc2(q.rewardExtra)}</span>` : ""}
@@ -41591,7 +41621,23 @@ ${lines.join("\n")}
           };
           quests.push(newQ);
           saveQuests(quests);
-          accepted2.push({ uid, title, rewardGold, acceptedAt: Date.now() });
+          let targetLocationId = null, targetLocationName = null, targetLocationIcon = null;
+          try {
+            const loc0 = window.currentLocation || loadCurrentLocation();
+            if (loc0) {
+              const locId0 = loc0.id || loc0.name;
+              const cacheKey0 = locId0 + "_" + Math.floor(Date.now() / (1e3 * 60 * 60 * 6));
+              const bulletinCache = loadBulletin();
+              const qInfo = bulletinCache[cacheKey0]?.quests?.find((x) => x.uid === uid);
+              if (qInfo) {
+                targetLocationId = qInfo.targetLocationId;
+                targetLocationName = qInfo.targetLocationName;
+                targetLocationIcon = qInfo.targetLocationIcon;
+              }
+            }
+          } catch (e) {
+          }
+          accepted2.push({ uid, title, rewardGold, acceptedAt: Date.now(), targetLocationId, targetLocationName, targetLocationIcon });
           saveAcceptedBulletin(accepted2);
           toast(`\u{1F4CB} \uC758\uB8B0 \uC218\uB77D: ${title} (\uBCF4\uC0C1 ${rewardGold}G)`, 2500);
           if (typeof maybeGenerateQuestLocation === "function")
@@ -47413,8 +47459,12 @@ ${lines.join("\n")}
         placedLabels.push({ ownerIdx: m._idx, ...box });
         m.labelY = y;
       });
+      const questTargetIds = new Set(
+        (typeof window.getActiveBulletinQuestTargets === "function" ? window.getActiveBulletinQuestTargets() : []).map((q) => q.locationId)
+      );
       markerList.forEach((m) => {
         const { loc, c, isCurrent, isDungeon, dTier, color, baseSize, shapePath, labelText, fontSize, labelY } = m;
+        const hasQuestTarget = questTargetIds.has(loc.id);
         const manifestHit = typeof window !== "undefined" && window.PIXEL_ART_MANIFEST ? window.PIXEL_ART_MANIFEST.byId[loc.id] || loc.name && window.PIXEL_ART_MANIFEST.byName[loc.name] : null;
         let iconImg = "";
         if (manifestHit) {
@@ -47429,6 +47479,7 @@ ${lines.join("\n")}
       ${isDungeon && dTier >= 4 ? `<circle cx="${c.x}" cy="${c.y}" r="${baseSize * 1.15}" fill="none" stroke="${color}" stroke-width="${0.8 * k}" opacity="0.4"/>` : ""}
       ${manifestHit ? "" : `<circle cx="${c.x}" cy="${c.y}" r="${baseSize * 0.55}" fill="${color}" stroke="${color}" stroke-width="${1 * k}" opacity="0.9"/>`}
       ${isCurrent ? `<circle cx="${c.x}" cy="${c.y}" r="${baseSize * 0.95}" fill="none" stroke="${color}" stroke-width="${1 * k}"><animate attributeName="r" values="${baseSize * 0.8};${baseSize * 1.15};${baseSize * 0.8}" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.9;0.3;0.9" dur="2s" repeatCount="indefinite"/></circle>` : ""}
+      ${hasQuestTarget ? `<text x="${c.x + baseSize * 0.7}" y="${c.y - baseSize * 0.6}" font-size="${13 * k}" text-anchor="middle">\u2757</text>` : ""}
       <rect x="${c.x - labelText.length * fontSize * 0.5 - 1.5 * k}" y="${labelY - fontSize * 0.85}" width="${labelText.length * fontSize + 3 * k}" height="${fontSize * 1.15}" fill="#050a05" opacity="0.5" rx="${2 * k}"/>
       <text x="${c.x}" y="${labelY}" font-size="${fontSize}" fill="${color}" text-anchor="middle" style="font-family:'Cinzel',serif">${esc2(labelText)}</text>
     </g>`;
@@ -132422,7 +132473,16 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
       } else {
         showFieldToast(`\u{1F4CD} ${screen.node.loc.name}`);
       }
+      try {
+        const targets = typeof window.getActiveBulletinQuestTargets === "function" ? window.getActiveBulletinQuestTargets() : [];
+        const hit = targets.find((t) => t.locationId === screen.node.loc.id);
+        RT.currentQuestTargetHere = hit || null;
+        if (hit) setTimeout(() => showFieldToast(`\u2757 \uC758\uB8B0 \uBAA9\uD45C \uC9C0\uC810: ${hit.questTitle}`), 3200);
+      } catch (e) {
+        RT.currentQuestTargetHere = null;
+      }
     } else {
+      RT.currentQuestTargetHere = null;
       const forkNote = screen.exits.length >= 3 ? " \u2014 \uC5EC\uB7EC \uAC08\uB798\uB85C \uAE38\uC774 \uB098\uB269\uB2C8\uB2E4" : "";
       showFieldToast((screen.biome === "mountain" ? "\u26F0\uFE0F \uC0B0\uAE38" : screen.biome === "forest" ? "\u{1F332} \uC232\uAE38" : screen.isWaterScreen ? "\u{1F30A} \uBB3C\uAE38" : "\u{1F33E} \uB4E4\uAE38") + forkNote);
     }
@@ -132670,7 +132730,10 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
       ctx.textAlign = "center";
     }
     const hud = document.getElementById("tf-field-hud");
-    if (hud) hud.textContent = `${tc.icon} ${tc.name} \xB7 HP ${Math.max(0, Math.round(S.stats?.hp || 0))}/${getPlayerMaxHp()}`;
+    if (hud) {
+      const questTag = RT.currentQuestTargetHere ? ` \xB7 \u2757\uC758\uB8B0 \uBAA9\uD45C` : "";
+      hud.textContent = `${tc.icon} ${tc.name} \xB7 HP ${Math.max(0, Math.round(S.stats?.hp || 0))}/${getPlayerMaxHp()}${questTag}`;
+    }
   }
   function renderFieldPanel2() {
     const body = document.getElementById("pb-fieldmove");

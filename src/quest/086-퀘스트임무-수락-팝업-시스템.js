@@ -34,7 +34,7 @@ import { clearSkillSP, clearSkills, loadSkills, saveSkillSP, saveSkills } from '
 import { clearPlayerLevel, loadPlayerLevel } from '../job/008-클리어-보상-시스템-시나리오-클리어-시-영구-아이템스킬.js';
 import { clearMemory, clearSecrets, clearSkillEnhance, getSkillEnhanceCost, getSkillEnhanceDesc, getSkillEnhanceLevel, getStatInfo, loadHighlights, loadMemory, loadTitles, saveHighlights, saveMemory } from '../job/010-스킬-강화-시스템.js';
 import { calcAffinityMod, clearAffinity, renderAffinityPanel } from '../job/035-NEW-직업-조합-시너지-시스템.js';
-import { MAIN_QUEST_KEY, WORLD_EVENT_KEY, checkMainQuests, checkSecretEndings, checkWorldEvents, discoverJob, getJobIdFromName, getNPCHero, loadMainQuestState, loadNPCHeroState, loadWorldEvents, renderJobPanel, saveJobToMemory, updateActionPattern } from '../job/042-직업-시스템-무한-파생-도감.js';
+import { MAIN_QUEST_KEY, WORLD_EVENT_KEY, checkMainQuests, checkSecretEndings, checkWorldEvents, completeMainQuest, discoverJob, getJobIdFromName, getNPCHero, loadMainQuestState, loadNPCHeroState, loadWorldEvents, renderJobPanel, saveJobToMemory, updateActionPattern } from '../job/042-직업-시스템-무한-파생-도감.js';
 import { applyPassiveEffects, processSkillBeforeSend } from '../job/071-파트1-A-스킬-실제-발동-시스템.js';
 import { checkBulletinQuestCompletion, checkDynQuestCompletion, generateAIQuest, recordLocationVisit, renderHighlights, renderInventory, renderQuests, renderShop, shouldAutoGenerateQuest } from '../job/087-전직-조건-저장로드-헬퍼-퀘스트아이템장소-등.js';
 import { renderSkillTreePanel } from '../job/195-NEW-2-스킬트리-시각화-UI-직업-계보-기반.js';
@@ -817,7 +817,15 @@ export function composeLocalTurnText(history, injectedContext){
   // 필드에 다녀와도 서사가 아무 일 없었다는 듯 이어졌었다(사용자 지적:
   // "사냥하고 마을 갔다왔는데 이어서 대화를 진행하는 게 맞아?"). 여기서
   // 소비 즉시 지워서 다음 턴부터는 평소대로 돌아간다.
-  if(!learned && S._pendingFieldReturnHint){
+  // [19번 라운드, mq16 진엔딩 분기] 결전 선택 팝업에서 방금 확정된
+  // 결과(죽였는지/살렸는지)를 다음 턴 서사가 곧바로 이어받게 한다 —
+  // S._pendingFieldReturnHint와 같은 패턴, 다만 이야기 비중상 그보다도
+  // 먼저 확인한다(둘이 동시에 남아있을 일은 실제로는 거의 없지만,
+  // 있다면 방금 확정된 결전 쪽이 우선).
+  if(!learned && S._pendingMq16ResolutionHint){
+    const mq16Hint = S._pendingMq16ResolutionHint; S._pendingMq16ResolutionHint = null;
+    prose = identityFrag + mq16Hint;
+  } else if(!learned && S._pendingFieldReturnHint){
     const fieldHint = S._pendingFieldReturnHint; S._pendingFieldReturnHint = null;
     prose = identityFrag + fieldHint;
   } else if(dice){
@@ -2033,6 +2041,20 @@ export async function sendMsg(userMsg, isChoice=false){
       S._fieldEntryWindowUntil = Date.now() + FIELD_ENTRY_WINDOW_MS;
     }
   }
+
+  // [19번 라운드, mq16 진엔딩 분기 — 새 시스템, 자가복구형 트리거] 16장이
+  // active인데 아직 완료 안 됐으면 매 턴 completeMainQuest('mq16')을
+  // 불러본다 — job/042의 completeMainQuest는 opts.resolved 없이 호출되면
+  // 곧장 완료 처리하지 않고 "결전 선택 팝업이 지금 떠 있는지"만 확인해서,
+  // 없으면 다시 띄운다(이미 떠 있으면 아무 일도 안 함, 이미 완료됐으면도
+  // 아무 일도 안 함 — 멱등). 이렇게 하면 AI가 q_done으로 16장 종료를
+  // 알려주든 말든(무-API 폴백 상태에서는 애초에 q_done 자체가 안 온다)
+  // 상관없이, 그리고 팝업이 새로고침으로 날아갔더라도, 이 턴 훅이 항상
+  // 스스로 복구해서 플레이어가 16장에서 영원히 멈추는 사고를 막는다.
+  try{
+    const _mqS = (typeof loadMainQuestState==='function') ? loadMainQuestState() : {};
+    if(_mqS['mq16']==='active' && typeof completeMainQuest==='function') completeMainQuest('mq16');
+  }catch(e){}
 
   // 10턴마다 또는 중요 PM 이벤트(배신·비밀) 발생 시 시스템 프롬프트 갱신
   if(S.msgCount%10===0||!S.system||window._pmSystemDirty){

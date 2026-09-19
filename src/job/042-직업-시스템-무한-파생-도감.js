@@ -1525,7 +1525,39 @@ export function checkMainQuests(){
 }
 window.checkMainQuests = checkMainQuests;
 
-export function completeMainQuest(questId){
+// [19번 라운드, [대기] mq16 진엔딩 분기 — 새 시스템, 사용자 확정 지시:
+// "심혈을 기울여야 한다"] 지금까지 이 챕터의 "죽였는가/살려뒀는가"
+// 판정(confronted_villain_unresolved 플래그)은 오직 AI가 자유서술
+// 대사·전투 묘사를 스스로 해석해서 <gs> 태그로 출력해줘야만 결정되는
+// 구조였다 — 이 게임에서 가장 중요한 분기점(진엔딩行 여부)이 AI의
+// 자유 판단 하나에 전부 걸려 있었다는 뜻. 이걸 없애기 위해, "16장이
+// 끝났다"는 판정 자체는 (기존처럼 AI의 q_done 판정에서 오든, 앞으로
+// 다른 경로에서 오든) 더 이상 곧바로 완료 처리하지 않는다 — 대신 여기서
+// 가로채서, 반드시 아래 showMq16ConfrontationChoice()의 하드코딩 선택
+// 팝업(둘 중 하나를 실제로 클릭해야만 진행되는 명시적 UI)을 띄운다.
+// 실제 죽였는지/살렸는지는 그 팝업의 버튼 클릭 하나로만 결정되고,
+// resolveMq16Confrontation()이 확정된 선택으로 completeMainQuest('mq16',
+// {resolved:true})를 다시 호출해야만 아래 본문(실제 분기 판정)이 실행된다
+// — opts.resolved가 없는 일반 호출은 이 가드에서 되돌아간다.
+export function completeMainQuest(questId, opts){
+  opts = opts || {};
+  if(questId === 'mq16' && !opts.resolved){
+    try{
+      const state0 = loadMainQuestState();
+      if(state0['mq16'] === 'complete') return;
+      // 팝업이 이미 화면에 떠 있으면 또 띄우지 않는다. 이 판단을 영구
+      // 저장 플래그가 아니라 실제 DOM 존재 여부로 하는 이유 — 팝업이
+      // 뜬 채로 새로고침하면 그 DOM은 사라지는데, 영구 플래그로
+      // 막아뒀다면 다시는 못 뜨고 16장에서 영원히 멈추는 사고가 난다.
+      // 대신 이 함수가(AI의 q_done이든, 아래 sendMsg 매 턴 자가복구
+      // 훅이든) 다시 불릴 때마다 "아직 결정 안 됨"이면 다시 띄워서
+      // 스스로 복구되게 한다.
+      if(!document.getElementById('mq16-confrontation-modal')){
+        showMq16ConfrontationChoice();
+      }
+    }catch(e){ console.warn('[mq16 결전 팝업 트리거 오류]', e); }
+    return;
+  }
   const state = loadMainQuestState();
   const sid = S.scenario?.id || 'custom';
   const quests = MAIN_QUESTS[sid] || MAIN_QUESTS.custom;
@@ -1640,6 +1672,72 @@ export function completeMainQuest(questId){
   }
 }
 window.completeMainQuest = completeMainQuest;
+
+// [19번 라운드, mq16 진엔딩 분기 — 새 시스템] 마왕(베엘제부브)과의
+// 결전을 "죽인다"/"살려서 물러난다" 둘 중 하나로 확정 짓는 하드코딩
+// 선택 팝업. 기존 팝업 시스템(quest/086의 showQuestAcceptPopup)은
+// template.html에 미리 박아둔 고정 DOM(#quest-accept-popup 등)에
+// 의존하는 구조라 "수락/거절" 의미로 이미 굳어 있어서, 의미가 전혀
+// 다른 "죽인다/살린다" 선택에 억지로 끼워 맞추면 그게 바로 사용자가
+// 거부한 "기워붙이기"가 된다 — 대신 이 파일의 showEnhancedEndingCutscene/
+// showLastSessionSummary와 같은 관례(모달 DOM을 그때그때 직접
+// 만들어서 body에 붙이는 방식)를 그대로 따라 독립된 모달을 새로 만든다.
+// 대사(npcHint)는 이미 data/042 MAIN_QUESTS.mq16에 작가가 직접 써둔
+// 것을 그대로 가져다 쓴다 — 새로 지어내거나 대충 요약하지 않는다.
+export function showMq16ConfrontationChoice(){
+  if(document.getElementById('mq16-confrontation-modal')) return;
+  const sid = S.scenario?.id || 'custom';
+  const quests = MAIN_QUESTS[sid] || MAIN_QUESTS.custom;
+  const q = quests.find(x=>x.id==='mq16');
+  const npcLine = q?.npcHint || '"인간이 여기까지 오다니. 그래서, 나를 어떻게 하고 싶은 것이냐?"';
+  const modal = document.createElement('div');
+  modal.id = 'mq16-confrontation-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:#000000dd;z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
+  modal.innerHTML = `<div style="background:#0d0800;border:2px solid #8a2020;padding:22px;max-width:420px;width:100%;max-height:85vh;overflow-y:auto;border-radius:3px;box-shadow:0 0 50px rgba(180,40,40,.35)">
+    <div style="text-align:center;margin-bottom:14px">
+      <div style="font-size:38px;margin-bottom:6px">👑</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#e0a060;margin-bottom:4px">최후의 결전 — 마왕 베엘제부브</div>
+      <div style="font-family:'Cinzel',serif;font-size:9px;color:var(--dim)">이 선택이 이야기의 결말을 가른다</div>
+    </div>
+    <div style="font-size:11px;color:#d8c8a8;line-height:1.7;margin-bottom:14px;padding:12px;background:#050300;border-left:2px solid #8a2020;border-radius:2px">${esc(npcLine)}</div>
+    <div style="font-size:10px;color:var(--dim);line-height:1.7;margin-bottom:18px">검을 들 것인가, 거둘 것인가 — 이 순간의 선택은 돌이킬 수 없다.</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <button onclick="resolveMq16Confrontation('kill')" style="padding:12px;background:linear-gradient(135deg,#2a0a0a,#3a1010);border:1px solid #8a2020;color:#e08080;font-family:'Cinzel',serif;font-size:11px;cursor:pointer;border-radius:2px;letter-spacing:.5px">⚔️ 마왕을 처단한다 — 이야기를 여기서 완결짓는다</button>
+      <button onclick="resolveMq16Confrontation('spare')" style="padding:12px;background:linear-gradient(135deg,#0a1a2a,#10243a);border:1px solid #2a5a8a;color:#80b0e0;font-family:'Cinzel',serif;font-size:11px;cursor:pointer;border-radius:2px;letter-spacing:.5px">🕊️ 검을 거두고 물러난다 — 결착을 보류한다</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+}
+window.showMq16ConfrontationChoice = showMq16ConfrontationChoice;
+
+// choice: 'kill'(처단, 표면 엔딩 확정) | 'spare'(보류, 학자+금서 조건
+// 충족 시에만 히든 루트로 이어질 가능성이 열림 — 나머지 분기 판정은
+// completeMainQuest 본문의 기존 로직을 그대로 재사용한다. 여기서는
+// "무엇을 골랐는가"만 실제 게임 상태(GS 플래그)에 정직하게 반영한다.
+export function resolveMq16Confrontation(choice){
+  const modal = document.getElementById('mq16-confrontation-modal');
+  if(modal) modal.remove();
+  try{
+    const gsF = (typeof loadGSFlags==='function') ? loadGSFlags() : {};
+    if(choice==='spare') gsF['confronted_villain_unresolved'] = true;
+    else delete gsF['confronted_villain_unresolved'];
+    if(typeof saveGSFlags==='function') saveGSFlags(gsF);
+  }catch(e){}
+  const narrText = choice==='kill'
+    ? '검이 마왕의 심장을 꿰뚫는다. 오랜 위협이 마침내 끝났다 — 승리의 순간이지만, 그 이상의 감흥은 없다. 이것으로 이 싸움은 완전히 끝났다.'
+    : '검을 거둔다. 마왕은 쓰러지지 않았다 — 그저 침묵할 뿐이다. "...현명한 선택인지는, 두고 볼 일이군." 낮은 목소리가 등 뒤로 따라온다.';
+  toast(choice==='kill' ? '⚔️ 마왕을 처단했다' : '🕊️ 결착을 보류하고 물러났다', 3200);
+  // [16번 라운드 #10과 같은 패턴 재사용] 다음 턴 서사(로컬 폴백이든
+  // AI든)가 방금 일어난 이 결정을 자연스럽게 이어받게 한다 —
+  // composeLocalTurnText는 S._pendingMq16ResolutionHint를 직접 읽고,
+  // AI 쪽은 S._nextInjectedContext(이미 여러 시스템이 공용으로 쓰는
+  // 프롬프트 주입 채널)로 같은 내용을 전달한다.
+  S._pendingMq16ResolutionHint = narrText;
+  S._nextInjectedContext = (S._nextInjectedContext||'') + '\n[방금 마왕과의 결전이 확정됨] ' + narrText;
+  if(typeof completeMainQuest==='function') completeMainQuest('mq16', {resolved:true});
+  if(typeof window.saveSession==='function') window.saveSession();
+}
+window.resolveMq16Confrontation = resolveMq16Confrontation;
 
 export function checkSecretEndings(){
   // ── 게임이 제대로 초기화됐는지 먼저 확인 ──

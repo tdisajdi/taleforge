@@ -35,7 +35,7 @@ import { S } from '../data/084-TaleForge-순수-JS-엔진.js';
 import { getAllLandLocations, getLocationCoord } from '../economy/255-상인-거래소-교역-지부-확장.js';
 import { CONTINENT_TERRAIN, CONTINENT_PROPER_NAME_ICON } from '../data/255-상인-거래소-교역-지부-확장.js';
 import { loadCurrentLocation, saveCurrentLocation, getLocationLevelBand } from './052-동대륙-추가-장소-4.js';
-import { getPlayerMaxHp, calcMonsterAttackDamage } from '../misc/054-이동수단-시스템.js';
+import { getPlayerMaxHp, calcMonsterAttackDamage, loadParty } from '../misc/054-이동수단-시스템.js';
 import { TRANSPORT_CONFIG } from '../data/054-이동수단-시스템.js';
 import { rollLoot } from '../items/007-동적-아이템-생성-시스템-무제한-영구-캐시.js';
 import { triggerLoopIfDead } from '../progression/220-18-회차루프-시스템.js';
@@ -382,6 +382,30 @@ export function buildScreen(graph, nodeId){
     // 시켰을 수 있어서, 캐시라고 습격대가 그대로 방치/잔류하면 안 된다.
     const cached = _screenCache.get(cacheKey);
     if(cached.node.kind==='location') syncRaidPacksForScreen(cached, cached.node.loc);
+    // [16번 라운드, [대기] #12] 이 화면을 쫓기며 떠났던 기록이 있으면,
+    // 실제 경과 시간을 확인해 포기 여부를 가른다. 이 화면이 그 사이
+    // 한 번도 안 열렸으면(캐시만 존재) 몬스터 AI 루프 자체가 안 돌아서
+    // state가 그때 그대로 얼어있다 — 그래서 여기서 딱 한 번, 재입장
+    // 시점에만 판정한다.
+    if(cached._pursuerLeftAt){
+      const elapsed = Date.now() - cached._pursuerLeftAt;
+      if(elapsed >= PURSUER_GIVE_UP_MS){
+        const stillChasing = cached.packs.filter(p=>p.state==='chasing' && !p.isGuard);
+        if(stillChasing.length){
+          stillChasing.forEach(p=>{ p.state='idle'; p.retargetIn=0; });
+          // [버그 수정, 검증 중 발견] enterScreen()이 바로 이어서 "📍 장소명"
+          // 도착 토스트를 showFieldToast로 띄우는데, showFieldToast는 큐 없이
+          // 그냥 덮어쓰는 구조라 여기서 먼저 띄운 안내가 화면에 뜨기도 전에
+          // 지워졌다. 도착 토스트가 먼저 3초짜리 자기 타이머를 다 쓰고
+          // 사라지길 기다렸다가 이어서 띄운다.
+          setTimeout(()=>showFieldToast(`💨 ${stillChasing.map(p=>p.name).join(', ')}이(가) 추격을 포기한 듯 자취를 감췄다`), 3200);
+        }
+        cached._pursuerLeftAt = null; cached._pursuerNames = null;
+      } else if(cached._pursuerNames?.length){
+        const names = cached._pursuerNames;
+        setTimeout(()=>showFieldToast(`⚠️ ${names.join(', ')}이(가) 아직 이 근처를 맴돌고 있을지 모른다`), 3200);
+      }
+    }
     return cached;
   }
   const node = graph.nodes.get(nodeId);
@@ -960,6 +984,12 @@ const MONSTER_FLEE_SPEED   = FIELD_BASE_SPEED * (1.8/1.15);  // 기존 1.8(겁�
 // 60fps 프레임 수로 환산한 배율(frameScale)을 이동 거리에 곱해서 실제 초당
 // 이동 속도가 프레임레이트와 무관하게 항상 같아지게 한다.
 const REF_FRAME_MS = 1000/60;
+// [16번 라운드, [대기] #12] 도망친 추격자 지속성 — 프로토타입/원래 게임
+// 어디에도 대응 값이 없어 이번에 새로 정한 상수(10번 섹션 습격 타이머와
+// 같은 성격의 판단). 습격 "threatened" 유지시간(60초)보다 조금 길게 —
+// 화면을 완전히 벗어나 도망친 추격자가 "바로 포기하지는 않되 영원히
+// 쫓아오지도 않는" 느낌을 노림.
+const PURSUER_GIVE_UP_MS = 120000;
 
 export function enterFieldMode(continentKey){
   const graph = buildKingdomGraph(continentKey);
@@ -989,6 +1019,11 @@ export function enterFieldMode(continentKey){
     keys: new Set(), touchDir:{x:0,y:0}, joyPointerId:null, joyOriginX:0, joyOriginY:0,
     currentZone: null, encounterActive:false, raf:null, lastTs: performance.now(),
     listeners: [], _prevNodeId: null,
+    // [16번 라운드, [대기] #13 착수] 플레이어 이동 궤적을 짧게 기록해서
+    // 파티원이 몇 프레임 뒤처져 "따라오는" 것처럼 보이게 한다(고전
+    // 스네이크식 팔로워) — 새 좌표 시스템을 안 만들고 이미 있는
+    // player.x/y 흐름만 관찰한다.
+    partyTrail: [],
   };
   attachInput();
   enterScreen(startNodeId, null);
@@ -1368,6 +1403,10 @@ function enterScreen(nodeId, fromNodeId){
   RT.player.x = Math.max(TILE, Math.min(screen.COLS*TILE-TILE, sc*TILE+TILE/2));
   RT.player.y = Math.max(TILE, Math.min(screen.ROWS*TILE-TILE, sr*TILE+TILE/2));
   RT._prevNodeId = nodeId;
+  // 화면이 바뀌면 궤적도 리셋 — 안 그러면 파티원이 이전 화면 쪽에서부터
+  // 이어진 직선으로 순간이동하듯 보인다. 새 화면 진입 지점으로 다시 채워
+  // 즉시 플레이어 옆에서 시작하게 한다.
+  RT.partyTrail = new Array(240).fill({x:RT.player.x, y:RT.player.y});
 
   if(screen.node.kind==='location'){
     // 화면 하나 자체가 곧 그 장소다 — 실제로 여기 도착한 것으로 게임의
@@ -1421,6 +1460,16 @@ function checkScreenTransition(){
     if(ex.crossing==='air-only' && !tc.isAir){
       showFieldToast('🏔️ 이 지름길은 하늘을 나는 탑승물만 지날 수 있습니다');
       return;
+    }
+    // [16번 라운드, [대기] #12] 지금 쫓기고 있는 채로 화면을 벗어나면,
+    // 이 화면(캐시에 그대로 남음)에 "몇 시 몇 분에 추격받다 벗어났는지"를
+    // 찍어둔다 — buildScreen()의 캐시 히트 분기가 이걸 보고 실제 경과
+    // 시간에 따라 "아직 쫓고 있음"(그대로 둠, 다시 마주칠 수 있음)과
+    // "포기함"(idle로 되돌림 + 안내)을 가른다.
+    const stillChasing = screen.packs.filter(p=>p.state==='chasing' && !p.isGuard);
+    if(stillChasing.length){
+      screen._pursuerLeftAt = Date.now();
+      screen._pursuerNames = stillChasing.map(p=>p.name);
     }
     enterScreen(ex.to, screen.nodeId);
     return;
@@ -1501,6 +1550,10 @@ function fieldLoop(){
     checkScreenTransition();
     checkSignpostProximity();
   }
+  if(RT){
+    RT.partyTrail.push({x:player.x, y:player.y});
+    if(RT.partyTrail.length>240) RT.partyTrail.shift();
+  }
 
   if(RT.screen===screen){ // checkScreenTransition이 화면을 안 바꿨을 때만 이 화면 기준으로 계속 진행
     updateMonsters(dt);
@@ -1569,6 +1622,26 @@ function renderFieldCanvas(){
     else if(m.state==='fleeing'){ ctx.font='11px sans-serif'; ctx.fillStyle='#8fb0c8'; ctx.fillText('💨', px, py-14); }
     if(m.wounded){ ctx.font='10px serif'; ctx.fillText('🩸', px+9, py-8); }
   }
+
+  // [16번 라운드, [대기] #13] 파티원 — 실제 전투 참가는 아직 안 함(아래
+  // 이유로 손 안 댐), 화면에 실제로 동행하며 따라오는 것만 우선 구현.
+  // startFieldBattle()의 resolveHit()가 "아군이 맞으면 무조건
+  // S.stats.hp에 덮어쓴다"는 전제로 짜여 있어서, 파티원을 그대로
+  // allies에 끼워넣으면 파티원이 맞았을 때 플레이어 실제 HP가 잘못
+  // 깎이는 버그가 생긴다 — 이건 전투 엔진 쪽을 같이 고쳐야 하는 별도
+  // 작업이라 이번엔 범위 밖으로 남긴다(작업메모장 참고).
+  try{
+    const party = (typeof loadParty==='function') ? (loadParty()||[]).filter(m=>m.alive!==false) : [];
+    const trail = RT.partyTrail||[];
+    party.slice(0,4).forEach((m,i)=>{
+      const back = Math.min(trail.length-1, (i+1)*40);
+      const pos = trail[trail.length-1-back] || trail[0];
+      if(!pos) return;
+      const fx=pos.x-camX, fy=pos.y-camY;
+      if(fx<-20||fx>VIEW_W+20||fy<-20||fy>VIEW_H+20) return;
+      ctx.font='15px serif'; ctx.fillText(m.icon||'🧑', fx, fy);
+    });
+  }catch(e){}
 
   const ppx=player.x-camX, ppy=player.y-camY;
   ctx.fillStyle = tc.isAir ? '#a0c8e0' : '#cda746';
@@ -1707,3 +1780,25 @@ window.__tfDebugForceRaidResolve = function(locId){
   return ev;
 };
 window.__tfDebugRaidState = function(locId){ return loadRaidState()[locId] || null; };
+
+// [16번 라운드, [대기] #12 검증 전용] 위 습격 디버그 훅과 같은 관례 —
+// 판정 로직 자체는 그대로 두고 "시각만 앞당겨서" 실제 경과 시간 조건을
+// 재현한다(우회 없음). 공격적 몬스터가 실제로 플레이어를 감지해
+// 자연스럽게 chasing 상태가 될 때까지 기다리는 건 화면마다 배치가
+// 달라 결정론적 재현이 어려워, 첫 팩을 강제로 chasing으로 만드는 것만
+// 디버그 전용으로 허용한다.
+window.__tfDebugForcePursuerChase = function(){
+  if(!RT || !RT.screen) return false;
+  const m = RT.screen.packs.find(p=>!p.isGuard);
+  if(!m) return false;
+  m.state = 'chasing';
+  return { name: m.name };
+};
+window.__tfDebugMarkPursuerLeft = function(msAgo){
+  if(!RT || !RT.screen) return false;
+  const stillChasing = RT.screen.packs.filter(p=>p.state==='chasing' && !p.isGuard);
+  if(!stillChasing.length) return false;
+  RT.screen._pursuerLeftAt = Date.now() - (msAgo||0);
+  RT.screen._pursuerNames = stillChasing.map(p=>p.name);
+  return { names: RT.screen._pursuerNames, leftAt: RT.screen._pursuerLeftAt };
+};

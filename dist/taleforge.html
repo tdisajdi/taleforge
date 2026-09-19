@@ -131313,6 +131313,24 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
     if (_screenCache.has(cacheKey)) {
       const cached = _screenCache.get(cacheKey);
       if (cached.node.kind === "location") syncRaidPacksForScreen(cached, cached.node.loc);
+      if (cached._pursuerLeftAt) {
+        const elapsed = Date.now() - cached._pursuerLeftAt;
+        if (elapsed >= PURSUER_GIVE_UP_MS) {
+          const stillChasing = cached.packs.filter((p) => p.state === "chasing" && !p.isGuard);
+          if (stillChasing.length) {
+            stillChasing.forEach((p) => {
+              p.state = "idle";
+              p.retargetIn = 0;
+            });
+            setTimeout(() => showFieldToast(`\u{1F4A8} ${stillChasing.map((p) => p.name).join(", ")}\uC774(\uAC00) \uCD94\uACA9\uC744 \uD3EC\uAE30\uD55C \uB4EF \uC790\uCDE8\uB97C \uAC10\uCDC4\uB2E4`), 3200);
+          }
+          cached._pursuerLeftAt = null;
+          cached._pursuerNames = null;
+        } else if (cached._pursuerNames?.length) {
+          const names = cached._pursuerNames;
+          setTimeout(() => showFieldToast(`\u26A0\uFE0F ${names.join(", ")}\uC774(\uAC00) \uC544\uC9C1 \uC774 \uADFC\uCC98\uB97C \uB9F4\uB3CC\uACE0 \uC788\uC744\uC9C0 \uBAA8\uB978\uB2E4`), 3200);
+        }
+      }
       return cached;
     }
     const node = graph.nodes.get(nodeId);
@@ -131823,6 +131841,7 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
   var MONSTER_CHASE_SPEED = FIELD_BASE_SPEED * (1.4 / 1.15);
   var MONSTER_FLEE_SPEED = FIELD_BASE_SPEED * (1.8 / 1.15);
   var REF_FRAME_MS = 1e3 / 60;
+  var PURSUER_GIVE_UP_MS = 12e4;
   function enterFieldMode(continentKey) {
     const graph = buildKingdomGraph(continentKey);
     if (!graph) {
@@ -131863,7 +131882,12 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
       raf: null,
       lastTs: performance.now(),
       listeners: [],
-      _prevNodeId: null
+      _prevNodeId: null,
+      // [16번 라운드, [대기] #13 착수] 플레이어 이동 궤적을 짧게 기록해서
+      // 파티원이 몇 프레임 뒤처져 "따라오는" 것처럼 보이게 한다(고전
+      // 스네이크식 팔로워) — 새 좌표 시스템을 안 만들고 이미 있는
+      // player.x/y 흐름만 관찰한다.
+      partyTrail: []
     };
     attachInput();
     enterScreen(startNodeId, null);
@@ -132265,6 +132289,7 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
     RT.player.x = Math.max(TILE, Math.min(screen.COLS * TILE - TILE, sc * TILE + TILE / 2));
     RT.player.y = Math.max(TILE, Math.min(screen.ROWS * TILE - TILE, sr * TILE + TILE / 2));
     RT._prevNodeId = nodeId;
+    RT.partyTrail = new Array(240).fill({ x: RT.player.x, y: RT.player.y });
     if (screen.node.kind === "location") {
       saveCurrentLocation(screen.node.loc);
       const raidRec = isRaidVulnerable(screen.node.loc) ? loadRaidState2()[screen.node.loc.id] : null;
@@ -132314,6 +132339,11 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
       if (ex.crossing === "air-only" && !tc.isAir) {
         showFieldToast("\u{1F3D4}\uFE0F \uC774 \uC9C0\uB984\uAE38\uC740 \uD558\uB298\uC744 \uB098\uB294 \uD0D1\uC2B9\uBB3C\uB9CC \uC9C0\uB0A0 \uC218 \uC788\uC2B5\uB2C8\uB2E4");
         return;
+      }
+      const stillChasing = screen.packs.filter((p) => p.state === "chasing" && !p.isGuard);
+      if (stillChasing.length) {
+        screen._pursuerLeftAt = Date.now();
+        screen._pursuerNames = stillChasing.map((p) => p.name);
       }
       enterScreen(ex.to, screen.nodeId);
       return;
@@ -132402,6 +132432,10 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
       checkScreenTransition();
       checkSignpostProximity();
     }
+    if (RT) {
+      RT.partyTrail.push({ x: player.x, y: player.y });
+      if (RT.partyTrail.length > 240) RT.partyTrail.shift();
+    }
     if (RT.screen === screen) {
       updateMonsters(dt);
       if (!RT.encounterActive) checkPackEncounter();
@@ -132478,6 +132512,20 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
         ctx.font = "10px serif";
         ctx.fillText("\u{1FA78}", px + 9, py - 8);
       }
+    }
+    try {
+      const party = typeof loadParty === "function" ? (loadParty() || []).filter((m) => m.alive !== false) : [];
+      const trail = RT.partyTrail || [];
+      party.slice(0, 4).forEach((m, i) => {
+        const back = Math.min(trail.length - 1, (i + 1) * 40);
+        const pos = trail[trail.length - 1 - back] || trail[0];
+        if (!pos) return;
+        const fx = pos.x - camX, fy = pos.y - camY;
+        if (fx < -20 || fx > VIEW_W + 20 || fy < -20 || fy > VIEW_H + 20) return;
+        ctx.font = "15px serif";
+        ctx.fillText(m.icon || "\u{1F9D1}", fx, fy);
+      });
+    } catch (e) {
     }
     const ppx = player.x - camX, ppy = player.y - camY;
     ctx.fillStyle = tc.isAir ? "#a0c8e0" : "#cda746";
@@ -132602,6 +132650,21 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
   };
   window.__tfDebugRaidState = function(locId) {
     return loadRaidState2()[locId] || null;
+  };
+  window.__tfDebugForcePursuerChase = function() {
+    if (!RT || !RT.screen) return false;
+    const m = RT.screen.packs.find((p) => !p.isGuard);
+    if (!m) return false;
+    m.state = "chasing";
+    return { name: m.name };
+  };
+  window.__tfDebugMarkPursuerLeft = function(msAgo) {
+    if (!RT || !RT.screen) return false;
+    const stillChasing = RT.screen.packs.filter((p) => p.state === "chasing" && !p.isGuard);
+    if (!stillChasing.length) return false;
+    RT.screen._pursuerLeftAt = Date.now() - (msAgo || 0);
+    RT.screen._pursuerNames = stillChasing.map((p) => p.name);
+    return { names: RT.screen._pursuerNames, leftAt: RT.screen._pursuerLeftAt };
   };
 
   // src/main.js

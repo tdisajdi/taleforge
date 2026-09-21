@@ -834,7 +834,9 @@ export function composeLocalTurnText(history, injectedContext){
     const bank = TURN_REACT_BANK[cat][vk];
     const tpl = bank[Math.floor(Math.random()*bank.length)];
     const target = _turnPickTarget();
-    applyTurnRelationEffect(cat, vk, target);
+    // [20번 라운드, 시스템 업그레이드 ①] applyTurnRelationEffect 호출은
+    // sendMsg로 옮겼다(AI 유무와 무관하게 항상 동작하도록) — 여기서 또
+    // 부르면 이중 적용된다. target은 서사 템플릿 채우기용으로만 남긴다.
     prose = learned || (identityFrag + _fillTargetSlots(tpl, target));
   } else if(!learned && _isLocArrivalMsg(lastUserMsg?.content)){
     const loc = (typeof loadCurrentLocation==='function') ? loadCurrentLocation() : null;
@@ -2034,12 +2036,22 @@ export async function sendMsg(userMsg, isChoice=false){
   // 섹션 방법론: 로컬 폴백에만 걸면 "AI 없이도 돌아가는 게임"이라는
   // 대전제와 어긋남). move 카테고리(agi 판정) 성공/대성공만 자격을
   // 준다 — 실패/대실패는 "주변을 제대로 못 살폈다"는 뜻이라 제외.
+  // [20번 라운드, 시스템 업그레이드 ① — 사용자 승인] NPC 호감도/세력평판
+  // 훅(applyTurnRelationEffect, 15번 섹션)도 위 필드 진입 게이팅과 완전히
+  // 같은 결함을 갖고 있었다 — composeLocalTurnText(로컬 폴백 서사 전용)
+  // 안에서만 호출돼서, 클라우드/로컬 AI 모델이 응답하는 동안은 설득·사교·
+  // 위협 판정이 성공해도 NPC 호감도가 전혀 안 바뀌었다. 19번 섹션에서
+  // 필드 진입 게이팅을 고치면서 "같은 문제가 있다"고 기록만 해뒀던 것을
+  // 이번에 실제로 고친다 — sendMsg가 주사위 판정을 끝내는 이 지점으로
+  // 옮겨서 AI 사용 여부와 무관하게 항상 동작하게 한다.
   if(!isCasual){
-    const _entryCat = _turnStatToCategory(usedStat);
-    if(_entryCat==='move' && (verdictLabel==='성공'||verdictLabel==='대성공')){
+    const _turnCat = _turnStatToCategory(usedStat);
+    const _turnVk = _turnVerdictKey(verdictLabel);
+    if(_turnCat==='move' && (_turnVk==='success'||_turnVk==='crit')){
       const FIELD_ENTRY_WINDOW_MS = 3*60*1000; // 3분 — 추격자 포기(2분)/습격 threatened(60초)와 같은 성격의 실제 벽시계 타이머
       S._fieldEntryWindowUntil = Date.now() + FIELD_ENTRY_WINDOW_MS;
     }
+    applyTurnRelationEffect(_turnCat, _turnVk, _turnPickTarget());
   }
 
   // [19번 라운드, mq16 진엔딩 분기 — 새 시스템, 자가복구형 트리거] 16장이

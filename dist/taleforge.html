@@ -86336,7 +86336,6 @@ ${lines.join("\n")}
       const bank = TURN_REACT_BANK[cat][vk];
       const tpl = bank[Math.floor(Math.random() * bank.length)];
       const target = _turnPickTarget();
-      applyTurnRelationEffect(cat, vk, target);
       prose = learned || identityFrag + _fillTargetSlots(tpl, target);
     } else if (!learned && _isLocArrivalMsg(lastUserMsg?.content)) {
       const loc = typeof loadCurrentLocation === "function" ? loadCurrentLocation() : null;
@@ -87288,11 +87287,13 @@ ${lines.join("\n")}
       }
     }
     if (!isCasual) {
-      const _entryCat = _turnStatToCategory(usedStat);
-      if (_entryCat === "move" && (verdictLabel === "\uC131\uACF5" || verdictLabel === "\uB300\uC131\uACF5")) {
+      const _turnCat = _turnStatToCategory(usedStat);
+      const _turnVk = _turnVerdictKey(verdictLabel);
+      if (_turnCat === "move" && (_turnVk === "success" || _turnVk === "crit")) {
         const FIELD_ENTRY_WINDOW_MS = 3 * 60 * 1e3;
         S._fieldEntryWindowUntil = Date.now() + FIELD_ENTRY_WINDOW_MS;
       }
+      applyTurnRelationEffect(_turnCat, _turnVk, _turnPickTarget());
     }
     try {
       const _mqS = typeof loadMainQuestState === "function" ? loadMainQuestState() : {};

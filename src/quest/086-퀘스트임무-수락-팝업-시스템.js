@@ -623,6 +623,57 @@ const TURN_REACT_BANK = {
     critfail: ['생각지도 못한 방향으로 어긋나 버린다.', '최악의 타이밍에 일이 꼬인다.', '전혀 예상 못한 방식으로 상황이 틀어진다.', '되려 상황을 더 어렵게 만들고 만다.'],
   },
 };
+// [21번 라운드, 시스템 업그레이드 ② — 사용자 승인] "선택지→결과가
+// 카테고리에서 멈춘다"는 원래 문제를 다시 짚어보니, "설득한다"/
+// "협박한다"처럼 서로 다른 카테고리(persuade/fear)로 갈리는 경우는
+// 14번 섹션에서 이미 해결돼 있었다 — 진짜 남은 문제는 sendMsg의
+// usedStat 우선순위 판정(1789번째 줄 근처)이 이미 세밀하게 구분해둔
+// 스탯인데도 `_turnStatToCategory`에서 같은 카테고리로 도로 뭉개지는
+// 3쌍뿐이었다: 근접(str)/원거리(rng) 둘 다 attack, 직감(int)/관찰(per)
+// 둘 다 search, 마법(mgc)/신앙(fath) 둘 다 magic. 즉 정규식을 새로
+// 만들 필요 없이, 이미 계산돼 있는 dice.stat을 결과 문구 선택에도
+// 마저 활용하면 된다 — 기존 TURN_REACT_BANK 144개 문구는 안 건드리고
+// (근접 공격/관찰형 탐색/공격 마법 쪽은 이미 그 느낌으로 쓰여 있어서
+// 그대로 기본값으로 둔다), 반대쪽 절반(원거리/직감/신앙)만 새로
+// 써서 얹는 방식이라 범위가 작고 안전하다.
+const TURN_REACT_SUBBANK = {
+  attack: {
+    ranged: {
+      crit: ['화살이 정확히 {t}의 급소를 꿰뚫는다 — 피할 틈도 주지 않는다.', '던진 무기가 한 치의 오차도 없이 {t}에게 꽂힌다.', '조준선이 흔들림 없이 {t:을를} 향했고, 발사와 동시에 명중한다.'],
+      success: ['화살이 {t}에게 정확히 날아가 꽂힌다.', '던진 것이 거리 감각대로 {t}에게 명중한다.', '조준한 대로 {t:을를} 맞춘다.'],
+      fail: ['바람에 궤도가 틀어져 {t:을를} 스쳐 지나간다.', '거리를 잘못 재 {t}에게 닿지 못한다.', '손끝이 흔들려 목표를 빗나간다.'],
+      critfail: ['활시위가 어긋나며 자세가 완전히 무너진다.', '던진 무기가 엉뚱한 방향으로 날아가 버린다.', '조준하다 균형을 잃고 크게 휘청인다.'],
+    },
+  },
+  search: {
+    intuition: {
+      crit: ['흩어진 조각들이 머릿속에서 완벽하게 맞아떨어진다 — 진짜 이유를 정확히 꿰뚫어 본다.', '사소한 모순 하나로 전체 그림이 단숨에 읽힌다.', '직감이 정확히 들어맞으며, 숨겨진 맥락까지 전부 이해한다.'],
+      success: ['앞뒤를 짜맞춰보니 대강의 그림이 그려진다.', '흐름을 곱씹은 끝에 그럴듯한 해석에 도달한다.', '단서들을 이어붙여 나름의 결론을 내린다.'],
+      fail: ['아무리 곱씹어도 앞뒤가 맞지 않는다.', '추리가 자꾸 엉뚱한 방향으로 흐른다.', '확신이 안 서는 해석만 겨우 내놓는다.'],
+      critfail: ['완전히 잘못된 결론으로 단정 짓고 만다.', '스스로의 추측에 속아 엉뚱한 방향을 확신한다.', '성급한 판단이 오히려 진실을 가린다.'],
+    },
+  },
+  magic: {
+    faith: {
+      crit: ['신성한 기운이 완벽하게 응답하며, 상처가 순식간에 아문다.', '기도가 한 치의 흔들림 없이 가닿아, 압도적인 치유의 빛이 쏟아진다.', '믿음이 응답받은 듯, 상상 이상의 축복이 내린다.'],
+      success: ['신성한 기운이 무리 없이 흘러들어 상처를 다스린다.', '기도가 온전히 전해지며 치유의 온기가 감돈다.', '믿음이 안정적으로 응답해, 원하는 축복이 내린다.'],
+      fail: ['신성한 기운이 온전히 모이지 않아 효과가 미미하다.', '집중이 흐트러져 기도가 제대로 전해지지 않는다.', '믿음이 흔들려 축복이 온전히 내리지 않는다.'],
+      critfail: ['신성한 힘이 뒤틀리며 오히려 몸이 무거워진다.', '기도가 완전히 어긋나며 예상 못한 반동이 인다.', '믿음의 균열이 오히려 부작용을 불러온다.'],
+    },
+  },
+};
+function _turnSubFlavor(stat){
+  return stat==='rng' ? 'ranged' : stat==='int' ? 'intuition' : stat==='fath' ? 'faith' : null;
+}
+// cat/vk는 기존과 동일하게 카테고리 단위로 쓰되(관계 훅·기존 로직에
+// 영향 없음), 실제 문구를 고를 때만 더 구체적인 stat이 있으면 그
+// 쪽을 우선한다 — 서브뱅크가 없는 카테고리/스탯 조합은 항상 기존
+// TURN_REACT_BANK로 조용히 폴백한다(회귀 위험 없음).
+function _turnPickReactBank(cat, vk, stat){
+  const sub = _turnSubFlavor(stat);
+  const subBank = sub && TURN_REACT_SUBBANK[cat]?.[sub]?.[vk];
+  return (subBank && subBank.length) ? subBank : TURN_REACT_BANK[cat][vk];
+}
 const TURN_CASUAL_BANK = [
   '잠시 숨을 고르며 주변을 살핀다. 다음 행동을 정할 시간이다.',
   '상황은 크게 달라지지 않았지만, 다음에 무엇을 할지는 여전히 그대의 몫이다.',
@@ -831,10 +882,14 @@ export function composeLocalTurnText(history, injectedContext){
   } else if(dice){
     const cat = _turnStatToCategory(dice.stat);
     const vk = _turnVerdictKey(dice.verdict);
-    const bank = TURN_REACT_BANK[cat][vk];
+    // [21번 라운드, 시스템 업그레이드 ②] cat/vk만으로 고르면 근접/원거리·
+    // 관찰/직감·마법/신앙처럼 서로 다른 스탯인데 같은 카테고리로 뭉개진
+    // 조합이 항상 같은 문구 풀을 쓴다 — dice.stat까지 넘겨서 서브뱅크가
+    // 있으면 그쪽을 쓰고, 없으면 기존 카테고리 뱅크로 조용히 폴백한다.
+    const bank = _turnPickReactBank(cat, vk, dice.stat);
     const tpl = bank[Math.floor(Math.random()*bank.length)];
     const target = _turnPickTarget();
-    // [20번 라운드, 시스템 업그레이드 ①] applyTurnRelationEffect 호출은
+    // [21번 라운드, 시스템 업그레이드 ①] applyTurnRelationEffect 호출은
     // sendMsg로 옮겼다(AI 유무와 무관하게 항상 동작하도록) — 여기서 또
     // 부르면 이중 적용된다. target은 서사 템플릿 채우기용으로만 남긴다.
     prose = learned || (identityFrag + _fillTargetSlots(tpl, target));
@@ -2036,7 +2091,7 @@ export async function sendMsg(userMsg, isChoice=false){
   // 섹션 방법론: 로컬 폴백에만 걸면 "AI 없이도 돌아가는 게임"이라는
   // 대전제와 어긋남). move 카테고리(agi 판정) 성공/대성공만 자격을
   // 준다 — 실패/대실패는 "주변을 제대로 못 살폈다"는 뜻이라 제외.
-  // [20번 라운드, 시스템 업그레이드 ① — 사용자 승인] NPC 호감도/세력평판
+  // [21번 라운드, 시스템 업그레이드 ① — 사용자 승인] NPC 호감도/세력평판
   // 훅(applyTurnRelationEffect, 15번 섹션)도 위 필드 진입 게이팅과 완전히
   // 같은 결함을 갖고 있었다 — composeLocalTurnText(로컬 폴백 서사 전용)
   // 안에서만 호출돼서, 클라우드/로컬 AI 모델이 응답하는 동안은 설득·사교·

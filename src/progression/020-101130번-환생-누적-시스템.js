@@ -4510,8 +4510,17 @@ export function darklingLightExposure(methodId) {
 }
 window.darklingLightExposure = darklingLightExposure;
 
-function renderDarklingVoidPanel() {
-  const body = document.getElementById('pb-darkling-void');
+// [23-3, 다크링 공허 패널 라우팅 버그 수정] targetId를 받을 수 있게
+// 확장 — ui/025의 renderDarklingVoidExtPanel(메아리/감지/소환/협약
+// 4탭 UI)이 window.renderDarklingVoidPanel을 통째로 덮어써서, 이
+// 함수(공허 게이지·수동 버튼)가 실제 게임에서 한 번도 플레이어에게
+// 보인 적이 없었다(22-1 위임 작업 중 발견, 별도 task로만 플래그해둠).
+// ui/025의 다른 4개 탭(renderDeathEchoPanel 등)이 이미 targetId를
+// 받는 관례를 그대로 따라 이 함수도 같은 관례에 맞춰, ext 패널의
+// 5번째 탭으로 끼워넣을 수 있게 한다 — 새 UI 구조를 만드는 게 아니라
+// 이미 있는 관례를 하나 더 따르는 것뿐이라 범위가 작다고 판단.
+export function renderDarklingVoidPanel(targetId) {
+  const body = document.getElementById(targetId || 'pb-darkling-void');
   if (!body) return;
   const status = getDarklingVoidStatus();
   if (!status) {

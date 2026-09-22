@@ -32990,8 +32990,8 @@ ${lines.join("\n")}
     if (typeof window.renderDarklingVoidPanel === "function") window.renderDarklingVoidPanel();
   }
   window.darklingLightExposure = darklingLightExposure;
-  function renderDarklingVoidPanel() {
-    const body = document.getElementById("pb-darkling-void");
+  function renderDarklingVoidPanel(targetId) {
+    const body = document.getElementById(targetId || "pb-darkling-void");
     if (!body) return;
     const status = getDarklingVoidStatus();
     if (!status) {
@@ -52912,11 +52912,12 @@ ${lines.join("\n")}
     const dv = loadDarklingVoid();
     const color = DARKLING_VOID_STAGES[dv.stage || 0]?.color || "#4060c0";
     const tabKey = "darkling_ext_tab";
-    const activeTab = window[tabKey] || "echo";
+    const activeTab = window[tabKey] || "gauge";
     body.innerHTML = `
     <!-- \uD0ED \uD5E4\uB354 -->
     <div style="display:flex;background:#000210;border-bottom:1px solid #0a1030;overflow-x:auto;-webkit-overflow-scrolling:touch;flex-shrink:0">
       ${[
+      { id: "gauge", icon: "\u{1F311}", label: "\uAC8C\uC774\uC9C0" },
       { id: "echo", icon: "\u{1F480}", label: "\uBA54\uC544\uB9AC" },
       { id: "sense", icon: "\u{1F441}\uFE0F", label: "\uAC10\uC9C0" },
       { id: "summon", icon: "\u{1F300}", label: "\uC18C\uD658" },
@@ -52933,6 +52934,7 @@ ${lines.join("\n")}
   `;
     const tabBody = document.getElementById("darkling-ext-tab-body");
     if (!tabBody) return;
+    if (activeTab === "gauge") renderDarklingVoidPanel("darkling-ext-tab-body");
     if (activeTab === "echo") renderDeathEchoPanel("darkling-ext-tab-body");
     if (activeTab === "sense") renderVoidSensePanel("darkling-ext-tab-body");
     if (activeTab === "summon") renderVoidSummonPanel("darkling-ext-tab-body");

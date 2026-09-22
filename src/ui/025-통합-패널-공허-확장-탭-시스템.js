@@ -10,7 +10,7 @@ import { clearDeathEcho, detectDeathEchoFromText, gainDeathEcho, getDeathEchoSta
 import { getVoidSenseAIHint, getVoidSenseBonus, renderVoidSensePanel } from '../misc/022-2-공허-감지-시스템.js';
 import { getPlayerMaxHp, getPlayerMaxMp } from '../misc/054-이동수단-시스템.js';
 import { saveStats } from '../patches/299-플레이-통계-성향-분석-시스템-v57-완전판.js';
-import { DARKLING_VOID_STAGES, loadDarklingVoid } from '../progression/020-101130번-환생-누적-시스템.js';
+import { DARKLING_VOID_STAGES, loadDarklingVoid, renderDarklingVoidPanel } from '../progression/020-101130번-환생-누적-시스템.js';
 import { grantTitle } from '../quest/086-퀘스트임무-수락-팝업-시스템.js';
 import { clearShadowPact, enforceOrCursePact, initShadowPact, loadShadowPact, releasePact, renderShadowPactPanel } from '../race/024-4-그림자-협약-시스템-다크링-핵심-협상-도구.js';
 import { activateVoidSummon, clearVoidSummon, dismissVoidSummon, loadVoidSummon, renderVoidSummonPanel } from '../summon/023-3-균열-소환-시스템.js';
@@ -31,12 +31,21 @@ export function renderDarklingVoidExtPanel() {
   const color = DARKLING_VOID_STAGES[dv.stage||0]?.color || '#4060c0';
   // 활성 탭 상태
   const tabKey = 'darkling_ext_tab';
-  const activeTab = window[tabKey] || 'echo';
+  // [23-3, 라우팅 버그 수정] 예전엔 이 4탭 UI가 window.renderDarklingVoidPanel을
+  // 통째로 덮어써서, 공허 게이지·수동 획득 버튼을 보여주는 진짜
+  // renderDarklingVoidPanel(progression/020)이 실제 게임에서 한 번도
+  // 안 보였다(22-1 위임 작업 중 발견). 새 UI를 만드는 대신 이 파일의
+  // 다른 4개 탭과 같은 관례(targetId를 받는 서브패널)로 게이지를
+  // 5번째 탭으로 끼워넣는다 — 기본 탭도 '게이지'로 바꿔서 처음 열었을
+  // 때 가장 먼저 보이게 한다(현재 단계·수치가 하위 기능보다 우선순위가
+  // 높다고 판단).
+  const activeTab = window[tabKey] || 'gauge';
 
   body.innerHTML = `
     <!-- 탭 헤더 -->
     <div style="display:flex;background:#000210;border-bottom:1px solid #0a1030;overflow-x:auto;-webkit-overflow-scrolling:touch;flex-shrink:0">
       ${[
+        { id:'gauge', icon:'🌑', label:'게이지' },
         { id:'echo',  icon:'💀', label:'메아리' },
         { id:'sense', icon:'👁️', label:'감지' },
         { id:'summon',icon:'🌀', label:'소환' },
@@ -53,6 +62,7 @@ export function renderDarklingVoidExtPanel() {
   `;
   const tabBody = document.getElementById('darkling-ext-tab-body');
   if (!tabBody) return;
+  if (activeTab === 'gauge')  renderDarklingVoidPanel('darkling-ext-tab-body');
   if (activeTab === 'echo')   renderDeathEchoPanel('darkling-ext-tab-body');
   if (activeTab === 'sense')  renderVoidSensePanel('darkling-ext-tab-body');
   if (activeTab === 'summon') renderVoidSummonPanel('darkling-ext-tab-body');

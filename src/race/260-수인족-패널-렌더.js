@@ -2176,6 +2176,14 @@ window.setDemesneTab = setDemesneTab;
 export function establishDemesne(name){
   const d=loadDemesne();
   d.established=true; d.name=name||'이름 없는 영지';
+  // [21번 라운드, 시스템 업그레이드 ⑤] 예전엔 world/052의 getAllLocations()
+  // 가 영지를 항상 continent:'central'로 고정 배치했다(실제로 어느
+  // 대륙에서 개설했는지와 무관) — 지금 서있는 대륙을 그대로 남겨서
+  // 실제 필드 그래프에 그 대륙 안 진짜 위치로 들어가게 한다.
+  try{
+    const curLoc = (typeof window.loadCurrentLocation==='function') ? window.loadCurrentLocation() : null;
+    d.continent = curLoc?.continent || S.character?.startContinent || 'central';
+  }catch(e){ d.continent = 'central'; }
   d.tier=1; d.tax=50; d.prosperity=50; d.defense=30; d.loyalty=60;
   d.population=500; d.popStage=0; d.popPeak=500;
   d.season=0; d.seasonTurn=0; d.popGrowthLog=[];

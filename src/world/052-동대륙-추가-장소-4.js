@@ -341,7 +341,12 @@ function getAllLocations(){
         name: _d.name || '나의 영지',
         icon: _d.popStage>=4?'👑':_d.popStage>=3?'🌇':_d.popStage>=2?'🌆':_d.popStage>=1?'🏙️':'🏘️',
         type: _d.popStage>=3?'city':_d.popStage>=1?'town':'village',
-        continent: 'central',
+        // [21번 라운드, 시스템 업그레이드 ⑤] 예전엔 항상 'central'로
+        // 고정 — 실제로 어느 대륙에서 영지를 개설했는지(establishDemesne
+        // 가 이제 저장해둠)와 무관하게 늘 중앙대륙 지도/필드에만 나타나던
+        // 버그였다. 옛 세이브(이 필드가 없던 시절 개설한 영지) 호환을
+        // 위해 없으면 'central'로 폴백.
+        continent: _d.continent || 'central',
         desc: `${_tier.name} · ${_stage.name} · 인구 ${window._fmtPop?window._fmtPop(_d.population||500):(_d.population||500)+'명'}`,
         population: `${window._fmtPop?window._fmtPop(_d.population||500):(_d.population||500)}명`,
         triggerKeywords: [

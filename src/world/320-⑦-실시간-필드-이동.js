@@ -266,7 +266,23 @@ function buildGuardsForSettlement(loc, exits, markerPos){
   const [lvLo, lvHi] = getLocationLevelBand(loc);
   const lvMid = (lvLo+lvHi)/2;
   const isCapital = loc.type==='capital';
-  const guardMul = isCapital ? 1.6 : 1;
+  // [21번 라운드, 시스템 업그레이드 ⑤ — 사용자 승인: "전체 재설계,
+  // 필드 그래프에 진짜 새 노드로"] 조사해보니 영지는 이미
+  // world/052의 getAllLocations()를 통해 실제 필드 그래프 노드로
+  // 존재하고 있었다(isDemesne 플래그, 성문·경비병도 이미 일반
+  // 정착지 로직을 그대로 탄다) — 다만 그 경비병 강도가 영지 방어
+  // 스탯(d.defense, 플레이어가 골드를 들여 건물/정책으로 실제 투자하는
+  // 값)과 전혀 무관했다. 이게 11번 섹션에서 조정자가 원래 요청했던
+  // "영지 defense 투자가 습격 방어에 실제로 영향을 주게"의 진짜 남은
+  // 공백이었다 — 이번에 이 부분만 정확히 채운다.
+  const demesneMul = loc.isDemesne
+    ? (()=>{ try{
+        const d = (typeof window.loadDemesne==='function') ? window.loadDemesne() : null;
+        const def = d && typeof window.calcDemesneResources==='function' ? window.calcDemesneResources(d).defense : 50;
+        return 0.6 + (def/100)*1.2; // defense 0→0.6배(허술) ~ 100→1.8배(요새화)
+      }catch(e){ return 1; } })()
+    : 1;
+  const guardMul = (isCapital ? 1.6 : 1) * demesneMul;
   return exits.map((ex,i)=>{
     // 성문 바로 바깥이 아니라 안쪽으로 몇 칸 들어와 성문을 등지고 서 있는 위치
     let hc=ex.gc, hr=ex.gr;
@@ -565,7 +581,19 @@ function countGatesForLocation(loc){
 function resolveRaidOffscreen(loc, rec){
   const gates = countGatesForLocation(loc);
   const dangerMul = 1 + (loc.dangerLevel||0)*0.15;
-  const defenseScore = 35 + gates*16 + Math.random()*20;
+  // [21번 라운드, 시스템 업그레이드 ⑤] 화면 밖(플레이어가 없을 때)
+  // 확률 판정에도 같은 영지 방어 스탯을 반영 — buildGuardsForSettlement
+  // 쪽(라이브 판정)과 같은 원칙, 다른 수식(여긴 가산점이라 곱셈 대신
+  // 덧셈으로 스케일을 맞춤).
+  let demesneBonus = 0;
+  if(loc.isDemesne){
+    try{
+      const d = (typeof window.loadDemesne==='function') ? window.loadDemesne() : null;
+      const def = d && typeof window.calcDemesneResources==='function' ? window.calcDemesneResources(d).defense : 50;
+      demesneBonus = (def-50)*0.4; // defense 50(평균) 기준 ±20점까지
+    }catch(e){}
+  }
+  const defenseScore = 35 + gates*16 + demesneBonus + Math.random()*20;
   const raidScore = 25*dangerMul + (rec.raiderCount||2)*9 + Math.random()*25;
   const margin = defenseScore - raidScore;
   if(margin > 12) return 'defended';
@@ -593,6 +621,22 @@ function applyRaidOutcomeToEconomy(loc, outcome){
     setTradeRouteStatus(loc.id, 'disrupted');
   } else if(outcome==='defended'){
     changeProsperity(loc.id, 3, '자력 방어 성공');
+  }
+  // [21번 라운드, 시스템 업그레이드 ⑤] 습격 결과를 영지 자체 스탯
+  // (loyalty/prosperity)에도 되돌려 반영 — economy/332가 이미 다른
+  // 모든 정착지에 해주는 것과 같은 대칭을 영지에도 맞춘다. defense는
+  // 여기서 안 건드린다 — defense는 플레이어가 골드로 투자하는 값이지
+  // 습격 결과로 자동으로 변하면 "투자한 의미"가 흐려진다고 판단.
+  if(loc.isDemesne){
+    try{
+      const d = (typeof window.loadDemesne==='function') ? window.loadDemesne() : null;
+      if(d && d.established){
+        if(outcome==='damaged'){ d.loyalty=Math.max(0,(d.loyalty||50)-6); d.prosperity=Math.max(0,(d.prosperity||50)-8); }
+        else if(outcome==='destroyed'){ d.loyalty=Math.max(0,(d.loyalty||50)-15); d.prosperity=Math.max(0,(d.prosperity||50)-20); }
+        else if(outcome==='defended'){ d.loyalty=Math.min(100,(d.loyalty||50)+2); }
+        if(typeof window.saveDemesne==='function') window.saveDemesne(d);
+      }
+    }catch(e){}
   }
 }
 // 정착지 하나의 습격 상태를 지금 시각 기준으로 한 단계 진행시킨다(있으면).
@@ -703,6 +747,19 @@ function finalizeLiveRaidDefense(locId, bySelf=false){
   changeProsperity(locId, bySelf?8:5, bySelf?'직접 습격 격퇴':'현장에서 습격 방어');
   changeLocationReputation(locId, bySelf?12:6, bySelf?'직접 습격 격퇴':'현장에서 습격 방어', true);
   showFieldToast('🛡️ 습격을 성공적으로 막아냈다!');
+  // [21번 라운드, 시스템 업그레이드 ⑤] 플레이어가 직접(또는 자기 영지
+  // 경비병이) 현장에서 막아낸 경우도 applyRaidOutcomeToEconomy의
+  // 'defended' 분기와 같은 원칙으로 영지 충성도를 살짝 올린다 —
+  // 직접 방어니 화면 밖(off-screen) 자력방어보다 조금 더 크게.
+  if(locId==='loc_demesne'){
+    try{
+      const d = (typeof window.loadDemesne==='function') ? window.loadDemesne() : null;
+      if(d && d.established){
+        d.loyalty=Math.min(100,(d.loyalty||50)+(bySelf?6:3));
+        if(typeof window.saveDemesne==='function') window.saveDemesne(d);
+      }
+    }catch(e){}
+  }
   return true;
 }
 // 백그라운드 폴러 — 필드 패널이 닫혀있어도(플레이어가 다른 곳에서 채팅

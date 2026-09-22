@@ -39081,7 +39081,12 @@ ${lines.join("\n")}
             name: _d.name || "\uB098\uC758 \uC601\uC9C0",
             icon: _d.popStage >= 4 ? "\u{1F451}" : _d.popStage >= 3 ? "\u{1F307}" : _d.popStage >= 2 ? "\u{1F306}" : _d.popStage >= 1 ? "\u{1F3D9}\uFE0F" : "\u{1F3D8}\uFE0F",
             type: _d.popStage >= 3 ? "city" : _d.popStage >= 1 ? "town" : "village",
-            continent: "central",
+            // [21번 라운드, 시스템 업그레이드 ⑤] 예전엔 항상 'central'로
+            // 고정 — 실제로 어느 대륙에서 영지를 개설했는지(establishDemesne
+            // 가 이제 저장해둠)와 무관하게 늘 중앙대륙 지도/필드에만 나타나던
+            // 버그였다. 옛 세이브(이 필드가 없던 시절 개설한 영지) 호환을
+            // 위해 없으면 'central'로 폴백.
+            continent: _d.continent || "central",
             desc: `${_tier.name} \xB7 ${_stage.name} \xB7 \uC778\uAD6C ${window._fmtPop ? window._fmtPop(_d.population || 500) : (_d.population || 500) + "\uBA85"}`,
             population: `${window._fmtPop ? window._fmtPop(_d.population || 500) : _d.population || 500}\uBA85`,
             triggerKeywords: [
@@ -61772,6 +61777,12 @@ export default TALEFORGE_HARDCODE_RULES;
     const d = loadDemesne();
     d.established = true;
     d.name = name || "\uC774\uB984 \uC5C6\uB294 \uC601\uC9C0";
+    try {
+      const curLoc = typeof window.loadCurrentLocation === "function" ? window.loadCurrentLocation() : null;
+      d.continent = curLoc?.continent || S.character?.startContinent || "central";
+    } catch (e) {
+      d.continent = "central";
+    }
     d.tier = 1;
     d.tax = 50;
     d.prosperity = 50;
@@ -131403,7 +131414,16 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
     const [lvLo, lvHi] = getLocationLevelBand(loc);
     const lvMid = (lvLo + lvHi) / 2;
     const isCapital = loc.type === "capital";
-    const guardMul = isCapital ? 1.6 : 1;
+    const demesneMul = loc.isDemesne ? (() => {
+      try {
+        const d = typeof window.loadDemesne === "function" ? window.loadDemesne() : null;
+        const def = d && typeof window.calcDemesneResources === "function" ? window.calcDemesneResources(d).defense : 50;
+        return 0.6 + def / 100 * 1.2;
+      } catch (e) {
+        return 1;
+      }
+    })() : 1;
+    const guardMul = (isCapital ? 1.6 : 1) * demesneMul;
     return exits.map((ex, i) => {
       let hc = ex.gc, hr = ex.gr;
       if (ex.edge === "N") hr += 3;
@@ -131696,7 +131716,16 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
   function resolveRaidOffscreen(loc, rec) {
     const gates = countGatesForLocation(loc);
     const dangerMul = 1 + (loc.dangerLevel || 0) * 0.15;
-    const defenseScore = 35 + gates * 16 + Math.random() * 20;
+    let demesneBonus = 0;
+    if (loc.isDemesne) {
+      try {
+        const d = typeof window.loadDemesne === "function" ? window.loadDemesne() : null;
+        const def = d && typeof window.calcDemesneResources === "function" ? window.calcDemesneResources(d).defense : 50;
+        demesneBonus = (def - 50) * 0.4;
+      } catch (e) {
+      }
+    }
+    const defenseScore = 35 + gates * 16 + demesneBonus + Math.random() * 20;
     const raidScore = 25 * dangerMul + (rec.raiderCount || 2) * 9 + Math.random() * 25;
     const margin = defenseScore - raidScore;
     if (margin > 12) return "defended";
@@ -131715,6 +131744,24 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
       setTradeRouteStatus(loc.id, "disrupted");
     } else if (outcome === "defended") {
       changeProsperity(loc.id, 3, "\uC790\uB825 \uBC29\uC5B4 \uC131\uACF5");
+    }
+    if (loc.isDemesne) {
+      try {
+        const d = typeof window.loadDemesne === "function" ? window.loadDemesne() : null;
+        if (d && d.established) {
+          if (outcome === "damaged") {
+            d.loyalty = Math.max(0, (d.loyalty || 50) - 6);
+            d.prosperity = Math.max(0, (d.prosperity || 50) - 8);
+          } else if (outcome === "destroyed") {
+            d.loyalty = Math.max(0, (d.loyalty || 50) - 15);
+            d.prosperity = Math.max(0, (d.prosperity || 50) - 20);
+          } else if (outcome === "defended") {
+            d.loyalty = Math.min(100, (d.loyalty || 50) + 2);
+          }
+          if (typeof window.saveDemesne === "function") window.saveDemesne(d);
+        }
+      } catch (e) {
+      }
     }
   }
   function advanceRaidIfDue(loc, st, now) {
@@ -131824,6 +131871,16 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
     changeProsperity(locId, bySelf ? 8 : 5, bySelf ? "\uC9C1\uC811 \uC2B5\uACA9 \uACA9\uD1F4" : "\uD604\uC7A5\uC5D0\uC11C \uC2B5\uACA9 \uBC29\uC5B4");
     changeLocationReputation(locId, bySelf ? 12 : 6, bySelf ? "\uC9C1\uC811 \uC2B5\uACA9 \uACA9\uD1F4" : "\uD604\uC7A5\uC5D0\uC11C \uC2B5\uACA9 \uBC29\uC5B4", true);
     showFieldToast("\u{1F6E1}\uFE0F \uC2B5\uACA9\uC744 \uC131\uACF5\uC801\uC73C\uB85C \uB9C9\uC544\uB0C8\uB2E4!");
+    if (locId === "loc_demesne") {
+      try {
+        const d = typeof window.loadDemesne === "function" ? window.loadDemesne() : null;
+        if (d && d.established) {
+          d.loyalty = Math.min(100, (d.loyalty || 50) + (bySelf ? 6 : 3));
+          if (typeof window.saveDemesne === "function") window.saveDemesne(d);
+        }
+      } catch (e) {
+      }
+    }
     return true;
   }
   (function raidBackgroundPoller() {

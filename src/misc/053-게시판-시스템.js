@@ -30,7 +30,7 @@ import { loadMaterials, saveMaterials } from './075-파트2-C-크래프팅-시�
 // 결정론적으로 고른다. 같은 uid(의뢰 고유 ID)는 항상 같은 장소를
 // 가리킨다 — AI 호출 없이 재현 가능하고, 게시판 자체가 이미 쓰고
 // 있는 seededRand와 같은 성격의 결정론적 해시.
-function pickQuestTargetLocation(boardLoc, seedStr){
+export function pickQuestTargetLocation(boardLoc, seedStr){
   try{
     const all = (typeof getAllLandLocations==='function') ? getAllLandLocations() : [];
     const candidates = all.filter(l=>l.continent===boardLoc.continent && l.id!==boardLoc.id);
@@ -46,6 +46,11 @@ function pickQuestTargetLocation(boardLoc, seedStr){
     return withDist[idx].l;
   }catch(e){ return null; }
 }
+// [21번 라운드, 시스템 업그레이드 ④] AI 자유생성 퀘스트(quest_detail)
+// 쪽에서도 이 결정론적 위치 선택을 재사용할 수 있도록 window에 노출.
+// combat/150이 이 파일을 직접 import하면 순환 참조 위험이 있어(이
+// 프로젝트 전역 관례대로) bare 참조로 연결한다.
+window.pickQuestTargetLocation = pickQuestTargetLocation;
 
 export function generateBulletinData(loc) {
   const cfg = BULLETIN_SIZE_CONFIG[loc.type] || BULLETIN_SIZE_CONFIG.village;

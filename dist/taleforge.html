@@ -40513,6 +40513,7 @@ ${lines.join("\n")}
       return null;
     }
   }
+  window.pickQuestTargetLocation = pickQuestTargetLocation;
   function generateBulletinData(loc) {
     const cfg = BULLETIN_SIZE_CONFIG[loc.type] || BULLETIN_SIZE_CONFIG.village;
     const locId = loc.id || loc.name;
@@ -47459,9 +47460,10 @@ ${lines.join("\n")}
         placedLabels.push({ ownerIdx: m._idx, ...box });
         m.labelY = y;
       });
-      const questTargetIds = new Set(
-        (typeof window.getActiveBulletinQuestTargets === "function" ? window.getActiveBulletinQuestTargets() : []).map((q) => q.locationId)
-      );
+      const questTargetIds = new Set([
+        ...typeof window.getActiveBulletinQuestTargets === "function" ? window.getActiveBulletinQuestTargets() : [],
+        ...typeof window.getActiveAIQuestLocationTargets === "function" ? window.getActiveAIQuestLocationTargets() : []
+      ].map((q) => q.locationId));
       markerList.forEach((m) => {
         const { loc, c, isCurrent, isDungeon, dTier, color, baseSize, shapePath, labelText, fontSize, labelY } = m;
         const hasQuestTarget = questTargetIds.has(loc.id);
@@ -72560,6 +72562,21 @@ ${simDesc}` : playerRep;
     return Object.values(loadQuestDB()).filter((q) => q.status === "active").sort((a, b) => b.priority - a.priority);
   }
   window.getActiveQuests = getActiveQuests;
+  function getActiveAIQuestLocationTargets() {
+    try {
+      const all = typeof window.getAllLandLocations === "function" ? window.getAllLandLocations() : [];
+      if (!all.length) return [];
+      const byId = new Map(all.map((l) => [l.id, l]));
+      return getActiveQuests().filter((q) => q.relatedLocations && q.relatedLocations.length).map((q) => {
+        const loc = byId.get(q.relatedLocations[0]);
+        if (!loc) return null;
+        return { locationId: loc.id, name: loc.name, icon: loc.icon, questTitle: q.title || "" };
+      }).filter(Boolean);
+    } catch (e) {
+      return [];
+    }
+  }
+  window.getActiveAIQuestLocationTargets = getActiveAIQuestLocationTargets;
   window.getQuest = getQuest;
   window.getActiveQuests = getActiveQuests;
 
@@ -117649,7 +117666,14 @@ GS: {"clan_join":"${clanId}"} \uCD9C\uB825.`;
     }
     if (gs.quest_detail) {
       const q = gs.quest_detail;
-      if (q.id) upsertQuest(q.id, { title: q.title, description: q.desc, objective: q.objective, rewards: q.reward ? { special: q.reward } : {} });
+      let locPatch = {};
+      try {
+        const curLoc = typeof window.loadCurrentLocation === "function" ? window.loadCurrentLocation() : null;
+        const target = curLoc && typeof window.pickQuestTargetLocation === "function" ? window.pickQuestTargetLocation(curLoc, String(q.id)) : null;
+        if (target) locPatch = { location: target.id };
+      } catch (e) {
+      }
+      if (q.id) upsertQuest(q.id, { title: q.title, description: q.desc, objective: q.objective, rewards: q.reward ? { special: q.reward } : {}, ...locPatch });
     }
     if (Array.isArray(gs.q_new)) {
       gs.q_new.forEach((id) => upsertQuest(String(id), { status: "active" }));
@@ -132560,7 +132584,10 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
         showFieldToast(`\u{1F4CD} ${screen.node.loc.name}`);
       }
       try {
-        const targets = typeof window.getActiveBulletinQuestTargets === "function" ? window.getActiveBulletinQuestTargets() : [];
+        const targets = [
+          ...typeof window.getActiveBulletinQuestTargets === "function" ? window.getActiveBulletinQuestTargets() : [],
+          ...typeof window.getActiveAIQuestLocationTargets === "function" ? window.getActiveAIQuestLocationTargets() : []
+        ];
         const hit = targets.find((t) => t.locationId === screen.node.loc.id);
         RT.currentQuestTargetHere = hit || null;
         if (hit) setTimeout(() => showFieldToast(`\u2757 \uC758\uB8B0 \uBAA9\uD45C \uC9C0\uC810: ${hit.questTitle}`), 3200);

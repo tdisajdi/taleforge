@@ -1533,7 +1533,14 @@ function enterScreen(nodeId, fromNodeId){
     // 같은 겹침 방지 패턴 — 3.2초 지연) 알려준다. RT.currentQuestTargetHere는
     // renderFieldCanvas의 HUD가 매 프레임 참고한다.
     try{
-      const targets = (typeof window.getActiveBulletinQuestTargets==='function') ? window.getActiveBulletinQuestTargets() : [];
+      // [21번 라운드, 시스템 업그레이드 ④] AI 자유생성 퀘스트 쪽 목표
+      // 장소도 같은 방식으로 합쳐서 확인한다 — misc/053(게시판)과
+      // quest/141(AI 퀘스트) 둘 다 같은 모양({locationId,name,icon,
+      // questTitle})을 돌려주므로 이어붙이기만 하면 된다.
+      const targets = [
+        ...((typeof window.getActiveBulletinQuestTargets==='function') ? window.getActiveBulletinQuestTargets() : []),
+        ...((typeof window.getActiveAIQuestLocationTargets==='function') ? window.getActiveAIQuestLocationTargets() : []),
+      ];
       const hit = targets.find(t=>t.locationId===screen.node.loc.id);
       RT.currentQuestTargetHere = hit || null;
       if(hit) setTimeout(()=>showFieldToast(`❗ 의뢰 목표 지점: ${hit.questTitle}`), 3200);

@@ -100,6 +100,29 @@ window.getQuest = getQuest;
 export function getActiveQuests(){ return Object.values(loadQuestDB()).filter(q=>q.status==='active').sort((a,b)=>b.priority-a.priority); }
 window.getActiveQuests = getActiveQuests;
 
+// [21번 라운드, 시스템 업그레이드 ④] misc/053의 getActiveBulletinQuestTargets()
+// 와 정확히 같은 모양({locationId,name,icon,questTitle})을 돌려주는
+// AI 자유생성 퀘스트 쪽 대응 함수 — economy/255·world/320이 두 함수를
+// 합쳐서 지도/필드에 표시한다. 위치 ID만 저장해뒀으니(relatedLocations),
+// 실제 이름/아이콘은 여기서 getAllLandLocations()로 그때그때 조회한다
+// (장소 데이터가 나중에 바뀌어도 항상 최신 상태를 반영).
+export function getActiveAIQuestLocationTargets(){
+  try{
+    const all = (typeof window.getAllLandLocations==='function') ? window.getAllLandLocations() : [];
+    if(!all.length) return [];
+    const byId = new Map(all.map(l=>[l.id,l]));
+    return getActiveQuests()
+      .filter(q=>q.relatedLocations && q.relatedLocations.length)
+      .map(q=>{
+        const loc = byId.get(q.relatedLocations[0]);
+        if(!loc) return null;
+        return { locationId: loc.id, name: loc.name, icon: loc.icon, questTitle: q.title||'' };
+      })
+      .filter(Boolean);
+  }catch(e){ return []; }
+}
+window.getActiveAIQuestLocationTargets = getActiveAIQuestLocationTargets;
+
 window.getQuest=getQuest;
 
 window.getActiveQuests=getActiveQuests;

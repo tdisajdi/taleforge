@@ -315,7 +315,22 @@ function processGSToAllDBs(gs){
   // ── 퀘스트 ───────────────────────────────────────────
   if(gs.quest_detail){
     const q=gs.quest_detail;
-    if(q.id) upsertQuest(q.id,{ title:q.title, description:q.desc, objective:q.objective, rewards:q.reward?{special:q.reward}:{} });
+    // [21번 라운드, 시스템 업그레이드 ④ — 사용자 승인] AI가 즉석
+    // 생성하는 퀘스트(quest_detail)는 목표가 자유 텍스트(objective)
+    // 뿐이라 구조화된 장소 참조가 전혀 없었다(18번 섹션에서 확인해둔
+    // 공백) — AI에게 좌표를 맡기지 않고(환각 위험), misc/053이 게시판
+    // 의뢰에 쓰던 것과 완전히 같은 결정론적 방식(실제 좌표로 가까운
+    // 실제 장소 하나를 시드로 고정 선택)을 재사용해 퀘스트 DB의
+    // 기존 relatedLocations 필드(quest/141에 이미 있었지만 이 필드를
+    // 채워주는 호출이 코드 전체에 단 하나도 없었다 — 죽어있던 스키마
+    // 필드를 처음으로 실제로 채움)에 위치를 채워 넣는다.
+    let locPatch = {};
+    try{
+      const curLoc = (typeof window.loadCurrentLocation==='function') ? window.loadCurrentLocation() : null;
+      const target = (curLoc && typeof window.pickQuestTargetLocation==='function') ? window.pickQuestTargetLocation(curLoc, String(q.id)) : null;
+      if(target) locPatch = { location: target.id };
+    }catch(e){}
+    if(q.id) upsertQuest(q.id,{ title:q.title, description:q.desc, objective:q.objective, rewards:q.reward?{special:q.reward}:{}, ...locPatch });
   }
   if(Array.isArray(gs.q_new)){
     gs.q_new.forEach(id=>upsertQuest(String(id),{ status:'active' }));

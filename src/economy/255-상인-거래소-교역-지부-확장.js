@@ -2170,10 +2170,15 @@ export function renderLandMapSVG(){
   // 목록을 읽어, 그 장소의 마커에 ❗ 배지를 얹는다. 텍스트 추측이
   // 아니라 misc/053에서 실제 좌표 데이터로 결정론적으로 고른
   // targetLocationId를 그대로 신뢰한다.
-  const questTargetIds = new Set(
-    (typeof window.getActiveBulletinQuestTargets==='function' ? window.getActiveBulletinQuestTargets() : [])
-      .map(q=>q.locationId)
-  );
+  // [21번 라운드, 시스템 업그레이드 ④] AI 자유생성 퀘스트 쪽 목표
+  // 장소(quest/141의 getActiveAIQuestLocationTargets, 같은 결정론적
+  // 방식으로 채워짐)도 같은 배지로 합쳐서 표시한다 — 두 출처가 서로
+  // 다른 방식으로 "장소 추측"을 하지 않도록 둘 다 이미 확정된 실제
+  // locationId만 신뢰한다.
+  const questTargetIds = new Set([
+    ...(typeof window.getActiveBulletinQuestTargets==='function' ? window.getActiveBulletinQuestTargets() : []),
+    ...(typeof window.getActiveAIQuestLocationTargets==='function' ? window.getActiveAIQuestLocationTargets() : []),
+  ].map(q=>q.locationId));
   markerList.forEach(m=>{
     const { loc, c, isCurrent, isDungeon, dTier, color, baseSize, shapePath, labelText, fontSize, labelY } = m;
     const hasQuestTarget = questTargetIds.has(loc.id);

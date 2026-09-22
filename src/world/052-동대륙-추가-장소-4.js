@@ -46,6 +46,12 @@ export function saveCurrentLocation(d){
       }
       updateChallenge('continents_visited', visited.length);
     }
+    // [21-7, 웨이포인트 네트워크 재설계] 위 대륙 방문 트래킹과 같은
+    // 이유로 이 공통 경로에서 등록한다 — 정착지에 도착하는 어떤 경로든
+    // (이동, AI 텍스트 감지, 체포/석방 등) 빠짐없이 웨이포인트로 잡힌다.
+    if(d && typeof window.registerTeleportWaypoint==='function'){
+      window.registerTeleportWaypoint(d);
+    }
   }catch(e){}
 }
 window.saveCurrentLocation = saveCurrentLocation;

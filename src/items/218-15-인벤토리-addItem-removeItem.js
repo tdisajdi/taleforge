@@ -1708,28 +1708,58 @@ function getOwnedSpecialMounts(){
 }
 window.getOwnedSpecialMounts = getOwnedSpecialMounts;
 
-// ── 텔레포트 쿨다운 ────────────────────────────────────────
-const TELEPORT_LAST_USE_KEY = 'tf-teleport-last-use';
-function isTeleportOnCooldown(){
+// ── 텔레포트 웨이포인트 네트워크 ────────────────────────────
+// [21-7 재설계, "기워붙인 곳" 6/6] 예전엔 아이템+쿨다운(30턴)만
+// 채우면 대륙 어디든 무료로 순간이동했다 — 운임 체계가 전혀 없어
+// "유료"라는 설정 텍스트와 실제 동작이 따로 놀았다. 직접 방문해서
+// 등록한 정착지(마을/도시/수도/항구/영지)끼리만, 그것도 현재 위치
+// 자체가 등록된 웨이포인트일 때만, 거리에 비례한 골드를 내고 이동
+// 하는 진짜 웨이포인트 네트워크로 교체한다.
+const WAYPOINT_ELIGIBLE_TYPES = ['hamlet','village','town','city','major','capital','port'];
+const TELEPORT_WAYPOINTS_KEY = 'tf-teleport-waypoints';
+
+function loadTeleportWaypoints(){
+  try{ return JSON.parse(lsGet(TELEPORT_WAYPOINTS_KEY)||'[]'); }catch(e){ return []; }
+}
+window.loadTeleportWaypoints = loadTeleportWaypoints;
+
+function saveTeleportWaypoints(list){
+  try{ lsSet(TELEPORT_WAYPOINTS_KEY, JSON.stringify(list||[])); }catch(e){}
+}
+window.saveTeleportWaypoints = saveTeleportWaypoints;
+
+// saveCurrentLocation(world/052)이 모든 위치 저장 경로를 공통으로
+// 지나므로(대륙 방문 도전과제와 같은 패턴), 그 함수에서 이걸 호출해
+// 이동/AI 텍스트 감지/체포 등 어느 경로로 도착하든 빠짐없이 등록되게 한다.
+function registerTeleportWaypoint(loc){
   try{
-    const last = parseInt(lsGet(TELEPORT_LAST_USE_KEY)||'-9999', 10);
-    const now = S?.msgCount||0;
-    return (now - last) < (TRANSPORT_CONFIG.teleport?.cooldownTurns||30);
-  }catch(e){ return false; }
+    if(!loc || !loc.id) return;
+    if(!(WAYPOINT_ELIGIBLE_TYPES.includes(loc.type) || loc.isDemesne)) return;
+    const list = loadTeleportWaypoints();
+    if(list.some(w=>w.id===loc.id)) return;
+    list.push({ id:loc.id, name:loc.name, icon:loc.icon, continent:loc.continent });
+    saveTeleportWaypoints(list);
+    if(typeof toast==='function') toast(`🌀 웨이포인트 등록: ${loc.name}`, 2600);
+  }catch(e){}
 }
-window.isTeleportOnCooldown = isTeleportOnCooldown;
-function getTeleportCooldownRemaining(){
+window.registerTeleportWaypoint = registerTeleportWaypoint;
+
+function isRegisteredWaypoint(locId){
+  try{ return loadTeleportWaypoints().some(w=>w.id===locId); }catch(e){ return false; }
+}
+window.isRegisteredWaypoint = isRegisteredWaypoint;
+
+// 운임 — 같은 대륙 기준가, 다른 대륙이면 배율(배·대형선의 거리 배율과
+// 같은 원리). 등록된 웨이포인트끼리만 쓰는 네트워크라 자유 순간이동보다
+// 저렴하게 잡아도 남용 위험이 적다.
+function getWaypointTeleportCost(fromLoc, toLoc){
   try{
-    const last = parseInt(lsGet(TELEPORT_LAST_USE_KEY)||'-9999', 10);
-    const now = S?.msgCount||0;
-    return Math.max(0, (TRANSPORT_CONFIG.teleport?.cooldownTurns||30) - (now - last));
-  }catch(e){ return 0; }
+    const base = 40;
+    const sameContinent = fromLoc?.continent === toLoc?.continent;
+    return Math.round(base * (sameContinent ? 1.0 : 2.5));
+  }catch(e){ return 40; }
 }
-window.getTeleportCooldownRemaining = getTeleportCooldownRemaining;
-function markTeleportUsed(){
-  try{ lsSet(TELEPORT_LAST_USE_KEY, String(S?.msgCount||0)); }catch(e){}
-}
-window.markTeleportUsed = markTeleportUsed;
+window.getWaypointTeleportCost = getWaypointTeleportCost;
 
 // ── 공중 전용 위험 — 그리핀/페가수스/와이번으로 이동할 때만 발동.
 // 지상 몬스터/인간형/목격형 인카운터는 비행 중엔 전혀 안 일어나고,

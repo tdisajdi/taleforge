@@ -18,8 +18,12 @@ export const TRANSPORT_CONFIG = {
   griffin:  { icon:'🦅', svgIcon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 C8 5 4 9 4 14 C4 17 6 19 8 19" /><path d="M12 3 C16 5 20 9 20 14 C20 17 18 19 16 19" /><path d="M9 21 L12 17 L15 21" stroke-linejoin="round"/><circle cx="12" cy="8" r="2.2"/></svg>', name:'그리핀',      desc:'맹금과 사자의 힘을 가진 공중의 제왕. 날씨·지형 무관 최고속 비행.', speedMult:5.0, range:'air', color:'#d8a850', encounterMult:0, isAir:true, isPremiumMount:true },
   pegasus:  { icon:'🐎', svgIcon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17 C3 11 6 7 10 7 L17 7 C19.5 7 21 9.5 21 12 C21 14.5 19 16 17 16 L17 17 L4 17 Z" stroke-linejoin="round"/><path d="M9 8 C6 6 3 6 2 8 C4 9 6 9.5 8 9" stroke-linejoin="round"/><path d="M17 7 L21 2" /></svg>', name:'페가수스',    desc:'고귀하고 우아한 천마. 빠르지만 전투에는 서툴다.', speedMult:4.0, range:'air', color:'#e8e0f0', encounterMult:0, isAir:true },
   wyvern:   { icon:'🐲', svgIcon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20 L8 6 L11 12 L13 9 L22 20 Z" stroke-linejoin="round"/><path d="M8 6 L6.5 3 M8 6 L9.5 3.5" stroke-width="1.2"/></svg>', name:'와이번',      desc:'사납고 빠른 비룡. 다루기 위험하지만 그만큼 빠르다.', speedMult:4.5, range:'air', color:'#8a3a3a', encounterMult:0, isAir:true, isDangerousMount:true },
-  // ── 마법 이동 — 거리 무관 즉시 이동, 대신 매우 비싸고 재사용 제한 ──
-  teleport: { icon:'🌀', svgIcon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" stroke-width="1.3"/><path d="M12 12 C12 12 17 8 17 12 C17 16 12 12 12 12 C12 12 7 16 7 12 C7 8 12 12 12 12 Z" stroke-width="1.1"/></svg>', name:'마법진 이동', desc:'고대 마법진을 이용한 순간이동. 거리에 관계없이 즉시 도착하지만 막대한 비용과 재시전 시간이 필요하다.', speedMult:999, range:'any', color:'#a060d0', encounterMult:0, isTeleport:true, cooldownTurns:30 },
+  // ── 마법 이동 — [21-7 재설계] 예전엔 "쿨다운만 지나면 대륙 어디든
+  // 무료로 순간이동"이었으나, 직접 방문해 등록한 웨이포인트끼리만,
+  // 그것도 현재 위치 자체가 웨이포인트일 때만, 거리 비례 골드를 내고
+  // 이동하는 유료 네트워크로 재구현됨(items/218 registerTeleportWaypoint/
+  // getWaypointTeleportCost 참고).
+  teleport: { icon:'🌀', svgIcon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" stroke-width="1.3"/><path d="M12 12 C12 12 17 8 17 12 C17 16 12 12 12 12 C12 12 7 16 7 12 C7 8 12 12 12 12 Z" stroke-width="1.1"/></svg>', name:'마법진 이동', desc:'등록된 웨이포인트(마법진이 설치된 거점)끼리만, 거리에 비례한 골드를 내고 즉시 이동한다.', speedMult:999, range:'any', color:'#a060d0', encounterMult:0, isTeleport:true },
 };
 
 export const ALL_CONTINENTS = ['central','north','east','west','south','northeast','southeast','northwest'];
@@ -37,7 +41,7 @@ export const TRANSPORT_DEST_HINTS = {
   griffin:  { continents: ALL_CONTINENTS, hint:'하늘을 가로질러 어느 대륙이든 최고속으로 이동합니다.' },
   pegasus:  { continents: ALL_CONTINENTS, hint:'하늘을 가로질러 어느 대륙이든 이동 가능합니다.' },
   wyvern:   { continents: ALL_CONTINENTS, hint:'하늘을 가로질러 어느 대륙이든 빠르게 이동하지만 다루기 위험합니다.' },
-  teleport: { continents: ALL_CONTINENTS, hint:'마법진이 설치된 곳이라면 거리와 무관하게 즉시 도착합니다.' },
+  teleport: { continents: ALL_CONTINENTS, hint:'현재 위치가 웨이포인트로 등록되어 있어야 하며, 다른 등록된 웨이포인트로만 골드를 내고 이동할 수 있습니다.' },
 };
 
 export const GENERIC_MONSTER_SUFFIXES = [

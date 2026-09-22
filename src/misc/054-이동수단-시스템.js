@@ -48,18 +48,35 @@ export function openTransportPanel(transportType){
     return;
   }
 
+  // [21-7 재설계] 마법진 이동은 등록된 웨이포인트 네트워크로만 동작한다 —
+  // 현재 위치 자체가 웨이포인트로 등록돼 있지 않으면(방문한 적 없는
+  // 정착지이거나 야외/던전 등 웨이포인트 자격이 없는 곳) 아예 열 수 없다.
+  if(t.isTeleport && !(typeof isRegisteredWaypoint==='function' && currentLoc?.id && isRegisteredWaypoint(currentLoc.id))){
+    const body = document.getElementById('pb-location');
+    if(body) body.innerHTML = `
+      <div style="padding:14px;background:#150a1a;border:1px solid #7050a0;margin-bottom:10px;text-align:center">
+        <div style="font-size:24px;margin-bottom:6px">🌀</div>
+        <div style="font-size:11px;color:#c0a0e0;margin-bottom:4px">이곳은 웨이포인트로 등록되지 않았습니다.</div>
+        <div style="font-size:9px;color:var(--dim)">마법진 이동은 방문해서 등록한 정착지(마을·도시·항구·영지)에서만 열 수 있습니다.</div>
+        <button class="btn btn-dark" style="width:100%;margin-top:10px;font-size:10px" onclick="renderLocationPanel()">← 돌아가기</button>
+      </div>`;
+    return;
+  }
+
   // 목적지 필터: 선박은 해안/항구만, 육로·비행 탑승물은 해안 지역 제외
   // (해안 지역은 배로만 간다 — 여행 지도·세계지도와 같은 규칙). 마법진
-  // 순간이동만 예외 — "거리·지형과 무관하게 어디든" 즉시 이동이 그
-  // 자체로 존재 이유이므로 해안 지역도 그대로 목적지가 될 수 있다.
+  // 이동은 [21-7 재설계] 등록된 웨이포인트끼리만(현재 위치 제외).
+  const registeredIds = t.isTeleport && typeof loadTeleportWaypoints==='function'
+    ? new Set(loadTeleportWaypoints().map(w=>w.id))
+    : null;
   const destFilter = t.isTeleport
-    ? null
+    ? (l => registeredIds.has(l.id))
     : t.requiresSeaAccess
       ? (l => l.seaAccess)
       : t.requiresCoastal
         ? (l => l.coastal)
         : (l => !l.coastal);
-  const eligibleLocs = destFilter ? allLocs.filter(destFilter) : allLocs;
+  const eligibleLocs = allLocs.filter(destFilter);
 
   // 추천 목적지: 해당 이동수단에 맞는 대륙 장소 우선 표시
   const recommended = eligibleLocs.filter(l => hints.continents.includes(l.continent));
@@ -69,11 +86,14 @@ export function openTransportPanel(transportType){
   const renderLocBtn = (loc) => {
     const isCurrent = loc.id === currentId;
     const contLabel = {central:'🏰중앙',north:'❄️북',west:'⚓서',south:'🌴남',east:'🌸동',northeast:'🌿북동',southeast:'🌑남동',northwest:'⚙️북서'}[loc.continent]||'';
+    // [21-7 재설계] 마법진 이동은 목적지마다 거리 비례 골드 운임을 보여준다.
+    const teleportCost = (t.isTeleport && !isCurrent && typeof getWaypointTeleportCost==='function') ? getWaypointTeleportCost(currentLoc, loc) : null;
+    const costTag = teleportCost!=null ? ` <span style="font-size:8px;color:#e0c040">💰${teleportCost}G</span>` : '';
     return `<div onclick="${isCurrent?'':(`travelByTransport('${loc.name.replace(/'/g,"\\'")}','${transportType}')`
     )}" style="display:flex;align-items:center;gap:7px;padding:7px 10px;background:${isCurrent?'#1a1805':'#0d0800'};border:1px solid ${isCurrent?'var(--gold)':'var(--border)'};margin-bottom:3px;cursor:${isCurrent?'default':'pointer'};border-radius:1px">
       <span style="font-size:16px;flex-shrink:0">${typeof getEntityIconHTML==='function'?getEntityIconHTML(loc,{size:16}):loc.icon}</span>
       <div style="flex:1;min-width:0">
-        <div style="font-size:11px;color:${isCurrent?'var(--gold)':'var(--text)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(loc.name)} ${isCurrent?'<span style="font-size:8px;color:#60a060">◀현재</span>':''}${loc.coastal?' <span style="font-size:8px;color:#4a9ac0">🌊</span>':''}</div>
+        <div style="font-size:11px;color:${isCurrent?'var(--gold)':'var(--text)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(loc.name)} ${isCurrent?'<span style="font-size:8px;color:#60a060">◀현재</span>':''}${loc.coastal?' <span style="font-size:8px;color:#4a9ac0">🌊</span>':''}${costTag}</div>
         <div style="font-size:9px;color:var(--dim)">${contLabel} · ${loc.desc?.slice(0,28)||''}…</div>
       </div>
     </div>`;
@@ -111,11 +131,27 @@ export function travelByTransport(locName, transportType){
   const t = TRANSPORT_CONFIG[transportType]||TRANSPORT_CONFIG.walk;
   const prevLoc = loadCurrentLocation();
 
-  // [v13] 텔레포트는 재사용 쿨다운이 있다 — 막대한 비용과 재시전 시간을
-  // 반영. 쿨다운 중이면 이동 자체를 막는다.
-  if(t.isTeleport && typeof isTeleportOnCooldown==='function' && isTeleportOnCooldown()){
-    toast(`🌀 마법진이 아직 재충전 중입니다 — ${getTeleportCooldownRemaining()}턴 후 다시 사용할 수 있습니다.`, 3500);
-    return;
+  // [21-7 재설계] 마법진 이동은 출발지·목적지 둘 다 등록된 웨이포인트여야
+  // 하고(패널을 열어둔 채 다른 곳으로 실제 이동했을 가능성 재검증 — 선박
+  // 출항 제약 재검증과 같은 이유), 거리 비례 골드 운임을 낸다.
+  if(t.isTeleport){
+    if(!(typeof isRegisteredWaypoint==='function' && prevLoc?.id && isRegisteredWaypoint(prevLoc.id))){
+      toast(`🌀 현재 위치가 웨이포인트로 등록되어 있지 않습니다.`, 3000);
+      return;
+    }
+    if(!(typeof isRegisteredWaypoint==='function' && isRegisteredWaypoint(loc.id))){
+      toast(`🌀 ${loc.name}은(는) 아직 웨이포인트로 등록되지 않았습니다 — 직접 방문해야 합니다.`, 3000);
+      return;
+    }
+    const teleportCost = (typeof getWaypointTeleportCost==='function') ? getWaypointTeleportCost(prevLoc, loc) : 40;
+    if((S.gold||0) < teleportCost){
+      toast(`💰 웨이포인트 이동 비용(${teleportCost}G)이 부족합니다.`, 3000);
+      return;
+    }
+    S.gold -= teleportCost;
+    if(typeof saveGold==='function') saveGold(S.gold);
+    if(typeof window.updateHeader==='function') window.updateHeader();
+    toast(`💰 웨이포인트 이동 비용 ${teleportCost}G 지불`, 2200);
   }
 
   // [v14] 선박 출항 제약 재검증(목적지 클릭 시점에도 한 번 더 — 패널을
@@ -157,7 +193,6 @@ export function travelByTransport(locName, transportType){
   // 건너뛴다(둘 다 getTravelDays/tickLandTravel에서 처리).
   S._activeTransport = transportType;
   if(typeof recordTransportTimeCost==='function') recordTransportTimeCost(transportType);
-  if(t.isTeleport && typeof markTeleportUsed==='function') markTeleportUsed();
   if(t.isAir && typeof tryAirEncounter==='function') setTimeout(()=>tryAirEncounter(transportType), 100);
 
   if(!t.isTeleport && !t.requiresCoastal && !t.requiresSeaAccess && typeof window.startLandTravel==='function'){

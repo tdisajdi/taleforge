@@ -9628,8 +9628,12 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
     griffin: { icon: "\u{1F985}", svgIcon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 C8 5 4 9 4 14 C4 17 6 19 8 19" /><path d="M12 3 C16 5 20 9 20 14 C20 17 18 19 16 19" /><path d="M9 21 L12 17 L15 21" stroke-linejoin="round"/><circle cx="12" cy="8" r="2.2"/></svg>', name: "\uADF8\uB9AC\uD540", desc: "\uB9F9\uAE08\uACFC \uC0AC\uC790\uC758 \uD798\uC744 \uAC00\uC9C4 \uACF5\uC911\uC758 \uC81C\uC655. \uB0A0\uC528\xB7\uC9C0\uD615 \uBB34\uAD00 \uCD5C\uACE0\uC18D \uBE44\uD589.", speedMult: 5, range: "air", color: "#d8a850", encounterMult: 0, isAir: true, isPremiumMount: true },
     pegasus: { icon: "\u{1F40E}", svgIcon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17 C3 11 6 7 10 7 L17 7 C19.5 7 21 9.5 21 12 C21 14.5 19 16 17 16 L17 17 L4 17 Z" stroke-linejoin="round"/><path d="M9 8 C6 6 3 6 2 8 C4 9 6 9.5 8 9" stroke-linejoin="round"/><path d="M17 7 L21 2" /></svg>', name: "\uD398\uAC00\uC218\uC2A4", desc: "\uACE0\uADC0\uD558\uACE0 \uC6B0\uC544\uD55C \uCC9C\uB9C8. \uBE60\uB974\uC9C0\uB9CC \uC804\uD22C\uC5D0\uB294 \uC11C\uD234\uB2E4.", speedMult: 4, range: "air", color: "#e8e0f0", encounterMult: 0, isAir: true },
     wyvern: { icon: "\u{1F432}", svgIcon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20 L8 6 L11 12 L13 9 L22 20 Z" stroke-linejoin="round"/><path d="M8 6 L6.5 3 M8 6 L9.5 3.5" stroke-width="1.2"/></svg>', name: "\uC640\uC774\uBC88", desc: "\uC0AC\uB0A9\uACE0 \uBE60\uB978 \uBE44\uB8E1. \uB2E4\uB8E8\uAE30 \uC704\uD5D8\uD558\uC9C0\uB9CC \uADF8\uB9CC\uD07C \uBE60\uB974\uB2E4.", speedMult: 4.5, range: "air", color: "#8a3a3a", encounterMult: 0, isAir: true, isDangerousMount: true },
-    // ── 마법 이동 — 거리 무관 즉시 이동, 대신 매우 비싸고 재사용 제한 ──
-    teleport: { icon: "\u{1F300}", svgIcon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" stroke-width="1.3"/><path d="M12 12 C12 12 17 8 17 12 C17 16 12 12 12 12 C12 12 7 16 7 12 C7 8 12 12 12 12 Z" stroke-width="1.1"/></svg>', name: "\uB9C8\uBC95\uC9C4 \uC774\uB3D9", desc: "\uACE0\uB300 \uB9C8\uBC95\uC9C4\uC744 \uC774\uC6A9\uD55C \uC21C\uAC04\uC774\uB3D9. \uAC70\uB9AC\uC5D0 \uAD00\uACC4\uC5C6\uC774 \uC989\uC2DC \uB3C4\uCC29\uD558\uC9C0\uB9CC \uB9C9\uB300\uD55C \uBE44\uC6A9\uACFC \uC7AC\uC2DC\uC804 \uC2DC\uAC04\uC774 \uD544\uC694\uD558\uB2E4.", speedMult: 999, range: "any", color: "#a060d0", encounterMult: 0, isTeleport: true, cooldownTurns: 30 }
+    // ── 마법 이동 — [21-7 재설계] 예전엔 "쿨다운만 지나면 대륙 어디든
+    // 무료로 순간이동"이었으나, 직접 방문해 등록한 웨이포인트끼리만,
+    // 그것도 현재 위치 자체가 웨이포인트일 때만, 거리 비례 골드를 내고
+    // 이동하는 유료 네트워크로 재구현됨(items/218 registerTeleportWaypoint/
+    // getWaypointTeleportCost 참고).
+    teleport: { icon: "\u{1F300}", svgIcon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" stroke-width="1.3"/><path d="M12 12 C12 12 17 8 17 12 C17 16 12 12 12 12 C12 12 7 16 7 12 C7 8 12 12 12 12 Z" stroke-width="1.1"/></svg>', name: "\uB9C8\uBC95\uC9C4 \uC774\uB3D9", desc: "\uB4F1\uB85D\uB41C \uC6E8\uC774\uD3EC\uC778\uD2B8(\uB9C8\uBC95\uC9C4\uC774 \uC124\uCE58\uB41C \uAC70\uC810)\uB07C\uB9AC\uB9CC, \uAC70\uB9AC\uC5D0 \uBE44\uB840\uD55C \uACE8\uB4DC\uB97C \uB0B4\uACE0 \uC989\uC2DC \uC774\uB3D9\uD55C\uB2E4.", speedMult: 999, range: "any", color: "#a060d0", encounterMult: 0, isTeleport: true }
   };
   var ALL_CONTINENTS = ["central", "north", "east", "west", "south", "northeast", "southeast", "northwest"];
   var TRANSPORT_DEST_HINTS = {
@@ -9645,7 +9649,7 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
     griffin: { continents: ALL_CONTINENTS, hint: "\uD558\uB298\uC744 \uAC00\uB85C\uC9C8\uB7EC \uC5B4\uB290 \uB300\uB959\uC774\uB4E0 \uCD5C\uACE0\uC18D\uC73C\uB85C \uC774\uB3D9\uD569\uB2C8\uB2E4." },
     pegasus: { continents: ALL_CONTINENTS, hint: "\uD558\uB298\uC744 \uAC00\uB85C\uC9C8\uB7EC \uC5B4\uB290 \uB300\uB959\uC774\uB4E0 \uC774\uB3D9 \uAC00\uB2A5\uD569\uB2C8\uB2E4." },
     wyvern: { continents: ALL_CONTINENTS, hint: "\uD558\uB298\uC744 \uAC00\uB85C\uC9C8\uB7EC \uC5B4\uB290 \uB300\uB959\uC774\uB4E0 \uBE60\uB974\uAC8C \uC774\uB3D9\uD558\uC9C0\uB9CC \uB2E4\uB8E8\uAE30 \uC704\uD5D8\uD569\uB2C8\uB2E4." },
-    teleport: { continents: ALL_CONTINENTS, hint: "\uB9C8\uBC95\uC9C4\uC774 \uC124\uCE58\uB41C \uACF3\uC774\uB77C\uBA74 \uAC70\uB9AC\uC640 \uBB34\uAD00\uD558\uAC8C \uC989\uC2DC \uB3C4\uCC29\uD569\uB2C8\uB2E4." }
+    teleport: { continents: ALL_CONTINENTS, hint: "\uD604\uC7AC \uC704\uCE58\uAC00 \uC6E8\uC774\uD3EC\uC778\uD2B8\uB85C \uB4F1\uB85D\uB418\uC5B4 \uC788\uC5B4\uC57C \uD558\uBA70, \uB2E4\uB978 \uB4F1\uB85D\uB41C \uC6E8\uC774\uD3EC\uC778\uD2B8\uB85C\uB9CC \uACE8\uB4DC\uB97C \uB0B4\uACE0 \uC774\uB3D9\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4." }
   };
   var GENERIC_MONSTER_SUFFIXES = [
     "\uB291\uB300",
@@ -38866,6 +38870,9 @@ ${lines.join("\n")}
           lsSet("tf-visited-continents", JSON.stringify(visited));
         }
         updateChallenge("continents_visited", visited.length);
+      }
+      if (d && typeof window.registerTeleportWaypoint === "function") {
+        window.registerTeleportWaypoint(d);
       }
     } catch (e) {
     }
@@ -94745,34 +94752,54 @@ GS: {"soul_evolve_candidates":{"soulId":"${soul.id}","candidates":[{"name":"\uC9
       }
     }
     window.getOwnedSpecialMounts = getOwnedSpecialMounts2;
-    const TELEPORT_LAST_USE_KEY = "tf-teleport-last-use";
-    function isTeleportOnCooldown2() {
+    const WAYPOINT_ELIGIBLE_TYPES = ["hamlet", "village", "town", "city", "major", "capital", "port"];
+    const TELEPORT_WAYPOINTS_KEY = "tf-teleport-waypoints";
+    function loadTeleportWaypoints2() {
       try {
-        const last = parseInt(lsGet(TELEPORT_LAST_USE_KEY) || "-9999", 10);
-        const now = S?.msgCount || 0;
-        return now - last < (TRANSPORT_CONFIG.teleport?.cooldownTurns || 30);
+        return JSON.parse(lsGet(TELEPORT_WAYPOINTS_KEY) || "[]");
+      } catch (e) {
+        return [];
+      }
+    }
+    window.loadTeleportWaypoints = loadTeleportWaypoints2;
+    function saveTeleportWaypoints(list) {
+      try {
+        lsSet(TELEPORT_WAYPOINTS_KEY, JSON.stringify(list || []));
+      } catch (e) {
+      }
+    }
+    window.saveTeleportWaypoints = saveTeleportWaypoints;
+    function registerTeleportWaypoint(loc) {
+      try {
+        if (!loc || !loc.id) return;
+        if (!(WAYPOINT_ELIGIBLE_TYPES.includes(loc.type) || loc.isDemesne)) return;
+        const list = loadTeleportWaypoints2();
+        if (list.some((w) => w.id === loc.id)) return;
+        list.push({ id: loc.id, name: loc.name, icon: loc.icon, continent: loc.continent });
+        saveTeleportWaypoints(list);
+        if (typeof toast === "function") toast(`\u{1F300} \uC6E8\uC774\uD3EC\uC778\uD2B8 \uB4F1\uB85D: ${loc.name}`, 2600);
+      } catch (e) {
+      }
+    }
+    window.registerTeleportWaypoint = registerTeleportWaypoint;
+    function isRegisteredWaypoint2(locId) {
+      try {
+        return loadTeleportWaypoints2().some((w) => w.id === locId);
       } catch (e) {
         return false;
       }
     }
-    window.isTeleportOnCooldown = isTeleportOnCooldown2;
-    function getTeleportCooldownRemaining2() {
+    window.isRegisteredWaypoint = isRegisteredWaypoint2;
+    function getWaypointTeleportCost2(fromLoc, toLoc) {
       try {
-        const last = parseInt(lsGet(TELEPORT_LAST_USE_KEY) || "-9999", 10);
-        const now = S?.msgCount || 0;
-        return Math.max(0, (TRANSPORT_CONFIG.teleport?.cooldownTurns || 30) - (now - last));
+        const base = 40;
+        const sameContinent = fromLoc?.continent === toLoc?.continent;
+        return Math.round(base * (sameContinent ? 1 : 2.5));
       } catch (e) {
-        return 0;
+        return 40;
       }
     }
-    window.getTeleportCooldownRemaining = getTeleportCooldownRemaining2;
-    function markTeleportUsed2() {
-      try {
-        lsSet(TELEPORT_LAST_USE_KEY, String(S?.msgCount || 0));
-      } catch (e) {
-      }
-    }
-    window.markTeleportUsed = markTeleportUsed2;
+    window.getWaypointTeleportCost = getWaypointTeleportCost2;
     const AIR_ENCOUNTER_POOL = [
       { id: "air_wyvern_wild", icon: "\u{1F409}", name: "\uC57C\uC0DD \uC640\uC774\uBC88", desc: "\uC57C\uC0DD \uC640\uC774\uBC88 \uD55C \uB9C8\uB9AC\uAC00 \uC601\uC5ED\uC744 \uCE68\uBC94\uD55C \uB2F9\uC2E0\uC758 \uD0D1\uC2B9\uBB3C\uC5D0 \uC801\uB300\uC801\uC73C\uB85C \uC811\uADFC\uD55C\uB2E4." },
       { id: "air_griffin_rival", icon: "\u{1F985}", name: "\uACBD\uC7C1 \uADF8\uB9AC\uD540", desc: "\uB2E4\uB978 \uADF8\uB9AC\uD540 \uC870\uB828\uC0AC\uAC00 \uD558\uB298\uC5D0\uC11C \uC2DC\uBE44\uB97C \uAC74\uB2E4 \u2014 \uACF5\uC911 \uCD94\uACA9\uC804\uC774 \uBC8C\uC5B4\uC9C8 \uC218 \uC788\uB2E4." },
@@ -94954,18 +94981,32 @@ GS: {"soul_evolve_candidates":{"soulId":"${soul.id}","candidates":[{"name":"\uC9
       </div>`;
       return;
     }
-    const destFilter = t.isTeleport ? null : t.requiresSeaAccess ? ((l) => l.seaAccess) : t.requiresCoastal ? ((l) => l.coastal) : ((l) => !l.coastal);
-    const eligibleLocs = destFilter ? allLocs.filter(destFilter) : allLocs;
+    if (t.isTeleport && !(typeof isRegisteredWaypoint === "function" && currentLoc?.id && isRegisteredWaypoint(currentLoc.id))) {
+      const body2 = document.getElementById("pb-location");
+      if (body2) body2.innerHTML = `
+      <div style="padding:14px;background:#150a1a;border:1px solid #7050a0;margin-bottom:10px;text-align:center">
+        <div style="font-size:24px;margin-bottom:6px">\u{1F300}</div>
+        <div style="font-size:11px;color:#c0a0e0;margin-bottom:4px">\uC774\uACF3\uC740 \uC6E8\uC774\uD3EC\uC778\uD2B8\uB85C \uB4F1\uB85D\uB418\uC9C0 \uC54A\uC558\uC2B5\uB2C8\uB2E4.</div>
+        <div style="font-size:9px;color:var(--dim)">\uB9C8\uBC95\uC9C4 \uC774\uB3D9\uC740 \uBC29\uBB38\uD574\uC11C \uB4F1\uB85D\uD55C \uC815\uCC29\uC9C0(\uB9C8\uC744\xB7\uB3C4\uC2DC\xB7\uD56D\uAD6C\xB7\uC601\uC9C0)\uC5D0\uC11C\uB9CC \uC5F4 \uC218 \uC788\uC2B5\uB2C8\uB2E4.</div>
+        <button class="btn btn-dark" style="width:100%;margin-top:10px;font-size:10px" onclick="renderLocationPanel()">\u2190 \uB3CC\uC544\uAC00\uAE30</button>
+      </div>`;
+      return;
+    }
+    const registeredIds = t.isTeleport && typeof loadTeleportWaypoints === "function" ? new Set(loadTeleportWaypoints().map((w) => w.id)) : null;
+    const destFilter = t.isTeleport ? ((l) => registeredIds.has(l.id)) : t.requiresSeaAccess ? ((l) => l.seaAccess) : t.requiresCoastal ? ((l) => l.coastal) : ((l) => !l.coastal);
+    const eligibleLocs = allLocs.filter(destFilter);
     const recommended = eligibleLocs.filter((l) => hints.continents.includes(l.continent));
     const others = eligibleLocs.filter((l) => !hints.continents.includes(l.continent));
     const currentId = currentLoc?.id;
     const renderLocBtn = (loc) => {
       const isCurrent = loc.id === currentId;
       const contLabel = { central: "\u{1F3F0}\uC911\uC559", north: "\u2744\uFE0F\uBD81", west: "\u2693\uC11C", south: "\u{1F334}\uB0A8", east: "\u{1F338}\uB3D9", northeast: "\u{1F33F}\uBD81\uB3D9", southeast: "\u{1F311}\uB0A8\uB3D9", northwest: "\u2699\uFE0F\uBD81\uC11C" }[loc.continent] || "";
+      const teleportCost = t.isTeleport && !isCurrent && typeof getWaypointTeleportCost === "function" ? getWaypointTeleportCost(currentLoc, loc) : null;
+      const costTag = teleportCost != null ? ` <span style="font-size:8px;color:#e0c040">\u{1F4B0}${teleportCost}G</span>` : "";
       return `<div onclick="${isCurrent ? "" : `travelByTransport('${loc.name.replace(/'/g, "\\'")}','${transportType}')`}" style="display:flex;align-items:center;gap:7px;padding:7px 10px;background:${isCurrent ? "#1a1805" : "#0d0800"};border:1px solid ${isCurrent ? "var(--gold)" : "var(--border)"};margin-bottom:3px;cursor:${isCurrent ? "default" : "pointer"};border-radius:1px">
       <span style="font-size:16px;flex-shrink:0">${typeof getEntityIconHTML === "function" ? getEntityIconHTML(loc, { size: 16 }) : loc.icon}</span>
       <div style="flex:1;min-width:0">
-        <div style="font-size:11px;color:${isCurrent ? "var(--gold)" : "var(--text)"};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc2(loc.name)} ${isCurrent ? '<span style="font-size:8px;color:#60a060">\u25C0\uD604\uC7AC</span>' : ""}${loc.coastal ? ' <span style="font-size:8px;color:#4a9ac0">\u{1F30A}</span>' : ""}</div>
+        <div style="font-size:11px;color:${isCurrent ? "var(--gold)" : "var(--text)"};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc2(loc.name)} ${isCurrent ? '<span style="font-size:8px;color:#60a060">\u25C0\uD604\uC7AC</span>' : ""}${loc.coastal ? ' <span style="font-size:8px;color:#4a9ac0">\u{1F30A}</span>' : ""}${costTag}</div>
         <div style="font-size:9px;color:var(--dim)">${contLabel} \xB7 ${loc.desc?.slice(0, 28) || ""}\u2026</div>
       </div>
     </div>`;
@@ -95000,9 +95041,24 @@ GS: {"soul_evolve_candidates":{"soulId":"${soul.id}","candidates":[{"name":"\uC9
     if (!loc) return;
     const t = TRANSPORT_CONFIG[transportType] || TRANSPORT_CONFIG.walk;
     const prevLoc = loadCurrentLocation();
-    if (t.isTeleport && typeof isTeleportOnCooldown === "function" && isTeleportOnCooldown()) {
-      toast(`\u{1F300} \uB9C8\uBC95\uC9C4\uC774 \uC544\uC9C1 \uC7AC\uCDA9\uC804 \uC911\uC785\uB2C8\uB2E4 \u2014 ${getTeleportCooldownRemaining()}\uD134 \uD6C4 \uB2E4\uC2DC \uC0AC\uC6A9\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4.`, 3500);
-      return;
+    if (t.isTeleport) {
+      if (!(typeof isRegisteredWaypoint === "function" && prevLoc?.id && isRegisteredWaypoint(prevLoc.id))) {
+        toast(`\u{1F300} \uD604\uC7AC \uC704\uCE58\uAC00 \uC6E8\uC774\uD3EC\uC778\uD2B8\uB85C \uB4F1\uB85D\uB418\uC5B4 \uC788\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4.`, 3e3);
+        return;
+      }
+      if (!(typeof isRegisteredWaypoint === "function" && isRegisteredWaypoint(loc.id))) {
+        toast(`\u{1F300} ${loc.name}\uC740(\uB294) \uC544\uC9C1 \uC6E8\uC774\uD3EC\uC778\uD2B8\uB85C \uB4F1\uB85D\uB418\uC9C0 \uC54A\uC558\uC2B5\uB2C8\uB2E4 \u2014 \uC9C1\uC811 \uBC29\uBB38\uD574\uC57C \uD569\uB2C8\uB2E4.`, 3e3);
+        return;
+      }
+      const teleportCost = typeof getWaypointTeleportCost === "function" ? getWaypointTeleportCost(prevLoc, loc) : 40;
+      if ((S.gold || 0) < teleportCost) {
+        toast(`\u{1F4B0} \uC6E8\uC774\uD3EC\uC778\uD2B8 \uC774\uB3D9 \uBE44\uC6A9(${teleportCost}G)\uC774 \uBD80\uC871\uD569\uB2C8\uB2E4.`, 3e3);
+        return;
+      }
+      S.gold -= teleportCost;
+      if (typeof saveGold === "function") saveGold(S.gold);
+      if (typeof window.updateHeader === "function") window.updateHeader();
+      toast(`\u{1F4B0} \uC6E8\uC774\uD3EC\uC778\uD2B8 \uC774\uB3D9 \uBE44\uC6A9 ${teleportCost}G \uC9C0\uBD88`, 2200);
     }
     if (t.requiresCoastal && !prevLoc?.coastal) {
       toast(`\u26A0\uFE0F \uC774\uACF3\uC740 \uD574\uC548/\uD56D\uAD6C\uAC00 \uC544\uB2C8\uB77C ${t.name}\uC744 \uB744\uC6B8 \uC218 \uC5C6\uC2B5\uB2C8\uB2E4.`, 3e3);
@@ -95028,7 +95084,6 @@ GS: {"soul_evolve_candidates":{"soulId":"${soul.id}","candidates":[{"name":"\uC9
     }
     S._activeTransport = transportType;
     if (typeof recordTransportTimeCost === "function") recordTransportTimeCost(transportType);
-    if (t.isTeleport && typeof markTeleportUsed === "function") markTeleportUsed();
     if (t.isAir && typeof tryAirEncounter === "function") setTimeout(() => tryAirEncounter(transportType), 100);
     if (!t.isTeleport && !t.requiresCoastal && !t.requiresSeaAccess && typeof window.startLandTravel === "function") {
       toast(`${t.name}\uC744(\uB97C) \uD0C0\uACE0 ${loc.icon} ${loc.name}\uC744(\uB97C) \uD5A5\uD574 \uCD9C\uBC1C\uD569\uB2C8\uB2E4.`, 2800, t);

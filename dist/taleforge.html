@@ -33533,6 +33533,26 @@ ${lines.join("\n")}
   }
   window.recordFearEntry = recordFearEntry;
   window.recordFearEntry = recordFearEntry;
+  window.manualRecordBloodEntry = function() {
+    const npcSel = document.getElementById("vc-blood-npc-sel");
+    const clsSel = document.getElementById("vc-blood-class-sel");
+    if (!npcSel || !npcSel.value) {
+      toast("\uB300\uC0C1 NPC\uB97C \uBA3C\uC800 \uC120\uD0DD\uD558\uC138\uC694", 2e3);
+      return;
+    }
+    recordBloodEntry(npcSel.value, clsSel.value);
+    renderVampireChroniclePanel();
+  };
+  window.manualRecordFearEntry = function() {
+    const npcSel = document.getElementById("vc-fear-npc-sel");
+    const rankSel = document.getElementById("vc-fear-rank-sel");
+    if (!npcSel || !npcSel.value) {
+      toast("\uB300\uC0C1 NPC\uB97C \uBA3C\uC800 \uC120\uD0DD\uD558\uC138\uC694", 2e3);
+      return;
+    }
+    recordFearEntry(npcSel.value, rankSel.value);
+    renderVampireChroniclePanel();
+  };
   function unlockVampireRaceSkills() {
     if (!isVampireRace()) return;
     if (!S.unlockedSkills) S.unlockedSkills = {};
@@ -33707,6 +33727,19 @@ ${lines.join("\n")}
     } else {
       h += `<div style="font-size:9px;color:#3a2020;padding:8px;text-align:center">\uC544\uC9C1 \uD761\uD608 \uAE30\uB85D\uC774 \uC5C6\uB2E4.</div>`;
     }
+    {
+      const npcOpts = (typeof loadNPCs === "function" ? loadNPCs() : []).filter((n) => n && n.name).map((n) => `<option value="${esc2(n.name)}">${esc2(n.name)}</option>`).join("");
+      h += `<div style="background:#0d0003;padding:8px;border:1px solid #3a0010;border-radius:2px;margin-bottom:10px">
+      <div style="font-size:9px;color:#c05050;margin-bottom:5px">\u{1FA78} \uC218\uB3D9 \uD761\uD608 \uAE30\uB85D \uCD94\uAC00</div>
+      ${npcOpts ? `
+      <select id="vc-blood-npc-sel" style="width:100%;margin-bottom:4px;background:#1a0005;color:#e0a0a0;border:1px solid #3a0010;font-size:9px;padding:4px">${npcOpts}</select>
+      <select id="vc-blood-class-sel" style="width:100%;margin-bottom:4px;background:#1a0005;color:#e0a0a0;border:1px solid #3a0010;font-size:9px;padding:4px">
+        ${Object.entries(BLOOD_CLASSES).map(([k, c]) => `<option value="${k}">${c.icon} ${c.label} (+${c.points}pts)</option>`).join("")}
+      </select>
+      <button onclick="manualRecordBloodEntry()" style="width:100%;padding:6px;background:#1a0005;border:1px solid #8b0000;color:#ff6060;font-family:'Cinzel',serif;font-size:9px;cursor:pointer;border-radius:2px">\uAE30\uB85D\uD558\uAE30</button>
+      ` : `<div style="font-size:8px;color:#3a2020">\uC544\uC9C1 \uB9CC\uB09C NPC\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4 \u2014 \uB300\uD654\uB97C \uB098\uB220\uBCF8 \uB4A4 \uB2E4\uC2DC \uC624\uC138\uC694.</div>`}
+    </div>`;
+    }
     h += `<div style="font-family:'Cinzel',serif;font-size:10px;color:#ff4444;margin:10px 0 6px">\u{1F631} \uACF5\uD3EC \uAE30\uB85D\uBD80 (${d.fearRegistry.entries.length}\uBA85)</div>`;
     if (d.fearRegistry.entries.length) {
       h += `<div style="background:#0d0003;padding:8px;border:1px solid #3a0010;border-radius:2px;margin-bottom:8px;font-size:9px">`;
@@ -33721,6 +33754,19 @@ ${lines.join("\n")}
       h += `</div>`;
     } else {
       h += `<div style="font-size:9px;color:#3a2020;padding:8px;text-align:center">\uC544\uC9C1 \uACF5\uD3EC\uB97C \uC2EC\uC9C0 \uBABB\uD588\uB2E4.</div>`;
+    }
+    {
+      const npcOpts = (typeof loadNPCs === "function" ? loadNPCs() : []).filter((n) => n && n.name).map((n) => `<option value="${esc2(n.name)}">${esc2(n.name)}</option>`).join("");
+      h += `<div style="background:#0d0003;padding:8px;border:1px solid #3a0010;border-radius:2px;margin-bottom:10px">
+      <div style="font-size:9px;color:#c05050;margin-bottom:5px">\u{1F631} \uC218\uB3D9 \uACF5\uD3EC \uAE30\uB85D \uCD94\uAC00</div>
+      ${npcOpts ? `
+      <select id="vc-fear-npc-sel" style="width:100%;margin-bottom:4px;background:#1a0005;color:#e0a0a0;border:1px solid #3a0010;font-size:9px;padding:4px">${npcOpts}</select>
+      <select id="vc-fear-rank-sel" style="width:100%;margin-bottom:4px;background:#1a0005;color:#e0a0a0;border:1px solid #3a0010;font-size:9px;padding:4px">
+        ${Object.entries(FEAR_RANKS).map(([k, r]) => `<option value="${k}">${r.icon} ${r.label} (+${r.fearPoints}pts)</option>`).join("")}
+      </select>
+      <button onclick="manualRecordFearEntry()" style="width:100%;padding:6px;background:#1a0005;border:1px solid #8b0000;color:#ff6060;font-family:'Cinzel',serif;font-size:9px;cursor:pointer;border-radius:2px">\uAE30\uB85D\uD558\uAE30</button>
+      ` : `<div style="font-size:8px;color:#3a2020">\uC544\uC9C1 \uB9CC\uB09C NPC\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4 \u2014 \uB300\uD654\uB97C \uB098\uB220\uBCF8 \uB4A4 \uB2E4\uC2DC \uC624\uC138\uC694.</div>`}
+    </div>`;
     }
     h += `<div style="font-family:'Cinzel',serif;font-size:10px;color:#ff4444;margin:10px 0 6px">\u23F3 \uC2DC\uB300 \uAE30\uB85D\uBD80</div>`;
     h += `<div style="background:#0d0003;padding:8px;border:1px solid #3a0010;border-radius:2px;font-size:9px;color:#804040">
@@ -35238,9 +35284,26 @@ ${lines.join("\n")}
       }).join("")}
     </div>` : ""}
 
-    <!-- \uC218\uB3D9 \uC5C5\uBCF4 \uD68D\uB4DD -->
+    <!-- \uC218\uB3D9 \uC5C5\uBCF4 \uD68D\uB4DD (AI \uC5C6\uC774\uB3C4 \uC9C4\uD589\uB418\uB3C4\uB85D \uD558\uB294 \uC218\uB3D9 \uD2B8\uB9AC\uAC70 \u2014 \uAE30\uC874\uC5D4
+         detectOrcHonorFromText\uC758 AI \uC11C\uC0AC \uAC10\uC9C0\uC5D0\uB9CC \uC758\uC874\uD574 no-API \uBAA8\uB4DC\uC5D0\uC11C
+         \uC5C5\uBCF4\uAC00 \uC601\uAD6C \uC815\uC9C0\uD588\uC74C. honorable_duel/berserker/tactical_win\uC740
+         triggerLineageBurst \uBC84\uD2BC, oath_kept\uB294 declareBloodVow/
+         fulfillBloodVow \uBC84\uD2BC\uC73C\uB85C \uC774\uBBF8 \uCEE4\uBC84\uB3FC \uC788\uC5B4\uC11C(22-1 \uC2A4\uCE94\uC5D0\uC11C \uD655\uC778)
+         \uB098\uBA38\uC9C0 5\uAC1C(protect_weak/massacre/terror/sacrifice/tribe_protect)\uB9CC
+         \uC0C8\uB85C \uCD94\uAC00\uD55C\uB2E4 \u2014 \uC624\uD06C \uC9C4\uBA85 \uC2DC\uC2A4\uD15C\uC758 \uC774\uBCA4\uD2B8 \uBC84\uD2BC \uADF8\uB9AC\uB4DC\uC640 \uAC19\uC740 \uD328\uD134. -->
     <div style="padding:10px 12px;border-bottom:1px solid #1a0800">
-      <div style="font-size:9px;color:#4a2a10;font-style:italic;text-align:center;padding:4px 0">\u2694\uFE0F \uC5C5\uBCF4\uB294 AI \uC11C\uC0AC\uC5D0\uC11C \uC790\uB3D9\uC73C\uB85C \uC313\uC785\uB2C8\uB2E4</div>
+      <div style="font-family:'Cinzel',serif;font-size:9px;color:${color};letter-spacing:1px;margin-bottom:6px">\u2500\u2500 \u2694\uFE0F \uC5C5\uBCF4 \uD589\uB3D9 (\uC218\uB3D9) \u2500\u2500</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">
+        ${["protect_weak", "massacre", "terror", "sacrifice", "tribe_protect"].map((gainType) => {
+        const def = ORC_HONOR_GAINS[gainType];
+        const ld = ORC_LINEAGE_DEFS[def.lineage];
+        return `<button onclick="gainOrcHonor('${gainType}');renderOrcHonorPanel()"
+            style="padding:7px;background:#0d0500;border:1px solid ${ld.color}44;color:${ld.color};font-size:9px;cursor:pointer;font-family:'Crimson Text',serif;text-align:left;border-radius:2px;line-height:1.4">
+            ${typeof getEntityIconHTML === "function" ? getEntityIconHTML(def, { size: 7 }) : def.icon} ${def.label}<br><span style="font-size:7px;color:#6a4020">${esc2(def.desc)}</span>
+            <span style="float:right;font-family:'Cinzel',serif;font-size:9px;color:${ld.color}">+${def.gain}</span>
+          </button>`;
+      }).join("")}
+      </div>
     </div>
 
     <!-- \uB9F9\uC138 \uC120\uC5B8 -->

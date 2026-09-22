@@ -4965,6 +4965,30 @@ window.recordFearEntry = recordFearEntry;
 
 window.recordFearEntry = recordFearEntry;
 
+// [13번 섹션 10번, AI 의존 스캔 이어서 처리] recordBloodEntry/recordFearEntry는
+// 연대기 총점(gainChroniclePoints)·스탯 보너스까지 직접 주는 실제 메커니즘
+// 인데, 부르는 경로가 detectVampireChronicleFromText(AI 텍스트 감지)/
+// processVampireChronicleGS(AI GS 태그) 둘뿐이었다 — 순수 서사 색채만이
+// 아니라 진짜 수치 효과가 있어서, "AI 전용이 의도된 설계일 수도 있다"는
+// 원래 판단 보류를 뒤집고 수동 경로를 추가하기로 함. 이름은 지어내지
+// 않고 loadNPCs()의 실제 NPC 목록에서 고르게 한다(이 세션에서 반복해온
+// "AI가 지어내지 않고 실제 데이터를 신뢰" 원칙과 동일).
+window.manualRecordBloodEntry = function(){
+  const npcSel = document.getElementById('vc-blood-npc-sel');
+  const clsSel = document.getElementById('vc-blood-class-sel');
+  if(!npcSel || !npcSel.value) { toast('대상 NPC를 먼저 선택하세요', 2000); return; }
+  recordBloodEntry(npcSel.value, clsSel.value);
+  renderVampireChroniclePanel();
+};
+
+window.manualRecordFearEntry = function(){
+  const npcSel = document.getElementById('vc-fear-npc-sel');
+  const rankSel = document.getElementById('vc-fear-rank-sel');
+  if(!npcSel || !npcSel.value) { toast('대상 NPC를 먼저 선택하세요', 2000); return; }
+  recordFearEntry(npcSel.value, rankSel.value);
+  renderVampireChroniclePanel();
+};
+
 export function unlockVampireRaceSkills() {
   if (!isVampireRace()) return;
   if (!S.unlockedSkills) S.unlockedSkills = {};
@@ -5174,6 +5198,23 @@ export function renderVampireChroniclePanel() {
     h += `<div style="font-size:9px;color:#3a2020;padding:8px;text-align:center">아직 흡혈 기록이 없다.</div>`;
   }
 
+  // [수동 흡혈 기록 — AI 없이도 진행되도록 하는 수동 트리거] 이름을
+  // 지어내지 않고 실제 NPC 목록에서 고르게 한다.
+  {
+    const npcOpts = (typeof loadNPCs==='function' ? loadNPCs() : []).filter(n=>n && n.name)
+      .map(n=>`<option value="${esc(n.name)}">${esc(n.name)}</option>`).join('');
+    h += `<div style="background:#0d0003;padding:8px;border:1px solid #3a0010;border-radius:2px;margin-bottom:10px">
+      <div style="font-size:9px;color:#c05050;margin-bottom:5px">🩸 수동 흡혈 기록 추가</div>
+      ${npcOpts ? `
+      <select id="vc-blood-npc-sel" style="width:100%;margin-bottom:4px;background:#1a0005;color:#e0a0a0;border:1px solid #3a0010;font-size:9px;padding:4px">${npcOpts}</select>
+      <select id="vc-blood-class-sel" style="width:100%;margin-bottom:4px;background:#1a0005;color:#e0a0a0;border:1px solid #3a0010;font-size:9px;padding:4px">
+        ${Object.entries(BLOOD_CLASSES).map(([k,c])=>`<option value="${k}">${c.icon} ${c.label} (+${c.points}pts)</option>`).join('')}
+      </select>
+      <button onclick="manualRecordBloodEntry()" style="width:100%;padding:6px;background:#1a0005;border:1px solid #8b0000;color:#ff6060;font-family:'Cinzel',serif;font-size:9px;cursor:pointer;border-radius:2px">기록하기</button>
+      ` : `<div style="font-size:8px;color:#3a2020">아직 만난 NPC가 없습니다 — 대화를 나눠본 뒤 다시 오세요.</div>`}
+    </div>`;
+  }
+
   // 공포 기록부
   h += `<div style="font-family:'Cinzel',serif;font-size:10px;color:#ff4444;margin:10px 0 6px">😱 공포 기록부 (${d.fearRegistry.entries.length}명)</div>`;
   if (d.fearRegistry.entries.length) {
@@ -5189,6 +5230,22 @@ export function renderVampireChroniclePanel() {
     h += `</div>`;
   } else {
     h += `<div style="font-size:9px;color:#3a2020;padding:8px;text-align:center">아직 공포를 심지 못했다.</div>`;
+  }
+
+  // [수동 공포 기록 — 위 흡혈 기록과 같은 이유·같은 패턴]
+  {
+    const npcOpts = (typeof loadNPCs==='function' ? loadNPCs() : []).filter(n=>n && n.name)
+      .map(n=>`<option value="${esc(n.name)}">${esc(n.name)}</option>`).join('');
+    h += `<div style="background:#0d0003;padding:8px;border:1px solid #3a0010;border-radius:2px;margin-bottom:10px">
+      <div style="font-size:9px;color:#c05050;margin-bottom:5px">😱 수동 공포 기록 추가</div>
+      ${npcOpts ? `
+      <select id="vc-fear-npc-sel" style="width:100%;margin-bottom:4px;background:#1a0005;color:#e0a0a0;border:1px solid #3a0010;font-size:9px;padding:4px">${npcOpts}</select>
+      <select id="vc-fear-rank-sel" style="width:100%;margin-bottom:4px;background:#1a0005;color:#e0a0a0;border:1px solid #3a0010;font-size:9px;padding:4px">
+        ${Object.entries(FEAR_RANKS).map(([k,r])=>`<option value="${k}">${r.icon} ${r.label} (+${r.fearPoints}pts)</option>`).join('')}
+      </select>
+      <button onclick="manualRecordFearEntry()" style="width:100%;padding:6px;background:#1a0005;border:1px solid #8b0000;color:#ff6060;font-family:'Cinzel',serif;font-size:9px;cursor:pointer;border-radius:2px">기록하기</button>
+      ` : `<div style="font-size:8px;color:#3a2020">아직 만난 NPC가 없습니다 — 대화를 나눠본 뒤 다시 오세요.</div>`}
+    </div>`;
   }
 
   // 시대 기록부
@@ -6571,9 +6628,26 @@ function renderOrcHonorPanel() {
       }).join('')}
     </div>` : ''}
 
-    <!-- 수동 업보 획득 -->
+    <!-- 수동 업보 획득 (AI 없이도 진행되도록 하는 수동 트리거 — 기존엔
+         detectOrcHonorFromText의 AI 서사 감지에만 의존해 no-API 모드에서
+         업보가 영구 정지했음. honorable_duel/berserker/tactical_win은
+         triggerLineageBurst 버튼, oath_kept는 declareBloodVow/
+         fulfillBloodVow 버튼으로 이미 커버돼 있어서(22-1 스캔에서 확인)
+         나머지 5개(protect_weak/massacre/terror/sacrifice/tribe_protect)만
+         새로 추가한다 — 오크 진명 시스템의 이벤트 버튼 그리드와 같은 패턴. -->
     <div style="padding:10px 12px;border-bottom:1px solid #1a0800">
-      <div style="font-size:9px;color:#4a2a10;font-style:italic;text-align:center;padding:4px 0">⚔️ 업보는 AI 서사에서 자동으로 쌓입니다</div>
+      <div style="font-family:'Cinzel',serif;font-size:9px;color:${color};letter-spacing:1px;margin-bottom:6px">── ⚔️ 업보 행동 (수동) ──</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">
+        ${['protect_weak','massacre','terror','sacrifice','tribe_protect'].map(gainType => {
+          const def = ORC_HONOR_GAINS[gainType];
+          const ld = ORC_LINEAGE_DEFS[def.lineage];
+          return `<button onclick="gainOrcHonor('${gainType}');renderOrcHonorPanel()"
+            style="padding:7px;background:#0d0500;border:1px solid ${ld.color}44;color:${ld.color};font-size:9px;cursor:pointer;font-family:'Crimson Text',serif;text-align:left;border-radius:2px;line-height:1.4">
+            ${typeof getEntityIconHTML==='function'?getEntityIconHTML(def,{size:7}):(def.icon)} ${def.label}<br><span style="font-size:7px;color:#6a4020">${esc(def.desc)}</span>
+            <span style="float:right;font-family:'Cinzel',serif;font-size:9px;color:${ld.color}">+${def.gain}</span>
+          </button>`;
+        }).join('')}
+      </div>
     </div>
 
     <!-- 맹세 선언 -->

@@ -1137,6 +1137,35 @@ export function renderQuests(){
 
   let sections = [];
 
+  // ── 0. 메인 스토리 진행(28장 고정 캠페인, MAIN_QUESTS) — 아래
+  // "★ 메인 퀘스트"(S등급 AI 동적 퀘스트, 별개 시스템)와 이름이
+  // 헷갈리지 않도록 "📖 메인 스토리"로 구분해서 별도 표시한다.
+  // [21번 라운드, 시스템 업그레이드 ③] 지금까지 이 28장짜리 고정
+  // 캠페인은 AI의 q_done 판정에서만 진행됐고 플레이어가 직접 볼 수
+  // 있는 화면이 어디에도 없었다 — 여기서 처음으로 현재 활성 장과
+  // 수동 진행 버튼을 노출한다.
+  try{
+    const chapter = (typeof window.getActiveMainQuestChapter==='function') ? window.getActiveMainQuestChapter() : null;
+    if(chapter){
+      sections.push(`<div style="font-family:'Cinzel',serif;font-size:9px;color:#e0b060;letter-spacing:2px;margin:10px 0 6px;opacity:.9">📖 메인 스토리</div>`);
+      sections.push(`<div style="padding:10px 11px;background:#0d0800;border:1px solid #e0b06044;border-left:3px solid #e0b060;margin-bottom:5px">
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:5px">
+          <span style="font-size:16px">${esc(chapter.icon||'📖')}</span>
+          <div style="flex:1">
+            <div style="font-family:'Cinzel',serif;font-size:10px;color:#e0b060">${esc(chapter.chapter||'')} · ${esc(chapter.title||'')}</div>
+            <div style="font-size:8px;color:#e0b06088;margin-top:1px">진행중</div>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--dim);line-height:1.6">${esc(chapter.desc||'')}</div>
+        <div style="margin-top:7px">
+          ${chapter.canAdvance
+            ? `<button onclick="advanceMainQuestChapter('${esc(chapter.id)}')" style="width:100%;padding:6px;background:#1a1200;border:1px solid #e0b06066;color:#e0b060;font-family:'Cinzel',serif;font-size:9px;cursor:pointer;border-radius:2px">📖 이 장을 마무리하고 다음으로 넘어가기</button>`
+            : `<div style="padding:5px 8px;background:#0a0a0a;border:1px solid #3a3a3a;font-size:9px;color:#606060;font-family:'Cinzel',serif;text-align:center">이야기가 조금 더 진행되면 다음으로 넘어갈 수 있습니다 (${chapter.turnsElapsed}/${chapter.turnsNeeded}턴)</div>`}
+        </div>
+      </div>`);
+    }
+  }catch(e){}
+
   // ── 1. 메인 퀘스트 — S등급 AI 동적 퀘스트로 표시 ──
   try{
     const sQuests = loadDynQuests().filter(q => q.grade === 'S' && (q.status === 'active' || q.status === 'completed'));

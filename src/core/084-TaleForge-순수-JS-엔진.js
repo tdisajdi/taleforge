@@ -1434,6 +1434,9 @@ export function startGame(){
     const _mqInit = (typeof loadMainQuestState === 'function') ? loadMainQuestState() : {};
     if(!_mqInit['mq1']){
       _mqInit['mq1'] = 'active';
+      // [21번 라운드, 시스템 업그레이드 ③] 다른 모든 챕터 활성화 지점
+      // (job/042 completeMainQuest)과 동일하게 활성화 시각(턴)을 남긴다.
+      _mqInit['mq1_activeSinceTurn'] = S.msgCount||0;
       if(typeof saveMainQuestState === 'function') saveMainQuestState(_mqInit);
     }
   }catch(e){}

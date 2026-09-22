@@ -1570,6 +1570,10 @@ export function completeMainQuest(questId, opts){
   // 않던 버그. 다음 챕터(nextId)를 명시적으로 active로 전환한다.
   if(q.nextId && quests.find(x=>x.id===q.nextId)){
     state[q.nextId] = 'active';
+    // [21번 라운드, 시스템 업그레이드 ③] 이 장이 "언제 활성화됐는지"를
+    // 남겨야 아래 getActiveMainQuestChapter()가 "최소 이만큼은 진행된
+    // 뒤에만 다음 장 버튼을 보여준다"는 유예 기간을 계산할 수 있다.
+    state[q.nextId+'_activeSinceTurn'] = S.msgCount||0;
   }
   // [신규] 16장(mq16)은 표면 루트와 히든 루트가 갈라지는 배타적 분기점이다.
   // nextId가 null이라 자동 연결은 안 되고, 여기서 명시적으로 판정한다:
@@ -1587,6 +1591,7 @@ export function completeMainQuest(questId, opts){
       const gateCleared = hiddenQuests['hq_weight_of_forbidden_books']?.status === 'completed';
       if(isHeld && isScholar && gateCleared){
         state['mq17'] = 'active';
+        state['mq17_activeSinceTurn'] = S.msgCount||0;
         toast('📖 무언가 석연치 않은 위화감이 짙어진다...', 3500);
       } else if(!isHeld){
         // 마왕을 죽이거나 완전히 끝장냄 — 표면 엔딩으로 즉시 종료
@@ -1672,6 +1677,55 @@ export function completeMainQuest(questId, opts){
   }
 }
 window.completeMainQuest = completeMainQuest;
+
+// [21번 라운드, 시스템 업그레이드 ③ — 사용자 승인("전체 28개 장 완료판정
+// 로컬화")] 지금까지 "이 장이 끝났다"는 판정은 AI의 q_done 자유서술
+// 판정에만 의존했다 — AI가 없거나 있어도 q_done을 안 내면 그 장에서
+// 영원히 멈춘다. mq16(진엔딩 분기)처럼 명확한 이분법 선택이 있는 장은
+// 이미 결정론적 팝업으로 고쳤지만(19번 섹션), 나머지 27개 장은 "이야기가
+// 충분히 진행됐는가" 자체가 매 장마다 다른 순수 서사적 판단이라 똑같은
+// 방식을 쓸 수 없다 — 27개 장 각각에 bespoke 판정 로직을 새로 지어내는
+// 대신, "AI의 판단"을 "플레이어 본인의 판단"으로 대체한다: 챕터가
+// 활성화된 뒤 최소한의 유예(턴)가 지나면, 플레이어가 직접 "이 장을
+// 마무리하고 다음으로 넘어간다"를 누를 수 있게 한다. AI가 여전히
+// q_done을 잘 내면 그쪽이 더 빠르게 처리하고(기존 경로, 전혀 안 건드림
+// — 둘 다 같은 completeMainQuest를 부르므로 먼저 처리되는 쪽이 그냥
+// 이긴다, 이중 처리 걱정 없음), 이 버튼은 AI가 못하거나 안 할 때만
+// 쓰이는 로컬 폴백이다.
+const MQ_CHAPTER_MIN_TURNS = 3; // 활성화 후 최소 이만큼 턴이 지나야 버튼이 뜬다 — 활성화되자마자 바로 넘기면 그 장의 서사를 전혀 안 보고 건너뛰게 됨
+export function getActiveMainQuestChapter(){
+  try{
+    const state = loadMainQuestState();
+    const sid = S.scenario?.id || 'custom';
+    const quests = MAIN_QUESTS[sid] || MAIN_QUESTS.custom;
+    const activeQ = quests.find(q => state[q.id] === 'active');
+    if(!activeQ) return null;
+    // 옛 세이브 호환: 활성화 시각이 기록 안 된 챕터(이 업그레이드 이전에
+    // 이미 active였던 경우)는 지금 막 활성화된 것으로 취급 — 갑자기
+    // 즉시 버튼이 뜨는 것보다, 지금부터 다시 유예를 두는 쪽이 "장의
+    // 내용을 안 보고 건너뛰기"를 막는다는 원래 취지에 더 맞는다.
+    let sinceTurn = state[activeQ.id+'_activeSinceTurn'];
+    if(sinceTurn==null){
+      sinceTurn = S.msgCount||0;
+      state[activeQ.id+'_activeSinceTurn'] = sinceTurn;
+      saveMainQuestState(state);
+    }
+    const turnsElapsed = (S.msgCount||0) - sinceTurn;
+    return { ...activeQ, canAdvance: turnsElapsed >= MQ_CHAPTER_MIN_TURNS, turnsElapsed, turnsNeeded: MQ_CHAPTER_MIN_TURNS };
+  }catch(e){ return null; }
+}
+window.getActiveMainQuestChapter = getActiveMainQuestChapter;
+
+// 플레이어가 직접 누르는 로컬 진행 버튼의 실제 핸들러 — completeMainQuest를
+// 그대로 재사용한다(mq16이면 그 함수의 기존 인터셉트 로직이 알아서
+// 결전 팝업을 띄운다 — 여기서 mq16을 특별취급할 필요가 없다).
+export function advanceMainQuestChapter(questId){
+  const chapter = getActiveMainQuestChapter();
+  if(!chapter || chapter.id !== questId || !chapter.canAdvance) return;
+  completeMainQuest(questId);
+  if(typeof window.renderQuests==='function') window.renderQuests();
+}
+window.advanceMainQuestChapter = advanceMainQuestChapter;
 
 // [19번 라운드, mq16 진엔딩 분기 — 새 시스템] 마왕(베엘제부브)과의
 // 결전을 "죽인다"/"살려서 물러난다" 둘 중 하나로 확정 짓는 하드코딩

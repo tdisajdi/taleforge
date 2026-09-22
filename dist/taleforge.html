@@ -98698,6 +98698,7 @@ ${job.icon} ${job.name}\uC73C\uB85C \uC804\uC9C1\uD558\uACA0\uC2B5\uB2C8\uAE4C?
     state[questId] = "complete";
     if (q.nextId && quests.find((x) => x.id === q.nextId)) {
       state[q.nextId] = "active";
+      state[q.nextId + "_activeSinceTurn"] = S.msgCount || 0;
     }
     if (questId === "mq16") {
       try {
@@ -98708,6 +98709,7 @@ ${job.icon} ${job.name}\uC73C\uB85C \uC804\uC9C1\uD558\uACA0\uC2B5\uB2C8\uAE4C?
         const gateCleared = hiddenQuests["hq_weight_of_forbidden_books"]?.status === "completed";
         if (isHeld && isScholar && gateCleared) {
           state["mq17"] = "active";
+          state["mq17_activeSinceTurn"] = S.msgCount || 0;
           toast("\u{1F4D6} \uBB34\uC5B8\uAC00 \uC11D\uC5F0\uCE58 \uC54A\uC740 \uC704\uD654\uAC10\uC774 \uC9D9\uC5B4\uC9C4\uB2E4...", 3500);
         } else if (!isHeld) {
           if (typeof inheritVillainPower === "function") inheritVillainPower("\uBCA0\uC5D8\uC81C\uBD80\uBE0C", "\uB9C8\uC655\uC758 \uC704\uC555", S.scenario?.id);
@@ -98800,6 +98802,34 @@ ${job.icon} ${job.name}\uC73C\uB85C \uC804\uC9C1\uD558\uACA0\uC2B5\uB2C8\uAE4C?
     }
   }
   window.completeMainQuest = completeMainQuest;
+  var MQ_CHAPTER_MIN_TURNS = 3;
+  function getActiveMainQuestChapter() {
+    try {
+      const state = loadMainQuestState();
+      const sid = S.scenario?.id || "custom";
+      const quests = MAIN_QUESTS[sid] || MAIN_QUESTS.custom;
+      const activeQ = quests.find((q) => state[q.id] === "active");
+      if (!activeQ) return null;
+      let sinceTurn = state[activeQ.id + "_activeSinceTurn"];
+      if (sinceTurn == null) {
+        sinceTurn = S.msgCount || 0;
+        state[activeQ.id + "_activeSinceTurn"] = sinceTurn;
+        saveMainQuestState(state);
+      }
+      const turnsElapsed = (S.msgCount || 0) - sinceTurn;
+      return { ...activeQ, canAdvance: turnsElapsed >= MQ_CHAPTER_MIN_TURNS, turnsElapsed, turnsNeeded: MQ_CHAPTER_MIN_TURNS };
+    } catch (e) {
+      return null;
+    }
+  }
+  window.getActiveMainQuestChapter = getActiveMainQuestChapter;
+  function advanceMainQuestChapter(questId) {
+    const chapter = getActiveMainQuestChapter();
+    if (!chapter || chapter.id !== questId || !chapter.canAdvance) return;
+    completeMainQuest(questId);
+    if (typeof window.renderQuests === "function") window.renderQuests();
+  }
+  window.advanceMainQuestChapter = advanceMainQuestChapter;
   function showMq16ConfrontationChoice() {
     if (document.getElementById("mq16-confrontation-modal")) return;
     const sid = S.scenario?.id || "custom";
@@ -100885,6 +100915,26 @@ ${job.icon} ${job.name}\uC73C\uB85C \uC804\uC9C1\uD558\uACA0\uC2B5\uB2C8\uAE4C?
     const sc = { active: "#c8a96e", complete: "#60a060", completed: "#60a060", failed: "#e05a5a" };
     const sl = { active: "\uC9C4\uD589\uC911", complete: "\uC644\uB8CC", completed: "\uC644\uB8CC", failed: "\uC2E4\uD328" };
     let sections = [];
+    try {
+      const chapter = typeof window.getActiveMainQuestChapter === "function" ? window.getActiveMainQuestChapter() : null;
+      if (chapter) {
+        sections.push(`<div style="font-family:'Cinzel',serif;font-size:9px;color:#e0b060;letter-spacing:2px;margin:10px 0 6px;opacity:.9">\u{1F4D6} \uBA54\uC778 \uC2A4\uD1A0\uB9AC</div>`);
+        sections.push(`<div style="padding:10px 11px;background:#0d0800;border:1px solid #e0b06044;border-left:3px solid #e0b060;margin-bottom:5px">
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:5px">
+          <span style="font-size:16px">${esc2(chapter.icon || "\u{1F4D6}")}</span>
+          <div style="flex:1">
+            <div style="font-family:'Cinzel',serif;font-size:10px;color:#e0b060">${esc2(chapter.chapter || "")} \xB7 ${esc2(chapter.title || "")}</div>
+            <div style="font-size:8px;color:#e0b06088;margin-top:1px">\uC9C4\uD589\uC911</div>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--dim);line-height:1.6">${esc2(chapter.desc || "")}</div>
+        <div style="margin-top:7px">
+          ${chapter.canAdvance ? `<button onclick="advanceMainQuestChapter('${esc2(chapter.id)}')" style="width:100%;padding:6px;background:#1a1200;border:1px solid #e0b06066;color:#e0b060;font-family:'Cinzel',serif;font-size:9px;cursor:pointer;border-radius:2px">\u{1F4D6} \uC774 \uC7A5\uC744 \uB9C8\uBB34\uB9AC\uD558\uACE0 \uB2E4\uC74C\uC73C\uB85C \uB118\uC5B4\uAC00\uAE30</button>` : `<div style="padding:5px 8px;background:#0a0a0a;border:1px solid #3a3a3a;font-size:9px;color:#606060;font-family:'Cinzel',serif;text-align:center">\uC774\uC57C\uAE30\uAC00 \uC870\uAE08 \uB354 \uC9C4\uD589\uB418\uBA74 \uB2E4\uC74C\uC73C\uB85C \uB118\uC5B4\uAC08 \uC218 \uC788\uC2B5\uB2C8\uB2E4 (${chapter.turnsElapsed}/${chapter.turnsNeeded}\uD134)</div>`}
+        </div>
+      </div>`);
+      }
+    } catch (e) {
+    }
     try {
       const sQuests = loadDynQuests().filter((q) => q.grade === "S" && (q.status === "active" || q.status === "completed"));
       if (sQuests.length) {
@@ -106450,6 +106500,7 @@ ${isCivilianJob ? `
       const _mqInit = typeof loadMainQuestState === "function" ? loadMainQuestState() : {};
       if (!_mqInit["mq1"]) {
         _mqInit["mq1"] = "active";
+        _mqInit["mq1_activeSinceTurn"] = S.msgCount || 0;
         if (typeof saveMainQuestState === "function") saveMainQuestState(_mqInit);
       }
     } catch (e) {
@@ -117608,7 +117659,7 @@ GS: {"clan_join":"${clanId}"} \uCD9C\uB825.`;
         upsertQuest(String(id), { status: "completed" });
         const q = getQuest(String(id));
         if (q) updateWorldDB({ timeline: { category: "quest", title: q.title + " \uC644\uB8CC", icon: "\u2705" } });
-        if (/^mq\d+$/.test(String(id)) && typeof completeMainQuest === "function") {
+        if (/^mq\d+(-\d+)?$/.test(String(id)) && typeof completeMainQuest === "function") {
           try {
             completeMainQuest(String(id));
           } catch (e) {

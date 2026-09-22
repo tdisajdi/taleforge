@@ -332,7 +332,14 @@ function processGSToAllDBs(gs){
       // q_done으로 완료 처리해도 막대한 보상(골드/경험치/스탯보너스/완료
       // 플래그)이 단 한 번도 지급되지 않던 버그. id가 mq로 시작하면
       // completeMainQuest로도 함께 처리한다.
-      if(/^mq\d+$/.test(String(id)) && typeof completeMainQuest === 'function'){
+      // [21번 라운드, 시스템 업그레이드 ③에서 재발견·수정] 이 정규식이
+      // "mq" + 숫자만 허용해서, MAIN_QUESTS의 선택적 서브챕터
+      // (mq3-1/mq3-2/mq3-3/mq3-4/mq12-1/mq12-2/mq12-3/mq18-1/mq21-1,
+      // 하이픈이 붙은 9개)는 AI가 q_done을 정확히 내도 이 조건을 아예
+      // 통과 못 해서 completeMainQuest가 한 번도 안 불렸다 — 보상·
+      // GS 플래그·다음 장 활성화가 전부 조용히 누락되던 별도의 진짜
+      // 버그였다(무-API 여부와 무관하게 AI가 있어도 터지던 문제).
+      if(/^mq\d+(-\d+)?$/.test(String(id)) && typeof completeMainQuest === 'function'){
         try{ completeMainQuest(String(id)); }catch(e){}
       }
     });

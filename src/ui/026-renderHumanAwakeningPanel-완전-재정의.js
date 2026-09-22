@@ -3,7 +3,7 @@
 import { SOCIAL_RANKS } from '../core/084-TaleForge-순수-JS-엔진.js';
 import { pmLoad, pmSave } from '../core/267-저장로드초기화.js';
 import { RARITY_COLOR } from '../data/012-궁수-계열-T2-파생-5종-칭호-전사마법사도적-계열과-동일한-절제-원칙.js';
-import { DEMON_PURIFY_METHODS } from '../data/020-101130번-환생-누적-시스템.js';
+import { DEMON_PURIFY_METHODS, DEMON_SIN_GAIN } from '../data/020-101130번-환생-누적-시스템.js';
 import { AWAKENING_POWER_SKILLS, HUMAN_FATE_PATHS, NPC_INSPIRE_STAGES } from '../data/025-통합-패널-공허-확장-탭-시스템.js';
 import { CORRUPTION_POWER_SKILLS, DOMINATION_METHODS, LEGACY_ACTIONS, LEGACY_PATHS, NPC_CORRUPTION_STAGES, NPC_CORRUPT_METHODS, STIGMA_TYPES, THRALL_RANKS, THRALL_RANK_DEFAULT, THRALL_RANK_TABLES } from '../data/026-renderHumanAwakeningPanel-완전-재정의.js';
 import { S } from '../data/084-TaleForge-순수-JS-엔진.js';
@@ -1854,9 +1854,18 @@ window.renderDemonCorruptionPanel = function() {
       }).join('')}
     </div>` : ''}
 
-    <!-- ⑦ 죄악 행동 버튼 -->
-    <div style="padding:8px 12px;border-bottom:1px solid #1a0015">
-      <div style="font-size:9px;color:#4a1060;font-style:italic;text-align:center;padding:4px 0">😈 타락은 AI 서사에서 자동으로 진행됩니다</div>
+    <!-- ⑦ 죄악 행동 버튼 (AI 없이도 진행되도록 하는 수동 트리거 — 기존엔 detectDemonSinFromText의
+         AI 서사 감지에만 의존해 no-API 모드에서 타락도가 영구 정지했음) -->
+    <div style="padding:10px 12px;border-bottom:1px solid #1a0015">
+      <div style="font-family:'Cinzel',serif;font-size:9px;color:${color};letter-spacing:1px;margin-bottom:6px">── 😈 죄악 행동 (수동) ──</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">
+        ${Object.entries(DEMON_SIN_GAIN).map(([sinType, def]) => `
+          <button onclick="gainDemonCorruption('${sinType}');renderDemonCorruptionPanel()"
+            style="padding:7px;background:#150010;border:1px solid ${color}44;color:#e05050;font-size:9px;cursor:pointer;font-family:'Crimson Text',serif;text-align:left;border-radius:2px;line-height:1.4">
+            ${typeof getEntityIconHTML==='function'?getEntityIconHTML(def,{size:7}):(def.icon)} ${def.label}<br><span style="font-size:7px;color:#603040">${esc(def.desc)}</span>
+            <span style="float:right;font-family:'Cinzel',serif;font-size:9px;color:#e05050">+${def.gain}</span>
+          </button>`).join('')}
+      </div>
     </div>
 
     <!-- ⑧ 타락 정화 -->

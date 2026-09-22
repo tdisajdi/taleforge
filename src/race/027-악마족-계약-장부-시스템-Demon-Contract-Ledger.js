@@ -153,9 +153,21 @@ export function renderDemonContractPanel() {
       </div>
     </div>
 
-    <!-- ⑤ 계약 자동 전용 -->
-    <div style="padding:8px 12px;border-bottom:1px solid #1a0e00">
-      <div style="font-size:9px;color:#503a10;font-style:italic;text-align:center;padding:4px 0">📜 계약 공적은 AI 서사에서 자동으로 쌓입니다</div>
+    <!-- ⑤ 계약 이벤트 버튼 (AI 없이도 진행되도록 하는 수동 트리거 — 기존엔
+         detectDemonContractFromText의 AI 서사 감지에만 의존해 no-API 모드에서
+         계약 공적이 영구 정지했음) -->
+    <div style="padding:10px 12px;border-bottom:1px solid #1a0e00">
+      <div style="font-family:'Cinzel',serif;font-size:9px;color:${color};letter-spacing:1px;margin-bottom:6px">── 📜 계약 이벤트 (수동) ──</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">
+        ${DEMON_CONTRACT_TYPES.map(ct => {
+          const evcolor = ct.rankGain < 0 ? '#5090e0' : '#e0a030';
+          return `<button onclick="gainDemonContractRank('${ct.id}');renderDemonContractPanel()"
+            style="padding:7px;background:#150e00;border:1px solid ${color}44;color:${evcolor};font-size:9px;cursor:pointer;font-family:'Crimson Text',serif;text-align:left;border-radius:2px;line-height:1.4">
+            ${typeof getEntityIconHTML==='function'?getEntityIconHTML(ct,{size:7}):(ct.icon)} ${ct.label}<br><span style="font-size:7px;color:#605030">${esc(ct.desc)}</span>
+            <span style="float:right;font-family:'Cinzel',serif;font-size:9px;color:${evcolor}">${ct.rankGain>=0?'+':''}${ct.rankGain}</span>
+          </button>`;
+        }).join('')}
+      </div>
     </div>
 
     <!-- ⑥ 최근 계약 기록 -->

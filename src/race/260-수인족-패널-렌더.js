@@ -865,13 +865,24 @@ export function applyBeastPackBondStats() {
 }
 window.applyBeastPackBondStats = applyBeastPackBondStats;
 
+// [추출] 예전엔 detectBeastPackBondFromText 안에 pb.packStrength 증가가
+// 직접 inline돼 있어 AI 텍스트 감지 없이는 절대 호출할 수 없었다 — 수동
+// 버튼이 같은 로직을 재사용할 수 있도록 이름 있는 함수로 분리.
+export function gainBeastPackBond(amount, reason) {
+  if (!isBeastRace()) return;
+  const pb = loadBeastPackBond();
+  pb.packStrength = Math.min(999,(pb.packStrength||0)+(amount||6));
+  saveBeastPackBond(pb); applyBeastPackBondStats();
+  toast(`🐺 무리 강도 +${amount||6} (${reason||'협력'})`, 2500);
+  return pb;
+}
+window.gainBeastPackBond = gainBeastPackBond;
+
 export function detectBeastPackBondFromText(text) {
   if (!text || !isBeastRace()) return;
   if (/동료를 버리고|혼자 도망|혼자 빠져나|혼자 남겨/.test(text) && Math.random()<0.5) triggerPackBetrayal(null);
   if (/함께 싸우|나란히|어깨를 나란|호흡을 맞|무리와 함께/.test(text) && Math.random()<0.5) {
-    const pb = loadBeastPackBond();
-    pb.packStrength = Math.min(999,(pb.packStrength||0)+6);
-    saveBeastPackBond(pb); applyBeastPackBondStats();
+    gainBeastPackBond(6, 'AI 서사 감지');
   }
 }
 window.detectBeastPackBondFromText = detectBeastPackBondFromText;
@@ -984,6 +995,17 @@ export function renderBeastPackBondPanel() {
           </button>
         </div>` : ''}
     </div>
+
+    <!-- ④-2 무리 결속 행동 (AI 없이도 진행되도록 하는 수동 트리거 — 기존엔
+         detectBeastPackBondFromText의 AI 서사 감지에만 의존해 no-API
+         모드에서 무리 강도가 영구 정지했음) -->
+    ${!pb.isLone ? `
+    <div style="padding:10px 12px;border-bottom:1px solid #002010">
+      <button onclick="gainBeastPackBond(6,'수동 발동');renderBeastPackBondPanel()"
+        style="width:100%;padding:7px;background:#001a0a;border:1px solid ${color}55;color:${color};font-family:'Cinzel',serif;font-size:9px;cursor:pointer;border-radius:2px">
+        🐺 무리와 함께 싸우기 (무리 강도 +6)
+      </button>
+    </div>` : ''}
 
     <!-- ⑤ 무리 규칙 -->
     <div style="padding:10px 12px;border-bottom:1px solid #002010">
@@ -1225,6 +1247,17 @@ export function renderBeastLineagePanel() {
       </div>
     </div>
     ` : ''}
+
+    <!-- ②-2 혈통 순도 행동 (AI 없이도 진행되도록 하는 수동 트리거 — 기존엔
+         detectBeastLineageFromText의 AI 서사 감지에만 의존해 no-API 모드에서
+         혈통 순도가 영구 정지했음) -->
+    ${selected ? `
+    <div style="padding:10px 12px;border-bottom:1px solid #1a0030">
+      <button onclick="gainLineagePurity(5,'수동 발동');renderBeastLineagePanel()"
+        style="width:100%;padding:7px;background:#1a0030;border:1px solid ${color}55;color:${color};font-family:'Cinzel',serif;font-size:9px;cursor:pointer;border-radius:2px">
+        🧬 ${selected.name}의 본성 발현 (혈통 순도 +5)
+      </button>
+    </div>` : ''}
 
     <!-- ③ 계보 선택 (미선택 또는 변경) -->
     <div style="padding:10px 12px;border-bottom:1px solid #1a0030">

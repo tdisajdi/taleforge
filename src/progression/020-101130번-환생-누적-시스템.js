@@ -4646,9 +4646,20 @@ function renderDarklingVoidPanel() {
       </div>
     </div>
 
-    <!-- 공허 행동 자동 전용 -->
-    <div style="padding:8px 12px;border-bottom:1px solid #0a1030">
-      <div style="font-size:9px;color:#203050;font-style:italic;text-align:center;padding:4px 0">🌑 공허는 AI 서사에서 자동으로 진행됩니다</div>
+    <!-- 공허 잠식 행동 버튼 (AI 없이도 진행되도록 하는 수동 트리거 — 기존엔
+         detectDarklingVoidFromText의 AI 서사 감지에만 의존해 no-API 모드에서
+         공허도 증가 쪽만 영구 정지했음. 감소 쪽(darklingLightExposure)은
+         이미 아래에 수동 버튼이 있었음 — 그 옆에 증가 쪽을 추가) -->
+    <div style="padding:10px 12px;border-bottom:1px solid #0a1030">
+      <div style="font-family:'Cinzel',serif;font-size:9px;color:${color};letter-spacing:1px;margin-bottom:6px">── 공허 잠식 (수동) ──</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">
+        ${Object.entries(DARKLING_VOID_TYPES).map(([id,def]) => `
+          <button onclick="gainDarklingVoid('${id}');renderDarklingVoidPanel()"
+            style="padding:6px;background:#00050f;border:1px solid ${color}44;color:${color};font-size:8px;cursor:pointer;font-family:'Crimson Text',serif;text-align:left;border-radius:2px;line-height:1.3">
+            ${typeof getEntityIconHTML==='function'?getEntityIconHTML(def,{size:7}):(def.icon)} ${def.label}
+            <span style="float:right;font-family:'Cinzel',serif;color:${color}">+${def.gain}</span>
+          </button>`).join('')}
+      </div>
     </div>
 
     <!-- 빛 노출 (공허도 감소) -->
@@ -5548,9 +5559,31 @@ export function renderCelestialScalePanel() {
       </div>
     </div>
 
-    <!-- 신성/어둠 행동 자동 전용 -->
-    <div style="padding:8px 12px;border-bottom:1px solid #181840">
-      <div style="font-size:9px;color:#404070;font-style:italic;text-align:center;padding:4px 0">✨ 빛/어둠의 균형은 AI 서사에서 자동으로 변화합니다</div>
+    <!-- 신성/어둠 행동 버튼 (AI 없이도 진행되도록 하는 수동 트리거 — 기존엔
+         detectCelestialScaleFromText의 AI 서사 감지에만 의존해 no-API 모드에서
+         천평이 영구 정지했음) -->
+    <div style="padding:10px 12px;border-bottom:1px solid #181840">
+      <div style="font-family:'Cinzel',serif;font-size:9px;color:${color};letter-spacing:1px;margin-bottom:7px">── 행동 선택 (수동) ──</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div>
+          <div style="font-size:9px;color:#d4c040;font-family:'Cinzel',serif;margin-bottom:5px">💛 빛의 행동</div>
+          ${Object.entries(CELESTIAL_LIGHT_GAIN).map(([id,def]) => `
+            <button onclick="gainCelestialLight('${id}');renderCelestialScalePanel()"
+              style="width:100%;padding:5px 6px;margin-bottom:4px;background:#0a1015;border:1px solid #d4c04044;color:#d4c040;font-size:8px;cursor:pointer;font-family:'Crimson Text',serif;text-align:left;border-radius:2px;line-height:1.3">
+              ${typeof getEntityIconHTML==='function'?getEntityIconHTML(def,{size:7}):(def.icon)} ${def.label}
+              <span style="float:right;font-family:'Cinzel',serif;color:#d4c040">+${def.gain}</span>
+            </button>`).join('')}
+        </div>
+        <div>
+          <div style="font-size:9px;color:#a060d0;font-family:'Cinzel',serif;margin-bottom:5px">🌑 어둠의 행동</div>
+          ${Object.entries(CELESTIAL_DARK_GAIN).map(([id,def]) => `
+            <button onclick="gainCelestialDark('${id}');renderCelestialScalePanel()"
+              style="width:100%;padding:5px 6px;margin-bottom:4px;background:#100a15;border:1px solid #a060d044;color:#a060d0;font-size:8px;cursor:pointer;font-family:'Crimson Text',serif;text-align:left;border-radius:2px;line-height:1.3">
+              ${typeof getEntityIconHTML==='function'?getEntityIconHTML(def,{size:7}):(def.icon)} ${def.label}
+              <span style="float:right;font-family:'Cinzel',serif;color:#a060d0">${def.gain}</span>
+            </button>`).join('')}
+        </div>
+      </div>
     </div>
 
     <!-- 최근 기록 -->

@@ -33117,9 +33117,20 @@ ${lines.join("\n")}
       </div>
     </div>
 
-    <!-- \uACF5\uD5C8 \uD589\uB3D9 \uC790\uB3D9 \uC804\uC6A9 -->
-    <div style="padding:8px 12px;border-bottom:1px solid #0a1030">
-      <div style="font-size:9px;color:#203050;font-style:italic;text-align:center;padding:4px 0">\u{1F311} \uACF5\uD5C8\uB294 AI \uC11C\uC0AC\uC5D0\uC11C \uC790\uB3D9\uC73C\uB85C \uC9C4\uD589\uB429\uB2C8\uB2E4</div>
+    <!-- \uACF5\uD5C8 \uC7A0\uC2DD \uD589\uB3D9 \uBC84\uD2BC (AI \uC5C6\uC774\uB3C4 \uC9C4\uD589\uB418\uB3C4\uB85D \uD558\uB294 \uC218\uB3D9 \uD2B8\uB9AC\uAC70 \u2014 \uAE30\uC874\uC5D4
+         detectDarklingVoidFromText\uC758 AI \uC11C\uC0AC \uAC10\uC9C0\uC5D0\uB9CC \uC758\uC874\uD574 no-API \uBAA8\uB4DC\uC5D0\uC11C
+         \uACF5\uD5C8\uB3C4 \uC99D\uAC00 \uCABD\uB9CC \uC601\uAD6C \uC815\uC9C0\uD588\uC74C. \uAC10\uC18C \uCABD(darklingLightExposure)\uC740
+         \uC774\uBBF8 \uC544\uB798\uC5D0 \uC218\uB3D9 \uBC84\uD2BC\uC774 \uC788\uC5C8\uC74C \u2014 \uADF8 \uC606\uC5D0 \uC99D\uAC00 \uCABD\uC744 \uCD94\uAC00) -->
+    <div style="padding:10px 12px;border-bottom:1px solid #0a1030">
+      <div style="font-family:'Cinzel',serif;font-size:9px;color:${color};letter-spacing:1px;margin-bottom:6px">\u2500\u2500 \uACF5\uD5C8 \uC7A0\uC2DD (\uC218\uB3D9) \u2500\u2500</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">
+        ${Object.entries(DARKLING_VOID_TYPES).map(([id, def]) => `
+          <button onclick="gainDarklingVoid('${id}');renderDarklingVoidPanel()"
+            style="padding:6px;background:#00050f;border:1px solid ${color}44;color:${color};font-size:8px;cursor:pointer;font-family:'Crimson Text',serif;text-align:left;border-radius:2px;line-height:1.3">
+            ${typeof getEntityIconHTML === "function" ? getEntityIconHTML(def, { size: 7 }) : def.icon} ${def.label}
+            <span style="float:right;font-family:'Cinzel',serif;color:${color}">+${def.gain}</span>
+          </button>`).join("")}
+      </div>
     </div>
 
     <!-- \uBE5B \uB178\uCD9C (\uACF5\uD5C8\uB3C4 \uAC10\uC18C) -->
@@ -34054,9 +34065,31 @@ ${lines.join("\n")}
       </div>
     </div>
 
-    <!-- \uC2E0\uC131/\uC5B4\uB460 \uD589\uB3D9 \uC790\uB3D9 \uC804\uC6A9 -->
-    <div style="padding:8px 12px;border-bottom:1px solid #181840">
-      <div style="font-size:9px;color:#404070;font-style:italic;text-align:center;padding:4px 0">\u2728 \uBE5B/\uC5B4\uB460\uC758 \uADE0\uD615\uC740 AI \uC11C\uC0AC\uC5D0\uC11C \uC790\uB3D9\uC73C\uB85C \uBCC0\uD654\uD569\uB2C8\uB2E4</div>
+    <!-- \uC2E0\uC131/\uC5B4\uB460 \uD589\uB3D9 \uBC84\uD2BC (AI \uC5C6\uC774\uB3C4 \uC9C4\uD589\uB418\uB3C4\uB85D \uD558\uB294 \uC218\uB3D9 \uD2B8\uB9AC\uAC70 \u2014 \uAE30\uC874\uC5D4
+         detectCelestialScaleFromText\uC758 AI \uC11C\uC0AC \uAC10\uC9C0\uC5D0\uB9CC \uC758\uC874\uD574 no-API \uBAA8\uB4DC\uC5D0\uC11C
+         \uCC9C\uD3C9\uC774 \uC601\uAD6C \uC815\uC9C0\uD588\uC74C) -->
+    <div style="padding:10px 12px;border-bottom:1px solid #181840">
+      <div style="font-family:'Cinzel',serif;font-size:9px;color:${color};letter-spacing:1px;margin-bottom:7px">\u2500\u2500 \uD589\uB3D9 \uC120\uD0DD (\uC218\uB3D9) \u2500\u2500</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div>
+          <div style="font-size:9px;color:#d4c040;font-family:'Cinzel',serif;margin-bottom:5px">\u{1F49B} \uBE5B\uC758 \uD589\uB3D9</div>
+          ${Object.entries(CELESTIAL_LIGHT_GAIN).map(([id, def]) => `
+            <button onclick="gainCelestialLight('${id}');renderCelestialScalePanel()"
+              style="width:100%;padding:5px 6px;margin-bottom:4px;background:#0a1015;border:1px solid #d4c04044;color:#d4c040;font-size:8px;cursor:pointer;font-family:'Crimson Text',serif;text-align:left;border-radius:2px;line-height:1.3">
+              ${typeof getEntityIconHTML === "function" ? getEntityIconHTML(def, { size: 7 }) : def.icon} ${def.label}
+              <span style="float:right;font-family:'Cinzel',serif;color:#d4c040">+${def.gain}</span>
+            </button>`).join("")}
+        </div>
+        <div>
+          <div style="font-size:9px;color:#a060d0;font-family:'Cinzel',serif;margin-bottom:5px">\u{1F311} \uC5B4\uB460\uC758 \uD589\uB3D9</div>
+          ${Object.entries(CELESTIAL_DARK_GAIN).map(([id, def]) => `
+            <button onclick="gainCelestialDark('${id}');renderCelestialScalePanel()"
+              style="width:100%;padding:5px 6px;margin-bottom:4px;background:#100a15;border:1px solid #a060d044;color:#a060d0;font-size:8px;cursor:pointer;font-family:'Crimson Text',serif;text-align:left;border-radius:2px;line-height:1.3">
+              ${typeof getEntityIconHTML === "function" ? getEntityIconHTML(def, { size: 7 }) : def.icon} ${def.label}
+              <span style="float:right;font-family:'Cinzel',serif;color:#a060d0">${def.gain}</span>
+            </button>`).join("")}
+        </div>
+      </div>
     </div>
 
     <!-- \uCD5C\uADFC \uAE30\uB85D -->
@@ -50306,9 +50339,21 @@ ${lines.join("\n")}
       </div>
     </div>
 
-    <!-- \u2464 \uACC4\uC57D \uC790\uB3D9 \uC804\uC6A9 -->
-    <div style="padding:8px 12px;border-bottom:1px solid #1a0e00">
-      <div style="font-size:9px;color:#503a10;font-style:italic;text-align:center;padding:4px 0">\u{1F4DC} \uACC4\uC57D \uACF5\uC801\uC740 AI \uC11C\uC0AC\uC5D0\uC11C \uC790\uB3D9\uC73C\uB85C \uC313\uC785\uB2C8\uB2E4</div>
+    <!-- \u2464 \uACC4\uC57D \uC774\uBCA4\uD2B8 \uBC84\uD2BC (AI \uC5C6\uC774\uB3C4 \uC9C4\uD589\uB418\uB3C4\uB85D \uD558\uB294 \uC218\uB3D9 \uD2B8\uB9AC\uAC70 \u2014 \uAE30\uC874\uC5D4
+         detectDemonContractFromText\uC758 AI \uC11C\uC0AC \uAC10\uC9C0\uC5D0\uB9CC \uC758\uC874\uD574 no-API \uBAA8\uB4DC\uC5D0\uC11C
+         \uACC4\uC57D \uACF5\uC801\uC774 \uC601\uAD6C \uC815\uC9C0\uD588\uC74C) -->
+    <div style="padding:10px 12px;border-bottom:1px solid #1a0e00">
+      <div style="font-family:'Cinzel',serif;font-size:9px;color:${color};letter-spacing:1px;margin-bottom:6px">\u2500\u2500 \u{1F4DC} \uACC4\uC57D \uC774\uBCA4\uD2B8 (\uC218\uB3D9) \u2500\u2500</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">
+        ${DEMON_CONTRACT_TYPES.map((ct) => {
+      const evcolor = ct.rankGain < 0 ? "#5090e0" : "#e0a030";
+      return `<button onclick="gainDemonContractRank('${ct.id}');renderDemonContractPanel()"
+            style="padding:7px;background:#150e00;border:1px solid ${color}44;color:${evcolor};font-size:9px;cursor:pointer;font-family:'Crimson Text',serif;text-align:left;border-radius:2px;line-height:1.4">
+            ${typeof getEntityIconHTML === "function" ? getEntityIconHTML(ct, { size: 7 }) : ct.icon} ${ct.label}<br><span style="font-size:7px;color:#605030">${esc2(ct.desc)}</span>
+            <span style="float:right;font-family:'Cinzel',serif;font-size:9px;color:${evcolor}">${ct.rankGain >= 0 ? "+" : ""}${ct.rankGain}</span>
+          </button>`;
+    }).join("")}
+      </div>
     </div>
 
     <!-- \u2465 \uCD5C\uADFC \uACC4\uC57D \uAE30\uB85D -->
@@ -60290,14 +60335,21 @@ export default TALEFORGE_HARDCODE_RULES;
     window.updateHeader();
   }
   window.applyBeastPackBondStats = applyBeastPackBondStats;
+  function gainBeastPackBond(amount, reason) {
+    if (!isBeastRace()) return;
+    const pb = loadBeastPackBond();
+    pb.packStrength = Math.min(999, (pb.packStrength || 0) + (amount || 6));
+    saveBeastPackBond(pb);
+    applyBeastPackBondStats();
+    toast(`\u{1F43A} \uBB34\uB9AC \uAC15\uB3C4 +${amount || 6} (${reason || "\uD611\uB825"})`, 2500);
+    return pb;
+  }
+  window.gainBeastPackBond = gainBeastPackBond;
   function detectBeastPackBondFromText(text) {
     if (!text || !isBeastRace()) return;
     if (/동료를 버리고|혼자 도망|혼자 빠져나|혼자 남겨/.test(text) && Math.random() < 0.5) triggerPackBetrayal(null);
     if (/함께 싸우|나란히|어깨를 나란|호흡을 맞|무리와 함께/.test(text) && Math.random() < 0.5) {
-      const pb = loadBeastPackBond();
-      pb.packStrength = Math.min(999, (pb.packStrength || 0) + 6);
-      saveBeastPackBond(pb);
-      applyBeastPackBondStats();
+      gainBeastPackBond(6, "AI \uC11C\uC0AC \uAC10\uC9C0");
     }
   }
   window.detectBeastPackBondFromText = detectBeastPackBondFromText;
@@ -60406,6 +60458,17 @@ export default TALEFORGE_HARDCODE_RULES;
           </button>
         </div>` : ""}
     </div>
+
+    <!-- \u2463-2 \uBB34\uB9AC \uACB0\uC18D \uD589\uB3D9 (AI \uC5C6\uC774\uB3C4 \uC9C4\uD589\uB418\uB3C4\uB85D \uD558\uB294 \uC218\uB3D9 \uD2B8\uB9AC\uAC70 \u2014 \uAE30\uC874\uC5D4
+         detectBeastPackBondFromText\uC758 AI \uC11C\uC0AC \uAC10\uC9C0\uC5D0\uB9CC \uC758\uC874\uD574 no-API
+         \uBAA8\uB4DC\uC5D0\uC11C \uBB34\uB9AC \uAC15\uB3C4\uAC00 \uC601\uAD6C \uC815\uC9C0\uD588\uC74C) -->
+    ${!pb.isLone ? `
+    <div style="padding:10px 12px;border-bottom:1px solid #002010">
+      <button onclick="gainBeastPackBond(6,'\uC218\uB3D9 \uBC1C\uB3D9');renderBeastPackBondPanel()"
+        style="width:100%;padding:7px;background:#001a0a;border:1px solid ${color}55;color:${color};font-family:'Cinzel',serif;font-size:9px;cursor:pointer;border-radius:2px">
+        \u{1F43A} \uBB34\uB9AC\uC640 \uD568\uAED8 \uC2F8\uC6B0\uAE30 (\uBB34\uB9AC \uAC15\uB3C4 +6)
+      </button>
+    </div>` : ""}
 
     <!-- \u2464 \uBB34\uB9AC \uADDC\uCE59 -->
     <div style="padding:10px 12px;border-bottom:1px solid #002010">
@@ -60631,6 +60694,17 @@ export default TALEFORGE_HARDCODE_RULES;
       </div>
     </div>
     ` : ""}
+
+    <!-- \u2461-2 \uD608\uD1B5 \uC21C\uB3C4 \uD589\uB3D9 (AI \uC5C6\uC774\uB3C4 \uC9C4\uD589\uB418\uB3C4\uB85D \uD558\uB294 \uC218\uB3D9 \uD2B8\uB9AC\uAC70 \u2014 \uAE30\uC874\uC5D4
+         detectBeastLineageFromText\uC758 AI \uC11C\uC0AC \uAC10\uC9C0\uC5D0\uB9CC \uC758\uC874\uD574 no-API \uBAA8\uB4DC\uC5D0\uC11C
+         \uD608\uD1B5 \uC21C\uB3C4\uAC00 \uC601\uAD6C \uC815\uC9C0\uD588\uC74C) -->
+    ${selected ? `
+    <div style="padding:10px 12px;border-bottom:1px solid #1a0030">
+      <button onclick="gainLineagePurity(5,'\uC218\uB3D9 \uBC1C\uB3D9');renderBeastLineagePanel()"
+        style="width:100%;padding:7px;background:#1a0030;border:1px solid ${color}55;color:${color};font-family:'Cinzel',serif;font-size:9px;cursor:pointer;border-radius:2px">
+        \u{1F9EC} ${selected.name}\uC758 \uBCF8\uC131 \uBC1C\uD604 (\uD608\uD1B5 \uC21C\uB3C4 +5)
+      </button>
+    </div>` : ""}
 
     <!-- \u2462 \uACC4\uBCF4 \uC120\uD0DD (\uBBF8\uC120\uD0DD \uB610\uB294 \uBCC0\uACBD) -->
     <div style="padding:10px 12px;border-bottom:1px solid #1a0030">
@@ -64632,9 +64706,18 @@ ${oldRank?.icon || ""} ${oldRank?.name || "\uD604\uC7AC"} \u2192 ${newRank.icon}
     }).join("")}
     </div>` : ""}
 
-    <!-- \u2466 \uC8C4\uC545 \uD589\uB3D9 \uBC84\uD2BC -->
-    <div style="padding:8px 12px;border-bottom:1px solid #1a0015">
-      <div style="font-size:9px;color:#4a1060;font-style:italic;text-align:center;padding:4px 0">\u{1F608} \uD0C0\uB77D\uC740 AI \uC11C\uC0AC\uC5D0\uC11C \uC790\uB3D9\uC73C\uB85C \uC9C4\uD589\uB429\uB2C8\uB2E4</div>
+    <!-- \u2466 \uC8C4\uC545 \uD589\uB3D9 \uBC84\uD2BC (AI \uC5C6\uC774\uB3C4 \uC9C4\uD589\uB418\uB3C4\uB85D \uD558\uB294 \uC218\uB3D9 \uD2B8\uB9AC\uAC70 \u2014 \uAE30\uC874\uC5D4 detectDemonSinFromText\uC758
+         AI \uC11C\uC0AC \uAC10\uC9C0\uC5D0\uB9CC \uC758\uC874\uD574 no-API \uBAA8\uB4DC\uC5D0\uC11C \uD0C0\uB77D\uB3C4\uAC00 \uC601\uAD6C \uC815\uC9C0\uD588\uC74C) -->
+    <div style="padding:10px 12px;border-bottom:1px solid #1a0015">
+      <div style="font-family:'Cinzel',serif;font-size:9px;color:${color};letter-spacing:1px;margin-bottom:6px">\u2500\u2500 \u{1F608} \uC8C4\uC545 \uD589\uB3D9 (\uC218\uB3D9) \u2500\u2500</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">
+        ${Object.entries(DEMON_SIN_GAIN).map(([sinType, def]) => `
+          <button onclick="gainDemonCorruption('${sinType}');renderDemonCorruptionPanel()"
+            style="padding:7px;background:#150010;border:1px solid ${color}44;color:#e05050;font-size:9px;cursor:pointer;font-family:'Crimson Text',serif;text-align:left;border-radius:2px;line-height:1.4">
+            ${typeof getEntityIconHTML === "function" ? getEntityIconHTML(def, { size: 7 }) : def.icon} ${def.label}<br><span style="font-size:7px;color:#603040">${esc2(def.desc)}</span>
+            <span style="float:right;font-family:'Cinzel',serif;font-size:9px;color:#e05050">+${def.gain}</span>
+          </button>`).join("")}
+      </div>
     </div>
 
     <!-- \u2467 \uD0C0\uB77D \uC815\uD654 -->

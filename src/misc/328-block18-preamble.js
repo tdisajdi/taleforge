@@ -1295,12 +1295,21 @@ function finishLocalCombat(lc, victory){
   // [버그 수정] 전투 중 스킬로 소환된 소환수의 최종 HP/생존 여부를
   // 전역 loadSummons() 기록에도 반영한다 — 안 그러면 전투 중 소환수가
   // 피해를 입거나 소멸해도 전역 기록은 항상 풀피/active로 남는다.
+  // [22-1, AI 의존 전수 스캔 이어서 발견한 2차 버그] 위 의도는 맞았지만
+  // 매칭 키가 어긋나 있었다 — initLocalCombat이 전투 유닛을 만들 때
+  // `id:'summon_'+s.name`(파생 id)을 쓰는데, 여기서는 그 파생 id를
+  // 소환수 원본 레코드의 진짜 id(`summon_${skillId}_${Date.now()}_${i}`
+  // 형태, ai-prompt/148의 GS summon_add 경로도 별도 id 체계)와 비교하고
+  // 있었다 — 절대 일치할 수 없는 키라 이 동기화 자체가 항상 조용히
+  // no-op였다(전투 로그엔 "-N 피해"가 실제로 찍히는데, 전투가 끝나면
+  // 그 피해가 통째로 사라지는 것까지 Playwright로 실측 확인). 유닛
+  // 생성 때와 대칭되게, id 대신 이름(`customName||name`)으로 맞춘다.
   try{
     const summonUnits = lc.allies.filter(u=>u.isSummon);
     if(summonUnits.length){
       const summons = (typeof window.loadSummons==='function' ? window.loadSummons() : []);
       summonUnits.forEach(u=>{
-        const s = summons.find(x=>x.id===u.id);
+        const s = summons.find(x=>(x.customName||x.name)===u.name);
         if(!s) return;
         s.hp = u.hp;
         if(u.hp<=0 && !u._outOfBattle) s.status = 'dead'; // resolveSummonIncap이 이미 처리했으면 건드리지 않음

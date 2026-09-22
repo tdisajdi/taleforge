@@ -19,6 +19,7 @@ import { lsGet, lsSet, toast } from '../utils.js';
 import { loadLoopRecords } from '../world/165-저장소.js';
 import { ARTIFACT_MAX_SHARDS, checkRelicCondition, loadArtifactShards, loadCycleCount, saveArtifactShards, saveCycleCount } from './014-환생-누적-시스템-110번.js';
 import { assignMoonPhase, assignStarSign, collectMysteryPiece, earnTimeToken, triggerUndyingPassive } from './018-5170번-환생-누적-시스템.js';
+import { applyLegacyBonus } from './156-NG-회차-계승-시스템.js';
 import { recordElementDeath, recordLegacyWord, recordPastLetter } from './019-71100번-환생-누적-시스템.js';
 import { bloomGrudgeFlower, recordAssassinDeath, recordAvoidedFate } from './020-101130번-환생-누적-시스템.js';
 import { unlockAchievement } from './187-2-업적-시스템.js';
@@ -93,6 +94,17 @@ export function applyLoopCycleExtras(newCyc) {
   try {
     // 유산 이전
     transferLoopLegacy();
+    // [22-1, AI 의존 전수 스캔] NG+ 계승 스탯 보너스(applyLegacyBonus,
+    // progression/156) — 직전 회차에서 진/선 엔딩을 봤으면 pendingBonus에
+    // HP/ATK/DEF 보너스가 계산까지 다 돼서 저장돼 있는데, 이걸 실제로
+    // 적용하는 유일한 호출부가 AI가 <gs>{"apply_legacy":{"confirmed":true}}
+    // 를 되돌려줘야만 실행되는 npc/158의 GS 훅 하나뿐이었다 — 무-API
+    // 모드에서는 보상 텍스트("전생의 기억이 스며든다")는 나와도 실제
+    // 스탯은 영원히 안 붙는 구조. applyLegacyBonus()는 pendingBonus가
+    // 없으면 즉시 return하는 멱등 함수라 여기서 매 회차 시작마다 그냥
+    // 불러도 안전하다 — 위 artifact/time-token 지급과 같은 "새 회차
+    // 시작 시 누락된 지급을 자동으로 채운다" 패턴을 그대로 따른다.
+    if(typeof applyLegacyBonus==='function') applyLegacyBonus();
     // 보상 적용
     const rewards = getLoopRewards(newCyc);
     rewards.forEach(r => {

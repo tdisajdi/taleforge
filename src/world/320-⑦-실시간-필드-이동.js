@@ -41,6 +41,7 @@ import { rollLoot } from '../items/007-동적-아이템-생성-시스템-무제�
 import { triggerLoopIfDead } from '../progression/220-18-회차루프-시스템.js';
 import { changeLocationReputation, changeProsperity, getLocationEconomySummary, setTradeRouteStatus } from '../economy/332-정착지-경제-평판-시스템.js';
 import { esc, toast, toastHTML, getEntityIconHTML, lsGet, lsSet } from '../utils.js';
+import { loadPlayerLevel } from '../job/008-클리어-보상-시스템-시나리오-클리어-시-영구-아이템스킬.js';
 
 // ══════════════════════════════════════════════════════════════════
 // 1) 절차적 "화면 그래프" 생성기 — 왕국(대륙) 하나를 받아
@@ -263,8 +264,6 @@ function pickPackHome(isWaterScreen, node){
 // checkPackEncounter에서 별도로 제외한다.
 function buildGuardsForSettlement(loc, exits, markerPos){
   if(!exits || !exits.length) return [];
-  const [lvLo, lvHi] = getLocationLevelBand(loc);
-  const lvMid = (lvLo+lvHi)/2;
   const isCapital = loc.type==='capital';
   // [21번 라운드, 시스템 업그레이드 ⑤ — 사용자 승인: "전체 재설계,
   // 필드 그래프에 진짜 새 노드로"] 조사해보니 영지는 이미
@@ -283,6 +282,11 @@ function buildGuardsForSettlement(loc, exits, markerPos){
       }catch(e){ return 1; } })()
     : 1;
   const guardMul = (isCapital ? 1.6 : 1) * demesneMul;
+  // [22-2] 경비병도 "장소 레벨대"가 아니라 플레이어 전투력 기준 파생
+  // 공식으로 통일 — 상시 배치되는 유닛이라 예전 lvMid 선형 공식대로면
+  // 고레벨 플레이어에게는 그냥 허수아비였다. 3.0타격에 쓰러지고, 맞으면
+  // 최대체력의 8%를 깎는 기준치에 guardMul(수도/영지 방어 보너스)을 얹는다.
+  const stats = deriveMonsterStats(loc, 3.0, 0.08, guardMul);
   return exits.map((ex,i)=>{
     // 성문 바로 바깥이 아니라 안쪽으로 몇 칸 들어와 성문을 등지고 서 있는 위치
     let hc=ex.gc, hr=ex.gr;
@@ -291,8 +295,7 @@ function buildGuardsForSettlement(loc, exits, markerPos){
       id:'guard'+i+'_'+loc.id, packId:loc.id+'_guards', isGuard:true,
       name: isCapital?'왕실 근위병':'성문 경비병', icon: isCapital?'🛡️':'💂',
       temperament:'aggressive', weapon:'spear', intellect:'sapient',
-      detectR: 8, power: Math.max(3, Math.round((3+lvMid/8)*guardMul)),
-      hp: Math.round((22+lvMid*2)*guardMul), atk: Math.round((6+lvMid*0.9)*guardMul),
+      detectR: 8, power: stats.power, hp: stats.hp, atk: stats.atk,
       homeC:hc, homeR:hr, x:hc*TILE+TILE/2, y:hr*TILE+TILE/2, targetX:hc*TILE+TILE/2, targetY:hr*TILE+TILE/2,
       retargetIn: 2500+Math.random()*2000, cooldown:0, state:'idle', wounded:false, fighting:null, fightTimer:0,
     };
@@ -310,11 +313,58 @@ function biomeNear(continentKey, midWorld){
   for(const p of (terrain.forests||[])){ const d=Math.hypot(p.x-midWorld.x,p.y-midWorld.y); if(d<bestD){bestD=d;best='forest';} }
   return bestD<900 ? best : 'plain';
 }
+// [22-2, 필드 전투 데미지 밸런스 재설계] 예전엔 몬스터/경비병/습격대
+// HP·ATK가 전부 "장소 레벨대 중앙값(lvMid)"에만 선형 비례하는 독자
+// 공식이었다 — 플레이어의 실제 전투력(스탯을 어디에 투자했는지)과는
+// 완전히 무관한 절대 수치. 그런데 스탯 포인트는 레벨당 5포인트(스탯당
+// +3, 즉 한 스탯에 몰아주면 +15/레벨) 선형 증가인 반면 플레이어
+// 최대체력(getPlayerMaxHp)은 sqrt(레벨) 곡선이라 훨씬 완만하다 — 그
+// 결과 공격형 스탯 위주로 투자하면 레벨이 오를수록 몬스터가 상대적으로
+// 점점 더 쉬워지는(원래 반대여야 할) 구조였다. Playwright로 실측(레벨별
+// "플레이어 평균 데미지 ÷ 같은 레벨대 몬스터 HP" 비율)해 레벨 1엔 거의
+// 동타였다가 레벨 60엔 비율이 2.5배 넘게 벌어지는 것까지 확인됨(자세한
+// 수치는 작업메모장 22-2 참고).
+//
+// 고쳐서: 몬스터 HP/ATK를 "장소 레벨대"라는 독립된 절대수치가 아니라
+// "지금 이 플레이어가 실제로 낼 수 있는 데미지/버틸 수 있는 체력"에서
+// 유도한다 — 스탯을 어떻게 배분했든 항상 비슷한 체감 난이도(약속한
+// 타격 횟수만큼 때리면 죽고, 맞으면 최대체력의 약속한 비율만큼 잃는)를
+// 유지한다. "장소가 플레이어 레벨보다 얼마나 위험한 곳인지"는 여전히
+// relativeLocationDanger(장소 레벨대 ÷ 플레이어 레벨)로 반영 — 저레벨이
+// 고레벨 던전에 잘못 들어가면 여전히 위험하고, 고레벨이 저레벨 마을을
+// 지나가면 여전히 쉽다.
+function expectedPlayerFieldPower(){
+  const st = S.stats || {};
+  const atkStat = Math.max(st.str||50, st.mgc||50);
+  const critChance = 0.15 + Math.min(0.35, ((st.crit||50)-50)/200);
+  const avgDmg = Math.max(3, atkStat*0.28*(1+critChance*0.6));
+  const maxHp = (typeof getPlayerMaxHp==='function') ? getPlayerMaxHp() : 100;
+  return { avgDmg, maxHp };
+}
+function relativeLocationDanger(loc){
+  const [lvLo, lvHi] = getLocationLevelBand(loc);
+  const lvMid = (lvLo+lvHi)/2;
+  const playerLv = (typeof loadPlayerLevel==='function') ? (loadPlayerLevel()||1) : 1;
+  return Math.min(2.5, Math.max(0.4, lvMid / Math.max(1, playerLv)));
+}
+// hitsToKill: 이 몬스터가 몇 대 맞으면 죽는지(잡몹은 낮게, 경비/습격대는
+// 조금 더 단단하게). dmgPctPerHit: 이 몬스터의 공격 1회가 플레이어
+// 최대체력의 몇 %를 깎는지. tierMul: 그 자리 전용 추가 배율(장소
+// dangerLevel, 수도/영지 방어 보너스 등 — 기존 dangerMul/guardMul을
+// 그대로 여기 얹는다).
+function deriveMonsterStats(loc, hitsToKill, dmgPctPerHit, tierMul){
+  const { avgDmg, maxHp } = expectedPlayerFieldPower();
+  const rel = relativeLocationDanger(loc);
+  const hp  = Math.max(6, Math.round(avgDmg * hitsToKill * rel * (tierMul||1)));
+  const atk = Math.max(2, Math.round(maxHp * dmgPctPerHit * rel * (tierMul||1)));
+  const power = Math.max(1, Math.round((hp*atk)/60));
+  return { hp, atk, power };
+}
 function buildPacksForNode(graph, node, isWaterScreen, exits, markerPos){
   const packs = [];
   let seq = 0;
   const cCenter = SCREEN_COLS/2, rCenter = SCREEN_ROWS/2;
-  function makePack(roster, count, powerBase, hpBase, atkBase, homeC, homeR, tag){
+  function makePack(roster, count, stats, homeC, homeR, tag){
     for(let i=0;i<count;i++){
       const def = roster[i % roster.length];
       const packId = node.id+'_pack_'+tag;
@@ -328,7 +378,7 @@ function buildPacksForNode(graph, node, isWaterScreen, exits, markerPos){
       packs.push({
         id:'inst'+(seq++), packId, name:def.name, icon:def.icon||'👹', temperament, weapon, intellect,
         detectR: temperament==='passive' ? 0 : (4+Math.floor(seedRand(node.id+i,'det')*3)),
-        power: Math.max(1, Math.round(powerBase)), hp: Math.max(10, Math.round(hpBase)), atk: Math.max(3, Math.round(atkBase)),
+        power: stats.power, hp: stats.hp, atk: stats.atk,
         homeC:hc, homeR:hr, x:hc*TILE+TILE/2, y:hr*TILE+TILE/2, targetX:hc*TILE+TILE/2, targetY:hr*TILE+TILE/2,
         retargetIn:0, cooldown:0, state:'idle', wounded:false, fighting:null, fightTimer:0,
       });
@@ -339,12 +389,10 @@ function buildPacksForNode(graph, node, isWaterScreen, exits, markerPos){
     const isWild = WILD_TYPES.has(loc.type);
     const hasMonsters = Array.isArray(loc.monsters) && loc.monsters.length;
     if(isWild || hasMonsters){
-      const [lvLo, lvHi] = getLocationLevelBand(loc);
-      const lvMid = (lvLo+lvHi)/2;
       const dangerMul = 1 + (loc.dangerLevel||0)*0.15;
       const roster = hasMonsters ? loc.monsters : [{ name: loc.name+' 부근의 위협', icon: loc.icon||'👹' }];
       const count = Math.min(4, 1+Math.floor(seedRand(loc.id,'cnt')*3));
-      makePack(roster, count, lvMid/12, (14+lvMid*1.6)*dangerMul, (4+lvMid*0.7)*dangerMul, cCenter+10, rCenter+6, 'loc');
+      makePack(roster, count, deriveMonsterStats(loc, 2.5, 0.07, dangerMul), cCenter+10, rCenter+6, 'loc');
     }
     // [2026-09-18 습격 라운드] 정착지 화면엔 성문마다 경비병을 상시 배치
     // (습격 여부와 무관 — 평소엔 그냥 성문을 지키고 서 있다).
@@ -363,12 +411,11 @@ function buildPacksForNode(graph, node, isWaterScreen, exits, markerPos){
     // pickPackHome으로 항상 물이 없는 둔치 쪽에 홈을 잡는다.
     const home = pickPackHome(isWaterScreen, node);
     if(candidate && seedRand(node.id,'spawn') < 0.55){
-      const [lvLo, lvHi] = getLocationLevelBand(candidate);
-      const lvMid = (lvLo+lvHi)/2;
       const roster = (Array.isArray(candidate.monsters)&&candidate.monsters.length) ? candidate.monsters : [{ name:candidate.name+' 근방의 낙오 무리', icon:candidate.icon||'👹' }];
-      makePack(roster, 1+Math.floor(seedRand(node.id,'cnt2')*2), lvMid/16, 10+lvMid*1.1, 3+lvMid*0.5, home.hc, home.hr, 'road');
+      makePack(roster, 1+Math.floor(seedRand(node.id,'cnt2')*2), deriveMonsterStats(candidate, 1.8, 0.05, 1), home.hc, home.hr, 'road');
     } else if(seedRand(node.id,'genspawn') < 0.2){
-      makePack([{ name:'떠돌이 들짐승', icon:'🐺' }], 1, 1, 14, 4, home.hc, home.hr, 'gen');
+      // 실제 장소 데이터가 없는 최후 수단 — 기준 장소가 없으니 danger=1(중립)로 취급.
+      makePack([{ name:'떠돌이 들짐승', icon:'🐺' }], 1, deriveMonsterStats({}, 1.5, 0.04, 1), home.hc, home.hr, 'gen');
     }
     // [버그 수정, 2차] pickPackHome이 둔치 쪽으로 홈을 잡아도, makePack 안의
     // 무리 내 개체별 흩뿌림(offC/offR, ±4칸)이 다시 물 구간(4≤c<COLS-4)
@@ -702,8 +749,13 @@ function syncRaidPacksForScreen(screen, loc){
 // 따로 안 만듦).
 function spawnRaidersOnScreen(screen, loc, rec){
   const [lvLo, lvHi] = getLocationLevelBand(loc);
-  const lvMid = (lvLo+lvHi)/2;
+  const lvMid = (lvLo+lvHi)/2; // 루트 스케일(srcLevel)에만 쓴다 — HP/ATK는 아래 deriveMonsterStats로.
   const dangerMul = 1 + (loc.dangerLevel||0)*0.15;
+  // [22-2] 습격대도 경비병과 같은 플레이어 전투력 기준 공식으로 통일 —
+  // 경비병(hitsToKill 3.0)과 거의 맞먹는 2.8로 잡아서 습격 공방전이
+  // 양쪽 다 진짜 싸움처럼 느껴지게 한다(경비병이 압도적으로 세면 습격이
+  // 항상 싱겁게 끝나고, 반대면 습격이 항상 뚫린다).
+  const stats = deriveMonsterStats(loc, 2.8, 0.075, dangerMul);
   const count = rec.raiderCount || 2;
   const entryExit = screen.exits.length ? screen.exits[Math.floor(Math.random()*screen.exits.length)] : null;
   const startC = entryExit ? entryExit.gc : 2, startR = entryExit ? entryExit.gr : 2;
@@ -715,8 +767,7 @@ function spawnRaidersOnScreen(screen, loc, rec){
     screen.packs.push({
       id:'raider'+i+'_'+rec.threatenedAt, packId, isRaider:true,
       name:'습격대', icon:'🏴', temperament:'aggressive', weapon:'blade', intellect:'sapient',
-      detectR:6, power: Math.max(2, Math.round(2+lvMid/10*dangerMul)),
-      hp: Math.round((20+lvMid*2)*dangerMul), atk: Math.round((5+lvMid*0.8)*dangerMul),
+      detectR:6, power: stats.power, hp: stats.hp, atk: stats.atk,
       homeC:markC, homeR:markR, // 목적지 = 마을 중심(markerPos) — updateMonsters의 idle 배회 분기가 이 홈을 향해 계속 이동시킨다
       x:(startC+ox)*TILE, y:(startR+oy)*TILE, targetX:markC*TILE, targetY:markR*TILE,
       retargetIn:0, cooldown:0, state:'idle', wounded:false, fighting:null, fightTimer:0, srcLevel:lvMid,

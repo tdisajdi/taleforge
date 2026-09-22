@@ -13306,6 +13306,14 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
     if (cycle < 1) return [];
     return scenario ? maps.filter((m) => m.scenario === scenario || !m.scenario) : maps;
   };
+  var isLocationExplored = (locationName) => {
+    try {
+      return loadExploredMaps().some((m) => m.name === locationName);
+    } catch (e) {
+      return false;
+    }
+  };
+  window.isLocationExplored = isLocationExplored;
 
   // src/data/016-2130번-시스템.js
   var REL_LEGACY_HINTS = {
@@ -38907,6 +38915,9 @@ ${lines.join("\n")}
       if (d && typeof window.registerTeleportWaypoint === "function") {
         window.registerTeleportWaypoint(d);
       }
+      if (d && d.name && typeof addExploredLocation === "function") {
+        addExploredLocation(d.name, S.scenario?.id, d.type);
+      }
     } catch (e) {
     }
   }
@@ -47479,13 +47490,14 @@ ${lines.join("\n")}
         const isHub = CONTINENT_HUB_NAMES[loc.continent] === loc.name;
         const isDungeon = loc.type === "dungeon";
         const dTier = isDungeon ? loc.dungeonTier || 1 : null;
-        const color = isCurrent ? "#c0a030" : isOpen ? "#6aca6a" : isHub ? "#e0c060" : isDungeon && DUNGEON_TIER_COLORS[dTier] ? DUNGEON_TIER_COLORS[dTier] : "#6a9a5a";
+        const isExplored = isCurrent || typeof isLocationExplored === "function" && isLocationExplored(loc.name);
+        const color = !isExplored ? "#3a3a3a" : isCurrent ? "#c0a030" : isOpen ? "#6aca6a" : isHub ? "#e0c060" : isDungeon && DUNGEON_TIER_COLORS[dTier] ? DUNGEON_TIER_COLORS[dTier] : "#6a9a5a";
         const baseSize = (isCurrent || isOpen ? 15 : isHub ? 13 : isDungeon ? 9 + dTier * 1.3 : 10) * k;
         const shapeType = isHub ? "capital" : isDungeon && MAP_MARKER_SHAPES["dungeon" + dTier] ? "dungeon" + dTier : loc.type && MAP_MARKER_SHAPES[loc.type] ? loc.type : "hamlet";
         const shapePath = (typeof MAP_MARKER_SHAPES !== "undefined" ? MAP_MARKER_SHAPES[shapeType] : null) || MAP_MARKER_SHAPES.hamlet;
-        const labelText = `${loc.name}${isDungeon ? ` (${"\u2605".repeat(dTier)})` : ""}`;
+        const labelText = !isExplored ? "???" : `${loc.name}${isDungeon ? ` (${"\u2605".repeat(dTier)})` : ""}`;
         const fontSize = (isHub ? 8.5 : 7) * k;
-        return { loc, c, isCurrent, isOpen, isHub, isDungeon, dTier, color, baseSize, shapePath, labelText, fontSize, priority: isHub ? 0 : isCurrent ? 1 : isOpen ? 2 : 3 };
+        return { loc, c, isCurrent, isOpen, isHub, isDungeon, dTier, isExplored, color, baseSize, shapePath, labelText, fontSize, priority: isHub ? 0 : isCurrent ? 1 : isOpen ? 2 : 3 };
       }).filter(Boolean);
       markerList.forEach((m, i) => {
         m._idx = i;
@@ -47510,9 +47522,9 @@ ${lines.join("\n")}
         ...typeof window.getActiveAIQuestLocationTargets === "function" ? window.getActiveAIQuestLocationTargets() : []
       ].map((q) => q.locationId));
       markerList.forEach((m) => {
-        const { loc, c, isCurrent, isDungeon, dTier, color, baseSize, shapePath, labelText, fontSize, labelY } = m;
-        const hasQuestTarget = questTargetIds.has(loc.id);
-        const manifestHit = typeof window !== "undefined" && window.PIXEL_ART_MANIFEST ? window.PIXEL_ART_MANIFEST.byId[loc.id] || loc.name && window.PIXEL_ART_MANIFEST.byName[loc.name] : null;
+        const { loc, c, isCurrent, isDungeon, dTier, isExplored, color, baseSize, shapePath, labelText, fontSize, labelY } = m;
+        const hasQuestTarget = isExplored && questTargetIds.has(loc.id);
+        const manifestHit = isExplored && (typeof window !== "undefined" && window.PIXEL_ART_MANIFEST) ? window.PIXEL_ART_MANIFEST.byId[loc.id] || loc.name && window.PIXEL_ART_MANIFEST.byName[loc.name] : null;
         let iconImg = "";
         if (manifestHit) {
           const iconR = baseSize * 0.85;
@@ -47523,8 +47535,8 @@ ${lines.join("\n")}
         svg += `<g style="cursor:pointer" onclick="event.stopPropagation();openLandMapPopup('${esc2(loc.name).replace(/'/g, "\\'")}',${c.x},${c.y})">
       <circle cx="${c.x}" cy="${c.y}" r="${baseSize * 0.85}" fill="#050a05" opacity="${manifestHit ? 0.15 : 0.55}"/>
       ${iconImg}
-      ${isDungeon && dTier >= 4 ? `<circle cx="${c.x}" cy="${c.y}" r="${baseSize * 1.15}" fill="none" stroke="${color}" stroke-width="${0.8 * k}" opacity="0.4"/>` : ""}
-      ${manifestHit ? "" : `<circle cx="${c.x}" cy="${c.y}" r="${baseSize * 0.55}" fill="${color}" stroke="${color}" stroke-width="${1 * k}" opacity="0.9"/>`}
+      ${isExplored && isDungeon && dTier >= 4 ? `<circle cx="${c.x}" cy="${c.y}" r="${baseSize * 1.15}" fill="none" stroke="${color}" stroke-width="${0.8 * k}" opacity="0.4"/>` : ""}
+      ${manifestHit ? "" : `<circle cx="${c.x}" cy="${c.y}" r="${baseSize * 0.55}" fill="${color}" stroke="${color}" stroke-width="${1 * k}" opacity="${isExplored ? 0.9 : 0.6}"/>`}
       ${isCurrent ? `<circle cx="${c.x}" cy="${c.y}" r="${baseSize * 0.95}" fill="none" stroke="${color}" stroke-width="${1 * k}"><animate attributeName="r" values="${baseSize * 0.8};${baseSize * 1.15};${baseSize * 0.8}" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.9;0.3;0.9" dur="2s" repeatCount="indefinite"/></circle>` : ""}
       ${hasQuestTarget ? `<text x="${c.x + baseSize * 0.7}" y="${c.y - baseSize * 0.6}" font-size="${13 * k}" text-anchor="middle">\u2757</text>` : ""}
       <rect x="${c.x - labelText.length * fontSize * 0.5 - 1.5 * k}" y="${labelY - fontSize * 0.85}" width="${labelText.length * fontSize + 3 * k}" height="${fontSize * 1.15}" fill="#050a05" opacity="0.5" rx="${2 * k}"/>
@@ -47542,19 +47554,26 @@ ${lines.join("\n")}
     const px = popup.x, py = popup.y;
     const loc = getAllLandLocations().find((l) => l.name === popup.id);
     if (!loc) return "";
+    const isCurLoc = !!(curLoc && loc.name === curLoc.name);
+    const isExplored = isCurLoc || typeof isLocationExplored === "function" && isLocationExplored(loc.name);
     let rows = [];
     if (travel) {
       rows.push({ label: "\uC5EC\uD589 \uC911\uC5D0\uB294 \uC870\uC791\uD560 \uC218 \uC5C6\uC74C", action: null, color: "#888" });
-    } else if (curLoc && loc.name === curLoc.name) {
+    } else if (isCurLoc) {
       rows.push({ label: "\uD604\uC7AC \uC704\uCE58", action: null, color: "#c0a030" });
     } else {
       const days = getTravelDays(loc, "walk");
       const route = typeof findRoadRoute === "function" && curLoc ? findRoadRoute(curLoc, loc) : null;
       const roadTag = route ? "\u{1F6E3}\uFE0F" : "\u{1F33F}";
       rows.push({ label: `\u{1F6B6}${roadTag} \uB3C4\uBCF4\uB85C \uC774\uB3D9 (\uC57D ${days}\uC77C)`, action: `startLandTravel('${esc2(loc.name).replace(/'/g, "\\'")}','walk')`, color: "#6a9a5a" });
+      if (isExplored) {
+        rows.push({ label: `\u{1F9ED} \uAE38\uC7A1\uC774\uB85C \uACBD\uB85C \uBCF4\uAE30`, action: `showRouteGuide('${esc2(loc.name).replace(/'/g, "\\'")}')`, color: "#8aa0d0" });
+      } else {
+        rows.push({ label: `\u2753 \uC544\uC9C1 \uAC00\uBCF4\uC9C0 \uC54A\uC544 \uC815\uD655\uD55C \uAE38\uC744 \uBAA8\uB985\uB2C8\uB2E4`, action: null, color: "#776655" });
+      }
     }
     const tierLabel = loc.type === "dungeon" && loc.dungeonTier ? ` ${"\u2605".repeat(loc.dungeonTier)}` : "";
-    const title = `${loc.icon} ${loc.name}${tierLabel}`;
+    const title = isExplored ? `${loc.icon} ${loc.name}${tierLabel}` : `\u2753 \uBBF8\uD0D0\uC0AC \uC9C0\uC5ED`;
     const w = 140 * k, rowH = 18 * k, h = 26 * k + rows.length * rowH;
     let bx = px - w / 2, by = py - h - 14 * k;
     bx = Math.max(vb.x + 4 * k, Math.min(vb.x + vb.w - w - 4 * k, bx));
@@ -47575,6 +47594,27 @@ ${lines.join("\n")}
     return svg;
   }
   window.renderLandMapPopupSVG = renderLandMapPopupSVG;
+  window.showRouteGuide = function(destName) {
+    const curLoc = typeof loadCurrentLocation === "function" ? loadCurrentLocation() : null;
+    const loc = getAllLandLocations().find((l) => l.name === destName);
+    if (!curLoc || !loc) return;
+    const days = getTravelDays(loc, S._activeTransport || "walk");
+    const route = typeof findRoadRoute === "function" ? findRoadRoute(curLoc, loc) : null;
+    if (!route || !route.path || route.path.length < 2) {
+      toast(`\u{1F9ED} ${curLoc.name}\uC5D0\uC11C ${destName}\uAE4C\uC9C0 \uC774\uC5B4\uC9C4 \uD3EC\uC7A5\uB3C4\uB85C\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4 \u2014 \uB4E4\uD310\uC744 \uAC00\uB85C\uC9C8\uB7EC\uC57C \uD569\uB2C8\uB2E4 (\uB3C4\uBCF4 \uAE30\uC900 \uC57D ${days}\uC77C)`, 4500);
+      return;
+    }
+    const allLocs = getAllLandLocations();
+    const stopNames = route.path.map((n) => {
+      const l = allLocs.find((x) => x.name === n);
+      return l ? `${l.icon} ${esc2(l.name)}` : esc2(n);
+    });
+    const startLabel = `${curLoc.icon || ""} ${esc2(curLoc.name)}`;
+    if (stopNames[0] !== startLabel) stopNames.unshift(startLabel);
+    const destLabel = `${loc.icon || ""} ${esc2(loc.name)}`;
+    if (stopNames[stopNames.length - 1] !== destLabel) stopNames.push(destLabel);
+    toastHTML(`\u{1F9ED} <b>\uAE38\uC7A1\uC774</b>: ${stopNames.join(" \u2192 ")}<br><span style="font-size:9px;color:#9ab89a">\uB3C4\uBCF4 \uAE30\uC900 \uC57D ${days}\uC77C \uC18C\uC694</span>`, 5500);
+  };
   function openLandMapPopup(name, x, y) {
     S._landMapPopup = { id: name, x, y };
     window.renderWorldMapPanel();
@@ -48994,7 +49034,7 @@ ${lines.join("\n")}
       <span style="color:${DUNGEON_TIER_COLORS[3]}">\u25CF\uACE0\uAE09</span>
       <span style="color:${DUNGEON_TIER_COLORS[4]}">\u25CF\uC804\uC124\uAE09</span>
     </div>` : ""}
-    <div style="font-size:7px;color:#577;margin-top:4px;text-align:center;line-height:1.6;flex-shrink:0">${_curMode === "world" ? "\uB300\uB959\uC744 \uD130\uCE58\uD558\uBA74 \uC790\uC138\uD788 \uBCFC \uC218 \uC788\uC2B5\uB2C8\uB2E4 \xB7 \uC9C0\uB3C4\uB97C \uB4DC\uB798\uADF8\uD558\uBA74 \uC606\uB3C4 \uBCFC \uC218 \uC788\uC2B5\uB2C8\uB2E4" : "\u2B50\uAE08\uC0C9=\uAC70\uC810\uB3C4\uC2DC \xB7 \uB358\uC804 \uBCC4\uD45C(\u2605~\u2605\u2605\u2605\u2605)=\uB09C\uC774\uB3C4 \uB4F1\uAE09 \xB7 \uC810\uC744 \uD130\uCE58\uD558\uBA74 \uD589\uB3D9\uC744 \uACE0\uB97C \uC218 \uC788\uC2B5\uB2C8\uB2E4 \xB7 \uB4DC\uB798\uADF8\uB85C \uC774\uB3D9"}</div>
+    <div style="font-size:7px;color:#577;margin-top:4px;text-align:center;line-height:1.6;flex-shrink:0">${_curMode === "world" ? "\uB300\uB959\uC744 \uD130\uCE58\uD558\uBA74 \uC790\uC138\uD788 \uBCFC \uC218 \uC788\uC2B5\uB2C8\uB2E4 \xB7 \uC9C0\uB3C4\uB97C \uB4DC\uB798\uADF8\uD558\uBA74 \uC606\uB3C4 \uBCFC \uC218 \uC788\uC2B5\uB2C8\uB2E4" : "\u2B50\uAE08\uC0C9=\uAC70\uC810\uB3C4\uC2DC \xB7 \uB358\uC804 \uBCC4\uD45C(\u2605~\u2605\u2605\u2605\u2605)=\uB09C\uC774\uB3C4 \uB4F1\uAE09 \xB7 \uC810\uC744 \uD130\uCE58\uD558\uBA74 \uD589\uB3D9\uC744 \uACE0\uB97C \uC218 \uC788\uC2B5\uB2C8\uB2E4 \xB7 \uB4DC\uB798\uADF8\uB85C \uC774\uB3D9 \xB7 \u2753???=\uC544\uC9C1 \uAC00\uBCF4\uC9C0 \uC54A\uC740 \uACF3(\uAC00\uBCF4\uBA74 \uBC1D\uD600\uC9D1\uB2C8\uB2E4)"}</div>
   </div>`;
       if (travel && !travel.activeEncounter) {
         html += `<div style="padding:10px 12px;border-top:1px solid #1a2a14;background:#050a05;flex-shrink:0">

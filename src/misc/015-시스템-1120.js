@@ -247,3 +247,15 @@ export const getExploredLocations = (scenario) => {
   if (cycle < 1) return [];
   return scenario ? maps.filter(m => m.scenario === scenario || !m.scenario) : maps;
 };
+
+// [22-4, 월드맵 길잡이/fog of war] getExploredLocations()는 "전생의 희미한
+// 기억"이라는 서사적 의도로 cycle<1(첫 회차)이면 일부러 빈 배열을 준다 —
+// 그런데 fog of war는 "지금 이 생에서 실제로 가본 곳"을 즉시 알아야 해서
+// 그 게이트를 그대로 쓰면 첫 회차 내내 지도 전체가 안개에 덮인 채로
+// 고정된다. 같은 저장소(EXPLORED_MAPS_KEY — doReincarnate의 lsDel 목록에
+// 없어 환생해도 유지됨 확인됨)를 그대로 읽되, cycle 게이트 없이 이름만
+// 확인하는 별도 조회 함수를 둔다 — 저장소는 공유, 소비자만 분리.
+export const isLocationExplored = (locationName) => {
+  try{ return loadExploredMaps().some(m => m.name === locationName); }catch(e){ return false; }
+};
+window.isLocationExplored = isLocationExplored;

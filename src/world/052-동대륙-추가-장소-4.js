@@ -52,6 +52,16 @@ export function saveCurrentLocation(d){
     if(d && typeof window.registerTeleportWaypoint==='function'){
       window.registerTeleportWaypoint(d);
     }
+    // [22-4, 월드맵 길잡이/fog of war] addExploredLocation은 원래
+    // world/052의 detectAndSetLocation(AI 텍스트에서 장소명을 감지하는
+    // 경로) 한 곳에서만 불렸다 — AI가 꺼져 있으면 fog of war가 영원히
+    // 안 걷히는, 이 세션에서 반복적으로 찾은 것과 같은 패턴. 대륙 방문
+    // 트래킹·텔레포트 웨이포인트 등록과 같은 이유로 이 공통 경로에서
+    // 한 번 더(중복 호출은 addExploredLocation 내부에서 이름 기준으로
+    // 막아줌) 등록해 AI 여부와 무관하게 항상 동작하게 한다.
+    if(d && d.name && typeof addExploredLocation==='function'){
+      addExploredLocation(d.name, S.scenario?.id, d.type);
+    }
   }catch(e){}
 }
 window.saveCurrentLocation = saveCurrentLocation;

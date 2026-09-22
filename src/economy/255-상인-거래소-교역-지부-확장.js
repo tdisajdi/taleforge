@@ -8,6 +8,7 @@ import { NETWORK_TYPES, TOMB_RELIC_DEFS } from '../data/253-SVG-타일-렌더링
 import { SONG_GENRES } from '../data/254-음유시인-공연-후원자-전설곡.js';
 import { CONTINENT_HUB_NAMES, CONTINENT_PROPER_NAME, CONTINENT_PROPER_NAME_ICON, CONTINENT_TERRAIN, CREW_NAMES, CREW_ROLES, DEAL_LORE_SHOP, DUNGEON_TIER_COLORS, ENEMY_SHIP_DEFS, HUNTING_GROUNDS, INTEL_MATERIALS, INTEL_SITES, ISLAND_DEFS, ISLAND_LOOT, MERCHANT_RANKS, NPC_SHIP_KINDS, RECOMPOSE_YIELD_BY_RARITY, ROAD_EDGES, SEA_EVENT_POOL, SHIP_TIERS, SHIP_UPGRADE_BASE_COST, SHIP_UPGRADE_DEFS, SONG_LORE_SHOP, TALE_MATERIALS, TALE_SITES, TRAVEL_ENCOUNTER_POOL, WORLD_MAP_ZONES } from '../data/255-상인-거래소-교역-지부-확장.js';
 import { getLocationMonsterPool, getOrCreateEnemyMaterials, registerLocationMonster, saveGold } from '../items/007-동적-아이템-생성-시스템-무제한-영구-캐시.js';
+import { isLocationExplored } from '../misc/015-시스템-1120.js';
 import { moveToLocation } from '../misc/053-게시판-시스템.js';
 import { loadParty, saveParty, updateReputation } from '../misc/054-이동수단-시스템.js';
 import { loadMaterials, saveMaterials } from '../misc/075-파트2-C-크래프팅-시스템.js';
@@ -2125,16 +2126,23 @@ export function renderLandMapSVG(){
       const isHub = CONTINENT_HUB_NAMES[loc.continent]===loc.name;
       const isDungeon = loc.type==='dungeon';
       const dTier = isDungeon ? (loc.dungeonTier||1) : null;
-      const color = isCurrent ? '#c0a030' : isOpen ? '#6aca6a' : isHub ? '#e0c060'
+      // [22-4, fog of war] 한 번도 안 가본 곳은 종류(허브/던전 등급 등)를
+      // 드러내지 않는다 — 실제로 가보기 전까진 "저기 뭔가 있다"만 보이고
+      // 정확히 뭔지는 모른다는 게 사용자가 원한 "안가본곳은 깜깜하게"의
+      // 취지. isCurrent는 isLocationExplored보다 먼저 참이 되므로(도착
+      // 즉시 saveCurrentLocation이 등록) 따로 안 챙겨도 항상 밝혀져 있다.
+      const isExplored = isCurrent || (typeof isLocationExplored==='function' && isLocationExplored(loc.name));
+      const color = !isExplored ? '#3a3a3a'
+        : isCurrent ? '#c0a030' : isOpen ? '#6aca6a' : isHub ? '#e0c060'
         : (isDungeon && DUNGEON_TIER_COLORS[dTier]) ? DUNGEON_TIER_COLORS[dTier] : '#6a9a5a';
       const baseSize = (isCurrent||isOpen?15:isHub?13:(isDungeon?(9+dTier*1.3):10)) * k;
       const shapeType = isHub ? 'capital'
         : (isDungeon && MAP_MARKER_SHAPES['dungeon'+dTier]) ? 'dungeon'+dTier
         : (loc.type && MAP_MARKER_SHAPES[loc.type]) ? loc.type : 'hamlet';
       const shapePath = (typeof MAP_MARKER_SHAPES!=='undefined' ? MAP_MARKER_SHAPES[shapeType] : null) || MAP_MARKER_SHAPES.hamlet;
-      const labelText = `${loc.name}${isDungeon?` (${'★'.repeat(dTier)})`:''}`;
+      const labelText = !isExplored ? '???' : `${loc.name}${isDungeon?` (${'★'.repeat(dTier)})`:''}`;
       const fontSize = (isHub?8.5:7) * k;
-      return { loc, c, isCurrent, isOpen, isHub, isDungeon, dTier, color, baseSize, shapePath, labelText, fontSize, priority: isHub?0:isCurrent?1:isOpen?2:3 };
+      return { loc, c, isCurrent, isOpen, isHub, isDungeon, dTier, isExplored, color, baseSize, shapePath, labelText, fontSize, priority: isHub?0:isCurrent?1:isOpen?2:3 };
     })
     .filter(Boolean);
 
@@ -2180,8 +2188,11 @@ export function renderLandMapSVG(){
     ...(typeof window.getActiveAIQuestLocationTargets==='function' ? window.getActiveAIQuestLocationTargets() : []),
   ].map(q=>q.locationId));
   markerList.forEach(m=>{
-    const { loc, c, isCurrent, isDungeon, dTier, color, baseSize, shapePath, labelText, fontSize, labelY } = m;
-    const hasQuestTarget = questTargetIds.has(loc.id);
+    const { loc, c, isCurrent, isDungeon, dTier, isExplored, color, baseSize, shapePath, labelText, fontSize, labelY } = m;
+    // [22-4, fog of war] 안 가본 곳은 퀘스트 배지·던전 등급 표시도 함께
+    // 가린다 — 실제로 가보기 전엔 그 장소가 무슨 퀘스트와 관련 있는지도
+    // 몰라야 자연스럽다(도트 그림·테두리 링도 아래에서 같이 숨김).
+    const hasQuestTarget = isExplored && questTargetIds.has(loc.id);
     // [버그 수정] world/315(대륙 정치 지도)·combat/257(던전 미니맵)·
     // npc/226(관계도)은 전부 PIXEL_ART_MANIFEST에서 이 장소의 도트 그림을
     // 찾아 마커 안에 깔아주는데, 이 지도(월드맵)만 그 로직이 빠진 채
@@ -2200,7 +2211,11 @@ export function renderLandMapSVG(){
     // 실루엣 대신 그냥 단순 색점으로 떨어뜨려서, 있는 건 진짜 도트로,
     // 없는 건 최소한의 점으로만 표시하고 손그림 벡터 아이콘 자체를
     // 이 지도에서 없앴다.
-    const manifestHit = (typeof window!=='undefined' && window.PIXEL_ART_MANIFEST)
+    // [22-4, fog of war] 안 가본 곳은 도트 아트도 숨긴다 — 그림 자체가
+    // "여기가 어떤 곳인지"를 드러내는 정보라서, 실제로 가보기 전까진
+    // manifestHit을 아예 안 찾는다(찾아도 안 그린다가 아니라, 애초에
+    // 존재하지 않는 것처럼 취급 — 아래 단순 점 처리로 자연히 넘어감).
+    const manifestHit = isExplored && (typeof window!=='undefined' && window.PIXEL_ART_MANIFEST)
       ? (window.PIXEL_ART_MANIFEST.byId[loc.id] || (loc.name && window.PIXEL_ART_MANIFEST.byName[loc.name]))
       : null;
     let iconImg = '';
@@ -2213,10 +2228,10 @@ export function renderLandMapSVG(){
     svg += `<g style="cursor:pointer" onclick="event.stopPropagation();openLandMapPopup('${esc(loc.name).replace(/'/g,"\\'")}',${c.x},${c.y})">
       <circle cx="${c.x}" cy="${c.y}" r="${baseSize*0.85}" fill="#050a05" opacity="${manifestHit?0.15:0.55}"/>
       ${iconImg}
-      ${isDungeon && dTier>=4 ? `<circle cx="${c.x}" cy="${c.y}" r="${baseSize*1.15}" fill="none" stroke="${color}" stroke-width="${0.8*k}" opacity="0.4"/>` : ''}
+      ${isExplored && isDungeon && dTier>=4 ? `<circle cx="${c.x}" cy="${c.y}" r="${baseSize*1.15}" fill="none" stroke="${color}" stroke-width="${0.8*k}" opacity="0.4"/>` : ''}
       ${manifestHit
         ? '' /* [8-20] "링도 정신사나워" — 도트 그림 둘레의 색 테두리 링도 뺐다. 클릭 영역은 위의 배경 채움 원(opacity 0.15)이 그대로 담당. */
-        : `<circle cx="${c.x}" cy="${c.y}" r="${baseSize*0.55}" fill="${color}" stroke="${color}" stroke-width="${1*k}" opacity="0.9"/>`}
+        : `<circle cx="${c.x}" cy="${c.y}" r="${baseSize*0.55}" fill="${color}" stroke="${color}" stroke-width="${1*k}" opacity="${isExplored?0.9:0.6}"/>`}
       ${isCurrent?`<circle cx="${c.x}" cy="${c.y}" r="${baseSize*0.95}" fill="none" stroke="${color}" stroke-width="${1*k}"><animate attributeName="r" values="${baseSize*0.8};${baseSize*1.15};${baseSize*0.8}" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.9;0.3;0.9" dur="2s" repeatCount="indefinite"/></circle>`:''}
       ${hasQuestTarget?`<text x="${c.x+baseSize*0.7}" y="${c.y-baseSize*0.6}" font-size="${13*k}" text-anchor="middle">❗</text>`:''}
       <rect x="${c.x-labelText.length*fontSize*0.5-1.5*k}" y="${labelY-fontSize*0.85}" width="${labelText.length*fontSize+3*k}" height="${fontSize*1.15}" fill="#050a05" opacity="0.5" rx="${2*k}"/>
@@ -2237,19 +2252,33 @@ export function renderLandMapPopupSVG(popup, curLoc, travel, k, vb){
   const px=popup.x, py=popup.y;
   const loc = getAllLandLocations().find(l=>l.name===popup.id);
   if(!loc) return '';
+  const isCurLoc = !!(curLoc && loc.name===curLoc.name);
+  const isExplored = isCurLoc || (typeof isLocationExplored==='function' && isLocationExplored(loc.name));
   let rows = [];
   if(travel){
     rows.push({ label:'여행 중에는 조작할 수 없음', action:null, color:'#888' });
-  } else if(curLoc && loc.name===curLoc.name){
+  } else if(isCurLoc){
     rows.push({ label:'현재 위치', action:null, color:'#c0a030' });
   } else {
     const days = getTravelDays(loc, 'walk');
     const route = (typeof findRoadRoute==='function' && curLoc) ? findRoadRoute(curLoc, loc) : null;
     const roadTag = route ? '🛣️' : '🌿';
     rows.push({ label:`🚶${roadTag} 도보로 이동 (약 ${days}일)`, action:`startLandTravel('${esc(loc.name).replace(/'/g,"\\'")}','walk')`, color:'#6a9a5a' });
+    // [22-4, 월드맵 길잡이] "한번이라도 가본 곳만 경로 안내에 노출" —
+    // 실제로 가본 곳만 findRoadRoute 결과를 사람이 읽는 경유지 목록으로
+    // 펼쳐 보여준다(showRouteGuide). 안 가본 곳은 정확한 길을 모른다는
+    // 설정 그대로 반영하되, 위 도보 이동으로 "처음 가보는" 것 자체는
+    // 막지 않는다.
+    if(isExplored){
+      rows.push({ label:`🧭 길잡이로 경로 보기`, action:`showRouteGuide('${esc(loc.name).replace(/'/g,"\\'")}')`, color:'#8aa0d0' });
+    } else {
+      rows.push({ label:`❓ 아직 가보지 않아 정확한 길을 모릅니다`, action:null, color:'#776655' });
+    }
   }
+  // [22-4, fog of war] 팝업 제목도 안 가본 곳이면 실체를 드러내지 않는다 —
+  // 지도 마커의 "???" 처리와 같은 원칙.
   const tierLabel = (loc.type==='dungeon' && loc.dungeonTier) ? ` ${'★'.repeat(loc.dungeonTier)}` : '';
-  const title = `${loc.icon} ${loc.name}${tierLabel}`;
+  const title = isExplored ? `${loc.icon} ${loc.name}${tierLabel}` : `❓ 미탐사 지역`;
   const w=140*k, rowH=18*k, h=26*k+rows.length*rowH;
   let bx=px-w/2, by=py-h-14*k;
   bx = Math.max(vb.x+4*k, Math.min(vb.x+vb.w-w-4*k, bx));
@@ -2270,6 +2299,38 @@ export function renderLandMapPopupSVG(popup, curLoc, travel, k, vb){
   return svg;
 }
 window.renderLandMapPopupSVG = renderLandMapPopupSVG;
+
+// [22-4, 월드맵 길잡이] 기존 findRoadRoute(다익스트라, ROAD_EDGES 기반
+// 실제 포장도로망)를 그대로 재사용 — 이 함수는 원래 팝업의 🛣️/🌿 아이콘
+// 하나 고르는 데만 쓰이고 있었지, 실제 경로 자체를 사람이 볼 수 있게
+// 펼쳐 보여준 적은 없었다. 새 그래프를 만들지 않고 이미 검증된 도로망
+// 데이터를 그대로 읽어서 경유지 목록 + 예상 소요일만 덧붙인다.
+window.showRouteGuide = function(destName){
+  const curLoc = (typeof loadCurrentLocation==='function') ? loadCurrentLocation() : null;
+  const loc = getAllLandLocations().find(l=>l.name===destName);
+  if(!curLoc || !loc) return;
+  const days = getTravelDays(loc, S._activeTransport||'walk');
+  const route = (typeof findRoadRoute==='function') ? findRoadRoute(curLoc, loc) : null;
+  if(!route || !route.path || route.path.length<2){
+    toast(`🧭 ${curLoc.name}에서 ${destName}까지 이어진 포장도로가 없습니다 — 들판을 가로질러야 합니다 (도보 기준 약 ${days}일)`, 4500);
+    return;
+  }
+  // [버그 수정, 22-4 검증 중 발견] route.path는 도로망 위 경유지만 담고
+  // 있다 — 출발지·목적지 자체가 도로망 노드가 아니면(던전 등 도로에서
+  // 살짝 벗어난 곳이 흔함) 경로 끝이 실제 목적지 이름과 다를 수 있다.
+  // 시작·끝에 실제 출발지/목적지를 명시적으로 덧붙여서 항상 두 이름이
+  // 안내문에 그대로 나오게 한다.
+  const allLocs = getAllLandLocations();
+  const stopNames = route.path.map(n=>{
+    const l = allLocs.find(x=>x.name===n);
+    return l ? `${l.icon} ${esc(l.name)}` : esc(n);
+  });
+  const startLabel = `${curLoc.icon||''} ${esc(curLoc.name)}`;
+  if(stopNames[0] !== startLabel) stopNames.unshift(startLabel);
+  const destLabel = `${loc.icon||''} ${esc(loc.name)}`;
+  if(stopNames[stopNames.length-1] !== destLabel) stopNames.push(destLabel);
+  toastHTML(`🧭 <b>길잡이</b>: ${stopNames.join(' → ')}<br><span style="font-size:9px;color:#9ab89a">도보 기준 약 ${days}일 소요</span>`, 5500);
+};
 
 export function openLandMapPopup(name,x,y){ S._landMapPopup={id:name,x,y}; window.renderWorldMapPanel(); }
 window.openLandMapPopup = openLandMapPopup;
@@ -3659,7 +3720,7 @@ function renderWorldMapPanel(){
       <span style="color:${DUNGEON_TIER_COLORS[3]}">●고급</span>
       <span style="color:${DUNGEON_TIER_COLORS[4]}">●전설급</span>
     </div>` : ''}
-    <div style="font-size:7px;color:#577;margin-top:4px;text-align:center;line-height:1.6;flex-shrink:0">${_curMode==='world' ? '대륙을 터치하면 자세히 볼 수 있습니다 · 지도를 드래그하면 옆도 볼 수 있습니다' : '⭐금색=거점도시 · 던전 별표(★~★★★★)=난이도 등급 · 점을 터치하면 행동을 고를 수 있습니다 · 드래그로 이동'}</div>
+    <div style="font-size:7px;color:#577;margin-top:4px;text-align:center;line-height:1.6;flex-shrink:0">${_curMode==='world' ? '대륙을 터치하면 자세히 볼 수 있습니다 · 지도를 드래그하면 옆도 볼 수 있습니다' : '⭐금색=거점도시 · 던전 별표(★~★★★★)=난이도 등급 · 점을 터치하면 행동을 고를 수 있습니다 · 드래그로 이동 · ❓???=아직 가보지 않은 곳(가보면 밝혀집니다)'}</div>
   </div>`;
 
   if(travel && !travel.activeEncounter){

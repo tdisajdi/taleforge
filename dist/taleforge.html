@@ -131601,8 +131601,8 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
         buildChain(locA.id, locB.id, 1, "air-only", [locA.id, locB.id]);
       }
     }
-    const capital = locsRaw.find((l) => l.type === "capital") || locsRaw[0];
-    const graph = { continentKey, nodes, locsById, startNodeId: capital.id };
+    const startLoc = locsRaw.find((l) => l.type === "capital") || locsRaw.find((l) => SETTLEMENT_TYPES.has(l.type)) || locsRaw[0];
+    const graph = { continentKey, nodes, locsById, startNodeId: startLoc.id };
     _graphCache.set(continentKey, { sig, graph });
     return graph;
   }

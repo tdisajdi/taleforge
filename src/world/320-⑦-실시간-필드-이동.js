@@ -185,8 +185,17 @@ export function buildKingdomGraph(continentKey){
     }
   }
 
-  const capital = locsRaw.find(l=>l.type==='capital') || locsRaw[0];
-  const graph = { continentKey, nodes, locsById, startNodeId: capital.id };
+  // [2026-09-22, 24번 섹션 22-3 후속] 확장 이전 구 4개 대륙(north/south/
+  // east/west)엔 type==='capital'인 장소가 없어서, 예전엔 이 폴백이
+  // locsRaw[0](이름 해시 순서상 우연히 던전/황무지가 걸릴 수 있음)으로
+  // 떨어졌다(예: south는 "고대 유적 던전"이 시작점). 수도가 없으면
+  // 정착지 유형(SETTLEMENT_TYPES) 중 첫 번째를 우선 고르도록 해서,
+  // 초반 진입점이 위험한 던전으로 떨어지는 걸 피한다 — 그래도 정착지가
+  // 하나도 없으면(이론상 불가능하지만 안전하게) 기존처럼 첫 항목.
+  const startLoc = locsRaw.find(l=>l.type==='capital')
+    || locsRaw.find(l=>SETTLEMENT_TYPES.has(l.type))
+    || locsRaw[0];
+  const graph = { continentKey, nodes, locsById, startNodeId: startLoc.id };
   _graphCache.set(continentKey, { sig, graph });
   return graph;
 }

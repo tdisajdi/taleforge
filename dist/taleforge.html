@@ -133206,6 +133206,14 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
       totalNodesInGraph: RT.graph.nodes.size
     };
   };
+  window.__tfFieldThreatDebug = function() {
+    if (!RT || !RT.screen) return null;
+    return {
+      battleState: !!battleState,
+      unresolved: hasUnresolvedFieldThreat(),
+      packs: RT.screen.packs.map((p) => ({ name: p.name, state: p.state, isGuard: !!p.isGuard, isRaider: !!p.isRaider }))
+    };
+  };
   window.__tfForcePackEncounter = function(onlyKind) {
     if (!RT || !RT.screen.packs.length) return false;
     const pool = onlyKind === "raider" ? RT.screen.packs.filter((p) => p.isRaider) : onlyKind === "guard" ? RT.screen.packs.filter((p) => p.isGuard) : RT.screen.packs;

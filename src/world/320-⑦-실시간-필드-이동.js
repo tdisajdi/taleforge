@@ -1936,6 +1936,20 @@ window.__tfFieldDebug = function(){
     totalNodesInGraph: RT.graph.nodes.size,
   };
 };
+// [2026-09-22, 24번 섹션 22-3 부수 발견 확증용] exitFieldMode()가 11개
+// 왕국 중 4개에서 안 먹힌 원인이 hasUnresolvedFieldThreat()일 거라고
+// "높은 확률의 추정"으로만 적혀 있던 걸 실측으로 확증하기 위한 훅.
+// 판정 로직(hasUnresolvedFieldThreat) 자체는 그대로 호출만 하고,
+// 그 판정이 참조하는 RT.screen.packs[].state를 그대로 노출한다 —
+// 우회나 재구현 없음.
+window.__tfFieldThreatDebug = function(){
+  if(!RT || !RT.screen) return null;
+  return {
+    battleState: !!battleState,
+    unresolved: hasUnresolvedFieldThreat(),
+    packs: RT.screen.packs.map(p=>({ name:p.name, state:p.state, isGuard:!!p.isGuard, isRaider:!!p.isRaider })),
+  };
+};
 // [2026-09-18 습격 라운드] onlyKind('raider'|'guard'|undefined)를 추가 —
 // 습격 라운드 이후로는 성문 경비병도 screen.packs에 섞여 있어서(플레이어와
 // 전투 판정은 안 되지만 배열 앞쪽을 차지) 기존처럼 "첫 번째 조우 가능

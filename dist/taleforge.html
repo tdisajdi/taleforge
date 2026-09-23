@@ -47160,6 +47160,34 @@ ${lines.join("\n")}
   }
   window.findRoadRoute = findRoadRoute;
   window.findRoadRoute = findRoadRoute;
+  function resolveRouteProgress(stopNames, progress) {
+    if (!Array.isArray(stopNames) || stopNames.length < 2) return null;
+    const allLocs = getAllLandLocations();
+    const coords = stopNames.map((nm) => {
+      const l = allLocs.find((x) => x.name === nm);
+      return l ? getLocationCoord(l) : null;
+    });
+    if (coords.some((c) => !c)) return null;
+    const segLens = [];
+    let total = 0;
+    for (let i = 0; i < coords.length - 1; i++) {
+      const d = Math.hypot(coords[i + 1].x - coords[i].x, coords[i + 1].y - coords[i].y);
+      segLens.push(d);
+      total += d;
+    }
+    const p = Math.max(0, Math.min(1, progress || 0));
+    if (total <= 0) return { point: coords[0], segmentIdx: 0, coords };
+    let target = p * total, segIdx = 0;
+    for (; segIdx < segLens.length - 1; segIdx++) {
+      if (target <= segLens[segIdx]) break;
+      target -= segLens[segIdx];
+    }
+    const segLen = segLens[segIdx] || 1;
+    const t = segLen > 0 ? target / segLen : 0;
+    const a = coords[segIdx], b = coords[segIdx + 1] || a;
+    return { point: { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t }, segmentIdx: segIdx, coords };
+  }
+  window.resolveRouteProgress = resolveRouteProgress;
   function getTravelDays(destLoc, transportType) {
     const curLoc = typeof loadCurrentLocation === "function" ? loadCurrentLocation() : null;
     if (!curLoc) return 1;
@@ -47301,7 +47329,13 @@ ${lines.join("\n")}
       const total = route.roadDist + route.entryOffroadDist + route.exitOffroadDist;
       roadRatio = total > 0 ? route.roadDist / total : 0;
     }
-    saveTravelState({ destName: dest.name, daysLeft: days, totalDays: days, transportType: transportType || "walk", activeEncounter: null, startedAt: S.msgCount || 0, roadRatio, usedRoad: !!route });
+    let routeStops = null;
+    if (route && route.path && route.path.length >= 2) {
+      routeStops = route.path.slice();
+      if (routeStops[0] !== curLoc.name) routeStops.unshift(curLoc.name);
+      if (routeStops[routeStops.length - 1] !== dest.name) routeStops.push(dest.name);
+    }
+    saveTravelState({ destName: dest.name, daysLeft: days, totalDays: days, transportType: transportType || "walk", activeEncounter: null, startedAt: S.msgCount || 0, roadRatio, usedRoad: !!route, routeStops, lastSegmentIdx: 0 });
     S._mapPopup = null;
     S._landMapHighlightRoute = null;
     const roadNote = route ? roadRatio > 0.5 ? " \uC815\uBE44\uB41C \uB3C4\uB85C\uB97C \uB530\uB77C\uAC00\uB294 \uBE60\uB978 \uAE38\uC785\uB2C8\uB2E4." : " \uB3C4\uB85C\uC640 \uAC70\uCE5C \uAE38\uC774 \uC11E\uC778 \uACBD\uB85C\uC785\uB2C8\uB2E4." : " \uB3C4\uB85C\uAC00 \uC5C6\uB294 \uAC70\uCE5C \uAE38\uC785\uB2C8\uB2E4.";
@@ -47323,6 +47357,18 @@ ${lines.join("\n")}
       S._pendingTravelHint = `\uAE34 \uC5EC\uC815 \uB05D\uC5D0 ${travel.destName}\uC5D0 \uB3C4\uCC29\uD588\uB2E4.`;
       saveTravelState(null);
       return;
+    }
+    if (travel.routeStops && travel.routeStops.length > 2 && typeof resolveRouteProgress === "function") {
+      const progress = 1 - travel.daysLeft / travel.totalDays;
+      const rp = resolveRouteProgress(travel.routeStops, progress);
+      if (rp) {
+        const prevIdx = travel.lastSegmentIdx || 0;
+        for (let idx = prevIdx + 1; idx <= rp.segmentIdx; idx++) {
+          const wpName = travel.routeStops[idx];
+          if (wpName) toast(`\u{1F68F} ${wpName} \uBD80\uADFC\uC744 \uC9C0\uB098\uACE0 \uC788\uC2B5\uB2C8\uB2E4`, 2500);
+        }
+        travel.lastSegmentIdx = rp.segmentIdx;
+      }
     }
     const roadRatio = travel.roadRatio || 0;
     const t = typeof TRANSPORT_CONFIG !== "undefined" ? TRANSPORT_CONFIG[travel.transportType || "walk"] : null;
@@ -47588,12 +47634,19 @@ ${lines.join("\n")}
           const destInView = cTo.x >= vb.x && cTo.x <= vb.x + vb.w && cTo.y >= vb.y && cTo.y <= vb.y + vb.h;
           if (destInView) {
             const progress = 1 - travel.daysLeft / travel.totalDays;
-            const mx = (cFrom.x + cTo.x) / 2, my = (cFrom.y + cTo.y) / 2 - 60;
-            const t = progress;
-            const px = (1 - t) * (1 - t) * cFrom.x + 2 * (1 - t) * t * mx + t * t * cTo.x;
-            const py = (1 - t) * (1 - t) * cFrom.y + 2 * (1 - t) * t * my + t * t * cTo.y;
-            svg += `<path d="M${cFrom.x} ${cFrom.y} Q${mx} ${my} ${cTo.x} ${cTo.y}" fill="none" stroke="#5a8a3a" stroke-width="${1 * k}" stroke-dasharray="${3 * k},${3 * k}" pointer-events="none"/>`;
-            svg += `<text x="${px}" y="${py}" font-size="${13 * k}" text-anchor="middle" pointer-events="none">\u{1F6B6}</text>`;
+            const rp = travel.routeStops && typeof resolveRouteProgress === "function" ? resolveRouteProgress(travel.routeStops, progress) : null;
+            if (rp && rp.coords && rp.coords.length >= 2) {
+              const pts = rp.coords.map((c) => `${c.x},${c.y}`).join(" ");
+              svg += `<polyline points="${pts}" fill="none" stroke="#5a8a3a" stroke-width="${1 * k}" stroke-dasharray="${3 * k},${3 * k}" pointer-events="none"/>`;
+              svg += `<text x="${rp.point.x}" y="${rp.point.y}" font-size="${13 * k}" text-anchor="middle" pointer-events="none">\u{1F6B6}</text>`;
+            } else {
+              const mx = (cFrom.x + cTo.x) / 2, my = (cFrom.y + cTo.y) / 2 - 60;
+              const t = progress;
+              const px = (1 - t) * (1 - t) * cFrom.x + 2 * (1 - t) * t * mx + t * t * cTo.x;
+              const py = (1 - t) * (1 - t) * cFrom.y + 2 * (1 - t) * t * my + t * t * cTo.y;
+              svg += `<path d="M${cFrom.x} ${cFrom.y} Q${mx} ${my} ${cTo.x} ${cTo.y}" fill="none" stroke="#5a8a3a" stroke-width="${1 * k}" stroke-dasharray="${3 * k},${3 * k}" pointer-events="none"/>`;
+              svg += `<text x="${px}" y="${py}" font-size="${13 * k}" text-anchor="middle" pointer-events="none">\u{1F6B6}</text>`;
+            }
           } else {
             const cx = vb.x + vb.w / 2, cy = vb.y + vb.h / 2;
             const angle = Math.atan2(cTo.y - cy, cTo.x - cx);

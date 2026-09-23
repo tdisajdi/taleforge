@@ -1569,6 +1569,41 @@ window.findRoadRoute = findRoadRoute;
 
 window.findRoadRoute = findRoadRoute;
 
+// [길잡이 자동이동] `startLandTravel`이 저장해둔 경유지 이름 배열
+// (`travel.routeStops`, 실제 장소 이름들)과 여행 진행률(0~1)을 받아
+// "지금 몇 번째 구간, 그 구간 안에서 얼마나 왔는지"를 좌표로 계산한다.
+// 렌더(진행 아이콘 위치)와 틱(경유지 통과 안내)이 이 함수 하나를
+// 공유해서, "화면에 보이는 위치"와 "실제로 지나쳤다고 판정하는 시점"이
+// 항상 같은 계산식을 쓰게 한다(따로 두 번 구현하면 어긋날 위험이 있음).
+function resolveRouteProgress(stopNames, progress){
+  if(!Array.isArray(stopNames) || stopNames.length<2) return null;
+  const allLocs = getAllLandLocations();
+  const coords = stopNames.map(nm=>{
+    const l = allLocs.find(x=>x.name===nm);
+    return l ? getLocationCoord(l) : null;
+  });
+  if(coords.some(c=>!c)) return null; // 좌표 조회 실패한 경유지가 있으면 안전하게 포기(호출부가 폴백)
+  const segLens = [];
+  let total = 0;
+  for(let i=0;i<coords.length-1;i++){
+    const d = Math.hypot(coords[i+1].x-coords[i].x, coords[i+1].y-coords[i].y);
+    segLens.push(d);
+    total += d;
+  }
+  const p = Math.max(0, Math.min(1, progress||0));
+  if(total<=0) return { point: coords[0], segmentIdx: 0, coords };
+  let target = p*total, segIdx = 0;
+  for(; segIdx<segLens.length-1; segIdx++){
+    if(target <= segLens[segIdx]) break;
+    target -= segLens[segIdx];
+  }
+  const segLen = segLens[segIdx]||1;
+  const t = segLen>0 ? target/segLen : 0;
+  const a = coords[segIdx], b = coords[segIdx+1]||a;
+  return { point: { x:a.x+(b.x-a.x)*t, y:a.y+(b.y-a.y)*t }, segmentIdx: segIdx, coords };
+}
+window.resolveRouteProgress = resolveRouteProgress;
+
 export function getTravelDays(destLoc, transportType){
   const curLoc = (typeof loadCurrentLocation==='function') ? loadCurrentLocation() : null;
   if(!curLoc) return 1;
@@ -1704,7 +1739,17 @@ export function startLandTravel(destName, transportType){
     const total = route.roadDist + route.entryOffroadDist + route.exitOffroadDist;
     roadRatio = total>0 ? route.roadDist/total : 0;
   }
-  saveTravelState({ destName: dest.name, daysLeft: days, totalDays: days, transportType: transportType||'walk', activeEncounter:null, startedAt:S.msgCount||0, roadRatio, usedRoad: !!route });
+  // [길잡이 자동이동] `showRouteGuide()`와 똑같은 보정(출발/목적지가
+  // 도로망 노드가 아니면 시작·끝에 실제 이름을 덧붙임)으로 경유지 이름
+  // 배열을 만들어 저장해둔다 — 이걸로 여행 중 진행 표시가 직선이 아니라
+  // 실제 길을 따라 움직이고, 중간 경유지를 지날 때마다 안내도 나간다.
+  let routeStops = null;
+  if(route && route.path && route.path.length>=2){
+    routeStops = route.path.slice();
+    if(routeStops[0] !== curLoc.name) routeStops.unshift(curLoc.name);
+    if(routeStops[routeStops.length-1] !== dest.name) routeStops.push(dest.name);
+  }
+  saveTravelState({ destName: dest.name, daysLeft: days, totalDays: days, transportType: transportType||'walk', activeEncounter:null, startedAt:S.msgCount||0, roadRatio, usedRoad: !!route, routeStops, lastSegmentIdx: 0 });
   S._mapPopup = null;
   // [지도 위 경로 하이라이트] 실제 여행이 시작되면 그 여행 자체가 이미
   // 별도의 진행률 표시(위 "여행 중이면 경로 표시" 렌더 블록)를 갖고
@@ -1738,6 +1783,27 @@ export function tickLandTravel(){
     S._pendingTravelHint = `긴 여정 끝에 ${travel.destName}에 도착했다.`;
     saveTravelState(null);
     return;
+  }
+  // [길잡이 자동이동] 경유지가 2개(출발·도착) 넘게 있는 진짜 다구간
+  // 여행이면, 진행률이 새 구간으로 넘어갈 때마다(=중간 경유지를 하나
+  // 지나칠 때마다) 그 경유지 이름으로 짧게 안내한다 — 이전에는 여행
+  // 내내 "며칠 남았다"는 숫자만 셀 뿐 실제로 어디를 지나는지 전혀
+  // 알 수 없었다. `resolveRouteProgress`(렌더 쪽과 완전히 같은 계산식)
+  // 로 지금 진행률이 몇 번째 구간에 있는지 구해, 저장해둔
+  // `lastSegmentIdx`보다 커졌으면(=구간이 넘어갔으면) 그 사이 지나친
+  // 경유지들을 전부 안내하고 갱신한다(한 틱에 여러 구간을 건너뛸 만큼
+  // 짧은 구간이 있는 경우도 놓치지 않도록 반복 처리).
+  if(travel.routeStops && travel.routeStops.length>2 && typeof resolveRouteProgress==='function'){
+    const progress = 1-(travel.daysLeft/travel.totalDays);
+    const rp = resolveRouteProgress(travel.routeStops, progress);
+    if(rp){
+      const prevIdx = travel.lastSegmentIdx||0;
+      for(let idx=prevIdx+1; idx<=rp.segmentIdx; idx++){
+        const wpName = travel.routeStops[idx];
+        if(wpName) toast(`🚏 ${wpName} 부근을 지나고 있습니다`, 2500);
+      }
+      travel.lastSegmentIdx = rp.segmentIdx;
+    }
   }
   // 도로 비중이 높을수록 안전(인카운터 확률 감소, 산적 가중치 감소).
   // [11차 수정] 탑승 수단의 encounterMult도 반영한다 — 지금까지는
@@ -2096,12 +2162,25 @@ export function renderLandMapSVG(){
         const destInView = cTo.x>=vb.x && cTo.x<=vb.x+vb.w && cTo.y>=vb.y && cTo.y<=vb.y+vb.h;
         if(destInView){
           const progress = 1-(travel.daysLeft/travel.totalDays);
-          const mx=(cFrom.x+cTo.x)/2, my=(cFrom.y+cTo.y)/2-60;
-          const t=progress;
-          const px=(1-t)*(1-t)*cFrom.x+2*(1-t)*t*mx+t*t*cTo.x;
-          const py=(1-t)*(1-t)*cFrom.y+2*(1-t)*t*my+t*t*cTo.y;
-          svg += `<path d="M${cFrom.x} ${cFrom.y} Q${mx} ${my} ${cTo.x} ${cTo.y}" fill="none" stroke="#5a8a3a" stroke-width="${1*k}" stroke-dasharray="${3*k},${3*k}" pointer-events="none"/>`;
-          svg += `<text x="${px}" y="${py}" font-size="${13*k}" text-anchor="middle" pointer-events="none">🚶</text>`;
+          // [길잡이 자동이동] 저장해둔 실제 경유지(`travel.routeStops`)가
+          // 있으면 출발-도착 직선(가짜 곡선)이 아니라 진짜 길을 따라
+          // 그리고, 그 길 위에서 정확한 진행 위치를 계산한다 — 옛 세이브
+          // 데이터처럼 routeStops가 없거나 좌표를 못 찾는 경유지가 섞여
+          // 있으면 안전하게 예전 방식(직선 2점 베지어)으로 폴백한다.
+          const rp = (travel.routeStops && typeof resolveRouteProgress==='function')
+            ? resolveRouteProgress(travel.routeStops, progress) : null;
+          if(rp && rp.coords && rp.coords.length>=2){
+            const pts = rp.coords.map(c=>`${c.x},${c.y}`).join(' ');
+            svg += `<polyline points="${pts}" fill="none" stroke="#5a8a3a" stroke-width="${1*k}" stroke-dasharray="${3*k},${3*k}" pointer-events="none"/>`;
+            svg += `<text x="${rp.point.x}" y="${rp.point.y}" font-size="${13*k}" text-anchor="middle" pointer-events="none">🚶</text>`;
+          } else {
+            const mx=(cFrom.x+cTo.x)/2, my=(cFrom.y+cTo.y)/2-60;
+            const t=progress;
+            const px=(1-t)*(1-t)*cFrom.x+2*(1-t)*t*mx+t*t*cTo.x;
+            const py=(1-t)*(1-t)*cFrom.y+2*(1-t)*t*my+t*t*cTo.y;
+            svg += `<path d="M${cFrom.x} ${cFrom.y} Q${mx} ${my} ${cTo.x} ${cTo.y}" fill="none" stroke="#5a8a3a" stroke-width="${1*k}" stroke-dasharray="${3*k},${3*k}" pointer-events="none"/>`;
+            svg += `<text x="${px}" y="${py}" font-size="${13*k}" text-anchor="middle" pointer-events="none">🚶</text>`;
+          }
         } else {
           // 목적지가 다른 대륙(화면 밖)에 있으면, 그 방향의 화면 가장자리에 화살표와 거리 안내를 표시
           const cx = vb.x+vb.w/2, cy = vb.y+vb.h/2;

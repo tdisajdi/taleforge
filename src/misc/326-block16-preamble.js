@@ -599,7 +599,7 @@ window.getGuildBLS = getGuildBLS;
 //  나머지는 그대로 원본에 위임한다.
 // ══════════════════════════════════════════════════════════════════════════════
 function guildInteractLegacy(){
-  const gold=Math.floor(Math.random()*80)+40; S.gold+=gold; if(typeof saveGold==='function') saveGold(S.gold); if(typeof window.updateHeader==='function') window.updateHeader();
+  const gold=Math.floor(Math.random()*80)+40; if(typeof addGoldWithExchange==='function') addGoldWithExchange(gold, '길드 의뢰 완료'); else { S.gold+=gold; if(typeof saveGold==='function') saveGold(S.gold); } if(typeof window.updateHeader==='function') window.updateHeader();
   toast(`⚔️ 길드 의뢰 완료! 골드+${gold}`, 2500);
 }
 window.guildInteractLegacy = guildInteractLegacy;

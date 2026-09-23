@@ -429,7 +429,7 @@ export function applyMemoryAuctionReward(memoryId){
   };
   const r = rewards[memoryId];
   if(!r) return;
-  if(r.gold){ S.gold = (S.gold||0) + r.gold; if(typeof saveGold==='function') saveGold(S.gold); }
+  if(r.gold){ if(typeof addGoldWithExchange==='function') addGoldWithExchange(r.gold, '진명 기억 보상'); else { S.gold = (S.gold||0) + r.gold; if(typeof saveGold==='function') saveGold(S.gold); } }
   if(r.stat){
     Object.entries(r.stat).forEach(([k,v])=>{
       if(S.stats && S.stats[k]!==undefined) S.stats[k] = Math.min(999, S.stats[k]+v);

@@ -104,8 +104,8 @@ export function sellItem(inventoryIdx){
 
   S.inventory.splice(inventoryIdx, 1);
   saveInventory(S.inventory);
-  S.gold += sellPrice;
-  saveGold(S.gold);
+  if(typeof addGoldWithExchange==='function') addGoldWithExchange(sellPrice, '아이템 판매');
+  else { S.gold += sellPrice; saveGold(S.gold); }
   window.updateStats('totalGoldEarned', sellPrice);
   window.updateHeader();
   toast(`💰 ${item.name} 판매 → +${sellPrice} 골드`, 2000);

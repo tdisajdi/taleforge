@@ -49,7 +49,7 @@ export function sellAtBranch(cropId, branchName){
   net.warehouse[cropId] = 0;
   net.totalEarned = (net.totalEarned||0)+total;
   saveNetwork(net);
-  S.gold += total; if(typeof saveGold==='function') saveGold(S.gold); window.updateHeader&&window.updateHeader();
+  if(typeof addGoldWithExchange==='function') addGoldWithExchange(total, '지부 판매'); else { S.gold += total; if(typeof saveGold==='function') saveGold(S.gold); } window.updateHeader&&window.updateHeader();
   if(typeof window.updateStats==='function') window.updateStats('merchant_trades', 1);
   toast(`💰 ${branchName}에서 ${CROP_DEFS[cropId]?.name||cropId} 전량 판매! +${total}G${!isHome?' (원거리 프리미엄)':''}`, 3500);
   renderNetworkPanel();
@@ -84,7 +84,7 @@ export function tickNetwork(){
   const net = loadNetwork(); if(!net) return;
   if(net.type==='bard' && net.patrons.length>0){
     const income = net.patrons.reduce((s,p)=>s+p.income,0);
-    S.gold += income; if(typeof saveGold==='function') saveGold(S.gold); window.updateHeader&&window.updateHeader();
+    if(typeof addGoldWithExchange==='function') addGoldWithExchange(income, '후원자 수입'); else { S.gold += income; if(typeof saveGold==='function') saveGold(S.gold); } window.updateHeader&&window.updateHeader();
     // 후원자가 가끔 이탈(명성 관리 소홀 시)
     if(Math.random()<0.03 && net.patrons.length>0){
       const lost = net.patrons.pop();
@@ -95,7 +95,7 @@ export function tickNetwork(){
   if(net.type==='merchant' && net.branches.length>1){
     // 지부가 많을수록 매 턴 소량의 자동 수입(교역망 효과)
     const passiveIncome = (net.branches.length-1)*3;
-    S.gold += passiveIncome; if(typeof saveGold==='function') saveGold(S.gold); window.updateHeader&&window.updateHeader();
+    if(typeof addGoldWithExchange==='function') addGoldWithExchange(passiveIncome, '교역망 자동 수입'); else { S.gold += passiveIncome; if(typeof saveGold==='function') saveGold(S.gold); } window.updateHeader&&window.updateHeader();
   }
   // ── 지부 습격 — 재고를 쌓아두거나 지부를 여러 곳 두면 도적의 표적이
   //    된다. 지부에 용병을 배치(garrisonMerc)해두면 방어를 시도한다.
@@ -708,7 +708,7 @@ export function resellIntel(dealId){
   const deal = DEAL_LORE_SHOP[dealId]; if(!deal) return;
 
   const gold = getResellGold(dealId);
-  S.gold += gold; if(typeof saveGold==='function') saveGold(S.gold); window.updateHeader&&window.updateHeader();
+  if(typeof addGoldWithExchange==='function') addGoldWithExchange(gold, '정보 재판매'); else { S.gold += gold; if(typeof saveGold==='function') saveGold(S.gold); } window.updateHeader&&window.updateHeader();
   net.totalEarned = (net.totalEarned||0) + gold;
   saveNetwork(net);
 
@@ -901,7 +901,7 @@ export function reprocessTrophy(preyName){
   saveHunterTrophies(trophies);
 
   const gold = 15 + Math.floor(Math.random()*30);
-  S.gold += gold; if(typeof saveGold==='function') saveGold(S.gold); window.updateHeader&&window.updateHeader();
+  if(typeof addGoldWithExchange==='function') addGoldWithExchange(gold, '전리품 손질'); else { S.gold += gold; if(typeof saveGold==='function') saveGold(S.gold); } window.updateHeader&&window.updateHeader();
 
   toast(`🦴 ${preyName}의 전리품을 손질해 ${gold}G를 회수했다.`, 3500);
   renderHunterGroundsPanel();
@@ -1384,7 +1384,7 @@ export function exploreIsland(islandId){
     S._pendingVoyageHint = `${isl.name}을(를) 탐험하던 중 예상치 못한 위험에 휘말렸다.`;
   } else {
     const gold = loot.gold[0]+Math.floor(Math.random()*(loot.gold[1]-loot.gold[0]+1));
-    S.gold += gold; if(typeof saveGold==='function') saveGold(S.gold); window.updateHeader&&window.updateHeader();
+    if(typeof addGoldWithExchange==='function') addGoldWithExchange(gold, '섬 탐험'); else { S.gold += gold; if(typeof saveGold==='function') saveGold(S.gold); } window.updateHeader&&window.updateHeader();
     let msg = `🏝️ ${isl.name} 탐험 완료! +${gold}G`;
     if(Math.random() < loot.relicChance){
       const g = loadGraveyard ? loadGraveyard() : null;
@@ -2565,7 +2565,7 @@ export function sellShip(shipId){
   const next = fleet.filter(s=>s.id!==shipId);
   saveFleet(next);
   if(getActiveShipId()===shipId){ setActiveShipId(next.length?next[0].id:null); }
-  S.gold += refund; if(typeof saveGold==='function') saveGold(S.gold); window.updateHeader&&window.updateHeader();
+  if(typeof addGoldWithExchange==='function') addGoldWithExchange(refund, '선박 매각'); else { S.gold += refund; if(typeof saveGold==='function') saveGold(S.gold); } window.updateHeader&&window.updateHeader();
   toast(`💰 ${target.name}을(를) 매각했습니다. +${refund}G (선원은 모두 하선했습니다)`, 3500);
   renderVoyagePanel();
 }
@@ -2697,7 +2697,7 @@ export function sellCargoHere(cropId){
   const total = Math.round(basePrice * item.qty * homeContinentBonus);
   ship.cargo.splice(idx,1);
   saveShip(ship);
-  S.gold += total; if(typeof saveGold==='function') saveGold(S.gold); window.updateHeader&&window.updateHeader();
+  if(typeof addGoldWithExchange==='function') addGoldWithExchange(total, '화물 판매'); else { S.gold += total; if(typeof saveGold==='function') saveGold(S.gold); } window.updateHeader&&window.updateHeader();
   toast(`💰 타지에서 화물 판매! +${total}G${homeContinentBonus>1?' (원거리 교역 프리미엄)':''}`, 3500);
   if(typeof window.updateStats==='function') window.updateStats('trade_voyage_count', 1);
   renderVoyagePanel();
@@ -2773,7 +2773,7 @@ export function attemptPlunderPort(){
   const win = stats.combat > defenseRoll*0.6;
   if(win){
     const loot = 60 + Math.floor(Math.random()*150) + Math.round(stats.combat*1.5);
-    S.gold += loot; if(typeof saveGold==='function') saveGold(S.gold); window.updateHeader&&window.updateHeader();
+    if(typeof addGoldWithExchange==='function') addGoldWithExchange(loot, '항구 약탈'); else { S.gold += loot; if(typeof saveGold==='function') saveGold(S.gold); } window.updateHeader&&window.updateHeader();
     if(typeof window.updateStats==='function') window.updateStats('sea_plunder_count', 1);
     if(typeof updateReputation==='function') updateReputation(-12);
     toast(`🏴‍☠️ ${loc.name} 약탈 성공! +${loot}G (해상 악명 상승)`, 4000);
@@ -2918,7 +2918,7 @@ export function concludeSeaBattle(action){
   if(action==='loot'){
     const goldWon = enemy.lootGold[0]+Math.floor(Math.random()*(enemy.lootGold[1]-enemy.lootGold[0]+1));
     if(goldWon>0){
-      S.gold += goldWon; if(typeof saveGold==='function') saveGold(S.gold); window.updateHeader&&window.updateHeader();
+      if(typeof addGoldWithExchange==='function') addGoldWithExchange(goldWon, '해상전 노획물'); else { S.gold += goldWon; if(typeof saveGold==='function') saveGold(S.gold); } window.updateHeader&&window.updateHeader();
       toast(`💰 적선을 격퇴하고 노획물 ${goldWon}G를 획득했습니다!`, 4000);
     } else {
       toast(`⚓ ${enemy.name}을(를) 격퇴했습니다.`, 3500);
@@ -2983,7 +2983,7 @@ export function resolveSeaEvent(choice){
   } else if(ev.id==='sea_calm'){
     if(Math.random()<0.3){
       const found = 20+Math.floor(Math.random()*40);
-      S.gold += found; if(typeof saveGold==='function') saveGold(S.gold); window.updateHeader&&window.updateHeader();
+      if(typeof addGoldWithExchange==='function') addGoldWithExchange(found, '표류물 습득'); else { S.gold += found; if(typeof saveGold==='function') saveGold(S.gold); } window.updateHeader&&window.updateHeader();
       toast(`🌊 표류 중 바다에서 무언가를 건져올렸습니다! +${found}G`, 3000);
     } else {
       toast('🌊 표류로 항해가 하루 더 지연됩니다.', 2500);
@@ -2994,7 +2994,7 @@ export function resolveSeaEvent(choice){
       const item = ship.cargo[0];
       const price = Math.round((CROP_DEFS[item.cropId]?.basePrice||10) * item.qty * 1.2);
       ship.cargo.shift();
-      S.gold += price; if(typeof saveGold==='function') saveGold(S.gold); window.updateHeader&&window.updateHeader();
+      if(typeof addGoldWithExchange==='function') addGoldWithExchange(price, '해상 즉석 거래'); else { S.gold += price; if(typeof saveGold==='function') saveGold(S.gold); } window.updateHeader&&window.updateHeader();
       toast(`⛴️ 해상에서 화물을 즉석 거래했습니다! +${price}G`, 3000);
     } else {
       toast('⛴️ 우호적으로 인사를 나누고 각자의 길을 갔습니다.', 2500);

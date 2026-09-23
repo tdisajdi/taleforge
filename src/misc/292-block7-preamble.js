@@ -15,8 +15,12 @@ export function getContinentExchangeRate(){
     || (typeof window.currentLocation !== 'undefined' && window.currentLocation?.continent)
     || origin;
   if(origin === current) return 1.0;
-  const originRate = CONTINENT_CURRENCY[origin]?.exchangeRate || 1.0;
-  return Math.round(originRate * 100) / 100;
+  // [버그 수정] 이전엔 origin(고향 대륙)의 환율을 반환해서, 대부분
+  // 플레이어의 고향(central, exchangeRate:1.0) 기준으로는 어디를 가도
+  // 항상 1.0만 나오던 문제 — 실제로 지금 있는 대륙(current)의 환율을
+  // 반환해야 "타지에서 벌면 환율이 적용된다"는 의도대로 동작한다.
+  const currentRate = CONTINENT_CURRENCY[current]?.exchangeRate || 1.0;
+  return Math.round(currentRate * 100) / 100;
 }
 window.getContinentExchangeRate = getContinentExchangeRate;
 

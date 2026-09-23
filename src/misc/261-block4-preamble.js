@@ -86,7 +86,7 @@ export function checkMilestones(){
     try{ if(!m.check()) return; }catch(e){ return; }
     done[m.id]={ completedAt:new Date().toLocaleString('ko-KR'), turn:S.msgCount||0 };
     saveMilestonesV7(done);
-    if(m.reward&&m.reward.gold){ S.gold=(S.gold||0)+m.reward.gold; if(typeof saveGold==='function') saveGold(S.gold); if(typeof window.updateHeader==='function') window.updateHeader(); }
+    if(m.reward&&m.reward.gold){ if(typeof addGoldWithExchange==='function') addGoldWithExchange(m.reward.gold, '마일스톤 보상'); else { S.gold=(S.gold||0)+m.reward.gold; if(typeof saveGold==='function') saveGold(S.gold); } if(typeof window.updateHeader==='function') window.updateHeader(); }
     if(m.reward&&m.reward.exp && typeof gainExp==='function') gainExp(m.reward.exp);
     setTimeout(function(){ if(typeof toast==='function') toast('🎯 마일스톤! '+m.icon+' '+m.label+(m.reward&&m.reward.gold?' (+'+m.reward.gold+'G)':''), 4000); }, 300);
     if(typeof addTimelineEvent==='function') addTimelineEvent('milestone','마일스톤: '+m.label,{icon:m.icon});

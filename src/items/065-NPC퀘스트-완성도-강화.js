@@ -241,7 +241,7 @@ export function checkNpcQuestCompletion(aiText){
 
     // 보상
     const r = quest.reward;
-    if(r.gold){ S.gold+=r.gold; saveGold(S.gold); }
+    if(r.gold){ if(typeof addGoldWithExchange==='function') addGoldWithExchange(r.gold, 'NPC 의뢰 완료'); else { S.gold+=r.gold; saveGold(S.gold); } }
     if(r.relBonus) updateNpcRelationship(quest.npcName, r.relBonus, '퀘스트 완료');
     if(r.exp) window.updateStats('totalExp', r.exp);
     if(r.titleId) grantTitle(r.titleId);

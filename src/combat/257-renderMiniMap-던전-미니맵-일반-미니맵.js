@@ -341,7 +341,7 @@ export async function chooseDungeonAction(choiceId){
     const goldChg = Math.max(0, Math.round((result.goldChange||0) * (_dg.goldMult||1)));
     const expGain = Math.max(0, Math.round((result.expGain||10) * (_dg.expMult||1)));
     S.stats.hp = Math.max(1, Math.min((typeof getPlayerMaxHp==='function'?getPlayerMaxHp():999), (S.stats.hp||100) + hpChg));
-    if(goldChg > 0){ S.gold += goldChg; saveGold(S.gold); }
+    if(goldChg > 0){ if(typeof addGoldWithExchange==='function') addGoldWithExchange(goldChg, '던전 결과'); else { S.gold += goldChg; saveGold(S.gold); } }
     window.updateHeader();
     if(result.statusEffect && result.statusEffect !== 'null'){ try{ applyStatusEffect(result.statusEffect); }catch(e){} }
     if(result.foundItem){
@@ -381,7 +381,7 @@ export async function chooseDungeonAction(choiceId){
   }catch(e){
     console.warn('[던전 결과 생성 실패]', e.message);
     const isSucc = effRoll >= 50;
-    if(isSucc){ const gold=Math.floor(Math.random()*50)+10; S.gold+=gold; saveGold(S.gold); window.updateHeader(); ds.totalGold=(ds.totalGold||0)+gold; room._resultText='성공적으로 처리했다. 골드 +'+gold+'를 획득했다.'; room._goldChange=gold; }
+    if(isSucc){ const gold=Math.floor(Math.random()*50)+10; if(typeof addGoldWithExchange==='function') addGoldWithExchange(gold, '던전 폴백 결과'); else { S.gold+=gold; saveGold(S.gold); } window.updateHeader(); ds.totalGold=(ds.totalGold||0)+gold; room._resultText='성공적으로 처리했다. 골드 +'+gold+'를 획득했다.'; room._goldChange=gold; }
     else { const dmg=Math.floor(Math.random()*15)+5; S.stats.hp=Math.max(1,(S.stats.hp||100)-dmg); window.updateHeader(); room._resultText='실패했다. HP -'+dmg+' 피해를 입었다.'; room._hpChange=-dmg; }
     room._resolved=true; ds.currentRoom=room; saveDungeonState(ds); renderDungeonUI();
     toast('⚠️ AI 지연, 기본 판정 적용', 1500);

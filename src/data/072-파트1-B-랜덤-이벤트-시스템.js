@@ -35,7 +35,7 @@ export const RANDOM_EVENTS = {
       desc:'어둠 속에서 강도떼가 나타났다!',
       choices:['맞서 싸운다', '도망친다', '협상을 시도한다'],
       effects:{
-        '맞서 싸운다': ()=>{ if(Math.random()<0.6){ S.gold+=30; saveGold(S.gold); toast('⚔️ 격퇴! 골드+30',2500); } else { S.stats.hp=Math.max(1,(S.stats.hp||100)-20); window.updateHeader(); if(Math.random()<0.4){ applyStatusEffect('poison'); toast('💀 부상을 입었다! HP-20 + 중독',2500); } else { toast('💀 부상을 입었다! HP-20',2500); } } },
+        '맞서 싸운다': ()=>{ if(Math.random()<0.6){ if(typeof addGoldWithExchange==='function') addGoldWithExchange(30, '강도떼 격퇴'); else { S.gold+=30; saveGold(S.gold); } toast('⚔️ 격퇴! 골드+30',2500); } else { S.stats.hp=Math.max(1,(S.stats.hp||100)-20); window.updateHeader(); if(Math.random()<0.4){ applyStatusEffect('poison'); toast('💀 부상을 입었다! HP-20 + 중독',2500); } else { toast('💀 부상을 입었다! HP-20',2500); } } },
         '도망친다': ()=>{ if((S.stats.agi||50)>50){ toast('💨 탈출 성공!',2000); } else { S.gold=Math.max(0,S.gold-20); saveGold(S.gold); toast('💸 도망치다 골드를 잃었다! -20',2500); } },
         '협상을 시도한다': ()=>{ if((S.stats.neg||50)>60||Math.random()<0.3){ toast('🤝 협상 성공! 무사히 통과',2000); } else { S.gold=Math.max(0,S.gold-30); saveGold(S.gold); toast('❌ 협상 실패! 골드-30',2500); } },
       }},
@@ -45,7 +45,7 @@ export const RANDOM_EVENTS = {
       choices:['조심스럽게 연다', '그냥 힘으로 부순다', '무시하고 지나간다'],
       effects:{
         '조심스럽게 연다': ()=>{ if(Math.random()<0.7){ const item=generateItem(null,'rare'); if(item){ S.inventory.push(item); saveInventory(S.inventory); toastHTML(`💎 ${typeof getEntityIconHTML==='function'?getEntityIconHTML(item,{size:14}):(item.icon)} ${esc(item.name)} 발견!`,2500); } } else { if(Math.random()<0.5){ applyStatusEffect('curse'); toast('⚠️ 저주가 걸린 상자였다!',2500); } else { toast('⚠️ 상자가 비어있었다.',2000); } } },
-        '그냥 힘으로 부순다': ()=>{ const gold=Math.floor(Math.random()*50)+10; S.gold+=gold; saveGold(S.gold); toast(`💰 골드 +${gold}`,2000); },
+        '그냥 힘으로 부순다': ()=>{ const gold=Math.floor(Math.random()*50)+10; if(typeof addGoldWithExchange==='function') addGoldWithExchange(gold, '상자 부수기'); else { S.gold+=gold; saveGold(S.gold); } toast(`💰 골드 +${gold}`,2000); },
         '무시하고 지나간다': ()=>toast('계속 길을 간다',1000),
       }},
     { id:'re_traveler', chance:0.07, minTurn:5,

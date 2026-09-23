@@ -324,7 +324,7 @@ export function sellLivestockProduce(productKey, qty){
   const total = def.productPrice*qty;
   produce[productKey] = have-qty;
   saveLivestockProduce(produce);
-  S.gold += total; if(typeof saveGold==='function') saveGold(S.gold); window.updateHeader&&window.updateHeader();
+  if(typeof addGoldWithExchange==='function') addGoldWithExchange(total, '축산물 판매'); else { S.gold += total; if(typeof saveGold==='function') saveGold(S.gold); } window.updateHeader&&window.updateHeader();
   toast(`💰 ${def.productIcon} ${def.productName} ${qty}개 판매! +${total}G`, 2500);
   renderFarmPanel();
 }
@@ -441,7 +441,7 @@ export function hostFestival(){
   });
   if(typeof saveFarmWarehouse==='function') saveFarmWarehouse(wh);
   festivalIncome = Math.round(festivalIncome);
-  S.gold += festivalIncome; if(typeof saveGold==='function') saveGold(S.gold); window.updateHeader&&window.updateHeader();
+  if(typeof addGoldWithExchange==='function') addGoldWithExchange(festivalIncome, '수확제 수익'); else { S.gold += festivalIncome; if(typeof saveGold==='function') saveGold(S.gold); } window.updateHeader&&window.updateHeader();
   if(typeof updateReputation==='function') updateReputation(25);
 
   saveFestivalState({ lastHostedAt:S.msgCount||0, totalHosted:(last?.totalHosted||0)+1 });
@@ -579,7 +579,7 @@ export function tendGraveyard(){
   const g = loadGraveyard();
   if(!g.established){ toast('먼저 묘역을 맡아야 합니다.'); return; }
   const income = 10 + g.level*5;
-  S.gold += income; if(typeof saveGold==='function') saveGold(S.gold); window.updateHeader&&window.updateHeader();
+  if(typeof addGoldWithExchange==='function') addGoldWithExchange(income, '묘역 관리'); else { S.gold += income; if(typeof saveGold==='function') saveGold(S.gold); } window.updateHeader&&window.updateHeader();
   updateReputation(2);
   if(typeof window.updateStats==='function') window.updateStats('grave_mourn_count', 1);
   toast(`🕯️ 묘역을 정성껏 돌봤습니다. +${income}G, 평판+2`, 2500);
@@ -636,7 +636,7 @@ export function sellTombRelic(relicId){
   const toShadow = isOrgAbsorbed && typeof isOrgAbsorbed==='function' && isOrgAbsorbed('assassins');
   const price = toShadow ? Math.round(relic.price*1.4) : relic.price;
   g.relicInventory.splice(idx,1); saveGraveyard(g);
-  S.gold += price; if(typeof saveGold==='function') saveGold(S.gold); window.updateHeader&&window.updateHeader();
+  if(typeof addGoldWithExchange==='function') addGoldWithExchange(price, '유물 판매'); else { S.gold += price; if(typeof saveGold==='function') saveGold(S.gold); } window.updateHeader&&window.updateHeader();
   toast(`💰 「${relic.name}」 판매! +${price}G${toShadow?' (그림자 결사 고가 매입)':''}`, 3000);
   renderGravesPanel();
 }
@@ -1092,7 +1092,7 @@ export function fulfillOrder(orderId){
   ws.totalCrafted = (ws.totalCrafted||0) + order.qty;
   ws.totalEarned = (ws.totalEarned||0) + order.reward;
   saveWorkshop(ws);
-  S.gold += order.reward; if(typeof saveGold==='function') saveGold(S.gold); window.updateHeader&&window.updateHeader();
+  if(typeof addGoldWithExchange==='function') addGoldWithExchange(order.reward, '공방 주문 납품'); else { S.gold += order.reward; if(typeof saveGold==='function') saveGold(S.gold); } window.updateHeader&&window.updateHeader();
   if(typeof updateReputation==='function') updateReputation(4);
   if(typeof window.updateStats==='function') window.updateStats('workshop_orders_fulfilled', 1);
   toast(`✅ ${order.customer}의 주문 「${order.recipeIcon}${order.recipeName}」 납품! +${order.reward}G`, 4000);

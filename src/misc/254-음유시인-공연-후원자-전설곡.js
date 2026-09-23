@@ -18,7 +18,7 @@ export function performSong(genreId){
     const fameGain = genre.baseFame + Math.floor(net.patrons.length/2);
     net.fame = (net.fame||0)+fameGain;
     net.totalEarned = (net.totalEarned||0)+gold;
-    S.gold += gold; if(typeof saveGold==='function') saveGold(S.gold); window.updateHeader&&window.updateHeader();
+    if(typeof addGoldWithExchange==='function') addGoldWithExchange(gold, '공연 수익'); else { S.gold += gold; if(typeof saveGold==='function') saveGold(S.gold); } window.updateHeader&&window.updateHeader();
     if(typeof window.updateStats==='function') window.updateStats('bard_performances', 1);
     toast(`${genre.name} 공연 성공! +${gold}G, 명성+${fameGain}`, 3500, genre);
     S._pendingNetworkHint = `${genre.name} 공연이 큰 호응을 얻었다. 청중들이 박수를 보냈다.`;

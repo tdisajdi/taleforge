@@ -67,8 +67,8 @@ export function collectTax(kingdomId) {
     // 동기화해 헤더에 즉시 반영되도록 함(기존엔 새로고침 전까지 표시 안 됨).
     const cur = typeof loadGold==='function' ? loadGold() : 0;
     const goldGain = Math.floor(tax*0.3);
-    if (typeof saveGold === 'function') saveGold(cur + goldGain);
-    if (S.gold !== undefined) S.gold = cur + goldGain;
+    if (typeof addGoldWithExchange==='function'){ S.gold = cur; addGoldWithExchange(goldGain, '왕국 세금 징수'); }
+    else { if (typeof saveGold === 'function') saveGold(cur + goldGain); if (S.gold !== undefined) S.gold = cur + goldGain; }
     if (typeof window.updateHeader === 'function') window.updateHeader();
     saveKingdom(kg);
     toast(`💰 세금 징수: ${tax} (왕국 금고)`, 2000);

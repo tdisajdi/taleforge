@@ -110,8 +110,8 @@ export function processInvestments(){
     return false;
   });
   if(totalReturn > 0){
-    S.gold = (S.gold||0) + totalReturn;
-    saveGold(S.gold);
+    if(typeof addGoldWithExchange==='function') addGoldWithExchange(totalReturn, '투자 수익');
+    else { S.gold = (S.gold||0) + totalReturn; saveGold(S.gold); }
     window.updateHeader();
     toast(`🏦 투자 수익: +${totalReturn}G`, 2000);
   }

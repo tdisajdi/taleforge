@@ -536,7 +536,7 @@ export function defeatBoss(bossId){
     S.inventory.push(item); saveInventory(S.inventory);
     toastHTML(`🎁 ${typeof getEntityIconHTML==='function'?getEntityIconHTML(item,{size:14}):(item.icon)} ${esc(item.name)} 드롭!`, 2500);
   });
-  S.gold += 200; saveGold(S.gold); window.updateHeader();
+  if(typeof addGoldWithExchange==='function') addGoldWithExchange(200, '보스 처치'); else { S.gold += 200; saveGold(S.gold); } window.updateHeader();
   toast(`🏆 보스 처치! ${boss.name} 격파! 골드+200`, 4000);
   // 보스 처치 경험치
   if(typeof gainExpFromKill==='function') gainExpFromKill('boss');

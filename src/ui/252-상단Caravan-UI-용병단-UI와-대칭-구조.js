@@ -241,7 +241,7 @@ export function sellCrop(cropId, qty){
   const total = price*qty;
   wh[cropId] = have-qty;
   saveFarmWarehouse(wh);
-  S.gold += total; if(typeof saveGold==='function') saveGold(S.gold); window.updateHeader&&window.updateHeader();
+  if(typeof addGoldWithExchange==='function') addGoldWithExchange(total, '작물 판매'); else { S.gold += total; if(typeof saveGold==='function') saveGold(S.gold); } window.updateHeader&&window.updateHeader();
   if(typeof window.updateStats==='function') window.updateStats('farm_sell_count', qty);
   toastHTML(`💰 ${esc(CROP_DEFS[cropId].icon)} ${esc(CROP_DEFS[cropId].name)} ${esc(qty)}개 판매! +${esc(total)}G`, 2500);
   renderFarmPanel();
@@ -399,7 +399,7 @@ export function tickFarm(){
       S._pendingFarmHint = '영주가 불공정하게 계약 조건을 바꿔 농부의 몫을 줄였다. 부당함에 대한 감정이 서사에 묻어날 수 있다.';
       saveFarmContract(contract);
     } else {
-      S.gold += contract.income; if(typeof saveGold==='function') saveGold(S.gold); window.updateHeader&&window.updateHeader();
+      if(typeof addGoldWithExchange==='function') addGoldWithExchange(contract.income, '공급 계약 수입'); else { S.gold += contract.income; if(typeof saveGold==='function') saveGold(S.gold); } window.updateHeader&&window.updateHeader();
       saveFarmContract(contract);
     }
   }

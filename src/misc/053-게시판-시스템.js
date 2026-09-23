@@ -153,7 +153,8 @@ export function manualCompleteBulletin(uid, title, rewardGold, icon, tier){
 
   // [F-2 FIX] 템플릿 리터럴 이스케이프 오류 수정 (\${} → ${})
   if(rewardGold>0){
-    S.gold=(S.gold||0)+rewardGold; saveGold(S.gold); window.updateHeader();
+    if(typeof addGoldWithExchange==='function') addGoldWithExchange(rewardGold, '게시판 의뢰 완료');
+    else { S.gold=(S.gold||0)+rewardGold; saveGold(S.gold); window.updateHeader(); }
     toast(`💰 의뢰 완료: 골드 +${rewardGold}`, 3000);
   }
   const expGain = Math.floor(rewardGold*0.5)||30;
@@ -430,10 +431,10 @@ export function doInteraction(action, cost=0, transportType='walk'){
     // 5개(hp/mp/str/agi/end)만 뽑혀 나머지 25개 스탯은 절대 선택되지 않던
     // 버그. 다른 인접 상호작용(altarOffer 등)처럼 명시적 배열로 교체.
     donate: ()=>{ const bonus=Math.floor(Math.random()*20)+10; const keys=['str','agi','end','mgc','int','luk','per','wil','cha']; const key=keys[Math.floor(Math.random()*keys.length)]; S.stats[key]=Math.min(999,(S.stats[key]||50)+bonus); window.updateHeader(); toast(`✨ 봉납의 축복: ${key.toUpperCase()} +${bonus}!`, 3000); },
-    farmWork: ()=>{ S.gold+=15; saveGold(S.gold); S.stats.end=Math.min(999,(S.stats.end||50)+20); window.updateHeader(); toast('🌾 열심히 일했다. 골드+15, END+2', 2000); },
+    farmWork: ()=>{ if(typeof addGoldWithExchange==='function') addGoldWithExchange(15, '농장 일손 돕기'); else { S.gold+=15; saveGold(S.gold); } S.stats.end=Math.min(999,(S.stats.end||50)+20); window.updateHeader(); toast('🌾 열심히 일했다. 골드+15, END+2', 2000); },
     elderTalk: ()=>{ updateReputation(10); toast('👴 장로에게서 귀한 이야기를 들었다. 평판+10', 2500); },
     dungeonExplore: ()=>{ startAIDungeonExplore(); },
-    disarmTrap: ()=>{ if((S.stats.agi||50)>60){ S.gold+=50; saveGold(S.gold); window.updateHeader(); toast('⚙️ 함정 해제 성공! 골드+50', 2000); } else { S.stats.hp=Math.max(1,(S.stats.hp||100)-20); window.updateHeader(); toast('❌ 함정 해제 실패! HP-20', 2000); } },
+    disarmTrap: ()=>{ if((S.stats.agi||50)>60){ if(typeof addGoldWithExchange==='function') addGoldWithExchange(50, '함정 해제 성공'); else { S.gold+=50; saveGold(S.gold); } window.updateHeader(); toast('⚙️ 함정 해제 성공! 골드+50', 2000); } else { S.stats.hp=Math.max(1,(S.stats.hp||100)-20); window.updateHeader(); toast('❌ 함정 해제 실패! HP-20', 2000); } },
     altarOffer: ()=>{ if(S.gold>=30){ S.gold-=30; saveGold(S.gold); const keys=['str','agi','end','mgc','int','luk']; const k=keys[Math.floor(Math.random()*keys.length)]; S.stats[k]=Math.min(999,(S.stats[k]||50)+50); window.updateHeader(); toast(`⛩️ 제단의 축복: ${k.toUpperCase()} +8!`, 2500); } else toast('골드 30 필요', 1500); },
     scavenge: ()=>{ rollDynamicScavenge(loadCurrentLocation()?.type||'ruins').then(scavItem=>{ if(scavItem){ S.inventory.push(scavItem); saveInventory(S.inventory); toastHTML(`🔍 ${typeof getEntityIconHTML==='function'?getEntityIconHTML(scavItem,{size:14}):(scavItem.icon)} ${esc(scavItem.name)} 발견! (${esc(scavItem.rarity)})`, 2500); } else toast('🔍 수색했지만 아무것도 없었다', 1500); }); },
     payRespects: ()=>{ S.stats.fath=Math.min(999,(S.stats.fath||50)+40); window.updateHeader(); grantTitle('peacemaker'); toast('🪦 망자들의 넋을 기렸다. 신앙심+5', 2500); },
@@ -442,8 +443,8 @@ export function doInteraction(action, cost=0, transportType='walk'){
     investigateRuins: ()=>{ if((S.stats.int||50)>=60){ S.skillSP+=2; saveSkillSP(S.skillSP); toast('🔍 고대 지식 발견! 스킬 포인트+2', 2500); } else toast('🔍 뭔가 있는 것 같지만 해석하기 어렵다', 1500); },
     ancientRitual: ()=>{ const effects=[()=>{S.stats.mgc=Math.min(999,(S.stats.mgc||50)+80);toast('✨ 고대 마력 흡수! MGC+15',2500);},()=>{applyStatusEffect('blessed');toast('✨ 고대의 축복!',2500);},()=>{S.stats.hp=Math.min((typeof getPlayerMaxHp==='function'?getPlayerMaxHp():999),(S.stats.hp||100)-20);applyStatusEffect('curse');toast('⚠️ 저주가 깃들었다! HP-20, 저주 발동',2500);}]; effects[Math.floor(Math.random()*effects.length)](); window.updateHeader(); },
     visitBar: ()=>{ S.stats.mp=Math.min((typeof getPlayerMaxMp==='function'?getPlayerMaxMp():999),(S.stats.mp||100)+20); updateReputation(5); toast('🍺 바에서 정보를 들었다. MP+20, 평판+5', 2000); },
-    contactFixer: ()=>{ const gold=Math.floor(Math.random()*100)+50; S.gold+=gold; saveGold(S.gold); window.updateHeader(); toast(`🤝 픽서 의뢰 완료! 골드+${gold}`, 2500); },
-    guardDuty: ()=>{ S.gold+=20; saveGold(S.gold); updateReputation(8); window.updateHeader(); toast('🛡️ 경비 완료! 골드+20, 평판+8', 2000); },
+    contactFixer: ()=>{ const gold=Math.floor(Math.random()*100)+50; if(typeof addGoldWithExchange==='function') addGoldWithExchange(gold, '픽서 의뢰 완료'); else { S.gold+=gold; saveGold(S.gold); } window.updateHeader(); toast(`🤝 픽서 의뢰 완료! 골드+${gold}`, 2500); },
+    guardDuty: ()=>{ if(typeof addGoldWithExchange==='function') addGoldWithExchange(20, '경비 완료'); else { S.gold+=20; saveGold(S.gold); } updateReputation(8); window.updateHeader(); toast('🛡️ 경비 완료! 골드+20, 평판+8', 2000); },
     barterTrade: ()=>{ toast('🔄 물물교환: 인벤토리 패널에서 아이템을 선택하세요', 2500); window.openP('inventory'); },
     enchantItem: ()=>{ toast('✨ 인벤토리의 장비 아이템에 마법이 깃들었다!', 2500); S.inventory.forEach(item=>{ if(item.type==='equip'&&item.effects){ Object.keys(item.effects).forEach(k=>{ item.effects[k]=(item.effects[k]||0)+3; }); } }); saveInventory(S.inventory); },
     usePortal: ()=>{ toast('🌀 마법진이 활성화됐다. 다음 이동 시 비용 없음.', 2500); S._portalReady=true; },
@@ -481,7 +482,7 @@ export function doInteraction(action, cost=0, transportType='walk'){
       }
     },
     nobleVisit: ()=>{ if((S.stats.cha||50)>=60){ updateReputation(15); toast('👑 귀족과의 교류 성공! 평판+15', 2500); } else toast('👑 귀족이 당신을 무시했다...', 1500); },
-    guildInteract: ()=>{ const gold=Math.floor(Math.random()*80)+40; S.gold+=gold; saveGold(S.gold); window.updateHeader(); toast(`⚔️ 길드 의뢰 완료! 골드+${gold}`, 2500); },
+    guildInteract: ()=>{ const gold=Math.floor(Math.random()*80)+40; if(typeof addGoldWithExchange==='function') addGoldWithExchange(gold, '길드 의뢰 완료'); else { S.gold+=gold; saveGold(S.gold); } window.updateHeader(); toast(`⚔️ 길드 의뢰 완료! 골드+${gold}`, 2500); },
     // [신규] 태초의 화로 전용 — 대장장이 히든 퀘스트 「태초의 화로」 완료로
     // 영구 개방되는 장소. 재료를 확정적으로 지급하는 JS 함수로 구현해
     // AI 서술에 의존하지 않고 항상 동일하게 동작하게 한다.

@@ -40734,9 +40734,12 @@ ${lines.join("\n")}
     acc.completedAt = Date.now();
     saveAcceptedBulletin(accepted);
     if (rewardGold > 0) {
-      S.gold = (S.gold || 0) + rewardGold;
-      saveGold(S.gold);
-      window.updateHeader();
+      if (typeof addGoldWithExchange === "function") addGoldWithExchange(rewardGold, "\uAC8C\uC2DC\uD310 \uC758\uB8B0 \uC644\uB8CC");
+      else {
+        S.gold = (S.gold || 0) + rewardGold;
+        saveGold(S.gold);
+        window.updateHeader();
+      }
       toast(`\u{1F4B0} \uC758\uB8B0 \uC644\uB8CC: \uACE8\uB4DC +${rewardGold}`, 3e3);
     }
     const expGain = Math.floor(rewardGold * 0.5) || 30;
@@ -41027,8 +41030,11 @@ ${lines.join("\n")}
         toast(`\u2728 \uBD09\uB0A9\uC758 \uCD95\uBCF5: ${key.toUpperCase()} +${bonus}!`, 3e3);
       },
       farmWork: () => {
-        S.gold += 15;
-        saveGold(S.gold);
+        if (typeof addGoldWithExchange === "function") addGoldWithExchange(15, "\uB18D\uC7A5 \uC77C\uC190 \uB3D5\uAE30");
+        else {
+          S.gold += 15;
+          saveGold(S.gold);
+        }
         S.stats.end = Math.min(999, (S.stats.end || 50) + 20);
         window.updateHeader();
         toast("\u{1F33E} \uC5F4\uC2EC\uD788 \uC77C\uD588\uB2E4. \uACE8\uB4DC+15, END+2", 2e3);
@@ -41042,8 +41048,11 @@ ${lines.join("\n")}
       },
       disarmTrap: () => {
         if ((S.stats.agi || 50) > 60) {
-          S.gold += 50;
-          saveGold(S.gold);
+          if (typeof addGoldWithExchange === "function") addGoldWithExchange(50, "\uD568\uC815 \uD574\uC81C \uC131\uACF5");
+          else {
+            S.gold += 50;
+            saveGold(S.gold);
+          }
           window.updateHeader();
           toast("\u2699\uFE0F \uD568\uC815 \uD574\uC81C \uC131\uACF5! \uACE8\uB4DC+50", 2e3);
         } else {
@@ -41119,14 +41128,20 @@ ${lines.join("\n")}
       },
       contactFixer: () => {
         const gold = Math.floor(Math.random() * 100) + 50;
-        S.gold += gold;
-        saveGold(S.gold);
+        if (typeof addGoldWithExchange === "function") addGoldWithExchange(gold, "\uD53D\uC11C \uC758\uB8B0 \uC644\uB8CC");
+        else {
+          S.gold += gold;
+          saveGold(S.gold);
+        }
         window.updateHeader();
         toast(`\u{1F91D} \uD53D\uC11C \uC758\uB8B0 \uC644\uB8CC! \uACE8\uB4DC+${gold}`, 2500);
       },
       guardDuty: () => {
-        S.gold += 20;
-        saveGold(S.gold);
+        if (typeof addGoldWithExchange === "function") addGoldWithExchange(20, "\uACBD\uBE44 \uC644\uB8CC");
+        else {
+          S.gold += 20;
+          saveGold(S.gold);
+        }
         updateReputation(8);
         window.updateHeader();
         toast("\u{1F6E1}\uFE0F \uACBD\uBE44 \uC644\uB8CC! \uACE8\uB4DC+20, \uD3C9\uD310+8", 2e3);
@@ -41232,8 +41247,11 @@ ${lines.join("\n")}
       },
       guildInteract: () => {
         const gold = Math.floor(Math.random() * 80) + 40;
-        S.gold += gold;
-        saveGold(S.gold);
+        if (typeof addGoldWithExchange === "function") addGoldWithExchange(gold, "\uAE38\uB4DC \uC758\uB8B0 \uC644\uB8CC");
+        else {
+          S.gold += gold;
+          saveGold(S.gold);
+        }
         window.updateHeader();
         toast(`\u2694\uFE0F \uAE38\uB4DC \uC758\uB8B0 \uC644\uB8CC! \uACE8\uB4DC+${gold}`, 2500);
       },
@@ -42955,8 +42973,11 @@ ${lines.join("\n")}
     const total = price * qty;
     wh[cropId] = have - qty;
     saveFarmWarehouse(wh);
-    S.gold += total;
-    if (typeof saveGold === "function") saveGold(S.gold);
+    if (typeof addGoldWithExchange === "function") addGoldWithExchange(total, "\uC791\uBB3C \uD310\uB9E4");
+    else {
+      S.gold += total;
+      if (typeof saveGold === "function") saveGold(S.gold);
+    }
     window.updateHeader && window.updateHeader();
     if (typeof window.updateStats === "function") window.updateStats("farm_sell_count", qty);
     toastHTML(`\u{1F4B0} ${esc(CROP_DEFS[cropId].icon)} ${esc(CROP_DEFS[cropId].name)} ${esc(qty)}\uAC1C \uD310\uB9E4! +${esc(total)}G`, 2500);
@@ -43140,8 +43161,11 @@ ${lines.join("\n")}
         S._pendingFarmHint = "\uC601\uC8FC\uAC00 \uBD88\uACF5\uC815\uD558\uAC8C \uACC4\uC57D \uC870\uAC74\uC744 \uBC14\uAFD4 \uB18D\uBD80\uC758 \uBAAB\uC744 \uC904\uC600\uB2E4. \uBD80\uB2F9\uD568\uC5D0 \uB300\uD55C \uAC10\uC815\uC774 \uC11C\uC0AC\uC5D0 \uBB3B\uC5B4\uB0A0 \uC218 \uC788\uB2E4.";
         saveFarmContract(contract);
       } else {
-        S.gold += contract.income;
-        if (typeof saveGold === "function") saveGold(S.gold);
+        if (typeof addGoldWithExchange === "function") addGoldWithExchange(contract.income, "\uACF5\uAE09 \uACC4\uC57D \uC218\uC785");
+        else {
+          S.gold += contract.income;
+          if (typeof saveGold === "function") saveGold(S.gold);
+        }
         window.updateHeader && window.updateHeader();
         saveFarmContract(contract);
       }
@@ -43510,8 +43534,11 @@ ${lines.join("\n")}
     const total = def.productPrice * qty;
     produce[productKey] = have - qty;
     saveLivestockProduce(produce);
-    S.gold += total;
-    if (typeof saveGold === "function") saveGold(S.gold);
+    if (typeof addGoldWithExchange === "function") addGoldWithExchange(total, "\uCD95\uC0B0\uBB3C \uD310\uB9E4");
+    else {
+      S.gold += total;
+      if (typeof saveGold === "function") saveGold(S.gold);
+    }
     window.updateHeader && window.updateHeader();
     toast(`\u{1F4B0} ${def.productIcon} ${def.productName} ${qty}\uAC1C \uD310\uB9E4! +${total}G`, 2500);
     renderFarmPanel();
@@ -43659,8 +43686,11 @@ ${lines.join("\n")}
     });
     if (typeof saveFarmWarehouse === "function") saveFarmWarehouse(wh);
     festivalIncome = Math.round(festivalIncome);
-    S.gold += festivalIncome;
-    if (typeof saveGold === "function") saveGold(S.gold);
+    if (typeof addGoldWithExchange === "function") addGoldWithExchange(festivalIncome, "\uC218\uD655\uC81C \uC218\uC775");
+    else {
+      S.gold += festivalIncome;
+      if (typeof saveGold === "function") saveGold(S.gold);
+    }
     window.updateHeader && window.updateHeader();
     if (typeof updateReputation === "function") updateReputation(25);
     saveFestivalState({ lastHostedAt: S.msgCount || 0, totalHosted: (last?.totalHosted || 0) + 1 });
@@ -43815,8 +43845,11 @@ ${lines.join("\n")}
       return;
     }
     const income = 10 + g.level * 5;
-    S.gold += income;
-    if (typeof saveGold === "function") saveGold(S.gold);
+    if (typeof addGoldWithExchange === "function") addGoldWithExchange(income, "\uBB18\uC5ED \uAD00\uB9AC");
+    else {
+      S.gold += income;
+      if (typeof saveGold === "function") saveGold(S.gold);
+    }
     window.updateHeader && window.updateHeader();
     updateReputation(2);
     if (typeof window.updateStats === "function") window.updateStats("grave_mourn_count", 1);
@@ -43885,8 +43918,11 @@ ${lines.join("\n")}
     const price = toShadow ? Math.round(relic.price * 1.4) : relic.price;
     g.relicInventory.splice(idx, 1);
     saveGraveyard(g);
-    S.gold += price;
-    if (typeof saveGold === "function") saveGold(S.gold);
+    if (typeof addGoldWithExchange === "function") addGoldWithExchange(price, "\uC720\uBB3C \uD310\uB9E4");
+    else {
+      S.gold += price;
+      if (typeof saveGold === "function") saveGold(S.gold);
+    }
     window.updateHeader && window.updateHeader();
     toast(`\u{1F4B0} \u300C${relic.name}\u300D \uD310\uB9E4! +${price}G${toShadow ? " (\uADF8\uB9BC\uC790 \uACB0\uC0AC \uACE0\uAC00 \uB9E4\uC785)" : ""}`, 3e3);
     renderGravesPanel();
@@ -44399,8 +44435,11 @@ ${lines.join("\n")}
     ws.totalCrafted = (ws.totalCrafted || 0) + order.qty;
     ws.totalEarned = (ws.totalEarned || 0) + order.reward;
     saveWorkshop(ws);
-    S.gold += order.reward;
-    if (typeof saveGold === "function") saveGold(S.gold);
+    if (typeof addGoldWithExchange === "function") addGoldWithExchange(order.reward, "\uACF5\uBC29 \uC8FC\uBB38 \uB0A9\uD488");
+    else {
+      S.gold += order.reward;
+      if (typeof saveGold === "function") saveGold(S.gold);
+    }
     window.updateHeader && window.updateHeader();
     if (typeof updateReputation === "function") updateReputation(4);
     if (typeof window.updateStats === "function") window.updateStats("workshop_orders_fulfilled", 1);
@@ -45461,8 +45500,11 @@ ${lines.join("\n")}
       const fameGain = genre.baseFame + Math.floor(net.patrons.length / 2);
       net.fame = (net.fame || 0) + fameGain;
       net.totalEarned = (net.totalEarned || 0) + gold;
-      S.gold += gold;
-      if (typeof saveGold === "function") saveGold(S.gold);
+      if (typeof addGoldWithExchange === "function") addGoldWithExchange(gold, "\uACF5\uC5F0 \uC218\uC775");
+      else {
+        S.gold += gold;
+        if (typeof saveGold === "function") saveGold(S.gold);
+      }
       window.updateHeader && window.updateHeader();
       if (typeof window.updateStats === "function") window.updateStats("bard_performances", 1);
       toast(`${genre.name} \uACF5\uC5F0 \uC131\uACF5! +${gold}G, \uBA85\uC131+${fameGain}`, 3500, genre);
@@ -45553,8 +45595,11 @@ ${lines.join("\n")}
     net.warehouse[cropId] = 0;
     net.totalEarned = (net.totalEarned || 0) + total;
     saveNetwork(net);
-    S.gold += total;
-    if (typeof saveGold === "function") saveGold(S.gold);
+    if (typeof addGoldWithExchange === "function") addGoldWithExchange(total, "\uC9C0\uBD80 \uD310\uB9E4");
+    else {
+      S.gold += total;
+      if (typeof saveGold === "function") saveGold(S.gold);
+    }
     window.updateHeader && window.updateHeader();
     if (typeof window.updateStats === "function") window.updateStats("merchant_trades", 1);
     toast(`\u{1F4B0} ${branchName}\uC5D0\uC11C ${CROP_DEFS[cropId]?.name || cropId} \uC804\uB7C9 \uD310\uB9E4! +${total}G${!isHome ? " (\uC6D0\uAC70\uB9AC \uD504\uB9AC\uBBF8\uC5C4)" : ""}`, 3500);
@@ -45596,8 +45641,11 @@ ${lines.join("\n")}
     if (!net) return;
     if (net.type === "bard" && net.patrons.length > 0) {
       const income = net.patrons.reduce((s, p) => s + p.income, 0);
-      S.gold += income;
-      if (typeof saveGold === "function") saveGold(S.gold);
+      if (typeof addGoldWithExchange === "function") addGoldWithExchange(income, "\uD6C4\uC6D0\uC790 \uC218\uC785");
+      else {
+        S.gold += income;
+        if (typeof saveGold === "function") saveGold(S.gold);
+      }
       window.updateHeader && window.updateHeader();
       if (Math.random() < 0.03 && net.patrons.length > 0) {
         const lost = net.patrons.pop();
@@ -45607,8 +45655,11 @@ ${lines.join("\n")}
     }
     if (net.type === "merchant" && net.branches.length > 1) {
       const passiveIncome = (net.branches.length - 1) * 3;
-      S.gold += passiveIncome;
-      if (typeof saveGold === "function") saveGold(S.gold);
+      if (typeof addGoldWithExchange === "function") addGoldWithExchange(passiveIncome, "\uAD50\uC5ED\uB9DD \uC790\uB3D9 \uC218\uC785");
+      else {
+        S.gold += passiveIncome;
+        if (typeof saveGold === "function") saveGold(S.gold);
+      }
       window.updateHeader && window.updateHeader();
     }
     if (net.type === "merchant" && net.branches.length > 0) {
@@ -46257,8 +46308,11 @@ ${lines.join("\n")}
     const deal = DEAL_LORE_SHOP[dealId];
     if (!deal) return;
     const gold = getResellGold(dealId);
-    S.gold += gold;
-    if (typeof saveGold === "function") saveGold(S.gold);
+    if (typeof addGoldWithExchange === "function") addGoldWithExchange(gold, "\uC815\uBCF4 \uC7AC\uD310\uB9E4");
+    else {
+      S.gold += gold;
+      if (typeof saveGold === "function") saveGold(S.gold);
+    }
     window.updateHeader && window.updateHeader();
     net.totalEarned = (net.totalEarned || 0) + gold;
     saveNetwork(net);
@@ -46447,8 +46501,11 @@ ${lines.join("\n")}
     trophies[preyName] -= 1;
     saveHunterTrophies(trophies);
     const gold = 15 + Math.floor(Math.random() * 30);
-    S.gold += gold;
-    if (typeof saveGold === "function") saveGold(S.gold);
+    if (typeof addGoldWithExchange === "function") addGoldWithExchange(gold, "\uC804\uB9AC\uD488 \uC190\uC9C8");
+    else {
+      S.gold += gold;
+      if (typeof saveGold === "function") saveGold(S.gold);
+    }
     window.updateHeader && window.updateHeader();
     toast(`\u{1F9B4} ${preyName}\uC758 \uC804\uB9AC\uD488\uC744 \uC190\uC9C8\uD574 ${gold}G\uB97C \uD68C\uC218\uD588\uB2E4.`, 3500);
     renderHunterGroundsPanel();
@@ -46899,8 +46956,11 @@ ${lines.join("\n")}
       S._pendingVoyageHint = `${isl.name}\uC744(\uB97C) \uD0D0\uD5D8\uD558\uB358 \uC911 \uC608\uC0C1\uCE58 \uBABB\uD55C \uC704\uD5D8\uC5D0 \uD718\uB9D0\uB838\uB2E4.`;
     } else {
       const gold = loot.gold[0] + Math.floor(Math.random() * (loot.gold[1] - loot.gold[0] + 1));
-      S.gold += gold;
-      if (typeof saveGold === "function") saveGold(S.gold);
+      if (typeof addGoldWithExchange === "function") addGoldWithExchange(gold, "\uC12C \uD0D0\uD5D8");
+      else {
+        S.gold += gold;
+        if (typeof saveGold === "function") saveGold(S.gold);
+      }
       window.updateHeader && window.updateHeader();
       let msg = `\u{1F3DD}\uFE0F ${isl.name} \uD0D0\uD5D8 \uC644\uB8CC! +${gold}G`;
       if (Math.random() < loot.relicChance) {
@@ -47930,8 +47990,11 @@ ${lines.join("\n")}
     if (getActiveShipId() === shipId) {
       setActiveShipId(next.length ? next[0].id : null);
     }
-    S.gold += refund;
-    if (typeof saveGold === "function") saveGold(S.gold);
+    if (typeof addGoldWithExchange === "function") addGoldWithExchange(refund, "\uC120\uBC15 \uB9E4\uAC01");
+    else {
+      S.gold += refund;
+      if (typeof saveGold === "function") saveGold(S.gold);
+    }
     window.updateHeader && window.updateHeader();
     toast(`\u{1F4B0} ${target.name}\uC744(\uB97C) \uB9E4\uAC01\uD588\uC2B5\uB2C8\uB2E4. +${refund}G (\uC120\uC6D0\uC740 \uBAA8\uB450 \uD558\uC120\uD588\uC2B5\uB2C8\uB2E4)`, 3500);
     renderVoyagePanel();
@@ -48102,8 +48165,11 @@ ${lines.join("\n")}
     const total = Math.round(basePrice * item.qty * homeContinentBonus);
     ship.cargo.splice(idx, 1);
     saveShip(ship);
-    S.gold += total;
-    if (typeof saveGold === "function") saveGold(S.gold);
+    if (typeof addGoldWithExchange === "function") addGoldWithExchange(total, "\uD654\uBB3C \uD310\uB9E4");
+    else {
+      S.gold += total;
+      if (typeof saveGold === "function") saveGold(S.gold);
+    }
     window.updateHeader && window.updateHeader();
     toast(`\u{1F4B0} \uD0C0\uC9C0\uC5D0\uC11C \uD654\uBB3C \uD310\uB9E4! +${total}G${homeContinentBonus > 1 ? " (\uC6D0\uAC70\uB9AC \uAD50\uC5ED \uD504\uB9AC\uBBF8\uC5C4)" : ""}`, 3500);
     if (typeof window.updateStats === "function") window.updateStats("trade_voyage_count", 1);
@@ -48208,8 +48274,11 @@ ${lines.join("\n")}
     const win = stats.combat > defenseRoll * 0.6;
     if (win) {
       const loot = 60 + Math.floor(Math.random() * 150) + Math.round(stats.combat * 1.5);
-      S.gold += loot;
-      if (typeof saveGold === "function") saveGold(S.gold);
+      if (typeof addGoldWithExchange === "function") addGoldWithExchange(loot, "\uD56D\uAD6C \uC57D\uD0C8");
+      else {
+        S.gold += loot;
+        if (typeof saveGold === "function") saveGold(S.gold);
+      }
       window.updateHeader && window.updateHeader();
       if (typeof window.updateStats === "function") window.updateStats("sea_plunder_count", 1);
       if (typeof updateReputation === "function") updateReputation(-12);
@@ -48358,8 +48427,11 @@ ${lines.join("\n")}
     if (action === "loot") {
       const goldWon = enemy.lootGold[0] + Math.floor(Math.random() * (enemy.lootGold[1] - enemy.lootGold[0] + 1));
       if (goldWon > 0) {
-        S.gold += goldWon;
-        if (typeof saveGold === "function") saveGold(S.gold);
+        if (typeof addGoldWithExchange === "function") addGoldWithExchange(goldWon, "\uD574\uC0C1\uC804 \uB178\uD68D\uBB3C");
+        else {
+          S.gold += goldWon;
+          if (typeof saveGold === "function") saveGold(S.gold);
+        }
         window.updateHeader && window.updateHeader();
         toast(`\u{1F4B0} \uC801\uC120\uC744 \uACA9\uD1F4\uD558\uACE0 \uB178\uD68D\uBB3C ${goldWon}G\uB97C \uD68D\uB4DD\uD588\uC2B5\uB2C8\uB2E4!`, 4e3);
       } else {
@@ -48429,8 +48501,11 @@ ${lines.join("\n")}
     } else if (ev.id === "sea_calm") {
       if (Math.random() < 0.3) {
         const found = 20 + Math.floor(Math.random() * 40);
-        S.gold += found;
-        if (typeof saveGold === "function") saveGold(S.gold);
+        if (typeof addGoldWithExchange === "function") addGoldWithExchange(found, "\uD45C\uB958\uBB3C \uC2B5\uB4DD");
+        else {
+          S.gold += found;
+          if (typeof saveGold === "function") saveGold(S.gold);
+        }
         window.updateHeader && window.updateHeader();
         toast(`\u{1F30A} \uD45C\uB958 \uC911 \uBC14\uB2E4\uC5D0\uC11C \uBB34\uC5B8\uAC00\uB97C \uAC74\uC838\uC62C\uB838\uC2B5\uB2C8\uB2E4! +${found}G`, 3e3);
       } else {
@@ -48442,8 +48517,11 @@ ${lines.join("\n")}
         const item = ship.cargo[0];
         const price = Math.round((CROP_DEFS[item.cropId]?.basePrice || 10) * item.qty * 1.2);
         ship.cargo.shift();
-        S.gold += price;
-        if (typeof saveGold === "function") saveGold(S.gold);
+        if (typeof addGoldWithExchange === "function") addGoldWithExchange(price, "\uD574\uC0C1 \uC989\uC11D \uAC70\uB798");
+        else {
+          S.gold += price;
+          if (typeof saveGold === "function") saveGold(S.gold);
+        }
         window.updateHeader && window.updateHeader();
         toast(`\u26F4\uFE0F \uD574\uC0C1\uC5D0\uC11C \uD654\uBB3C\uC744 \uC989\uC11D \uAC70\uB798\uD588\uC2B5\uB2C8\uB2E4! +${price}G`, 3e3);
       } else {
@@ -50859,8 +50937,11 @@ ${lines.join("\n")}
     const r = rewards[memoryId];
     if (!r) return;
     if (r.gold) {
-      S.gold = (S.gold || 0) + r.gold;
-      if (typeof saveGold === "function") saveGold(S.gold);
+      if (typeof addGoldWithExchange === "function") addGoldWithExchange(r.gold, "\uC9C4\uBA85 \uAE30\uC5B5 \uBCF4\uC0C1");
+      else {
+        S.gold = (S.gold || 0) + r.gold;
+        if (typeof saveGold === "function") saveGold(S.gold);
+      }
     }
     if (r.stat) {
       Object.entries(r.stat).forEach(([k, v]) => {
@@ -51341,8 +51422,11 @@ ${lines.join("\n")}
       saveNpcQuestState(questState);
       const r = quest.reward;
       if (r.gold) {
-        S.gold += r.gold;
-        saveGold(S.gold);
+        if (typeof addGoldWithExchange === "function") addGoldWithExchange(r.gold, "NPC \uC758\uB8B0 \uC644\uB8CC");
+        else {
+          S.gold += r.gold;
+          saveGold(S.gold);
+        }
       }
       if (r.relBonus) updateNpcRelationship2(quest.npcName, r.relBonus, "\uD018\uC2A4\uD2B8 \uC644\uB8CC");
       if (r.exp) window.updateStats("totalExp", r.exp);
@@ -62289,8 +62373,11 @@ export default TALEFORGE_HARDCODE_RULES;
     }, 0);
     const income = Math.max(0, Math.floor(res.tax * 0.6)) + tradeIncome;
     if (income > 0) {
-      S.gold = (S.gold || 0) + income;
-      saveGold(S.gold);
+      if (typeof addGoldWithExchange === "function") addGoldWithExchange(income, "\uC601\uC9C0 \uC138\uC218");
+      else {
+        S.gold = (S.gold || 0) + income;
+        saveGold(S.gold);
+      }
       window.updateHeader();
       d.totalIncome = (d.totalIncome || 0) + income;
       toast(`\u{1F3F0} \uC138\uC218: +${income}G${tradeIncome > 0 ? ` (\uAD50\uC5ED+${tradeIncome}G)` : ""}`, 2e3);
@@ -77638,8 +77725,11 @@ ${simDesc}` : playerRep;
       const expGain = Math.max(0, Math.round((result.expGain || 10) * (_dg.expMult || 1)));
       S.stats.hp = Math.max(1, Math.min(typeof getPlayerMaxHp === "function" ? getPlayerMaxHp() : 999, (S.stats.hp || 100) + hpChg));
       if (goldChg > 0) {
-        S.gold += goldChg;
-        saveGold(S.gold);
+        if (typeof addGoldWithExchange === "function") addGoldWithExchange(goldChg, "\uB358\uC804 \uACB0\uACFC");
+        else {
+          S.gold += goldChg;
+          saveGold(S.gold);
+        }
       }
       window.updateHeader();
       if (result.statusEffect && result.statusEffect !== "null") {
@@ -77708,8 +77798,11 @@ ${simDesc}` : playerRep;
       const isSucc = effRoll >= 50;
       if (isSucc) {
         const gold = Math.floor(Math.random() * 50) + 10;
-        S.gold += gold;
-        saveGold(S.gold);
+        if (typeof addGoldWithExchange === "function") addGoldWithExchange(gold, "\uB358\uC804 \uD3F4\uBC31 \uACB0\uACFC");
+        else {
+          S.gold += gold;
+          saveGold(S.gold);
+        }
         window.updateHeader();
         ds.totalGold = (ds.totalGold || 0) + gold;
         room._resultText = "\uC131\uACF5\uC801\uC73C\uB85C \uCC98\uB9AC\uD588\uB2E4. \uACE8\uB4DC +" + gold + "\uB97C \uD68D\uB4DD\uD588\uB2E4.";
@@ -78734,8 +78827,11 @@ ${simDesc}` : playerRep;
 \uD310\uB9E4\uD558\uACA0\uC2B5\uB2C8\uAE4C?`)) return;
     S.inventory.splice(inventoryIdx, 1);
     saveInventory(S.inventory);
-    S.gold += sellPrice;
-    saveGold(S.gold);
+    if (typeof addGoldWithExchange === "function") addGoldWithExchange(sellPrice, "\uC544\uC774\uD15C \uD310\uB9E4");
+    else {
+      S.gold += sellPrice;
+      saveGold(S.gold);
+    }
     window.updateStats("totalGoldEarned", sellPrice);
     window.updateHeader();
     toast(`\u{1F4B0} ${item.name} \uD310\uB9E4 \u2192 +${sellPrice} \uACE8\uB4DC`, 2e3);
@@ -80449,8 +80545,11 @@ ${esc2(sk.desc || "")}">
         effects: {
           "\uB9DE\uC11C \uC2F8\uC6B4\uB2E4": () => {
             if (Math.random() < 0.6) {
-              S.gold += 30;
-              saveGold(S.gold);
+              if (typeof addGoldWithExchange === "function") addGoldWithExchange(30, "\uAC15\uB3C4\uB5BC \uACA9\uD1F4");
+              else {
+                S.gold += 30;
+                saveGold(S.gold);
+              }
               toast("\u2694\uFE0F \uACA9\uD1F4! \uACE8\uB4DC+30", 2500);
             } else {
               S.stats.hp = Math.max(1, (S.stats.hp || 100) - 20);
@@ -80510,8 +80609,11 @@ ${esc2(sk.desc || "")}">
           },
           "\uADF8\uB0E5 \uD798\uC73C\uB85C \uBD80\uC21C\uB2E4": () => {
             const gold = Math.floor(Math.random() * 50) + 10;
-            S.gold += gold;
-            saveGold(S.gold);
+            if (typeof addGoldWithExchange === "function") addGoldWithExchange(gold, "\uC0C1\uC790 \uBD80\uC218\uAE30");
+            else {
+              S.gold += gold;
+              saveGold(S.gold);
+            }
             toast(`\u{1F4B0} \uACE8\uB4DC +${gold}`, 2e3);
           },
           "\uBB34\uC2DC\uD558\uACE0 \uC9C0\uB098\uAC04\uB2E4": () => toast("\uACC4\uC18D \uAE38\uC744 \uAC04\uB2E4", 1e3)
@@ -82343,8 +82445,11 @@ ${lines.join("\n")}
       done[m.id] = { completedAt: (/* @__PURE__ */ new Date()).toLocaleString("ko-KR"), turn: S.msgCount || 0 };
       saveMilestonesV7(done);
       if (m.reward && m.reward.gold) {
-        S.gold = (S.gold || 0) + m.reward.gold;
-        if (typeof saveGold === "function") saveGold(S.gold);
+        if (typeof addGoldWithExchange === "function") addGoldWithExchange(m.reward.gold, "\uB9C8\uC77C\uC2A4\uD1A4 \uBCF4\uC0C1");
+        else {
+          S.gold = (S.gold || 0) + m.reward.gold;
+          if (typeof saveGold === "function") saveGold(S.gold);
+        }
         if (typeof window.updateHeader === "function") window.updateHeader();
       }
       if (m.reward && m.reward.exp && typeof gainExp === "function") gainExp(m.reward.exp);
@@ -95577,8 +95682,11 @@ GS: {"soul_evolve_candidates":{"soulId":"${soul.id}","candidates":[{"name":"\uC9
       saveInventory(S.inventory);
       toastHTML(`\u{1F381} ${typeof getEntityIconHTML === "function" ? getEntityIconHTML(item, { size: 14 }) : item.icon} ${esc2(item.name)} \uB4DC\uB86D!`, 2500);
     });
-    S.gold += 200;
-    saveGold(S.gold);
+    if (typeof addGoldWithExchange === "function") addGoldWithExchange(200, "\uBCF4\uC2A4 \uCC98\uCE58");
+    else {
+      S.gold += 200;
+      saveGold(S.gold);
+    }
     window.updateHeader();
     toast(`\u{1F3C6} \uBCF4\uC2A4 \uCC98\uCE58! ${boss.name} \uACA9\uD30C! \uACE8\uB4DC+200`, 4e3);
     if (typeof gainExpFromKill === "function") gainExpFromKill("boss");
@@ -98995,8 +99103,11 @@ ${job.icon} ${job.name}\uC73C\uB85C \uC804\uC9C1\uD558\uACA0\uC2B5\uB2C8\uAE4C?
     }
     saveMainQuestState(state);
     if (q.reward.gold) {
-      S.gold += q.reward.gold;
-      saveGold(S.gold);
+      if (typeof addGoldWithExchange === "function") addGoldWithExchange(q.reward.gold, "\uBA54\uC778 \uD018\uC2A4\uD2B8 \uBCF4\uC0C1");
+      else {
+        S.gold += q.reward.gold;
+        saveGold(S.gold);
+      }
       window.updateHeader();
     }
     if (q.reward.exp) {
@@ -121879,8 +121990,13 @@ summon_add/summon_damage/summon_evolve \u2014 \uC18C\uD658\uC218 \uAD00\uB828`;
       k.treasury = (k.treasury || 0) + tax;
       const cur = typeof loadGold === "function" ? loadGold() : 0;
       const goldGain = Math.floor(tax * 0.3);
-      if (typeof saveGold === "function") saveGold(cur + goldGain);
-      if (S.gold !== void 0) S.gold = cur + goldGain;
+      if (typeof addGoldWithExchange === "function") {
+        S.gold = cur;
+        addGoldWithExchange(goldGain, "\uC655\uAD6D \uC138\uAE08 \uC9D5\uC218");
+      } else {
+        if (typeof saveGold === "function") saveGold(cur + goldGain);
+        if (S.gold !== void 0) S.gold = cur + goldGain;
+      }
       if (typeof window.updateHeader === "function") window.updateHeader();
       saveKingdom(kg);
       toast(`\u{1F4B0} \uC138\uAE08 \uC9D5\uC218: ${tax} (\uC655\uAD6D \uAE08\uACE0)`, 2e3);
@@ -123720,8 +123836,11 @@ summon_add/summon_damage/summon_evolve \u2014 \uC18C\uD658\uC218 \uAD00\uB828`;
       return false;
     });
     if (totalReturn > 0) {
-      S.gold = (S.gold || 0) + totalReturn;
-      saveGold(S.gold);
+      if (typeof addGoldWithExchange === "function") addGoldWithExchange(totalReturn, "\uD22C\uC790 \uC218\uC775");
+      else {
+        S.gold = (S.gold || 0) + totalReturn;
+        saveGold(S.gold);
+      }
       window.updateHeader();
       toast(`\u{1F3E6} \uD22C\uC790 \uC218\uC775: +${totalReturn}G`, 2e3);
     }
@@ -124579,11 +124698,11 @@ summon_add/summon_damage/summon_evolve \u2014 \uC18C\uD658\uC218 \uAD00\uB828`;
     const origin = S.character?.startContinent || "central";
     const current = S.character?.currentContinent || typeof window.currentLocation !== "undefined" && window.currentLocation?.continent || origin;
     if (origin === current) return 1;
-    const originRate = CONTINENT_CURRENCY[origin]?.exchangeRate || 1;
-    return Math.round(originRate * 100) / 100;
+    const currentRate = CONTINENT_CURRENCY[current]?.exchangeRate || 1;
+    return Math.round(currentRate * 100) / 100;
   }
   window.getContinentExchangeRate = getContinentExchangeRate;
-  function addGoldWithExchange(amount, reason = "") {
+  function addGoldWithExchange2(amount, reason = "") {
     const rate = getContinentExchangeRate();
     const final = Math.max(1, Math.round(amount * rate));
     S.gold = (S.gold || 0) + final;
@@ -124595,8 +124714,8 @@ summon_add/summon_damage/summon_evolve \u2014 \uC18C\uD658\uC218 \uAD00\uB828`;
     }
     return final;
   }
-  window.addGoldWithExchange = addGoldWithExchange;
-  window.addGoldWithExchange = addGoldWithExchange;
+  window.addGoldWithExchange = addGoldWithExchange2;
+  window.addGoldWithExchange = addGoldWithExchange2;
   function checkContinentTaboo2(userMsg) {
     const cid = S.character?.startContinent || "central";
     const taboos = CONTINENT_TABOOS[cid] || [];
@@ -129067,8 +129186,11 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
     })();
     function guildInteractLegacy() {
       const gold = Math.floor(Math.random() * 80) + 40;
-      S.gold += gold;
-      if (typeof saveGold === "function") saveGold(S.gold);
+      if (typeof addGoldWithExchange === "function") addGoldWithExchange(gold, "\uAE38\uB4DC \uC758\uB8B0 \uC644\uB8CC");
+      else {
+        S.gold += gold;
+        if (typeof saveGold === "function") saveGold(S.gold);
+      }
       if (typeof window.updateHeader === "function") window.updateHeader();
       toast(`\u2694\uFE0F \uAE38\uB4DC \uC758\uB8B0 \uC644\uB8CC! \uACE8\uB4DC+${gold}`, 2500);
     }
@@ -132378,8 +132500,11 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
         toastHTML2(loot.map((it) => `\u{1F381} ${typeof getEntityIconHTML2 === "function" ? getEntityIconHTML2(it, { size: 14 }) : it.icon || ""} ${esc2(it.name)}`).join(" "), 3200);
       }
       const gold = 10 + Math.floor(Math.random() * 30);
-      S.gold = (S.gold || 0) + gold;
-      if (typeof window.saveGold === "function") window.saveGold(S.gold);
+      if (typeof window.addGoldWithExchange === "function") window.addGoldWithExchange(gold, "\uD544\uB4DC \uC804\uD22C \uC804\uB9AC\uD488");
+      else {
+        S.gold = (S.gold || 0) + gold;
+        if (typeof window.saveGold === "function") window.saveGold(S.gold);
+      }
     }
     if (typeof window.saveSession === "function") window.saveSession();
     if (battleUiRefresh) battleUiRefresh(bs, true);

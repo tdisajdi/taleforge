@@ -2449,7 +2449,7 @@ export function tickDemesneResources(){
   },0);
   const income=Math.max(0,Math.floor(res.tax*0.6))+tradeIncome;
   if(income>0){
-    S.gold=(S.gold||0)+income; saveGold(S.gold); window.updateHeader();
+    if(typeof addGoldWithExchange==='function') addGoldWithExchange(income, '영지 세수'); else { S.gold=(S.gold||0)+income; saveGold(S.gold); } window.updateHeader();
     d.totalIncome=(d.totalIncome||0)+income;
     toast(`🏰 세수: +${income}G${tradeIncome>0?` (교역+${tradeIncome}G)`:''}`,2000);
   }

@@ -1090,8 +1090,8 @@ function finishFieldBattle(){
       toastHTML(loot.map(it=>`🎁 ${typeof getEntityIconHTML==='function'?getEntityIconHTML(it,{size:14}):(it.icon||'')} ${esc(it.name)}`).join(' '), 3200);
     }
     const gold = 10 + Math.floor(Math.random()*30);
-    S.gold = (S.gold||0)+gold;
-    if(typeof window.saveGold==='function') window.saveGold(S.gold);
+    if(typeof window.addGoldWithExchange==='function') window.addGoldWithExchange(gold, '필드 전투 전리품');
+    else { S.gold = (S.gold||0)+gold; if(typeof window.saveGold==='function') window.saveGold(S.gold); }
   }
   if(typeof window.saveSession==='function') window.saveSession();
   if(battleUiRefresh) battleUiRefresh(bs, true);

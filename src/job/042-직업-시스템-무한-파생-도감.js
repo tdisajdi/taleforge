@@ -1604,7 +1604,7 @@ export function completeMainQuest(questId, opts){
   }
   saveMainQuestState(state);
   // 보상: 골드
-  if(q.reward.gold){ S.gold += q.reward.gold; saveGold(S.gold); window.updateHeader(); }
+  if(q.reward.gold){ if(typeof addGoldWithExchange==='function') addGoldWithExchange(q.reward.gold, '메인 퀘스트 보상'); else { S.gold += q.reward.gold; saveGold(S.gold); } window.updateHeader(); }
   if(q.reward.exp){ window.updateStats('totalExp', q.reward.exp); }
   // 보상: 아이템 (세트 아이템 파츠인 경우 인벤토리에 직접 지급 — RELICS 유물은 hasFlag 자동체크로 별도 처리됨)
   if(q.reward.item && typeof getAllSetItems==='function'){

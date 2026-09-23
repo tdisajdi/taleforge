@@ -1706,6 +1706,10 @@ export function startLandTravel(destName, transportType){
   }
   saveTravelState({ destName: dest.name, daysLeft: days, totalDays: days, transportType: transportType||'walk', activeEncounter:null, startedAt:S.msgCount||0, roadRatio, usedRoad: !!route });
   S._mapPopup = null;
+  // [지도 위 경로 하이라이트] 실제 여행이 시작되면 그 여행 자체가 이미
+  // 별도의 진행률 표시(위 "여행 중이면 경로 표시" 렌더 블록)를 갖고
+  // 있어서, 미리보기용 하이라이트가 같이 남아있으면 둘이 겹쳐 혼란스럽다.
+  S._landMapHighlightRoute = null;
   const roadNote = route ? (roadRatio>0.5 ? ' 정비된 도로를 따라가는 빠른 길입니다.' : ' 도로와 거친 길이 섞인 경로입니다.') : ' 도로가 없는 거친 길입니다.';
   toastHTML(`🚶 ${typeof getEntityIconHTML==='function'?getEntityIconHTML(dest,{size:14}):(dest.icon)} ${esc(dest.name)}을(를) 향해 출발했습니다. (예상 ${esc(days)}일)${esc(roadNote)}`, 4500);
   S._pendingTravelHint = `주인공이 ${dest.name}을(를) 향해 길을 떠났다.`;
@@ -1861,6 +1865,9 @@ export function selectMapContinent(contKey){
   }
   S._landMapViewMode = 'continent';
   closeLandMapPopup();
+  // [지도 위 경로 하이라이트] 보고 있던 왕국/대륙 자체가 바뀌면 예전
+  // 경로선은 더 이상 지금 뷰와 안 맞는 좌표를 가리킬 수 있어 지운다.
+  S._landMapHighlightRoute = null;
   window.renderWorldMapPanel();
 }
 window.selectMapContinent = selectMapContinent;
@@ -1871,6 +1878,7 @@ export function selectMapKingdom(contKey){
   S._landMapSelectedContinent = contKey;
   S._landMapViewMode = 'continent';
   closeLandMapPopup();
+  S._landMapHighlightRoute = null;
   window.renderWorldMapPanel();
 }
 window.selectMapKingdom = selectMapKingdom;
@@ -1892,6 +1900,7 @@ export function toggleLandMapViewMode(){
     S._landMapSelectedGroup = null;
   }
   closeLandMapPopup();
+  S._landMapHighlightRoute = null;
   window.renderWorldMapPanel();
 }
 window.toggleLandMapViewMode = toggleLandMapViewMode;
@@ -2107,6 +2116,27 @@ export function renderLandMapSVG(){
         }
       }
     }
+
+    // [지도 위 경로 하이라이트, 신규] `showRouteGuide()`(길잡이)가 골라준
+    // 경로(`S._landMapHighlightRoute.stops`, 실제 장소 이름 배열)를 기본
+    // 도로선(위 ROAD_EDGES, 어두운 갈색) 위에 밝은 점선으로 한 번 더
+    // 덧그려서 "이 길로 가면 된다"를 실제로 눈에 보이게 한다. 마커보다는
+    // 아래, 기본 도로선보다는 위에 그려 계층을 맞춘다. 실제 여행 중
+    // (travel)이면 위에서 이미 진행률 곡선을 그리므로 중복 표시를 피해
+    // 하이라이트는 건너뛴다.
+    if(!travel && S._landMapHighlightRoute && Array.isArray(S._landMapHighlightRoute.stops)){
+      const stopCoords = S._landMapHighlightRoute.stops
+        .map(nm=>{ const l = locs.find(x=>x.name===nm); return l ? getLocationCoord(l) : null; })
+        .filter(Boolean);
+      if(stopCoords.length>=2){
+        const pts = stopCoords.map(c=>`${c.x},${c.y}`).join(' ');
+        svg += `<polyline points="${pts}" fill="none" stroke="#3ad6ff" stroke-width="${2.2*k}" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="${5*k},${4*k}" opacity="0.85" pointer-events="none"/>`;
+        stopCoords.forEach((c,i)=>{
+          const isEnd = i===0 || i===stopCoords.length-1;
+          svg += `<circle cx="${c.x}" cy="${c.y}" r="${(isEnd?4.5:2.6)*k}" fill="#3ad6ff" opacity="0.9" pointer-events="none"/>`;
+        });
+      }
+    }
   }
 
   if(_mapMode==='continent'){
@@ -2309,10 +2339,15 @@ window.showRouteGuide = function(destName){
   const curLoc = (typeof loadCurrentLocation==='function') ? loadCurrentLocation() : null;
   const loc = getAllLandLocations().find(l=>l.name===destName);
   if(!curLoc || !loc) return;
+  // [지도 위 경로 하이라이트] 새 안내를 여는 순간 예전 하이라이트부터
+  // 지운다 — 실패(도로 없음)로 끝나도 낡은 경로가 지도에 남아있으면
+  // 안 되므로 먼저 지우고, 성공하면 아래에서 다시 채운다.
+  S._landMapHighlightRoute = null;
   const days = getTravelDays(loc, S._activeTransport||'walk');
   const route = (typeof findRoadRoute==='function') ? findRoadRoute(curLoc, loc) : null;
   if(!route || !route.path || route.path.length<2){
     toast(`🧭 ${curLoc.name}에서 ${destName}까지 이어진 포장도로가 없습니다 — 들판을 가로질러야 합니다 (도보 기준 약 ${days}일)`, 4500);
+    window.renderWorldMapPanel();
     return;
   }
   // [버그 수정, 22-4 검증 중 발견] route.path는 도로망 위 경유지만 담고
@@ -2330,6 +2365,24 @@ window.showRouteGuide = function(destName){
   const destLabel = `${loc.icon||''} ${esc(loc.name)}`;
   if(stopNames[stopNames.length-1] !== destLabel) stopNames.push(destLabel);
   toastHTML(`🧭 <b>길잡이</b>: ${stopNames.join(' → ')}<br><span style="font-size:9px;color:#9ab89a">도보 기준 약 ${days}일 소요</span>`, 5500);
+  // [지도 위 경로 하이라이트, 신규] 텍스트 안내뿐 아니라 지도 위에도 실제
+  // 경로선을 그리도록 좌표 조회용 원본 이름 목록(아이콘 안 붙은 순수
+  // 이름)을 별도로 저장 — renderLandMapSVG가 이 이름들을 getLocationCoord로
+  // 다시 조회해 폴리라인을 그린다. 출발/목적지가 도로망 노드가 아닐 수
+  // 있는 문제(위 주석과 동일)도 같은 방식(시작/끝에 실제 이름 덧붙이기)
+  // 으로 똑같이 처리한다.
+  const rawStops = route.path.slice();
+  if(rawStops[0] !== curLoc.name) rawStops.unshift(curLoc.name);
+  if(rawStops[rawStops.length-1] !== loc.name) rawStops.push(loc.name);
+  S._landMapHighlightRoute = { stops: rawStops, destName: loc.name };
+  window.renderWorldMapPanel();
+};
+// [지도 위 경로 하이라이트] 하이라이트를 지우는 명시적 진입점 — 대륙/왕국
+// 전환·여행 시작 시점(선택·startLandTravel)에서도 자동으로 지워지지만,
+// 사용자가 직접 지우고 싶을 때를 위해 별도로도 노출해둔다.
+window.clearLandMapRouteHighlight = function(){
+  S._landMapHighlightRoute = null;
+  window.renderWorldMapPanel();
 };
 
 export function openLandMapPopup(name,x,y){ S._landMapPopup={id:name,x,y}; window.renderWorldMapPanel(); }

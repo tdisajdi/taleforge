@@ -47303,6 +47303,7 @@ ${lines.join("\n")}
     }
     saveTravelState({ destName: dest.name, daysLeft: days, totalDays: days, transportType: transportType || "walk", activeEncounter: null, startedAt: S.msgCount || 0, roadRatio, usedRoad: !!route });
     S._mapPopup = null;
+    S._landMapHighlightRoute = null;
     const roadNote = route ? roadRatio > 0.5 ? " \uC815\uBE44\uB41C \uB3C4\uB85C\uB97C \uB530\uB77C\uAC00\uB294 \uBE60\uB978 \uAE38\uC785\uB2C8\uB2E4." : " \uB3C4\uB85C\uC640 \uAC70\uCE5C \uAE38\uC774 \uC11E\uC778 \uACBD\uB85C\uC785\uB2C8\uB2E4." : " \uB3C4\uB85C\uAC00 \uC5C6\uB294 \uAC70\uCE5C \uAE38\uC785\uB2C8\uB2E4.";
     toastHTML(`\u{1F6B6} ${typeof getEntityIconHTML === "function" ? getEntityIconHTML(dest, { size: 14 }) : dest.icon} ${esc2(dest.name)}\uC744(\uB97C) \uD5A5\uD574 \uCD9C\uBC1C\uD588\uC2B5\uB2C8\uB2E4. (\uC608\uC0C1 ${esc2(days)}\uC77C)${esc2(roadNote)}`, 4500);
     S._pendingTravelHint = `\uC8FC\uC778\uACF5\uC774 ${dest.name}\uC744(\uB97C) \uD5A5\uD574 \uAE38\uC744 \uB5A0\uB0AC\uB2E4.`;
@@ -47428,6 +47429,7 @@ ${lines.join("\n")}
     }
     S._landMapViewMode = "continent";
     closeLandMapPopup();
+    S._landMapHighlightRoute = null;
     window.renderWorldMapPanel();
   }
   window.selectMapContinent = selectMapContinent;
@@ -47435,6 +47437,7 @@ ${lines.join("\n")}
     S._landMapSelectedContinent = contKey;
     S._landMapViewMode = "continent";
     closeLandMapPopup();
+    S._landMapHighlightRoute = null;
     window.renderWorldMapPanel();
   }
   window.selectMapKingdom = selectMapKingdom;
@@ -47452,6 +47455,7 @@ ${lines.join("\n")}
       S._landMapSelectedGroup = null;
     }
     closeLandMapPopup();
+    S._landMapHighlightRoute = null;
     window.renderWorldMapPanel();
   }
   window.toggleLandMapViewMode = toggleLandMapViewMode;
@@ -47603,6 +47607,20 @@ ${lines.join("\n")}
           }
         }
       }
+      if (!travel && S._landMapHighlightRoute && Array.isArray(S._landMapHighlightRoute.stops)) {
+        const stopCoords = S._landMapHighlightRoute.stops.map((nm) => {
+          const l = locs.find((x) => x.name === nm);
+          return l ? getLocationCoord(l) : null;
+        }).filter(Boolean);
+        if (stopCoords.length >= 2) {
+          const pts = stopCoords.map((c) => `${c.x},${c.y}`).join(" ");
+          svg += `<polyline points="${pts}" fill="none" stroke="#3ad6ff" stroke-width="${2.2 * k}" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="${5 * k},${4 * k}" opacity="0.85" pointer-events="none"/>`;
+          stopCoords.forEach((c, i) => {
+            const isEnd = i === 0 || i === stopCoords.length - 1;
+            svg += `<circle cx="${c.x}" cy="${c.y}" r="${(isEnd ? 4.5 : 2.6) * k}" fill="#3ad6ff" opacity="0.9" pointer-events="none"/>`;
+          });
+        }
+      }
     }
     if (_mapMode === "continent") {
       const markerList = locs.filter((loc) => S._landMapSelectedContinent ? loc.continent === S._landMapSelectedContinent : S._landMapSelectedGroup ? (CONTINENT_GROUPS[S._landMapSelectedGroup] || []).includes(loc.continent) : false).map((loc) => {
@@ -47721,10 +47739,12 @@ ${lines.join("\n")}
     const curLoc = typeof loadCurrentLocation === "function" ? loadCurrentLocation() : null;
     const loc = getAllLandLocations().find((l) => l.name === destName);
     if (!curLoc || !loc) return;
+    S._landMapHighlightRoute = null;
     const days = getTravelDays(loc, S._activeTransport || "walk");
     const route = typeof findRoadRoute === "function" ? findRoadRoute(curLoc, loc) : null;
     if (!route || !route.path || route.path.length < 2) {
       toast(`\u{1F9ED} ${curLoc.name}\uC5D0\uC11C ${destName}\uAE4C\uC9C0 \uC774\uC5B4\uC9C4 \uD3EC\uC7A5\uB3C4\uB85C\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4 \u2014 \uB4E4\uD310\uC744 \uAC00\uB85C\uC9C8\uB7EC\uC57C \uD569\uB2C8\uB2E4 (\uB3C4\uBCF4 \uAE30\uC900 \uC57D ${days}\uC77C)`, 4500);
+      window.renderWorldMapPanel();
       return;
     }
     const allLocs = getAllLandLocations();
@@ -47737,6 +47757,15 @@ ${lines.join("\n")}
     const destLabel = `${loc.icon || ""} ${esc2(loc.name)}`;
     if (stopNames[stopNames.length - 1] !== destLabel) stopNames.push(destLabel);
     toastHTML(`\u{1F9ED} <b>\uAE38\uC7A1\uC774</b>: ${stopNames.join(" \u2192 ")}<br><span style="font-size:9px;color:#9ab89a">\uB3C4\uBCF4 \uAE30\uC900 \uC57D ${days}\uC77C \uC18C\uC694</span>`, 5500);
+    const rawStops = route.path.slice();
+    if (rawStops[0] !== curLoc.name) rawStops.unshift(curLoc.name);
+    if (rawStops[rawStops.length - 1] !== loc.name) rawStops.push(loc.name);
+    S._landMapHighlightRoute = { stops: rawStops, destName: loc.name };
+    window.renderWorldMapPanel();
+  };
+  window.clearLandMapRouteHighlight = function() {
+    S._landMapHighlightRoute = null;
+    window.renderWorldMapPanel();
   };
   function openLandMapPopup(name, x, y) {
     S._landMapPopup = { id: name, x, y };

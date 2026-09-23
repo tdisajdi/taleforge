@@ -575,7 +575,13 @@ export function buildScreen(graph, nodeId){
   }
 
   const packs = buildPacksForNode(graph, node, isWaterScreen, exits, markerPos);
-  const screen = { nodeId, node, COLS, ROWS, grid, idx, inB, exits, markerPos, packs, biome, isWaterScreen, signposts };
+  // [2026-09-23, 25-3] 타일 단위 fog of war — 0(미탐사)으로 시작, 플레이어가
+  // 실제로 반경 안에 들어온 타일만 1(탐사됨)로 바뀐다. 캐시된 화면(재입장)은
+  // 이 배열을 그대로 들고 있어서, 같은 브라우저 세션 안에서는 한 번 밝힌
+  // 구역이 다시 어두워지지 않는다(새로고침하면 _screenCache 자체가 메모리
+  // 상태라 초기화됨 — packs 등 이 화면의 다른 런타임 상태와 동일한 범위).
+  const fog = new Uint8Array(COLS*ROWS);
+  const screen = { nodeId, node, COLS, ROWS, grid, idx, inB, exits, markerPos, packs, biome, isWaterScreen, signposts, fog };
   if(node.kind==='location') syncRaidPacksForScreen(screen, node.loc);
   _screenCache.set(cacheKey, screen);
   return screen;
@@ -1177,6 +1183,17 @@ const REF_FRAME_MS = 1000/60;
 // 화면을 완전히 벗어나 도망친 추격자가 "바로 포기하지는 않되 영원히
 // 쫓아오지도 않는" 느낌을 노림.
 const PURSUER_GIVE_UP_MS = 120000;
+// [2026-09-23, 25-3, 22-4에서 범위 밖에 남겼던 마지막 항목] 필드 모드
+// "화면 하나 안"의 타일 단위 fog of war. 화면 단위 안개(안 가본 화면
+// 자체가 안 보임)는 22-4 이전부터 이미 있었지만, 그 화면 안에 들어오면
+// 항상 전체가 다 보이고 있었다 — 예전 독립 프로토타입에 있던
+// revealAround() 개념(작업메모장 10번 섹션 3번 항목)을 타일 단위로
+// 재구현한다. 반경은 캔버스 최소 크기(320px=16타일 폭)에서 안개가
+// 화면을 압도하지 않으면서도 전체를 한눈에 드러내지 않는 절충값으로
+// 새로 정했다(밸런스 튜닝 없음, 다른 신규 상수들과 같은 성격).
+const FOG_REVEAL_RADIUS_TILES = 7;
+const FOG_REVEAL_RADIUS_SQ = FOG_REVEAL_RADIUS_TILES*FOG_REVEAL_RADIUS_TILES;
+const FOG_DIM_OVERLAY = 'rgba(2,2,2,0.55)'; // 한 번 밝혀졌지만 지금은 시야 밖인 타일 — 기억은 나지만 어둡게
 
 // [19번 라운드, [대기] #10 나머지 — 필드 진입 게이팅] 사용자 확정 지시
 // ("막아줘"): 지금까지는 월드맵에서 아무 서사적 맥락 없이 아무 때나
@@ -1608,6 +1625,21 @@ function exitLabel(screen, ex){
   if(ex.crossing==='air-only') return '하늘길(비행 전용)';
   return '갈림길';
 }
+// [2026-09-23, 25-3] 플레이어 주변 반경 안의 타일을 탐사됨(1)으로 표시한다.
+// enterScreen(진입 지점 최초 공개)과 fieldLoop(걸어다니며 계속 공개) 둘 다
+// 이 함수 하나만 쓴다 — 렌더 쪽의 "지금 시야 안"(dc²+dr²≤반경²) 판정과 반경
+// 값이 어긋나면 안 되므로, 판정식 자체는 renderFieldCanvas가 별도로 다시
+// 계산하지만 반경 상수(FOG_REVEAL_RADIUS_TILES)는 이 함수와 공유한다.
+function revealFogAround(screen, c, r){
+  const c0=Math.max(0,c-FOG_REVEAL_RADIUS_TILES), c1=Math.min(screen.COLS-1,c+FOG_REVEAL_RADIUS_TILES);
+  const r0=Math.max(0,r-FOG_REVEAL_RADIUS_TILES), r1=Math.min(screen.ROWS-1,r+FOG_REVEAL_RADIUS_TILES);
+  for(let rr=r0; rr<=r1; rr++){
+    for(let cc=c0; cc<=c1; cc++){
+      const dc=cc-c, dr=rr-r;
+      if(dc*dc+dr*dr<=FOG_REVEAL_RADIUS_SQ) screen.fog[screen.idx(cc,rr)] = 1;
+    }
+  }
+}
 function enterScreen(nodeId, fromNodeId){
   const screen = buildScreen(RT.graph, nodeId);
   if(!screen) return;
@@ -1624,6 +1656,7 @@ function enterScreen(nodeId, fromNodeId){
   }
   RT.player.x = Math.max(TILE, Math.min(screen.COLS*TILE-TILE, sc*TILE+TILE/2));
   RT.player.y = Math.max(TILE, Math.min(screen.ROWS*TILE-TILE, sr*TILE+TILE/2));
+  revealFogAround(screen, Math.floor(RT.player.x/TILE), Math.floor(RT.player.y/TILE));
   RT._prevNodeId = nodeId;
   // 화면이 바뀌면 궤적도 리셋 — 안 그러면 파티원이 이전 화면 쪽에서부터
   // 이어진 직선으로 순간이동하듯 보인다. 새 화면 진입 지점으로 다시 채워
@@ -1788,6 +1821,7 @@ function fieldLoop(){
     }
     player.x = Math.max(TILE, Math.min(screen.COLS*TILE-TILE, player.x));
     player.y = Math.max(TILE, Math.min(screen.ROWS*TILE-TILE, player.y));
+    revealFogAround(screen, Math.floor(player.x/TILE), Math.floor(player.y/TILE));
     checkScreenTransition();
     checkSignpostProximity();
   }
@@ -1813,25 +1847,39 @@ function renderFieldCanvas(){
   const camY = worldH<=VIEW_H ? -(VIEW_H-worldH)/2 : Math.max(0, Math.min(worldH-VIEW_H, player.y-VIEW_H/2));
   ctx.fillStyle='#050403'; ctx.fillRect(0,0,VIEW_W,VIEW_H);
 
+  // [2026-09-23, 25-3] fog of war — 지금 플레이어 반경 안(dc²+dr²≤반경²)이면
+  // "시야 안"(밝게), 아니면 screen.fog(revealFogAround가 채워둔, 한 번이라도
+  // 밝혀진 타일 기록)를 봐서 "탐사됨"(기억, 어둡게)/"미탐사"(아예 안 그림 —
+  // 캔버스 배경(#050403, 위에서 이미 채워둔 검정)이 그대로 안개로 보임)를 가른다.
+  const pc = Math.floor(player.x/TILE), pr = Math.floor(player.y/TILE);
+  const inFogSight = (c,r) => { const dc=Math.round(c)-pc, dr=Math.round(r)-pr; return (dc*dc+dr*dr)<=FOG_REVEAL_RADIUS_SQ; };
+  const inFogExplored = (c,r) => inFogSight(c,r) || screen.fog[screen.idx(Math.round(c),Math.round(r))]===1;
+
   const c0=Math.max(0,Math.floor(camX/TILE)), c1=Math.min(screen.COLS-1,Math.ceil((camX+VIEW_W)/TILE));
   const r0=Math.max(0,Math.floor(camY/TILE)), r1=Math.min(screen.ROWS-1,Math.ceil((camY+VIEW_H)/TILE));
   for(let r=r0;r<=r1;r++) for(let c=c0;c<=c1;c++){
+    const visible = inFogSight(c,r);
+    if(!visible && screen.fog[screen.idx(c,r)]!==1) continue; // 미탐사 — 배경 그대로 검게 남김
     const t = screen.grid[screen.idx(c,r)];
     ctx.fillStyle = FT_COLOR[t] || FT_COLOR[FT.GRASS];
     ctx.fillRect(c*TILE-camX, r*TILE-camY, TILE, TILE);
+    if(!visible){ ctx.fillStyle = FOG_DIM_OVERLAY; ctx.fillRect(c*TILE-camX, r*TILE-camY, TILE, TILE); }
   }
 
   ctx.textAlign='center'; ctx.textBaseline='middle';
 
-  // 장소 마커(화면 하나 = 그 장소 자체)
-  if(screen.markerPos){
+  // 장소 마커(화면 하나 = 그 장소 자체) — 지형/도로처럼 "한 번 탐사되면 계속
+  // 기억"(현재 시야 밖이어도 계속 보임, 다시 어두워지지 않음) 취급한다.
+  if(screen.markerPos && inFogExplored(screen.markerPos.c, screen.markerPos.r)){
     const px = screen.markerPos.c*TILE-camX, py = screen.markerPos.r*TILE-camY;
     ctx.font='22px serif'; ctx.fillText(screen.node.loc.icon||'📍', px+TILE/2, py+TILE/2);
   }
 
   // 출구 — 어느 방향이 어디로 이어지는지, 지금 탄 수단으로 못 지나가면 빨갛게 표시
+  // (마커와 동일하게 "한 번 탐사되면 계속 기억" — 지형 취급)
   const tc = currentTransportConfig();
   for(const ex of screen.exits){
+    if(!inFogExplored(ex.gc, ex.gr)) continue;
     const px = ex.gc*TILE-camX, py = ex.gr*TILE-camY;
     if(px<-40||px>VIEW_W+40||py<-40||py>VIEW_H+40) continue;
     const locked = (ex.crossing==='water' && !(tc.range==='water'||tc.range==='sea'||tc.isAir)) || (ex.crossing==='air-only' && !tc.isAir);
@@ -1845,7 +1893,9 @@ function renderFieldCanvas(){
 
   // [2026-09-18, 도로/이정표 라운드] 이정표 — 실제 목적지 이름을 그대로 보여준다
   // (지어낸 방향 이름이 아니라 그 도로가 진짜로 이어지는 정착지의 이름).
+  // 마커/출구와 같은 "지형" 취급 — 탐사되면 계속 보임.
   for(const sp of (screen.signposts||[])){
+    if(!inFogExplored(sp.c, sp.r)) continue;
     const px = sp.c*TILE-camX, py = sp.r*TILE-camY;
     if(px<-40||px>VIEW_W+40||py<-40||py>VIEW_H+40) continue;
     ctx.font='18px serif'; ctx.fillStyle='#e6cf82'; ctx.fillText(sp.icon, px, py-6);
@@ -1853,8 +1903,11 @@ function renderFieldCanvas(){
     ctx.fillText(sp.label, px, py+11);
   }
 
+  // 몬스터/경비병 팩 — 지형과 달리 "지금 시야 안일 때만"(이동하는 대상을
+  // 예전 위치로 착각하면 안 됨 — 탐사 기억이 아니라 실시간 시야).
   for(const m of screen.packs){
     if(m.cooldown>0) continue;
+    if(!inFogSight(m.x/TILE, m.y/TILE)) continue;
     const px=m.x-camX, py=m.y-camY;
     if(px<-20||px>VIEW_W+20||py<-20||py>VIEW_H+20) continue;
     ctx.font='16px serif'; ctx.fillText(m.icon, px, py);
@@ -1878,6 +1931,7 @@ function renderFieldCanvas(){
       const back = Math.min(trail.length-1, (i+1)*40);
       const pos = trail[trail.length-1-back] || trail[0];
       if(!pos) return;
+      if(!inFogSight(pos.x/TILE, pos.y/TILE)) return; // 팩과 동일 — 이동 유닛은 지금 시야 안일 때만
       const fx=pos.x-camX, fy=pos.y-camY;
       if(fx<-20||fx>VIEW_W+20||fy<-20||fy>VIEW_H+20) return;
       ctx.font='15px serif'; ctx.fillText(m.icon||'🧑', fx, fy);
@@ -1943,6 +1997,10 @@ window.__tfFieldDebug = function(){
     transportType: RT.transportType,
     encounterActive: RT.encounterActive,
     totalNodesInGraph: RT.graph.nodes.size,
+    // [2026-09-23, 25-3] fog of war 검증용 — 판정 로직(revealFogAround)을
+    // 그대로 조회만 한다, 우회 없음.
+    exploredTileCount: RT.screen.fog.reduce((a,b)=>a+b,0),
+    totalTileCount: RT.screen.COLS*RT.screen.ROWS,
   };
 };
 // [2026-09-22, 24번 섹션 22-3 부수 발견 확증용] exitFieldMode()가 11개

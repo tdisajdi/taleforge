@@ -132131,7 +132131,8 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
       stampSettlementWalls(grid, idx, inB, exits, COLS, ROWS);
     }
     const packs = buildPacksForNode(graph, node, isWaterScreen, exits, markerPos);
-    const screen = { nodeId, node, COLS, ROWS, grid, idx, inB, exits, markerPos, packs, biome, isWaterScreen, signposts };
+    const fog = new Uint8Array(COLS * ROWS);
+    const screen = { nodeId, node, COLS, ROWS, grid, idx, inB, exits, markerPos, packs, biome, isWaterScreen, signposts, fog };
     if (node.kind === "location") syncRaidPacksForScreen(screen, node.loc);
     _screenCache.set(cacheKey, screen);
     return screen;
@@ -132636,6 +132637,9 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
   var MONSTER_FLEE_SPEED = FIELD_BASE_SPEED * (1.8 / 1.15);
   var REF_FRAME_MS = 1e3 / 60;
   var PURSUER_GIVE_UP_MS = 12e4;
+  var FOG_REVEAL_RADIUS_TILES = 7;
+  var FOG_REVEAL_RADIUS_SQ = FOG_REVEAL_RADIUS_TILES * FOG_REVEAL_RADIUS_TILES;
+  var FOG_DIM_OVERLAY = "rgba(2,2,2,0.55)";
   function hasFieldEntryEligibility() {
     return !!(S._fieldEntryWindowUntil && Date.now() < S._fieldEntryWindowUntil);
   }
@@ -133078,6 +133082,16 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
     if (ex.crossing === "air-only") return "\uD558\uB298\uAE38(\uBE44\uD589 \uC804\uC6A9)";
     return "\uAC08\uB9BC\uAE38";
   }
+  function revealFogAround(screen, c, r) {
+    const c0 = Math.max(0, c - FOG_REVEAL_RADIUS_TILES), c1 = Math.min(screen.COLS - 1, c + FOG_REVEAL_RADIUS_TILES);
+    const r0 = Math.max(0, r - FOG_REVEAL_RADIUS_TILES), r1 = Math.min(screen.ROWS - 1, r + FOG_REVEAL_RADIUS_TILES);
+    for (let rr = r0; rr <= r1; rr++) {
+      for (let cc = c0; cc <= c1; cc++) {
+        const dc = cc - c, dr = rr - r;
+        if (dc * dc + dr * dr <= FOG_REVEAL_RADIUS_SQ) screen.fog[screen.idx(cc, rr)] = 1;
+      }
+    }
+  }
   function enterScreen(nodeId, fromNodeId) {
     const screen = buildScreen(RT.graph, nodeId);
     if (!screen) return;
@@ -133098,6 +133112,7 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
     }
     RT.player.x = Math.max(TILE, Math.min(screen.COLS * TILE - TILE, sc * TILE + TILE / 2));
     RT.player.y = Math.max(TILE, Math.min(screen.ROWS * TILE - TILE, sr * TILE + TILE / 2));
+    revealFogAround(screen, Math.floor(RT.player.x / TILE), Math.floor(RT.player.y / TILE));
     RT._prevNodeId = nodeId;
     RT.partyTrail = new Array(240).fill({ x: RT.player.x, y: RT.player.y });
     if (screen.node.kind === "location") {
@@ -133251,6 +133266,7 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
       }
       player.x = Math.max(TILE, Math.min(screen.COLS * TILE - TILE, player.x));
       player.y = Math.max(TILE, Math.min(screen.ROWS * TILE - TILE, player.y));
+      revealFogAround(screen, Math.floor(player.x / TILE), Math.floor(player.y / TILE));
       checkScreenTransition();
       checkSignpostProximity();
     }
@@ -133273,22 +133289,35 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
     const camY = worldH <= VIEW_H ? -(VIEW_H - worldH) / 2 : Math.max(0, Math.min(worldH - VIEW_H, player.y - VIEW_H / 2));
     ctx.fillStyle = "#050403";
     ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+    const pc = Math.floor(player.x / TILE), pr = Math.floor(player.y / TILE);
+    const inFogSight = (c, r) => {
+      const dc = Math.round(c) - pc, dr = Math.round(r) - pr;
+      return dc * dc + dr * dr <= FOG_REVEAL_RADIUS_SQ;
+    };
+    const inFogExplored = (c, r) => inFogSight(c, r) || screen.fog[screen.idx(Math.round(c), Math.round(r))] === 1;
     const c0 = Math.max(0, Math.floor(camX / TILE)), c1 = Math.min(screen.COLS - 1, Math.ceil((camX + VIEW_W) / TILE));
     const r0 = Math.max(0, Math.floor(camY / TILE)), r1 = Math.min(screen.ROWS - 1, Math.ceil((camY + VIEW_H) / TILE));
     for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) {
+      const visible = inFogSight(c, r);
+      if (!visible && screen.fog[screen.idx(c, r)] !== 1) continue;
       const t = screen.grid[screen.idx(c, r)];
       ctx.fillStyle = FT_COLOR[t] || FT_COLOR[FT.GRASS];
       ctx.fillRect(c * TILE - camX, r * TILE - camY, TILE, TILE);
+      if (!visible) {
+        ctx.fillStyle = FOG_DIM_OVERLAY;
+        ctx.fillRect(c * TILE - camX, r * TILE - camY, TILE, TILE);
+      }
     }
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    if (screen.markerPos) {
+    if (screen.markerPos && inFogExplored(screen.markerPos.c, screen.markerPos.r)) {
       const px = screen.markerPos.c * TILE - camX, py = screen.markerPos.r * TILE - camY;
       ctx.font = "22px serif";
       ctx.fillText(screen.node.loc.icon || "\u{1F4CD}", px + TILE / 2, py + TILE / 2);
     }
     const tc = currentTransportConfig();
     for (const ex of screen.exits) {
+      if (!inFogExplored(ex.gc, ex.gr)) continue;
       const px = ex.gc * TILE - camX, py = ex.gr * TILE - camY;
       if (px < -40 || px > VIEW_W + 40 || py < -40 || py > VIEW_H + 40) continue;
       const locked = ex.crossing === "water" && !(tc.range === "water" || tc.range === "sea" || tc.isAir) || ex.crossing === "air-only" && !tc.isAir;
@@ -133302,6 +133331,7 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
       ctx.fillText(label, px, py + dy + (ex.edge === "E" || ex.edge === "W" ? 14 : 0));
     }
     for (const sp of screen.signposts || []) {
+      if (!inFogExplored(sp.c, sp.r)) continue;
       const px = sp.c * TILE - camX, py = sp.r * TILE - camY;
       if (px < -40 || px > VIEW_W + 40 || py < -40 || py > VIEW_H + 40) continue;
       ctx.font = "18px serif";
@@ -133313,6 +133343,7 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
     }
     for (const m of screen.packs) {
       if (m.cooldown > 0) continue;
+      if (!inFogSight(m.x / TILE, m.y / TILE)) continue;
       const px = m.x - camX, py = m.y - camY;
       if (px < -20 || px > VIEW_W + 20 || py < -20 || py > VIEW_H + 20) continue;
       ctx.font = "16px serif";
@@ -133342,6 +133373,7 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
         const back = Math.min(trail.length - 1, (i + 1) * 40);
         const pos = trail[trail.length - 1 - back] || trail[0];
         if (!pos) return;
+        if (!inFogSight(pos.x / TILE, pos.y / TILE)) return;
         const fx = pos.x - camX, fy = pos.y - camY;
         if (fx < -20 || fx > VIEW_W + 20 || fy < -20 || fy > VIEW_H + 20) return;
         ctx.font = "15px serif";
@@ -133410,7 +133442,11 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
       packCount: RT.screen.packs.length,
       transportType: RT.transportType,
       encounterActive: RT.encounterActive,
-      totalNodesInGraph: RT.graph.nodes.size
+      totalNodesInGraph: RT.graph.nodes.size,
+      // [2026-09-23, 25-3] fog of war 검증용 — 판정 로직(revealFogAround)을
+      // 그대로 조회만 한다, 우회 없음.
+      exploredTileCount: RT.screen.fog.reduce((a, b) => a + b, 0),
+      totalTileCount: RT.screen.COLS * RT.screen.ROWS
     };
   };
   window.__tfFieldThreatDebug = function() {

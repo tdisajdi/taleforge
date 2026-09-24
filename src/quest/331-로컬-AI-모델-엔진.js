@@ -205,12 +205,24 @@ export async function callLocalModelJSON(prompt, opts){
 }
 window.callLocalModelJSON = callLocalModelJSON;
 
-// 3단 폴백 헬퍼. [2026-08-26] 로컬 모델이 켜져 있고 이 기기가 지원하면
-// "로컬 모델이 메인, API 키는 보조"로 우선순위를 바꿨다 — 최종 목표가
-// API 없이 도는 앱이라, 로컬 모델을 켠 사용자에게는 그게 기본 경로가
-// 맞다는 판단(사용자 확인 완료). 로컬 모델을 안 켰거나 이 기기가
-// WebGPU를 지원하지 않으면(=메인으로 쓸 로컬 모델이 없으면) 기존처럼
-// 클라우드 API가 먼저 시도된다. 어느 경로든 최종 폴백은 항상 로컬 조합.
+// [2026-09-24] 정책 재전환 — "AI 선택제"(키 있으면 생성 계열도 클라우드
+// 우선) 폐지, 매 턴 서사 포함 전부 로컬 전용으로 되돌림(28번 섹션).
+// 실사용자 대부분은 API 키가 없어 "키 있으면 우선" 경로가 실전에서
+// 거의 안 쓰이므로, 런타임 클라우드 호출 자체를 끄고 그 대신 개발
+// 단계에 콘텐츠 볼륨을 두껍게 채우는 쪽으로 방향을 바꿨다. 아래
+// CLOUD_TIER_ENABLED만 false→true로 되돌리면 클라우드 우선 동작이
+// 즉시 복원된다(이 함수를 호출하는 17개 지점 전부에 자동 반영 —
+// 개별 호출부는 손대지 않음).
+const CLOUD_TIER_ENABLED = false;
+
+// 3단 폴백 헬퍼(현재는 로컬 모델→로컬 조합 2단, 위 플래그 참고).
+// [2026-08-26] 로컬 모델이 켜져 있고 이 기기가 지원하면 "로컬 모델이
+// 메인"으로 우선순위를 둔다 — 최종 목표가 API 없이 도는 앱이라, 로컬
+// 모델을 켠 사용자에게는 그게 기본 경로가 맞다는 판단(사용자 확인
+// 완료). 로컬 모델을 안 켰거나 이 기기가 WebGPU를 지원하지 않으면
+// 곧바로 로컬 조합(bankFn)으로 떨어진다. 클라우드 API는
+// CLOUD_TIER_ENABLED가 true일 때만(현재 false) 로컬 모델 다음 순서로
+// 시도된다.
 export async function tryCloudThenLocalModelThenBank(cloudFn, localModelFn, bankFn, label){
   const tag = label || 'AI 생성';
   let keys = [];
@@ -252,7 +264,7 @@ export async function tryCloudThenLocalModelThenBank(cloudFn, localModelFn, bank
     // 매 턴 재시도로 네트워크를 두드리지 않는다(토글을 껐다 켜면 재시도됨).
   }
 
-  if(keys.length){
+  if(CLOUD_TIER_ENABLED && keys.length){
     try{
       const result = await cloudFn();
       if(result) return result;

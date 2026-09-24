@@ -37940,6 +37940,7 @@ ${lines.join("\n")}
     return parsed;
   }
   window.callLocalModelJSON = callLocalModelJSON;
+  var CLOUD_TIER_ENABLED = false;
   async function tryCloudThenLocalModelThenBank(cloudFn, localModelFn, bankFn, label) {
     const tag = label || "AI \uC0DD\uC131";
     let keys = [];
@@ -37972,7 +37973,7 @@ ${lines.join("\n")}
         });
       }
     }
-    if (keys.length) {
+    if (CLOUD_TIER_ENABLED && keys.length) {
       try {
         const result = await cloudFn();
         if (result) return result;

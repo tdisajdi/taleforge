@@ -7109,6 +7109,12 @@ const MONSTER_NAME_ADJ_BANK = [
   '녹슨 사슬을 두른', '안개 속에서 나온', '오래된 저주에 물든',
   '검은 갈기의', '일그러진', '상처투성이', '흉터 가득한', '반쯤 썩은',
   '이름 없는', '눈이 붉게 빛나는',
+  '불꽃을 두른', '독기를 내뿜는', '번개를 머금은', '뼈만 남은',
+  '거대한', '이형의', '역병에 물든', '심연에서 기어나온',
+  '달빛 아래 울부짖는', '피에 굶주린', '숨결이 얼어붙은', '살갗이 벗겨진',
+  '어둠을 삼킨', '길 잃은', '폭주한', '기형의', '악취를 풍기는',
+  '송곳니가 드러난', '발톱이 시커먼', '아가리가 찢어진', '눈알이 여러 개인',
+  '살기를 뿜는', '숲의 저주를 받은', '방황하는', '조용히 노려보는',
 ];
 function composeLocalMonsterName(baseWord){
   const adj = MONSTER_NAME_ADJ_BANK[Math.floor(Math.random()*MONSTER_NAME_ADJ_BANK.length)];
@@ -7120,6 +7126,26 @@ const MONSTER_LORE_BANK = [
   '왜 이런 모습이 되었는지 아는 이는 아직 없다.',
   '보통 개체보다 훨씬 사납다는 이야기가 떠돈다.',
   '이 지역 사냥꾼들 사이에서 조심하라는 말이 돌기 시작했다.',
+  '몇몇 상인들이 이 근방을 피해 돌아가기 시작했다.',
+  '가축들이 유독 이 개체를 두려워한다는 이야기가 있다.',
+  '밤마다 이 근방에서 울음소리가 들린다는 증언이 늘고 있다.',
+  '몸에 새겨진 흉터가 예사롭지 않은 싸움을 겪었음을 말해준다.',
+  '한때 사람의 손에 길들여졌던 흔적이 남아 있다는 추측도 있다.',
+  '이 개체를 본 사람들의 증언이 하나같이 엇갈린다.',
+  '무리에서 떨어져 나와 홀로 떠도는 듯하다.',
+  '먹이를 가리지 않는다는 흉흉한 소문이 돈다.',
+  '가까이 다가간 이들 중 무사히 돌아온 경우가 드물다고 한다.',
+  '이 지역의 오래된 저주와 관련이 있다는 추측이 떠돈다.',
+  '평소보다 훨씬 영역 다툼이 거세다는 보고가 있다.',
+  '몸집이 같은 종보다 유독 크다는 목격담이 있다.',
+  '최근 들어 활동 시간이 점점 대담해지고 있다.',
+  '지나가던 여행자 몇이 이 개체를 보고 혼비백산했다는 이야기가 있다.',
+  '이곳에 정착한 지 얼마 안 된 것으로 보인다는 관찰이 있다.',
+  '유독 이 개체만 인간을 경계하지 않는다는 보고가 있다.',
+  '근처 마을에서 가축을 잃은 사건과 연관이 있다는 의혹이 있다.',
+  '이빨과 발톱에 남은 흔적이 여러 번의 실전을 겪었음을 보여준다.',
+  '주변 생태계를 유독 크게 어지럽히고 있다는 보고가 있다.',
+  '드물게 무리를 이끄는 모습이 목격되기도 했다.',
 ];
 function composeLocalMonsterLore(baseWord){
   return MONSTER_LORE_BANK[Math.floor(Math.random()*MONSTER_LORE_BANK.length)];
@@ -7203,6 +7229,8 @@ async function generateAIMonsterConcept(){
   }catch(e){ console.warn('[generateAIMonsterConcept]', e); }
 }
 window.generateAIMonsterConcept = generateAIMonsterConcept;
+window.composeLocalMonsterName = composeLocalMonsterName;
+window.composeLocalMonsterLore = composeLocalMonsterLore;
 
 function checkRandomEncounter(userMsg){
   try{

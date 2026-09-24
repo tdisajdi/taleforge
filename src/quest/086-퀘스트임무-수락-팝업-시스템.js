@@ -43,7 +43,7 @@ import { expireSkillBuffs } from '../job/207-4-스킬-시스템.js';
 import { renderProphecyPanel } from '../lore/301-①-예언운명-시스템.js';
 import { renderOathPanel } from '../lore/312-⑤-서약-시스템.js';
 import { renderTraumaDeepPanel } from '../lore/316-⑦-심층-트라우마-시스템.js';
-import { CHAR_KEY, CHAT_KEY, META_KEY, SCENARIO_SAVE_KEY, STATS_SAVE_KEY, STORAGE_KEY, _clearDirty, _markDirty, clearAtmosphere, clearNPCs, clearQuests, clearSession, loadAtmosphere, loadEmotion, loadNPCs, loadPastLife, loadQuests, saveAtmosphere, saveCharacter, saveChatHistory, saveEmotion, saveMetaState, savePastLife, saveScenario, saveSession, saveStatsSplit } from '../misc/001-block0-preamble.js';
+import { CHAR_KEY, CHAT_KEY, META_KEY, SCENARIO_SAVE_KEY, STATS_SAVE_KEY, STORAGE_KEY, _clearDirty, _markDirty, clearAtmosphere, clearNPCs, clearQuests, clearSession, loadAtmosphere, loadDynQuests, loadEmotion, loadNPCs, loadPastLife, loadQuests, saveAtmosphere, saveCharacter, saveChatHistory, saveEmotion, saveMetaState, savePastLife, saveScenario, saveSession, saveStatsSplit } from '../misc/001-block0-preamble.js';
 import { EPIC_QUEST_KEY, SKILL_TREE_SP_COST, checkEpicQuests, clearJobSkills, clearPlayerExp, gainExpFromAction, gainExpFromKill, getAllSkillDefs, getSkillUnlockable, loadStatPoints, renderBuildRecommendPanel, renderEpicQuestPanel, renderRestPanel, renderStatAllocPanel, saveStatPoints } from '../misc/009-레벨업-스탯-포인트-배분-시스템.js';
 import { checkEvolutionCondition, clearTraumas, getActiveDeathBonuses, loadPermStatBonus, rollPermStatBonus, savePermStatBonus } from '../misc/015-시스템-1120.js';
 import { recordCurseRingAction, recordMemoryDistort, recordParallelSelf, recordStatKill, recordStatScenario, recordStatTurn, resetPastPrayerCycle } from '../misc/016-2130번-시스템.js';
@@ -108,6 +108,7 @@ import { EXPLORE_KEY, STATUS_STATE_KEY, buySealHintFromSilver, checkTrueEndingCo
 import { renderStoryMarkdown } from '../ui/231-스토리서사-캐릭터-성장-UIUX-개선-시스템.js';
 import { $, esc, isBlockingPopupOpen, lsDel, lsGet, lsSet, toast } from '../utils.js';
 import { checkHiddenQuestsLocal } from './041-궁수-계열-T2-파생-5종-히든-퀘스트-전사마법사도적-계열과-동일한-뼈대.js';
+import { loadHiddenQuests } from './039-NEW-히든-퀘스트-시스템.js';
 import { getScenarioEvent } from '../world/034-NEW-세계관별-고유-이벤트-테이블.js';
 import { CURRENT_LOC_KEY, getLocationLevelBand, getLocationPowerScale, loadCurrentLocation, loadLocEco, onLocMonsterKilled, pickWeightedLocEcoName, registerLocEcoEncounter, renderLocationPanel, saveCurrentLocation, saveLocEco, tickLocEcosystem } from '../world/052-동대륙-추가-장소-4.js';
 import { WORLD_REACTION_KEY, checkWorldReactions, renderWorldReactions } from '../world/070-⑤-세계-반응-시스템.js';
@@ -3224,6 +3225,7 @@ export async function sendMsg(userMsg, isChoice=false){
       const _pmTrivialRe = /^(네|아니|응|그래|좋아|알겠|계속|다음|돌아|뒤로|확인|닫|ㄴ|ㅇ|예|아니요|ok|yes|no).{0,5}$/i;
       if(typeof pmUpdateChoice==='function' && _lastUserMsg.content.length>10 && !_pmTrivialRe.test(_lastUserMsg.content.trim())) pmUpdateChoice(_lastUserMsg.content, '', '');
       if(typeof collectTurnData==='function') collectTurnData(_lastAiMsg.content, _lastUserMsg.content, window._pmLastGsSucceeded===(S.msgCount||0));
+      try{ if(typeof recordQuestProgressTurn==='function') recordQuestProgressTurn(_lastUserMsg.content, _lastAiMsg.content); }catch(e){}
       // [버그 수정] 예언 키워드 자동 감지·중요 행동 자동 소문 생성도
       // npc/158이 window.sendMsg를 감싸던 같은 원인으로 죽어있던 훅이다.
       if(typeof addProphecy==='function' && _lastAiMsg.content.includes('예언') && _lastAiMsg.content.includes('"') && !_lastAiMsg.content.includes('prophecy_add')){
@@ -7410,6 +7412,140 @@ function checkRandomEncounter(userMsg){
 window.checkRandomEncounter = checkRandomEncounter;
 
 window.checkRandomEncounter = checkRandomEncounter;
+
+// ══════════════════════════════════════════════════════════════════
+// [2026-09-24, 27번 섹션, 4번 섹션 보류 ①] GS 실패 턴 보조 파싱 로그.
+// `fallbackParseNarrative`는 지금까지 no-op 스텁(race/260)과 그걸
+// 감싸는 NPC보강 래퍼(core/244)만 있었을 뿐, 실제 "보조 파싱" 로직
+// 자체가 코드베이스 어디에도 없었다(전수 grep 확인) — 그 결과
+// `quest/229` 데이터 내보내기가 읽는 tf-gs-failed-turns/
+// tf-fallback-locations/tf-fallback-parse-log 3개 키가 영구히 빈
+// 배열이었다. 장소 감지는 `detectAndSetLocation`(world/052)이 GS
+// 성공/실패와 무관하게 이미 매 턴 따로 하고 있어서(2570행 근처) 여기서
+// 실제 게임 상태를 또 건드리지 않는다 — 순수하게 "이번 턴 GS 파싱이
+// 왜 실패했고 그 텍스트에서 뭘 건졌는지"를 기록하는 진단 로그다.
+// ══════════════════════════════════════════════════════════════════
+const GS_FAILED_TURNS_KEY = 'tf-gs-failed-turns';
+const FALLBACK_LOCATIONS_KEY = 'tf-fallback-locations';
+const FALLBACK_PARSE_LOG_KEY = 'tf-fallback-parse-log';
+const FALLBACK_LOG_CAP = 200; // misc/009 에픽 퀘스트 히스토리(200)와 같은 규모
+
+function _fallbackLogAppend(key, entry, cap){
+  try{
+    const arr = JSON.parse(lsGet(key) || '[]');
+    arr.push(entry);
+    if(arr.length > cap) arr.splice(0, arr.length - cap);
+    lsSet(key, JSON.stringify(arr));
+  }catch(e){}
+}
+
+// detectAndSetLocation(world/052)과 같은 매칭 방식(triggerKeywords
+// substring)을 그대로 재사용 — 새 추측 로직을 안 만든다. 단 여긴 순수
+// 조회만 하고(마주친 모든 후보를 다 모음) 실제 위치 상태는 절대
+// 안 건드린다.
+function _fallbackExtractLocationMentions(text){
+  const lc = (text||'').toLowerCase();
+  const found = [];
+  try{
+    const allLocs = (typeof window.getAllLocations==='function') ? window.getAllLocations() : [];
+    for(const loc of allLocs){
+      if(Array.isArray(loc.triggerKeywords) && loc.triggerKeywords.some(kw=>lc.includes(kw))){
+        found.push(loc.name);
+      }
+    }
+  }catch(e){}
+  return found;
+}
+
+function _runFallbackParse(cleanText, rawText){
+  const now = Date.now();
+  const turn = (S && S.msgCount) || 0;
+  const hasGsTag = /<gs[\s>]/i.test(rawText||'');
+  const reason = hasGsTag ? 'gs_parse_error' : 'no_gs_tag';
+
+  _fallbackLogAppend(GS_FAILED_TURNS_KEY, { turn, reason, ts: now, snippet: (rawText||'').slice(0,200) }, FALLBACK_LOG_CAP);
+
+  const foundLocs = _fallbackExtractLocationMentions(cleanText || rawText || '');
+  if(foundLocs.length){
+    _fallbackLogAppend(FALLBACK_LOCATIONS_KEY, { turn, ts: now, locations: foundLocs }, FALLBACK_LOG_CAP);
+  }
+
+  _fallbackLogAppend(FALLBACK_PARSE_LOG_KEY, { turn, ts: now, reason, foundLocationCount: foundLocs.length }, FALLBACK_LOG_CAP);
+
+  return { foundLocations: foundLocs, reason };
+}
+window._runFallbackParse = _runFallbackParse; // 검증/디버그 전용 직접 호출 노출
+
+// [3-3번 방법론, "setTimeout 콜백 안 — 지연 시간과 무관하게 항상 안전"]
+// core/244의 `_origFallbackParse`는 자기 모듈 최상단(코드 평가 시점)에서
+// `window.fallbackParseNarrative || function(){}`로 캡처되는데, main.js
+// 임포트 순서상 core/244가 이 파일보다 먼저 평가돼 그 시점엔 아무도
+// fallbackParseNarrative를 정의해둔 적이 없어 항상 no-op를 캡처해버린다
+// (파일 로드 순서를 바꾸는 우회는 위험하다고 판단해 안 함). 대신
+// setTimeout(0)으로 모든 모듈 평가 + __tfDeferred 체인이 다 끝난 뒤
+// 실행되는 콜백 안에서, 그 시점의 최종 window.fallbackParseNarrative
+// (core/244가 씌워둔 NPC보강 래퍼)를 한 번 더 감싼다 — 원본 체인은 그대로
+// 보존하면서(먼저 내 로직 실행 → 그다음 기존 래퍼 실행) 실제 보조 파싱을
+// 끼워넣는다.
+setTimeout(function(){
+  const _prevFallbackParse = window.fallbackParseNarrative;
+  window.fallbackParseNarrative = function(cleanText, rawText){
+    let result;
+    try{ result = _runFallbackParse(cleanText, rawText); }catch(e){}
+    try{ if(typeof _prevFallbackParse==='function') _prevFallbackParse(cleanText, rawText); }catch(e){}
+    return result;
+  };
+}, 0);
+
+// ══════════════════════════════════════════════════════════════════
+// [2026-09-24, 27번 섹션, 4번 섹션 보류 ②] 일반 퀘스트 진행 히스토리
+// (넓은 범위). job/087의 `renderQuests()`가 `taleforge-quest-history`를
+// qid 기준으로 읽어 "★ 메인 퀘스트"(AI 동적 퀘스트)·"🔮 히든 퀘스트"
+// 섹션에 진행 기록을 보여주는 코드가 이미 있었지만(`histByQid[q.id]`),
+// 그 두 퀘스트 종류에 기록을 남기는 작성자가 코드베이스 어디에도 없어서
+// 항상 빈 배열이었다(에픽 퀘스트만 misc/009가 스텝 완료 시점에만 기록—
+// 이건 안 건드리고 그대로 둔다). AI 자유생성 퀘스트(quest/141의
+// `getActiveQuests()`, upsertQuest)는 조사해보니 이미 자기 전용
+// `keyMoments[]` 배열(quest/270이 매 턴 채움, "무제한")로 진행 기록을
+// 따로 갖추고 있어서 — 진짜 공백이 아니라 손 안 댐. 게시판(bulletin)
+// 의뢰는 accepted 기록에 `history`류 필드도 없고 그걸 읽어서 보여주는
+// 화면도 어디에도 없어서(11번 섹션 원칙 — "연결이 없으면 억지 매핑
+// 만들지 말고 보류하고 기록") 이번 범위에서 제외했다.
+// ══════════════════════════════════════════════════════════════════
+const QUEST_HISTORY_KEY = 'taleforge-quest-history';
+// misc/009(에픽 퀘스트 전용, 200)와 같은 배열을 공유하므로 두 작성자의
+// 캡을 맞췄다(위 misc/009 쪽 주석 참고) — 이제 이 배열은 매 턴 여러 퀘스트
+// 종류에 걸쳐 쌓이므로 범위가 넓어진 만큼 캡도 함께 올렸다.
+const QUEST_HISTORY_CAP = 800;
+
+function recordQuestProgressTurn(userMsg, aiText){
+  try{
+    const turn = (S && S.msgCount) || 0;
+    const scene = (aiText||'').slice(0,150);
+    const um = (userMsg||'').slice(0,80);
+    const entries = [];
+    // AI 동적 퀘스트(등급 무관 전부) — job/087의 "★ 메인 퀘스트"는
+    // S등급만 걸러서 보여주지만, 어떤 등급이든 기록 자체는 남겨둔다
+    // (나중에 다른 등급을 노출하는 화면이 생겨도 새로 설계할 필요 없게).
+    if(typeof loadDynQuests==='function'){
+      loadDynQuests().filter(q=>q && q.status==='active').forEach(q=>{
+        entries.push({ qid: q.id, turn, userMsg: um, scene });
+      });
+    }
+    // 히든 퀘스트
+    if(typeof loadHiddenQuests==='function'){
+      Object.values(loadHiddenQuests()||{}).filter(q=>q && q.status==='active').forEach(q=>{
+        entries.push({ qid: q.id, turn, userMsg: um, scene });
+      });
+    }
+    if(!entries.length) return;
+    const hist = JSON.parse(lsGet(QUEST_HISTORY_KEY) || '[]');
+    hist.push(...entries);
+    if(hist.length > QUEST_HISTORY_CAP) hist.splice(0, hist.length - QUEST_HISTORY_CAP);
+    lsSet(QUEST_HISTORY_KEY, JSON.stringify(hist));
+  }catch(e){}
+}
+window.recordQuestProgressTurn = recordQuestProgressTurn;
 
 function openP(name){
   if(name==='shop'){

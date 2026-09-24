@@ -88709,6 +88709,10 @@ ${lines.join("\n")}
         const _pmTrivialRe = /^(네|아니|응|그래|좋아|알겠|계속|다음|돌아|뒤로|확인|닫|ㄴ|ㅇ|예|아니요|ok|yes|no).{0,5}$/i;
         if (typeof pmUpdateChoice === "function" && _lastUserMsg.content.length > 10 && !_pmTrivialRe.test(_lastUserMsg.content.trim())) pmUpdateChoice(_lastUserMsg.content, "", "");
         if (typeof collectTurnData === "function") collectTurnData(_lastAiMsg.content, _lastUserMsg.content, window._pmLastGsSucceeded === (S.msgCount || 0));
+        try {
+          if (typeof recordQuestProgressTurn === "function") recordQuestProgressTurn(_lastUserMsg.content, _lastAiMsg.content);
+        } catch (e) {
+        }
         if (typeof addProphecy === "function" && _lastAiMsg.content.includes("\uC608\uC5B8") && _lastAiMsg.content.includes('"') && !_lastAiMsg.content.includes("prophecy_add")) {
           const _prophMatch = _lastAiMsg.content.match(/"([^"]{10,80})"/);
           if (_prophMatch) setTimeout(() => {
@@ -92900,6 +92904,89 @@ ${_monsterInfoLine}`;
     }
     window.checkRandomEncounter = checkRandomEncounter2;
     window.checkRandomEncounter = checkRandomEncounter2;
+    const GS_FAILED_TURNS_KEY = "tf-gs-failed-turns";
+    const FALLBACK_LOCATIONS_KEY = "tf-fallback-locations";
+    const FALLBACK_PARSE_LOG_KEY = "tf-fallback-parse-log";
+    const FALLBACK_LOG_CAP = 200;
+    function _fallbackLogAppend(key, entry, cap) {
+      try {
+        const arr = JSON.parse(lsGet(key) || "[]");
+        arr.push(entry);
+        if (arr.length > cap) arr.splice(0, arr.length - cap);
+        lsSet(key, JSON.stringify(arr));
+      } catch (e) {
+      }
+    }
+    function _fallbackExtractLocationMentions(text) {
+      const lc = (text || "").toLowerCase();
+      const found = [];
+      try {
+        const allLocs = typeof window.getAllLocations === "function" ? window.getAllLocations() : [];
+        for (const loc of allLocs) {
+          if (Array.isArray(loc.triggerKeywords) && loc.triggerKeywords.some((kw) => lc.includes(kw))) {
+            found.push(loc.name);
+          }
+        }
+      } catch (e) {
+      }
+      return found;
+    }
+    function _runFallbackParse(cleanText, rawText) {
+      const now = Date.now();
+      const turn = S && S.msgCount || 0;
+      const hasGsTag = /<gs[\s>]/i.test(rawText || "");
+      const reason = hasGsTag ? "gs_parse_error" : "no_gs_tag";
+      _fallbackLogAppend(GS_FAILED_TURNS_KEY, { turn, reason, ts: now, snippet: (rawText || "").slice(0, 200) }, FALLBACK_LOG_CAP);
+      const foundLocs = _fallbackExtractLocationMentions(cleanText || rawText || "");
+      if (foundLocs.length) {
+        _fallbackLogAppend(FALLBACK_LOCATIONS_KEY, { turn, ts: now, locations: foundLocs }, FALLBACK_LOG_CAP);
+      }
+      _fallbackLogAppend(FALLBACK_PARSE_LOG_KEY, { turn, ts: now, reason, foundLocationCount: foundLocs.length }, FALLBACK_LOG_CAP);
+      return { foundLocations: foundLocs, reason };
+    }
+    window._runFallbackParse = _runFallbackParse;
+    setTimeout(function() {
+      const _prevFallbackParse = window.fallbackParseNarrative;
+      window.fallbackParseNarrative = function(cleanText, rawText) {
+        let result;
+        try {
+          result = _runFallbackParse(cleanText, rawText);
+        } catch (e) {
+        }
+        try {
+          if (typeof _prevFallbackParse === "function") _prevFallbackParse(cleanText, rawText);
+        } catch (e) {
+        }
+        return result;
+      };
+    }, 0);
+    const QUEST_HISTORY_KEY = "taleforge-quest-history";
+    const QUEST_HISTORY_CAP = 800;
+    function recordQuestProgressTurn2(userMsg, aiText) {
+      try {
+        const turn = S && S.msgCount || 0;
+        const scene = (aiText || "").slice(0, 150);
+        const um = (userMsg || "").slice(0, 80);
+        const entries = [];
+        if (typeof loadDynQuests === "function") {
+          loadDynQuests().filter((q) => q && q.status === "active").forEach((q) => {
+            entries.push({ qid: q.id, turn, userMsg: um, scene });
+          });
+        }
+        if (typeof loadHiddenQuests === "function") {
+          Object.values(loadHiddenQuests() || {}).filter((q) => q && q.status === "active").forEach((q) => {
+            entries.push({ qid: q.id, turn, userMsg: um, scene });
+          });
+        }
+        if (!entries.length) return;
+        const hist = JSON.parse(lsGet(QUEST_HISTORY_KEY) || "[]");
+        hist.push(...entries);
+        if (hist.length > QUEST_HISTORY_CAP) hist.splice(0, hist.length - QUEST_HISTORY_CAP);
+        lsSet(QUEST_HISTORY_KEY, JSON.stringify(hist));
+      } catch (e) {
+      }
+    }
+    window.recordQuestProgressTurn = recordQuestProgressTurn2;
     function openP(name) {
       if (name === "shop") {
         const loc = loadCurrentLocation();
@@ -99668,7 +99755,7 @@ ${job.icon} ${job.name}\uC73C\uB85C \uC804\uC9C1\uD558\uACA0\uC2B5\uB2C8\uAE4C?
           try {
             const qHist = JSON.parse(lsGet("taleforge-quest-history") || "[]");
             qHist.push({ qid: step.id, turn: S.msgCount || 0, scene: text.slice(0, 150) });
-            lsSet("taleforge-quest-history", JSON.stringify(qHist.slice(-200)));
+            lsSet("taleforge-quest-history", JSON.stringify(qHist.slice(-800)));
           } catch (e) {
           }
           const nextIdx = stepIdx + 1;

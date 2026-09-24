@@ -85,10 +85,15 @@ export function checkEpicQuests(cleanText){
         // 이 키에 실제로 기록을 남기는 곳이 코드베이스 어디에도 없어 그
         // 표시 영역이 게임 전체에서 항상 비어있었다(전수조사로 발견).
         // 스텝이 완료되는 바로 이 시점에 네이티브로 기록한다.
+        // [2026-09-24, 27번 섹션] 캡을 200→800으로 올림 — quest/086의
+        // recordQuestProgressTurn()이 이제 같은 키에 AI 동적 퀘스트·히든
+        // 퀘스트 기록까지 매 턴 같이 쌓기 시작해서, 여기 캡이 그대로 200이면
+        // 스텝 완료 이벤트가 발생할 때마다 방금 쌓인 넓은 범위 기록을
+        // 도로 잘라내 버린다 — 같은 배열을 쓰는 두 작성자의 캡을 맞췄다.
         try{
           const qHist = JSON.parse(lsGet('taleforge-quest-history')||'[]');
           qHist.push({ qid: step.id, turn: S.msgCount||0, scene: text.slice(0,150) });
-          lsSet('taleforge-quest-history', JSON.stringify(qHist.slice(-200)));
+          lsSet('taleforge-quest-history', JSON.stringify(qHist.slice(-800)));
         }catch(e){}
         const nextIdx = stepIdx + 1;
         if(nextIdx >= chain.steps.length){

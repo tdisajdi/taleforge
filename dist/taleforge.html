@@ -26978,7 +26978,6 @@ ${hist.map((h) => {
     saveFactionInteract(inter);
   }
   window.setFactionRelation = setFactionRelation;
-  var _factionSelected = null;
   window._factionView = "list";
   function renderFactionPanel() {
     const pb = document.getElementById("pb-factions");
@@ -26987,9 +26986,9 @@ ${hist.map((h) => {
       renderFactionSimPanel(pb);
     } else if (window._factionView === "rumor") {
       pb.innerHTML = renderNpcRumorPanel ? renderNpcRumorPanel() : '<div style="color:var(--dim);font-size:10px;text-align:center;padding:15px">\uBD88\uB7EC\uC624\uB294 \uC911...</div>';
-    } else if (window._factionView === "interact" && _factionSelected) {
+    } else if (window._factionView === "interact" && window._factionSelected) {
       renderFactionInteract(pb);
-    } else if (window._factionView === "detail" && _factionSelected) {
+    } else if (window._factionView === "detail" && window._factionSelected) {
       renderFactionDetail(pb);
     } else {
       window._factionView = "list";
@@ -27000,6 +26999,7 @@ ${hist.map((h) => {
   function renderFactionList(pb) {
     const factions = getCurrentFactions();
     const rep = loadFactionRep();
+    const secrets = typeof loadFactionSecrets === "function" ? loadFactionSecrets() : {};
     const sid = S?.scenario?.id || "medieval";
     const scenarioLabel = { medieval: "\u2694\uFE0F \uC911\uC138 \uD310\uD0C0\uC9C0" }[sid] || sid;
     const repLabel = (r) => r >= 50 ? "\uB3D9\uB9F9 \u{1F91D}" : r >= 20 ? "\uC6B0\uD638 \u{1F44D}" : r >= -20 ? "\uC911\uB9BD \u2696\uFE0F" : r >= -50 ? "\uC801\uB300 \u26A0\uFE0F" : "\uC804\uC7C1 \u2620\uFE0F";
@@ -27020,6 +27020,7 @@ ${hist.map((h) => {
       const r = rep[name] || 0;
       const pct = Math.round((r + 100) / 2);
       const col = repColor(r);
+      const secretOpen = secrets[name]?.surfaced && !secrets[name]?.resolved;
       return `
       <div onclick="window._factionSelected='${name.replace(/'/g, "\\'")}';window._factionView='detail';renderFactionPanel()"
            style="border:1px solid var(--border);background:var(--bg-input);margin-bottom:6px;padding:9px 11px;border-left:3px solid ${f.color};cursor:pointer;transition:all .15s"
@@ -27027,7 +27028,7 @@ ${hist.map((h) => {
         <div style="display:flex;align-items:center;gap:8px">
           <span style="color:${f.color};display:inline-flex;flex-shrink:0">${typeof getEntityIconHTML === "function" ? getEntityIconHTML(f, { size: 16 }) : f.svgIcon || f.icon}</span>
           <div style="flex:1;min-width:0">
-            <div style="font-family:'Cinzel',serif;font-size:11px;color:var(--gold)">${name}</div>
+            <div style="font-family:'Cinzel',serif;font-size:11px;color:var(--gold)">${name}${secretOpen ? ' <span style="font-size:9px;color:#e0a060">\u{1F510} \uBE44\uBC00 \uBC1C\uACAC</span>' : ""}</div>
             <div style="font-size:9px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${f.desc}</div>
           </div>
           <div style="text-align:right;flex-shrink:0">
@@ -27048,13 +27049,16 @@ ${hist.map((h) => {
   function renderFactionDetail(pb) {
     const factions = getCurrentFactions();
     const rep = loadFactionRep();
-    const name = _factionSelected;
+    const name = window._factionSelected;
     const f = factions[name];
     if (!f) {
       window._factionView = "list";
       renderFactionList(pb);
       return;
     }
+    const secrets = typeof loadFactionSecrets === "function" ? loadFactionSecrets() : {};
+    const secretText = typeof extractSecretFromLore === "function" ? extractSecretFromLore(f.lore) : null;
+    const secretOpen = secrets[name]?.surfaced && !secrets[name]?.resolved && secretText;
     const r = rep[name] || 0;
     const pct = Math.round((r + 100) / 2);
     const repLabel = (r2) => r2 >= 50 ? "\uB3D9\uB9F9 \u{1F91D}" : r2 >= 20 ? "\uC6B0\uD638 \u{1F44D}" : r2 >= -20 ? "\uC911\uB9BD \u2696\uFE0F" : r2 >= -50 ? "\uC801\uB300 \u26A0\uFE0F" : "\uC804\uC7C1 \u2620\uFE0F";
@@ -27126,6 +27130,22 @@ ${hist.map((h) => {
       </div>` : ""}
     </div>
 
+    ${secretOpen ? `
+    <!-- [34\uBC88 \uC139\uC158, M5] \uC138\uB825 \uBE44\uBC00 \uACB0\uB9D0 \uD655\uC815 -->
+    <div style="border:1px solid #8a6020;background:#1a1206;padding:10px 12px;border-left:3px solid #e0a060;margin-bottom:8px">
+      <div style="font-family:'Cinzel',serif;font-size:10px;color:#e0a060;margin-bottom:5px">\u{1F510} \uBC1C\uACAC\uD55C \uBE44\uBC00</div>
+      <div style="font-size:10px;color:var(--dim);line-height:1.6;margin-bottom:9px">${esc2(secretText)}</div>
+      <div style="font-size:9px;color:var(--dim);margin-bottom:7px">\uC774 \uBE44\uBC00\uC744 \uC5B4\uB5BB\uAC8C \uCC98\uB9AC\uD560\uC9C0 \uD655\uC815\uD55C\uB2E4 \u2014 \uB418\uB3CC\uB9B4 \uC218 \uC5C6\uB2E4.</div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <button onclick="processFactionSecretResolved({faction_secret_resolved:{name:'${name.replace(/'/g, "\\'")}',outcome:'exposed'}});renderFactionPanel()"
+          style="padding:8px;background:#2a0a0a;border:1px solid #8a2020;color:#e08080;font-size:10px;cursor:pointer;font-family:'Cinzel',serif;border-radius:2px">\u{1F4E2} \uD3ED\uB85C\uD55C\uB2E4 \u2014 \uC138\uB825\uC5D0 \uD0C0\uACA9\uC744 \uC900\uB2E4</button>
+        <button onclick="processFactionSecretResolved({faction_secret_resolved:{name:'${name.replace(/'/g, "\\'")}',outcome:'concealed'}});renderFactionPanel()"
+          style="padding:8px;background:#0a1a2a;border:1px solid #2a5a8a;color:#80b0e0;font-size:10px;cursor:pointer;font-family:'Cinzel',serif;border-radius:2px">\u{1F910} \uC740\uD3D0\uB97C \uB3D5\uB294\uB2E4 \u2014 \uC138\uB825\uC5D0 \uC57D\uC810\uC744 \uC954\uB2E4</button>
+        <button onclick="processFactionSecretResolved({faction_secret_resolved:{name:'${name.replace(/'/g, "\\'")}',outcome:'used'}});renderFactionPanel()"
+          style="padding:8px;background:#1a1608;border:1px solid #8a7020;color:#d0b060;font-size:10px;cursor:pointer;font-family:'Cinzel',serif;border-radius:2px">\u{1F5DD}\uFE0F \uD611\uC0C1 \uD328\uB85C \uC774\uC6A9\uD55C\uB2E4</button>
+      </div>
+    </div>` : ""}
+
     <!-- \uD0C0 \uC138\uB825 \uC0C1\uD638\uC791\uC6A9 -->
     <div style="font-family:'Cinzel',serif;font-size:9px;color:var(--dim);letter-spacing:1px;margin-bottom:6px">\u2696\uFE0F \uD0C0 \uC138\uB825\uACFC \uC0C1\uD638\uC791\uC6A9</div>
     ${relRows}
@@ -27135,7 +27155,7 @@ ${hist.map((h) => {
   function renderFactionInteract(pb) {
     const factions = getCurrentFactions();
     const rep = loadFactionRep();
-    const nameA = _factionSelected;
+    const nameA = window._factionSelected;
     const nameB = window._factionTarget;
     const fa = factions[nameA];
     const fb = factions[nameB];
@@ -66124,11 +66144,17 @@ ${cycleStatus} | ${chapterStatus} | ${sealStatus} | ${treeStatus}`;
   function advanceNpcStoryStage(npcId) {
     try {
       const stages = loadNpcStoryStages();
+      const npcDef = findWorldFigureById(npcId);
+      const totalStages = Array.isArray(npcDef?.questChain) ? npcDef.questChain.length : 0;
+      if (totalStages > 0 && (stages[npcId] || 0) >= totalStages) {
+        if (typeof toast === "function") toast(`\u{1F4D6} ${npcDef.name}\uC758 \uC774\uC57C\uAE30\uB294 \uC774\uBBF8 \uB9C8\uBB34\uB9AC\uB410\uB2E4.`, 2500);
+        return stages[npcId];
+      }
       stages[npcId] = (stages[npcId] || 0) + 1;
       saveNpcStoryStages(stages);
-      const npc = findWorldFigureById(npcId);
+      const npc = npcDef;
       if (npc && typeof toast === "function") {
-        const total = Array.isArray(npc.questChain) ? npc.questChain.length : 0;
+        const total = totalStages;
         const cur = Math.min(stages[npcId], total);
         if (cur >= total && total > 0) {
           toast(`\u{1F4D6} ${npc.name}\uC758 \uC774\uC57C\uAE30\uAC00 \uB9C8\uBB34\uB9AC\uB410\uB2E4.`, 3500);
@@ -67001,6 +67027,7 @@ ${simDesc}` : playerRep;
         </div>
         <div style="font-size:8px;color:var(--dim);text-align:right;margin-bottom:5px">${cur}/${total}\uB2E8\uACC4${cur >= total ? " (\uC644\uACB0)" : ""}</div>
         <div style="font-size:9px;color:var(--text);line-height:1.5;opacity:0.85">${cur > 0 ? esc2(curStageText) : "\uC544\uC9C1 \uC774\uC57C\uAE30\uAC00 \uC2DC\uC791\uB418\uC9C0 \uC54A\uC558\uC2B5\uB2C8\uB2E4."}</div>
+        ${cur < total ? `<button onclick="advanceNpcStoryStage('${npc.id}');renderPanel('worldfigures')" style="margin-top:7px;width:100%;padding:5px;font-size:9px;background:#1a1008;border:1px solid ${color}66;color:${color};border-radius:3px;cursor:pointer">\u{1F4D6} \uC774\uC57C\uAE30 \uC9C4\uC804(\uC218\uB3D9)</button>` : ""}
         ` : ""}
       </div>`;
       }).join("");
@@ -101000,7 +101027,12 @@ ${job.icon} ${job.name}\uC73C\uB85C \uC804\uC9C1\uD558\uACA0\uC2B5\uB2C8\uAE4C?
       const inv = S?.inventory || [];
       const relics = typeof loadOwnedRelics === "function" ? loadOwnedRelics() : [];
       const inInv = inv.some((it) => (it.name || "").includes(itemKeyword) || (it.id || "").includes(itemKeyword));
-      const inRelics = relics.some((r) => (typeof r === "string" ? r : r?.id || "").includes(itemKeyword));
+      const inRelics = relics.some((r) => {
+        const relicId = typeof r === "string" ? r : r?.id || "";
+        if (relicId.includes(itemKeyword)) return true;
+        const def = RELICS.find((rd) => rd.id === relicId);
+        return !!(def && (def.name || "").includes(itemKeyword));
+      });
       return inInv || inRelics;
     } catch (e) {
       return false;

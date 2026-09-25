@@ -161,14 +161,27 @@ window.findWorldFigureById = findWorldFigureById;
 export function advanceNpcStoryStage(npcId){
   try{
     const stages = loadNpcStoryStages();
+    // [34번 섹션, M4] 이미 완결된 서브플롯은 더 이상 진행시키지 않는다 —
+    // 수동 버튼(npc/067의 renderWorldFigures)이 생기면서 AI 없이도 이
+    // 함수가 여러 번 연달아 눌릴 수 있게 됐는데, 예전엔 questChain 길이를
+    // 넘어서도 stages가 무한히 증가할 수 있어(표시만 Math.min으로 가렸을
+    // 뿐) 오크/드워프/엘프 종족 보너스를 클릭할 때마다 무한히 파밍할 수
+    // 있는 구멍이 될 뻔했다 — 완결(cur>=total) 시점에 더 늘지 않게 막아
+    // 종족 보너스도 NPC당 총 questChain 단계 수만큼만(1회성) 받게 한다.
+    const npcDef = findWorldFigureById(npcId);
+    const totalStages = Array.isArray(npcDef?.questChain) ? npcDef.questChain.length : 0;
+    if(totalStages > 0 && (stages[npcId]||0) >= totalStages){
+      if(typeof toast==='function') toast(`📖 ${npcDef.name}의 이야기는 이미 마무리됐다.`, 2500);
+      return stages[npcId];
+    }
     stages[npcId] = (stages[npcId]||0) + 1;
     saveNpcStoryStages(stages);
     // [신규] 단계가 진행되는 순간 플레이어가 즉시 알 수 있도록 토스트로
     // 알린다 — 이전엔 localStorage 숫자만 조용히 바뀌어서 플레이어가
     // 전혀 인지할 방법이 없었다.
-    const npc = findWorldFigureById(npcId);
+    const npc = npcDef;
     if(npc && typeof toast==='function'){
-      const total = Array.isArray(npc.questChain) ? npc.questChain.length : 0;
+      const total = totalStages;
       const cur = Math.min(stages[npcId], total);
       if(cur >= total && total > 0){
         toast(`📖 ${npc.name}의 이야기가 마무리됐다.`, 3500);

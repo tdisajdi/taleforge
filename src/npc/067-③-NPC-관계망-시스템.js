@@ -778,6 +778,7 @@ export function renderWorldFigures(){
         </div>
         <div style="font-size:8px;color:var(--dim);text-align:right;margin-bottom:5px">${cur}/${total}단계${cur>=total?' (완결)':''}</div>
         <div style="font-size:9px;color:var(--text);line-height:1.5;opacity:0.85">${cur>0 ? esc(curStageText) : '아직 이야기가 시작되지 않았습니다.'}</div>
+        ${cur<total ? `<button onclick="advanceNpcStoryStage('${npc.id}');renderPanel('worldfigures')" style="margin-top:7px;width:100%;padding:5px;font-size:9px;background:#1a1008;border:1px solid ${color}66;color:${color};border-radius:3px;cursor:pointer">📖 이야기 진전(수동)</button>` : ''}
         ` : ''}
       </div>`;
     }).join('');

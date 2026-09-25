@@ -6,6 +6,7 @@ import { BLUEPRINT_SHOP } from '../data/075-파트2-C-크래프팅-시스템.js'
 import { S } from '../data/084-TaleForge-순수-JS-엔진.js';
 import { RACE_DEFS } from '../race/013-종족-시스템.js';
 import { RC } from '../data/086-퀘스트임무-수락-팝업-시스템.js';
+import { RELICS } from '../data/054-이동수단-시스템.js';
 import { QUEST_GRADES, TL, TL_ICON, TL_TEXT, WL, WL_ICON, WL_TEXT } from '../data/087-전직-조건-저장로드-헬퍼-퀘스트아이템장소-등.js';
 import { ALIGN_AXES } from '../data/208-5-직업-시스템.js';
 import { EQUIP_SLOTS } from '../items/004-장비-슬롯-시스템-12종.js';
@@ -77,7 +78,12 @@ export function hasItemInInventory(itemKeyword){
     const inv = S?.inventory||[];
     const relics = typeof loadOwnedRelics==='function' ? loadOwnedRelics() : [];
     const inInv = inv.some(it=>(it.name||'').includes(itemKeyword)||(it.id||'').includes(itemKeyword));
-    const inRelics = relics.some(r=>(typeof r==='string'?r:r?.id||'').includes(itemKeyword));
+    const inRelics = relics.some(r=>{
+      const relicId = typeof r==='string' ? r : (r?.id||'');
+      if(relicId.includes(itemKeyword)) return true;
+      const def = RELICS.find(rd=>rd.id===relicId);
+      return !!(def && (def.name||'').includes(itemKeyword));
+    });
     return inInv || inRelics;
   }catch(e){ return false; }
 }

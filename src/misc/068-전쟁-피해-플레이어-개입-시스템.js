@@ -2,10 +2,10 @@
 // Auto-extracted from taleforge.html (original section banner preserved above).
 import { FACTION_GOAL_POOL, WAR_ACTIONS } from '../data/068-전쟁-피해-플레이어-개입-시스템.js';
 import { S } from '../data/084-TaleForge-순수-JS-엔진.js';
-import { _initTension, _simKey, getCurrentFactions, getSimStatus, getSimTension, loadFactionRep, loadFactionSim, saveFactionRep, saveFactionSim, showFactionNewsToast, tickFactionSimulation, updateFactionRep } from '../npc/067-③-NPC-관계망-시스템.js';
+import { _initTension, _simKey, extractSecretFromLore, getCurrentFactions, getSimStatus, getSimTension, loadFactionRep, loadFactionSecrets, loadFactionSim, processFactionSecretResolved, saveFactionRep, saveFactionSim, showFactionNewsToast, tickFactionSimulation, updateFactionRep } from '../npc/067-③-NPC-관계망-시스템.js';
 import { renderNpcRumorPanel } from '../npc/294-NPC-소문-계급별-정보-시스템.js';
 import { addEventLog } from '../quest/086-퀘스트임무-수락-팝업-시스템.js';
-import { lsGet, lsSet, toast } from '../utils.js';
+import { esc, lsGet, lsSet, toast } from '../utils.js';
 import { applyFactionWarResult } from '../world/199-NEW-6-세력-전쟁-영구-반영-시스템.js';
 
 export const WAR_ACTION_KEY = 'tf-war-action';
@@ -798,9 +798,9 @@ export function renderFactionPanel(){
     renderFactionSimPanel(pb);
   } else if(window._factionView === 'rumor'){
     pb.innerHTML = renderNpcRumorPanel ? renderNpcRumorPanel() : '<div style="color:var(--dim);font-size:10px;text-align:center;padding:15px">불러오는 중...</div>';
-  } else if(window._factionView === 'interact' && _factionSelected){
+  } else if(window._factionView === 'interact' && window._factionSelected){
     renderFactionInteract(pb);
-  } else if(window._factionView === 'detail' && _factionSelected){
+  } else if(window._factionView === 'detail' && window._factionSelected){
     renderFactionDetail(pb);
   } else {
     window._factionView = 'list';
@@ -812,6 +812,12 @@ window.renderFactionPanel = renderFactionPanel;
 export function renderFactionList(pb){
   const factions = getCurrentFactions();
   const rep = loadFactionRep();
+  // [34번 섹션, M5] 세력 비밀이 "발견 기회" 상태로 떠 있는지 표시 —
+  // 지금까지는 이 상태를 보여주는 UI가 전혀 없어(npc/067의
+  // checkFactionSecretTrigger()가 만드는 힌트는 AI 프롬프트에만 들어가고
+  // 완전 로컬 폴백에서는 아무 데도 안 보였다), 무-API 환경에서는 비밀이
+  // 떴다는 사실 자체를 플레이어가 알 방법이 없었다.
+  const secrets = (typeof loadFactionSecrets==='function') ? loadFactionSecrets() : {};
   const sid = S?.scenario?.id || 'medieval';
   const scenarioLabel = { medieval:'⚔️ 중세 판타지' }[sid] || sid;
   const repLabel = (r) => r>=50?'동맹 🤝':r>=20?'우호 👍':r>=-20?'중립 ⚖️':r>=-50?'적대 ⚠️':'전쟁 ☠️';
@@ -833,6 +839,7 @@ export function renderFactionList(pb){
       const r = rep[name]||0;
       const pct = Math.round((r+100)/2);
       const col = repColor(r);
+      const secretOpen = secrets[name]?.surfaced && !secrets[name]?.resolved;
       return `
       <div onclick="window._factionSelected='${name.replace(/'/g,"\\'")}';window._factionView='detail';renderFactionPanel()"
            style="border:1px solid var(--border);background:var(--bg-input);margin-bottom:6px;padding:9px 11px;border-left:3px solid ${f.color};cursor:pointer;transition:all .15s"
@@ -840,7 +847,7 @@ export function renderFactionList(pb){
         <div style="display:flex;align-items:center;gap:8px">
           <span style="color:${f.color};display:inline-flex;flex-shrink:0">${typeof getEntityIconHTML==='function'?getEntityIconHTML(f,{size:16}):(f.svgIcon||f.icon)}</span>
           <div style="flex:1;min-width:0">
-            <div style="font-family:'Cinzel',serif;font-size:11px;color:var(--gold)">${name}</div>
+            <div style="font-family:'Cinzel',serif;font-size:11px;color:var(--gold)">${name}${secretOpen?' <span style="font-size:9px;color:#e0a060">🔐 비밀 발견</span>':''}</div>
             <div style="font-size:9px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${f.desc}</div>
           </div>
           <div style="text-align:right;flex-shrink:0">
@@ -862,9 +869,21 @@ window.renderFactionList = renderFactionList;
 export function renderFactionDetail(pb){
   const factions = getCurrentFactions();
   const rep = loadFactionRep();
-  const name = _factionSelected;
+  // [34번 섹션, M5 검증 중 발견] onclick이 window._factionSelected(전역)에
+  // 값을 쓰는데 여기는 모듈 스코프의 바인딩 없는 _factionSelected(항상
+  // null)를 읽고 있어서, 세력 카드를 클릭해도 상세 화면이 한 번도 열린
+  // 적이 없었던 기존 버그 — window._factionSelected로 통일해 고침.
+  const name = window._factionSelected;
   const f = factions[name];
   if(!f){ window._factionView='list'; renderFactionList(pb); return; }
+  // [34번 섹션, M5] 이 세력의 비밀이 발견 기회 상태(surfaced && !resolved)면
+  // 플레이어가 직접 결말을 확정할 수 있게 한다 — 19번 섹션의 mq16 결전
+  // 확정 선택 팝업과 같은 원칙: AI가 자유 서사를 해석해야만 판단 가능한
+  // 게 아니라, 플레이어가 명시적으로 고른 버튼 하나가 유일한 권위 있는
+  // 판정자가 되게 한다.
+  const secrets = (typeof loadFactionSecrets==='function') ? loadFactionSecrets() : {};
+  const secretText = (typeof extractSecretFromLore==='function') ? extractSecretFromLore(f.lore) : null;
+  const secretOpen = secrets[name]?.surfaced && !secrets[name]?.resolved && secretText;
 
   const r = rep[name]||0;
   const pct = Math.round((r+100)/2);
@@ -942,6 +961,22 @@ export function renderFactionDetail(pb){
       </div>`:''}
     </div>
 
+    ${secretOpen?`
+    <!-- [34번 섹션, M5] 세력 비밀 결말 확정 -->
+    <div style="border:1px solid #8a6020;background:#1a1206;padding:10px 12px;border-left:3px solid #e0a060;margin-bottom:8px">
+      <div style="font-family:'Cinzel',serif;font-size:10px;color:#e0a060;margin-bottom:5px">🔐 발견한 비밀</div>
+      <div style="font-size:10px;color:var(--dim);line-height:1.6;margin-bottom:9px">${esc(secretText)}</div>
+      <div style="font-size:9px;color:var(--dim);margin-bottom:7px">이 비밀을 어떻게 처리할지 확정한다 — 되돌릴 수 없다.</div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <button onclick="processFactionSecretResolved({faction_secret_resolved:{name:'${name.replace(/'/g,"\\'")}',outcome:'exposed'}});renderFactionPanel()"
+          style="padding:8px;background:#2a0a0a;border:1px solid #8a2020;color:#e08080;font-size:10px;cursor:pointer;font-family:'Cinzel',serif;border-radius:2px">📢 폭로한다 — 세력에 타격을 준다</button>
+        <button onclick="processFactionSecretResolved({faction_secret_resolved:{name:'${name.replace(/'/g,"\\'")}',outcome:'concealed'}});renderFactionPanel()"
+          style="padding:8px;background:#0a1a2a;border:1px solid #2a5a8a;color:#80b0e0;font-size:10px;cursor:pointer;font-family:'Cinzel',serif;border-radius:2px">🤐 은폐를 돕는다 — 세력에 약점을 쥔다</button>
+        <button onclick="processFactionSecretResolved({faction_secret_resolved:{name:'${name.replace(/'/g,"\\'")}',outcome:'used'}});renderFactionPanel()"
+          style="padding:8px;background:#1a1608;border:1px solid #8a7020;color:#d0b060;font-size:10px;cursor:pointer;font-family:'Cinzel',serif;border-radius:2px">🗝️ 협상 패로 이용한다</button>
+      </div>
+    </div>`:''}
+
     <!-- 타 세력 상호작용 -->
     <div style="font-family:'Cinzel',serif;font-size:9px;color:var(--dim);letter-spacing:1px;margin-bottom:6px">⚖️ 타 세력과 상호작용</div>
     ${relRows}
@@ -952,7 +987,7 @@ window.renderFactionDetail = renderFactionDetail;
 export function renderFactionInteract(pb){
   const factions = getCurrentFactions();
   const rep = loadFactionRep();
-  const nameA = _factionSelected;
+  const nameA = window._factionSelected;
   const nameB = window._factionTarget;
   const fa = factions[nameA]; const fb = factions[nameB];
   if(!fa || !fb){ window._factionView='detail'; renderFactionDetail(pb); return; }

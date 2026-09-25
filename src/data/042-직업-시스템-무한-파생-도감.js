@@ -510,6 +510,9 @@ export const MAIN_QUESTS = {
       rewardDesc:'세계수 봉인석 실마리 / 실라리엘과의 첫 유대 / 골드 600',
       nextId:'mq19',
       flags:['mq18-1_done'],
+      newNpcs:[
+        { name:'실라리엘', icon:'🌙', role:'달빛 예언단 대예언사 / 세계수의 목소리', personality:'말이 적다. 그러나 말하지 않는 것이 더 많다. 3천 년간 세계수를 지키며 루프가 반복되는 것을 지켜봐왔다.', type:'major' },
+      ],
       npcProfileRef: 'SILARIEL_PROFILE',
       sealConnection: '세계수 봉인석(trueEndingRequired: true) — SEAL_DEFINITIONS[\'세계수 봉인석\'].narrative(hook/stage1/stage2/stage3/complication/resolution)를 그대로 활용하라. 신뢰도 80+에서 "세계수 의식"을 치를 자격을 얻는다.',
       historyFragmentHint: 'WORLD_HISTORY_FRAGMENTS의 hist_ws_001(세계수의 첫 번째 죽음 — 수만 년 전 최초의 혼돈이 처음 깨어났을 때 세계수가 한 번 죽었다가 다시 자라난 것이 지금의 두 번째 생이라는 사실)을 세계수 뿌리 심부(loc_world_tree_core) 탐험을 통해 발견할 수 있다. 신뢰도가 90까지 오르면 hist_ws_002(봉인석은 원래 세계수의 심장에서 나온 씨앗이었다는 사실)도 실라리엘과의 대화를 통해 자연스럽게 드러난다 — 이것이 세계수 봉인석 서사의 완결점이다.',

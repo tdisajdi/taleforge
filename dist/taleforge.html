@@ -4995,6 +4995,9 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
         rewardDesc: "\uC138\uACC4\uC218 \uBD09\uC778\uC11D \uC2E4\uB9C8\uB9AC / \uC2E4\uB77C\uB9AC\uC5D8\uACFC\uC758 \uCCAB \uC720\uB300 / \uACE8\uB4DC 600",
         nextId: "mq19",
         flags: ["mq18-1_done"],
+        newNpcs: [
+          { name: "\uC2E4\uB77C\uB9AC\uC5D8", icon: "\u{1F319}", role: "\uB2EC\uBE5B \uC608\uC5B8\uB2E8 \uB300\uC608\uC5B8\uC0AC / \uC138\uACC4\uC218\uC758 \uBAA9\uC18C\uB9AC", personality: "\uB9D0\uC774 \uC801\uB2E4. \uADF8\uB7EC\uB098 \uB9D0\uD558\uC9C0 \uC54A\uB294 \uAC83\uC774 \uB354 \uB9CE\uB2E4. 3\uCC9C \uB144\uAC04 \uC138\uACC4\uC218\uB97C \uC9C0\uD0A4\uBA70 \uB8E8\uD504\uAC00 \uBC18\uBCF5\uB418\uB294 \uAC83\uC744 \uC9C0\uCF1C\uBD10\uC654\uB2E4.", type: "major" }
+        ],
         npcProfileRef: "SILARIEL_PROFILE",
         sealConnection: `\uC138\uACC4\uC218 \uBD09\uC778\uC11D(trueEndingRequired: true) \u2014 SEAL_DEFINITIONS['\uC138\uACC4\uC218 \uBD09\uC778\uC11D'].narrative(hook/stage1/stage2/stage3/complication/resolution)\uB97C \uADF8\uB300\uB85C \uD65C\uC6A9\uD558\uB77C. \uC2E0\uB8B0\uB3C4 80+\uC5D0\uC11C "\uC138\uACC4\uC218 \uC758\uC2DD"\uC744 \uCE58\uB97C \uC790\uACA9\uC744 \uC5BB\uB294\uB2E4.`,
         historyFragmentHint: "WORLD_HISTORY_FRAGMENTS\uC758 hist_ws_001(\uC138\uACC4\uC218\uC758 \uCCAB \uBC88\uC9F8 \uC8FD\uC74C \u2014 \uC218\uB9CC \uB144 \uC804 \uCD5C\uCD08\uC758 \uD63C\uB3C8\uC774 \uCC98\uC74C \uAE68\uC5B4\uB0AC\uC744 \uB54C \uC138\uACC4\uC218\uAC00 \uD55C \uBC88 \uC8FD\uC5C8\uB2E4\uAC00 \uB2E4\uC2DC \uC790\uB77C\uB09C \uAC83\uC774 \uC9C0\uAE08\uC758 \uB450 \uBC88\uC9F8 \uC0DD\uC774\uB77C\uB294 \uC0AC\uC2E4)\uC744 \uC138\uACC4\uC218 \uBFCC\uB9AC \uC2EC\uBD80(loc_world_tree_core) \uD0D0\uD5D8\uC744 \uD1B5\uD574 \uBC1C\uACAC\uD560 \uC218 \uC788\uB2E4. \uC2E0\uB8B0\uB3C4\uAC00 90\uAE4C\uC9C0 \uC624\uB974\uBA74 hist_ws_002(\uBD09\uC778\uC11D\uC740 \uC6D0\uB798 \uC138\uACC4\uC218\uC758 \uC2EC\uC7A5\uC5D0\uC11C \uB098\uC628 \uC528\uC557\uC774\uC5C8\uB2E4\uB294 \uC0AC\uC2E4)\uB3C4 \uC2E4\uB77C\uB9AC\uC5D8\uACFC\uC758 \uB300\uD654\uB97C \uD1B5\uD574 \uC790\uC5F0\uC2A4\uB7FD\uAC8C \uB4DC\uB7EC\uB09C\uB2E4 \u2014 \uC774\uAC83\uC774 \uC138\uACC4\uC218 \uBD09\uC778\uC11D \uC11C\uC0AC\uC758 \uC644\uACB0\uC810\uC774\uB2E4.",
@@ -75269,12 +75272,24 @@ ${simDesc}` : playerRep;
     const restoreState = loadSealRestore();
     const restored = Object.values(restoreState).filter((v) => v?.restored).length;
     const loopCount = typeof v36_getReincarnationCount2 === "function" ? v36_getReincarnationCount2() : 0;
+    const npcsForEnding = typeof loadNPCs === "function" ? loadNPCs() : S.npcs || [];
+    const silarielBond = npcsForEnding.find((n) => n.name === "\uC2E4\uB77C\uB9AC\uC5D8")?.relationship || 0;
+    const silarielBondReady = silarielBond >= 90;
     if (restored >= 5 && restored < totalSeals) {
       toast(`\u{1F494} \uBD09\uC778\uC11D ${restored}/${totalSeals} \uBCF5\uC6D0. \uC138\uACC4\uAC00 \uC548\uC815\uC744 \uB418\uCC3E\uACE0 \uC788\uB2E4`, 3e3);
     } else if (restored === totalSeals) {
       toast(`\u2728 \uBD09\uC778\uC11D ${totalSeals}\uAC1C \uC804\uBD80 \uBCF5\uC6D0! \uC138\uACC4\uAC00 \uC644\uC804\uD55C \uD3C9\uC628\uC744 \uB418\uCC3E\uC558\uB2E4`, 4e3);
+      if (loopCount >= 15 && gsF["asmodeus_redeemed"] && !silarielBondReady && !gsF["_silariel_bond_hint_shown"]) {
+        toast(`\u{1F319} \uC2E4\uB77C\uB9AC\uC5D8\uACFC\uC758 \uC720\uB300\uAC00 \uC544\uC9C1 \uBD80\uC871\uD558\uB2E4(\uD604\uC7AC ${silarielBond}/90). \uC138\uACC4\uC218 \uBD09\uC778\uC11D \uC11C\uC0AC\uB97C \uB354 \uAE4A\uC774 \uC313\uC544\uC57C \uC9C4 \uC5D4\uB529\uC5D0 \uB2FF\uC744 \uC218 \uC788\uB2E4`, 5e3);
+        try {
+          const gsF2 = loadGSFlags();
+          gsF2["_silariel_bond_hint_shown"] = true;
+          saveGSFlags(gsF2);
+        } catch (e) {
+        }
+      }
     }
-    if (restored >= totalSeals && loopCount >= 15 && gsF["asmodeus_redeemed"]) {
+    if (restored >= totalSeals && loopCount >= 15 && gsF["asmodeus_redeemed"] && silarielBondReady) {
       const timeNarrative = typeof SEAL_DEFINITIONS !== "undefined" ? SEAL_DEFINITIONS["\uC2DC\uAC04 \uBD09\uC778\uC11D"]?.narrative : null;
       if (timeNarrative) {
         const watcherProgress = (() => {

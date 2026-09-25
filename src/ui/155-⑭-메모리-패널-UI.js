@@ -432,16 +432,32 @@ export function checkTrueEndingCondition(){
   const restored = Object.values(restoreState).filter(v=>v?.restored).length;
   const loopCount = typeof v36_getReincarnationCount==='function' ? v36_getReincarnationCount() : 0;
 
+  // [2026-09-25 추가] mq18-1(세계수의 부름)/hq_weight_of_forbidden_books가
+  // 서사로 "실라리엘 유대도 90+가 진엔딩에 필수"라고 명시적으로 약속하는데,
+  // 이 함수의 실제 판정에는 전혀 반영돼 있지 않던 서사-시스템 불일치를
+  // 여기서 바로잡는다 — 조회 방식은 world/055의 hist_ws_002(같은 "실라리엘
+  // 신뢰 90+" 조건) 발견 로직과 완전히 동일하게 재사용한다.
+  const npcsForEnding = typeof loadNPCs==='function' ? loadNPCs() : (S.npcs||[]);
+  const silarielBond = npcsForEnding.find(n=>n.name==='실라리엘')?.relationship || 0;
+  const silarielBondReady = silarielBond >= 90;
+
   // 봉인석 복원 진행 안내 — 일반엔딩(세계 회복도)과 연결되는 순수한 진행 알림
   if(restored>=5 && restored<totalSeals){
     toast(`💔 봉인석 ${restored}/${totalSeals} 복원. 세계가 안정을 되찾고 있다`, 3000);
   } else if(restored===totalSeals){
     toast(`✨ 봉인석 ${totalSeals}개 전부 복원! 세계가 완전한 평온을 되찾았다`, 4000);
+    // 나머지 조건(15회차+화해)은 갖췄는데 실라리엘 유대만 부족한 경우,
+    // 왜 진엔딩이 아직 안 열리는지 플레이어가 알 수 있게 1회만 안내한다.
+    if(loopCount>=15 && gsF['asmodeus_redeemed'] && !silarielBondReady && !gsF['_silariel_bond_hint_shown']){
+      toast(`🌙 실라리엘과의 유대가 아직 부족하다(현재 ${silarielBond}/90). 세계수 봉인석 서사를 더 깊이 쌓아야 진 엔딩에 닿을 수 있다`, 5000);
+      try{ const gsF2 = loadGSFlags(); gsF2['_silariel_bond_hint_shown']=true; saveGSFlags(gsF2); }catch(e){}
+    }
   }
 
   // [재조정] 진엔딩 조건에 봉인석 전부 복원을 다시 포함 — 9챕터(감시자
-  // 대면)로 넘어가는 트리거. 루프 인지(15회차+)와 화해까지 모두 채워야 함.
-  if(restored>=totalSeals && loopCount>=15 && gsF['asmodeus_redeemed']){
+  // 대면)로 넘어가는 트리거. 루프 인지(15회차+)와 화해, 그리고 실라리엘
+  // 유대(세계수 봉인석 서사가 명시적으로 약속한 조건)까지 모두 채워야 함.
+  if(restored>=totalSeals && loopCount>=15 && gsF['asmodeus_redeemed'] && silarielBondReady){
     // [CRITICAL BUG FIX] 진엔딩 조건 달성 시 일반적인 안내만 주고, 시간
     // 봉인석의 narrative(stage1~stage4_5~stage5, finalChoice, resolution)
     // 가 전혀 BLS에 전달되지 않던 버그. getSealRestoreBLS()의 pending

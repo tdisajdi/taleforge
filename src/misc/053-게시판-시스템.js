@@ -500,6 +500,16 @@ export function doInteraction(action, cost=0, transportType='walk'){
       // 이미 드래곤혈 종족 체크를 하므로 여기서도 동일하게 가드).
       const _race053 = (S.character?.race||'');
       if((_race053.includes('드래곤')||_race053.includes('dragon')||_race053.includes('용혈')) && typeof gainDragonFragment==='function' && Math.random()<0.25){ gainDragonFragment('ancient_ruin'); }
+      // [④, 2026-09-25 추가] 북방 전용 파생직 "룬 전사"(data/292
+      // CONTINENT_EXCLUSIVE_JOBS.north)의 unlockCondition.requireItem
+      // "고대 룬 비전서"는 이 아이템의 정적 드랍처가 코드 어디에도 없어
+      // (howToGet 문구만 있고 실제 지급 로직 없음) AI가 서사 중 지급해야만
+      // 얻을 수 있었다 — 위 "고대 지식의 편린"과 정확히 같은 구멍이다.
+      // 같은 도서관/유적 조사 성공 분기에 북대륙 한정으로 확률 드랍 연결
+      // (job이 requiredContinent:'north'라 이 아이템도 북대륙에서만 등장
+      // 시켜 일관성 유지). 중복 방지만 걸고 새 시스템은 안 만듦.
+      const _loc053 = (typeof loadCurrentLocation==='function' ? loadCurrentLocation() : null);
+      if((_loc053?.continent==='north' || S.character?.startContinent==='north') && !S.inventory.some(it=>it&&it.id==='ancient_rune_grimoire') && Math.random()<0.3){ S.inventory.push({ id:'ancient_rune_grimoire', name:'고대 룬 비전서', icon:'🔷', rarity:'rare', type:'quest', desc:'북방 고대 룬 문자가 새겨진 낡은 비전서. 해독하면 룬 전사의 비전 전투술을 익힐 수 있다.' }); saveInventory(S.inventory); toastHTML(`🔷 고대 룬 비전서를 발견했다!`, 3000); }
       toast('🔍 고대 지식 발견! 스킬 포인트+2', 2500); } else toast('🔍 뭔가 있는 것 같지만 해석하기 어렵다', 1500); },
     // [2026-09-25 추가] 어둠의 사제(dark_priest) 직업 선행 아이템
     // 「이단의 성유」도 같은 공백 — job/042 conditionHint가 "터부시된

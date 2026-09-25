@@ -41299,6 +41299,12 @@ ${lines.join("\n")}
           if ((_race053.includes("\uB4DC\uB798\uACE4") || _race053.includes("dragon") || _race053.includes("\uC6A9\uD608")) && typeof gainDragonFragment === "function" && Math.random() < 0.25) {
             gainDragonFragment("ancient_ruin");
           }
+          const _loc053 = typeof loadCurrentLocation === "function" ? loadCurrentLocation() : null;
+          if ((_loc053?.continent === "north" || S.character?.startContinent === "north") && !S.inventory.some((it) => it && it.id === "ancient_rune_grimoire") && Math.random() < 0.3) {
+            S.inventory.push({ id: "ancient_rune_grimoire", name: "\uACE0\uB300 \uB8EC \uBE44\uC804\uC11C", icon: "\u{1F537}", rarity: "rare", type: "quest", desc: "\uBD81\uBC29 \uACE0\uB300 \uB8EC \uBB38\uC790\uAC00 \uC0C8\uACA8\uC9C4 \uB0A1\uC740 \uBE44\uC804\uC11C. \uD574\uB3C5\uD558\uBA74 \uB8EC \uC804\uC0AC\uC758 \uBE44\uC804 \uC804\uD22C\uC220\uC744 \uC775\uD790 \uC218 \uC788\uB2E4." });
+            saveInventory(S.inventory);
+            toastHTML(`\u{1F537} \uACE0\uB300 \uB8EC \uBE44\uC804\uC11C\uB97C \uBC1C\uACAC\uD588\uB2E4!`, 3e3);
+          }
           toast("\u{1F50D} \uACE0\uB300 \uC9C0\uC2DD \uBC1C\uACAC! \uC2A4\uD0AC \uD3EC\uC778\uD2B8+2", 2500);
         } else toast("\u{1F50D} \uBB54\uAC00 \uC788\uB294 \uAC83 \uAC19\uC9C0\uB9CC \uD574\uC11D\uD558\uAE30 \uC5B4\uB835\uB2E4", 1500);
       },

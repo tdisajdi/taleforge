@@ -4,7 +4,7 @@ import { SOCIAL_RANKS } from '../core/084-TaleForge-순수-JS-엔진.js';
 import { pmLoad, pmSave } from '../core/267-저장로드초기화.js';
 import { RARITY_COLOR } from '../data/012-궁수-계열-T2-파생-5종-칭호-전사마법사도적-계열과-동일한-절제-원칙.js';
 import { DEMON_PURIFY_METHODS, DEMON_SIN_GAIN } from '../data/020-101130번-환생-누적-시스템.js';
-import { AWAKENING_POWER_SKILLS, HUMAN_FATE_PATHS, NPC_INSPIRE_STAGES } from '../data/025-통합-패널-공허-확장-탭-시스템.js';
+import { AWAKENING_POWER_SKILLS, HUMAN_DEED_GAIN, HUMAN_FATE_PATHS, NPC_INSPIRE_STAGES } from '../data/025-통합-패널-공허-확장-탭-시스템.js';
 import { CORRUPTION_POWER_SKILLS, DOMINATION_METHODS, LEGACY_ACTIONS, LEGACY_PATHS, NPC_CORRUPTION_STAGES, NPC_CORRUPT_METHODS, STIGMA_TYPES, THRALL_RANKS, THRALL_RANK_DEFAULT, THRALL_RANK_TABLES } from '../data/026-renderHumanAwakeningPanel-완전-재정의.js';
 import { S } from '../data/084-TaleForge-순수-JS-엔진.js';
 import { registerDynNpcFromText } from '../items/007-동적-아이템-생성-시스템-무제한-영구-캐시.js';
@@ -201,9 +201,34 @@ window.renderHumanAwakeningPanel = function() {
       }).join('')}
     </div>` : ''}
 
-    <!-- ⑧ 행적 행동 자동 전용 -->
+    <!-- ⑧ 각성 행적 기록 (수동) — [M1 FIX] 이 패널이 보여주는 각성도
+         (ha.points, gainHumanAwakening)는 인간족 전체가 공유하는 단일
+         게이지로, detectHumanDeedFromText(ui/025, AI 텍스트 감지 전용)
+         가 growth/courage/bond/triumph/sacrifice 5개 분류로 지급하는
+         것과 recordLegacyAction(같은 파일 위 유산 패널)이 지급하는
+         것 모두 결국 이 값 하나에 합산된다 — "인간족 전용 별개 게이지"
+         가 아니라 진짜 공용 게이지임을 확인하고, 지금까지 수동 대응이
+         전혀 없던 detectHumanDeedFromText 5종을 여기 한 곳에 모아
+         노출한다(유산 경로별 수동 트리거는 위 유산 패널 ③에 별도로
+         있음 — 같은 "각성" 카운터를 올리지만 서사적 맥락이 다르고
+         수치도 달라 분리해서 각자 그대로 재사용, 새 값 지어내지 않음). -->
     <div style="padding:8px 12px;border-bottom:1px solid #1a1500">
-      <div style="font-size:9px;color:#5a4a20;font-style:italic;text-align:center;padding:4px 0">🌟 각성도는 AI 서사에서 자동으로 쌓입니다</div>
+      <div style="font-family:'Cinzel',serif;font-size:9px;color:${color};letter-spacing:1px;margin-bottom:6px">── 각성 행적 기록 (수동) ──</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">
+        ${[
+          { cat:'growth',    amount:5 },
+          { cat:'courage',   amount:6 },
+          { cat:'bond',      amount:4 },
+          { cat:'triumph',   amount:7 },
+          { cat:'sacrifice', amount:6 },
+        ].map(a => {
+          const dd = HUMAN_DEED_GAIN[a.cat] || {};
+          return `<button onclick="gainHumanAwakening('${a.cat}',${a.amount});renderHumanAwakeningPanel()"
+            style="padding:6px 7px;background:#150d03;border:1px solid ${color}44;color:${color};font-size:8px;cursor:pointer;font-family:'Crimson Text',serif;text-align:left;border-radius:2px;line-height:1.3">
+            ${dd.icon||'🌟'} ${dd.label||a.cat} <span style="color:#60d060">+${a.amount}</span>
+          </button>`;
+        }).join('')}
+      </div>
     </div>
 
     <!-- ⑨ 최근 기록 -->
@@ -263,6 +288,32 @@ export function getDominantLegacyPath(hl) {
 }
 window.getDominantLegacyPath = getDominantLegacyPath;
 
+// [M1 FIX] 유산 경로를 "확정(lock)"하는 상태 변경 로직 자체를 공용 함수로
+// 분리. 원래는 recordLegacyAction() 안에만 있었고(AI 텍스트 감지
+// 전용 detectHumanLegacyFromText() 에서만 호출됨), chooseLegacyPath()
+// (기존 "이 경로 선택" 수동 버튼)는 이 로직을 타지 않고 hl.lockedPath/
+// hl.points를 직접 썼다 — 그래서 수동 버튼을 눌러도 gainHumanAwakening
+// ('triumph', 15) 각성 포인트 지급이 전혀 일어나지 않았다. 이제 두
+// 호출부(자연 누적 → recordLegacyAction, 수동 선택 → chooseLegacyPath)가
+// 완전히 같은 코드를 타므로 값이 어긋나거나 각성 지급이 빠질 일이 없다.
+// 두 호출부 모두 진입 전에 `!hl.lockedPath`를 확인하고 잠기는 즉시
+// hl.lockedPath가 채워지므로(동기 처리, 재진입 없음) 같은 회차 안에서
+// 이 함수가 두 번 불려 각성 포인트가 중복 지급될 수는 없다.
+function lockLegacyPathCore(hl, pathId) {
+  const pd = LEGACY_PATHS[pathId];
+  if (!pd) return null;
+  hl.points = hl.points || {warrior:0, sage:0, diplomat:0, martyr:0};
+  hl.points[pathId] = Math.max(hl.points[pathId] || 0, pd.thresholdToLock);
+  hl.lockedPath = pathId;
+  hl.pathLevel = 1;
+  saveHumanLegacy(hl);
+  applyHumanLegacyStats();
+  // 각성 스킬 연동 — recordLegacyAction()이 원래 갖고 있던 유일한
+  // 각성 지급 경로. 이제 chooseLegacyPath()도 동일하게 이 지점을 탄다.
+  if (typeof gainHumanAwakening === 'function') gainHumanAwakening('triumph', 15);
+  return pd;
+}
+
 export function recordLegacyAction(actionId, note) {
   if (!isHumanRace()) return;
   const hl = loadHumanLegacy();
@@ -278,24 +329,19 @@ export function recordLegacyAction(actionId, note) {
     id: actionId, label: def.label, icon: def.icon, path: def.path,
     points: def.points, note: note || '', at: new Date().toISOString().slice(0, 10)
   });
-  
+
 
   hl.history = hl.history || [];
   hl.history.push({ label: def.label, icon: def.icon, path: def.path, points: def.points, at: new Date().toISOString().slice(0,16) });
-  
+
 
   // 경로 확정 체크
   if (!hl.lockedPath) {
     const dom = getDominantLegacyPath(hl);
-    const pd = LEGACY_PATHS[dom];
-    if (dom && pd && (hl.points[dom] || 0) >= pd.thresholdToLock) {
-      hl.lockedPath = dom;
-      hl.pathLevel = 1;
-      saveHumanLegacy(hl);
-      applyHumanLegacyStats();
+    const pdCheck = LEGACY_PATHS[dom];
+    if (dom && pdCheck && (hl.points[dom] || 0) >= pdCheck.thresholdToLock) {
+      const pd = lockLegacyPathCore(hl, dom);
       setTimeout(() => toastHTML(`📜 운명의 분기! ${typeof getEntityIconHTML==='function'?getEntityIconHTML(pd,{size:14}):(pd.icon)} ${esc(pd.label)} 경로가 확정됐습니다!`, 5000), 400);
-      // 각성 스킬 연동
-      if (typeof gainHumanAwakening === 'function') gainHumanAwakening('triumph', 15);
       return;
     }
   } else {
@@ -324,14 +370,13 @@ export function chooseLegacyPath(pathId) {
   if (!isHumanRace()) return;
   const hl = loadHumanLegacy();
   if (hl.lockedPath) { toast('⚠️ 이미 유산 경로가 확정됐습니다.'); return; }
-  const pd = LEGACY_PATHS[pathId];
+  // [M1 FIX] 예전엔 여기서 hl.lockedPath/hl.points를 직접 써서 잠갔기
+  // 때문에 recordLegacyAction()의 첫 잠금(first-lock) 시 지급되는
+  // gainHumanAwakening('triumph', 15)를 완전히 건너뛰었다. 이제 같은
+  // 공용 로직(lockLegacyPathCore)을 타므로 자연 누적으로 잠기든, 이
+  // 버튼으로 즉시 잠그든 각성 포인트가 똑같이 지급된다.
+  const pd = lockLegacyPathCore(hl, pathId);
   if (!pd) return;
-  hl.lockedPath = pathId;
-  hl.pathLevel = 1;
-  hl.points = hl.points || {warrior:0, sage:0, diplomat:0, martyr:0};
-  hl.points[pathId] = Math.max(hl.points[pathId] || 0, pd.thresholdToLock);
-  saveHumanLegacy(hl);
-  applyHumanLegacyStats();
   // 각성 스킬 해금
   if (pd.awakeSkill && (hl.points[pathId]||0) >= pd.thresholdToLock * 2) {
     S.unlockedSkills = S.unlockedSkills || {};
@@ -442,10 +487,28 @@ export function renderHumanLegacyPanel() {
       </div>
     </div>
 
-    <!-- ③ 유산 안내 (자동 전용) -->
+    <!-- ③ 유산 각성 행동 (수동) — [M1 FIX] recordLegacyAction()의 경로
+         잠금 이후(및 잠기기 전에도) 매 호출마다 함께 지급되던
+         courage/growth/sacrifice 각성 포인트가 detectHumanLegacyFromText
+         (AI 텍스트 감지) 한 곳에서만 트리거됐다 — 경로를 이미 확정한
+         플레이어가 무-API로는 각성 게이지를 더 올릴 방법이 전혀 없던
+         구멍. recordLegacyAction의 기존 매핑(전사→용기+3, 현자→성장+3,
+         희생자→희생+3, 외교관은 원래부터 매핑 없음)을 그대로 재사용해
+         gainHumanAwakening을 직접 호출한다. -->
     <div style="padding:8px 12px;border-bottom:1px solid #1a1200">
-      <div style="font-size:9px;color:#5a4a20;font-style:italic;text-align:center;padding:4px 0">
-        📜 유산 행동은 AI 서사에서 자동으로 기록됩니다
+      <div style="font-family:'Cinzel',serif;font-size:9px;color:${color};letter-spacing:1px;margin-bottom:6px">── 유산 각성 행동 (수동) ──</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px">
+        ${[
+          { cat:'courage',   pathId:'warrior', label:'용기의 순간', amount:3 },
+          { cat:'growth',    pathId:'sage',    label:'배움의 순간', amount:3 },
+          { cat:'sacrifice', pathId:'martyr',  label:'희생의 순간', amount:3 },
+        ].map(a => {
+          const apd = LEGACY_PATHS[a.pathId];
+          return `<button onclick="gainHumanAwakening('${a.cat}',${a.amount});renderHumanLegacyPanel()"
+            style="padding:6px 4px;background:#0e0c00;border:1px solid ${apd.color}44;color:${apd.color};font-size:8px;cursor:pointer;font-family:'Crimson Text',serif;text-align:center;border-radius:2px;line-height:1.3">
+            ${typeof getEntityIconHTML==='function'?getEntityIconHTML(apd,{size:12}):(apd.icon)}<br>${a.label}<br>+${a.amount} 각성
+          </button>`;
+        }).join('')}
       </div>
     </div>
 

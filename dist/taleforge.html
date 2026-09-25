@@ -63535,9 +63535,34 @@ ${lines}`;
     }).join("")}
     </div>` : ""}
 
-    <!-- \u2467 \uD589\uC801 \uD589\uB3D9 \uC790\uB3D9 \uC804\uC6A9 -->
+    <!-- \u2467 \uAC01\uC131 \uD589\uC801 \uAE30\uB85D (\uC218\uB3D9) \u2014 [M1 FIX] \uC774 \uD328\uB110\uC774 \uBCF4\uC5EC\uC8FC\uB294 \uAC01\uC131\uB3C4
+         (ha.points, gainHumanAwakening)\uB294 \uC778\uAC04\uC871 \uC804\uCCB4\uAC00 \uACF5\uC720\uD558\uB294 \uB2E8\uC77C
+         \uAC8C\uC774\uC9C0\uB85C, detectHumanDeedFromText(ui/025, AI \uD14D\uC2A4\uD2B8 \uAC10\uC9C0 \uC804\uC6A9)
+         \uAC00 growth/courage/bond/triumph/sacrifice 5\uAC1C \uBD84\uB958\uB85C \uC9C0\uAE09\uD558\uB294
+         \uAC83\uACFC recordLegacyAction(\uAC19\uC740 \uD30C\uC77C \uC704 \uC720\uC0B0 \uD328\uB110)\uC774 \uC9C0\uAE09\uD558\uB294
+         \uAC83 \uBAA8\uB450 \uACB0\uAD6D \uC774 \uAC12 \uD558\uB098\uC5D0 \uD569\uC0B0\uB41C\uB2E4 \u2014 "\uC778\uAC04\uC871 \uC804\uC6A9 \uBCC4\uAC1C \uAC8C\uC774\uC9C0"
+         \uAC00 \uC544\uB2C8\uB77C \uC9C4\uC9DC \uACF5\uC6A9 \uAC8C\uC774\uC9C0\uC784\uC744 \uD655\uC778\uD558\uACE0, \uC9C0\uAE08\uAE4C\uC9C0 \uC218\uB3D9 \uB300\uC751\uC774
+         \uC804\uD600 \uC5C6\uB358 detectHumanDeedFromText 5\uC885\uC744 \uC5EC\uAE30 \uD55C \uACF3\uC5D0 \uBAA8\uC544
+         \uB178\uCD9C\uD55C\uB2E4(\uC720\uC0B0 \uACBD\uB85C\uBCC4 \uC218\uB3D9 \uD2B8\uB9AC\uAC70\uB294 \uC704 \uC720\uC0B0 \uD328\uB110 \u2462\uC5D0 \uBCC4\uB3C4\uB85C
+         \uC788\uC74C \u2014 \uAC19\uC740 "\uAC01\uC131" \uCE74\uC6B4\uD130\uB97C \uC62C\uB9AC\uC9C0\uB9CC \uC11C\uC0AC\uC801 \uB9E5\uB77D\uC774 \uB2E4\uB974\uACE0
+         \uC218\uCE58\uB3C4 \uB2EC\uB77C \uBD84\uB9AC\uD574\uC11C \uAC01\uC790 \uADF8\uB300\uB85C \uC7AC\uC0AC\uC6A9, \uC0C8 \uAC12 \uC9C0\uC5B4\uB0B4\uC9C0 \uC54A\uC74C). -->
     <div style="padding:8px 12px;border-bottom:1px solid #1a1500">
-      <div style="font-size:9px;color:#5a4a20;font-style:italic;text-align:center;padding:4px 0">\u{1F31F} \uAC01\uC131\uB3C4\uB294 AI \uC11C\uC0AC\uC5D0\uC11C \uC790\uB3D9\uC73C\uB85C \uC313\uC785\uB2C8\uB2E4</div>
+      <div style="font-family:'Cinzel',serif;font-size:9px;color:${color};letter-spacing:1px;margin-bottom:6px">\u2500\u2500 \uAC01\uC131 \uD589\uC801 \uAE30\uB85D (\uC218\uB3D9) \u2500\u2500</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">
+        ${[
+      { cat: "growth", amount: 5 },
+      { cat: "courage", amount: 6 },
+      { cat: "bond", amount: 4 },
+      { cat: "triumph", amount: 7 },
+      { cat: "sacrifice", amount: 6 }
+    ].map((a) => {
+      const dd = HUMAN_DEED_GAIN[a.cat] || {};
+      return `<button onclick="gainHumanAwakening('${a.cat}',${a.amount});renderHumanAwakeningPanel()"
+            style="padding:6px 7px;background:#150d03;border:1px solid ${color}44;color:${color};font-size:8px;cursor:pointer;font-family:'Crimson Text',serif;text-align:left;border-radius:2px;line-height:1.3">
+            ${dd.icon || "\u{1F31F}"} ${dd.label || a.cat} <span style="color:#60d060">+${a.amount}</span>
+          </button>`;
+    }).join("")}
+      </div>
     </div>
 
     <!-- \u2468 \uCD5C\uADFC \uAE30\uB85D -->
@@ -63597,6 +63622,18 @@ ${lines}`;
     return entries[0]?.[0] || null;
   }
   window.getDominantLegacyPath = getDominantLegacyPath;
+  function lockLegacyPathCore(hl, pathId) {
+    const pd = LEGACY_PATHS[pathId];
+    if (!pd) return null;
+    hl.points = hl.points || { warrior: 0, sage: 0, diplomat: 0, martyr: 0 };
+    hl.points[pathId] = Math.max(hl.points[pathId] || 0, pd.thresholdToLock);
+    hl.lockedPath = pathId;
+    hl.pathLevel = 1;
+    saveHumanLegacy(hl);
+    applyHumanLegacyStats();
+    if (typeof gainHumanAwakening === "function") gainHumanAwakening("triumph", 15);
+    return pd;
+  }
   function recordLegacyAction(actionId, note) {
     if (!isHumanRace()) return;
     const hl = loadHumanLegacy();
@@ -63619,14 +63656,10 @@ ${lines}`;
     hl.history.push({ label: def.label, icon: def.icon, path: def.path, points: def.points, at: (/* @__PURE__ */ new Date()).toISOString().slice(0, 16) });
     if (!hl.lockedPath) {
       const dom = getDominantLegacyPath(hl);
-      const pd = LEGACY_PATHS[dom];
-      if (dom && pd && (hl.points[dom] || 0) >= pd.thresholdToLock) {
-        hl.lockedPath = dom;
-        hl.pathLevel = 1;
-        saveHumanLegacy(hl);
-        applyHumanLegacyStats();
+      const pdCheck = LEGACY_PATHS[dom];
+      if (dom && pdCheck && (hl.points[dom] || 0) >= pdCheck.thresholdToLock) {
+        const pd = lockLegacyPathCore(hl, dom);
         setTimeout(() => toastHTML(`\u{1F4DC} \uC6B4\uBA85\uC758 \uBD84\uAE30! ${typeof getEntityIconHTML === "function" ? getEntityIconHTML(pd, { size: 14 }) : pd.icon} ${esc2(pd.label)} \uACBD\uB85C\uAC00 \uD655\uC815\uB410\uC2B5\uB2C8\uB2E4!`, 5e3), 400);
-        if (typeof gainHumanAwakening === "function") gainHumanAwakening("triumph", 15);
         return;
       }
     } else {
@@ -63653,14 +63686,8 @@ ${lines}`;
       toast("\u26A0\uFE0F \uC774\uBBF8 \uC720\uC0B0 \uACBD\uB85C\uAC00 \uD655\uC815\uB410\uC2B5\uB2C8\uB2E4.");
       return;
     }
-    const pd = LEGACY_PATHS[pathId];
+    const pd = lockLegacyPathCore(hl, pathId);
     if (!pd) return;
-    hl.lockedPath = pathId;
-    hl.pathLevel = 1;
-    hl.points = hl.points || { warrior: 0, sage: 0, diplomat: 0, martyr: 0 };
-    hl.points[pathId] = Math.max(hl.points[pathId] || 0, pd.thresholdToLock);
-    saveHumanLegacy(hl);
-    applyHumanLegacyStats();
     if (pd.awakeSkill && (hl.points[pathId] || 0) >= pd.thresholdToLock * 2) {
       S.unlockedSkills = S.unlockedSkills || {};
       S.unlockedSkills[pd.awakeSkill.id] = true;
@@ -63768,10 +63795,28 @@ ${lines}`;
       </div>
     </div>
 
-    <!-- \u2462 \uC720\uC0B0 \uC548\uB0B4 (\uC790\uB3D9 \uC804\uC6A9) -->
+    <!-- \u2462 \uC720\uC0B0 \uAC01\uC131 \uD589\uB3D9 (\uC218\uB3D9) \u2014 [M1 FIX] recordLegacyAction()\uC758 \uACBD\uB85C
+         \uC7A0\uAE08 \uC774\uD6C4(\uBC0F \uC7A0\uAE30\uAE30 \uC804\uC5D0\uB3C4) \uB9E4 \uD638\uCD9C\uB9C8\uB2E4 \uD568\uAED8 \uC9C0\uAE09\uB418\uB358
+         courage/growth/sacrifice \uAC01\uC131 \uD3EC\uC778\uD2B8\uAC00 detectHumanLegacyFromText
+         (AI \uD14D\uC2A4\uD2B8 \uAC10\uC9C0) \uD55C \uACF3\uC5D0\uC11C\uB9CC \uD2B8\uB9AC\uAC70\uB410\uB2E4 \u2014 \uACBD\uB85C\uB97C \uC774\uBBF8 \uD655\uC815\uD55C
+         \uD50C\uB808\uC774\uC5B4\uAC00 \uBB34-API\uB85C\uB294 \uAC01\uC131 \uAC8C\uC774\uC9C0\uB97C \uB354 \uC62C\uB9B4 \uBC29\uBC95\uC774 \uC804\uD600 \uC5C6\uB358
+         \uAD6C\uBA4D. recordLegacyAction\uC758 \uAE30\uC874 \uB9E4\uD551(\uC804\uC0AC\u2192\uC6A9\uAE30+3, \uD604\uC790\u2192\uC131\uC7A5+3,
+         \uD76C\uC0DD\uC790\u2192\uD76C\uC0DD+3, \uC678\uAD50\uAD00\uC740 \uC6D0\uB798\uBD80\uD130 \uB9E4\uD551 \uC5C6\uC74C)\uC744 \uADF8\uB300\uB85C \uC7AC\uC0AC\uC6A9\uD574
+         gainHumanAwakening\uC744 \uC9C1\uC811 \uD638\uCD9C\uD55C\uB2E4. -->
     <div style="padding:8px 12px;border-bottom:1px solid #1a1200">
-      <div style="font-size:9px;color:#5a4a20;font-style:italic;text-align:center;padding:4px 0">
-        \u{1F4DC} \uC720\uC0B0 \uD589\uB3D9\uC740 AI \uC11C\uC0AC\uC5D0\uC11C \uC790\uB3D9\uC73C\uB85C \uAE30\uB85D\uB429\uB2C8\uB2E4
+      <div style="font-family:'Cinzel',serif;font-size:9px;color:${color};letter-spacing:1px;margin-bottom:6px">\u2500\u2500 \uC720\uC0B0 \uAC01\uC131 \uD589\uB3D9 (\uC218\uB3D9) \u2500\u2500</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px">
+        ${[
+      { cat: "courage", pathId: "warrior", label: "\uC6A9\uAE30\uC758 \uC21C\uAC04", amount: 3 },
+      { cat: "growth", pathId: "sage", label: "\uBC30\uC6C0\uC758 \uC21C\uAC04", amount: 3 },
+      { cat: "sacrifice", pathId: "martyr", label: "\uD76C\uC0DD\uC758 \uC21C\uAC04", amount: 3 }
+    ].map((a) => {
+      const apd = LEGACY_PATHS[a.pathId];
+      return `<button onclick="gainHumanAwakening('${a.cat}',${a.amount});renderHumanLegacyPanel()"
+            style="padding:6px 4px;background:#0e0c00;border:1px solid ${apd.color}44;color:${apd.color};font-size:8px;cursor:pointer;font-family:'Crimson Text',serif;text-align:center;border-radius:2px;line-height:1.3">
+            ${typeof getEntityIconHTML === "function" ? getEntityIconHTML(apd, { size: 12 }) : apd.icon}<br>${a.label}<br>+${a.amount} \uAC01\uC131
+          </button>`;
+    }).join("")}
       </div>
     </div>
 

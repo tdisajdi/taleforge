@@ -512,7 +512,42 @@ export function renderHumanLegacyPanel() {
       </div>
     </div>
 
-    <!-- ④ 최근 기록 -->
+    <!-- ④ 유산 경로 레벨(pathLevel) 행적 기록 (수동) — [2026-09-25,
+         32번 섹션 ③ FIX] recordLegacyAction()이 hl.points[path]를
+         올리는 유일한 호출부는 detectHumanLegacyFromText(AI 텍스트
+         감지, w_fight/s_discover/d_convince/m_sacrifice 4개 정규식
+         패턴뿐)였다 — 경로 잠금(lock) 전 포인트 누적도, 잠금 후
+         pathLevel(1→5, recordLegacyAction의 "경로 레벨업" 분기:
+         Math.floor(hl.points[locked]/40), maxLevel 클램프)도 전부
+         AI 서사 텍스트 없이는 단 1포인트도 못 올리던 구멍(M1이 고친
+         "각성 포인트" 공용 게이지와는 별개 메커니즘 — data/026의
+         LEGACY_ACTIONS 자체가 아예 수동 진입점이 없었음). data/026의
+         LEGACY_ACTIONS(경로당 3종, 총 12종 — AI 감지는 그중 대표
+         1종씩만 다뤘지만 데이터 자체는 12종 전부 이미 정의돼 있었음)를
+         그대로 12개 버튼으로 노출해 recordLegacyAction()을 직접
+         호출한다 — 새 게이지·새 판정식을 만들지 않고, 경로 잠금
+         전(자연 누적과 동일한 잠금 판정)·잠금 후(레벨업 판정) 양쪽
+         다 AI텍스트 경로와 완전히 같은 코드를 그대로 탄다(포인트
+         값도 기존 LEGACY_ACTIONS.points 그대로 재사용, 새 수치 없음). -->
+    <div style="padding:8px 12px;border-bottom:1px solid #1a1200">
+      <div style="font-family:'Cinzel',serif;font-size:9px;color:${color};letter-spacing:1px;margin-bottom:6px">── 유산 행적 기록 (수동) ──</div>
+      ${Object.entries(LEGACY_PATHS).map(([pid, pd2]) => {
+        const acts = LEGACY_ACTIONS.filter(a => a.path === pid);
+        if (!acts.length) return '';
+        return `<div style="margin-bottom:7px">
+          <div style="font-size:8px;color:${pd2.color};margin-bottom:3px">${typeof getEntityIconHTML==='function'?getEntityIconHTML(pd2,{size:10}):(pd2.icon)} ${pd2.label}</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px">
+            ${acts.map(a => `<button onclick="recordLegacyAction('${a.id}');renderHumanLegacyPanel()"
+              title="${esc(a.desc)}"
+              style="padding:5px 4px;background:#0e0c00;border:1px solid ${pd2.color}44;color:${pd2.color};font-size:8px;cursor:pointer;font-family:'Crimson Text',serif;text-align:center;border-radius:2px;line-height:1.3">
+              ${a.icon} ${esc(a.label)}<br><span style="color:#60d060">+${a.points}</span>
+            </button>`).join('')}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+
+    <!-- ⑤ 최근 기록 -->
     ${(hl.history||[]).length ? `
     <div style="padding:10px 12px">
       <div style="font-family:'Cinzel',serif;font-size:9px;color:${color};letter-spacing:1px;margin-bottom:5px">── 유산 기록 ──</div>

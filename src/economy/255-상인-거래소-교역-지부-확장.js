@@ -1608,7 +1608,13 @@ export function getTravelDays(destLoc, transportType){
   const curLoc = (typeof loadCurrentLocation==='function') ? loadCurrentLocation() : null;
   if(!curLoc) return 1;
   const t = (typeof TRANSPORT_CONFIG!=='undefined') ? TRANSPORT_CONFIG[transportType||'walk'] : null;
-  const mult = t ? t.speedMult : 1.0;
+  let mult = t ? t.speedMult : 1.0;
+  // [2026-09-25, 33번 섹션 — S1] 세계 달력 효과(겨울 등) — 실제 시각
+  // 기준 이동 속도 배율을 탑승 수단 배율에 곱으로 얹는다.
+  if(typeof getCalendarModifiers==='function'){
+    const cal = getCalendarModifiers();
+    if(typeof cal.travelSpeedMult==='number') mult *= cal.travelSpeedMult;
+  }
 
   // [11차 수정] 비행 탑승물(그리핀·페가수스·와이번)은 "지형·날씨 무관 최고속
   // 비행"이 설계 의도인데, 지금까지는 speedMult만 반영하고 도로망 유무는

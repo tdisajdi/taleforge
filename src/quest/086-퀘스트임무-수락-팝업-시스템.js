@@ -6884,10 +6884,15 @@ function doReincarnate(){
   lsDel(MATERIAL_BAG_KEY); // 재료 수량 초기화 (환생 시 리셋)
   // ※ DYN_MAT_KEY(재료 정의), DYN_ENEMY_KEY(적 정보), DYN_BP_KEY(설계도)는 유지
   lsDel(DIARY_KEY);
-  // [BUG FIX] GAME_TIME_KEY 미정의 → ReferenceError 원인. 실제 시간 시스템
-  // 저장 키는 'tf-game-time' (loadGameTime/saveGameTime이 사용).
+  // [BUG FIX] GAME_TIME_KEY 미정의 → ReferenceError 원인. 'tf-game-time'은
+  // 실제로는 쓰는 코드가 없는 죽은 키였음(2026-09-25, 33번 섹션에서
+  // 확인 — world/306의 달력 시스템은 이제 'tf-calendar-epoch'를 씀,
+  // 아래 참고). 레거시 정리 차원에서 그대로 둠.
   lsDel(typeof GAME_TIME_KEY!=='undefined' ? GAME_TIME_KEY : 'tf-game-time');
-  lsDel('tf-timecost'); // 시간 누적값 초기화
+  lsDel('tf-timecost'); // 시간 누적값 초기화(world/214)
+  // [2026-09-25, 33번 섹션] world/306의 실시간(Date.now()) 기반 달력
+  // 기준점 — 환생 시 "새로운 생"이 다시 봄 1일차부터 시작하도록 리셋.
+  lsDel('tf-calendar-epoch');
   if(typeof TIMELINE_KEY!=='undefined') lsDel(TIMELINE_KEY);
   lsDel(typeof PREV_DESC_KEY!=='undefined' ? PREV_DESC_KEY : 'tf-prev-narrations');
   lsDel('tf-boss-state');

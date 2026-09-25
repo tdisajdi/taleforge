@@ -1812,7 +1812,12 @@ function fieldLoop(){
     if(!dx && !dy && (RT.touchDir.x||RT.touchDir.y)){ dx=RT.touchDir.x; dy=RT.touchDir.y; }
     if(dx||dy){
       const len=Math.hypot(dx,dy);
-      const speed = FIELD_BASE_SPEED * Math.min(FIELD_MOUNT_SPEED_CAP, currentTransportConfig().speedMult||1);
+      // [2026-09-25, 33번 섹션 — S1] 세계 달력 효과(겨울 등) — 실제 시각
+      // 기준 이동 속도 배율을 곱한다. 필드 이동 중엔 sendMsg()가 전혀
+      // 안 불려서(quest/086 턴 기반) 이 배율이 Date.now() 기준이어야만
+      // 여기서도 실제로 갈릴 수 있다는 게 이번 재설계의 핵심.
+      const calSpeedMult = (typeof getCalendarModifiers==='function') ? (getCalendarModifiers().travelSpeedMult||1) : 1;
+      const speed = FIELD_BASE_SPEED * Math.min(FIELD_MOUNT_SPEED_CAP, currentTransportConfig().speedMult||1) * calSpeedMult;
       const frameScale = dt / REF_FRAME_MS; // dt(실측 ms) 기준으로 정규화 — 프레임레이트 무관 실제 초당 속도
       dx = dx/len*speed*frameScale; dy = dy/len*speed*frameScale;
       if(Math.abs(dx)>Math.abs(dy)) player.facing = dx>0?'right':'left'; else if(dy!==0) player.facing = dy>0?'down':'up';

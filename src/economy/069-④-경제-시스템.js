@@ -85,6 +85,13 @@ export function getDynamicPrice(basePrice, itemRarity){
       price = Math.round(price * mech.priceMultiplier);
     }
   }
+
+  // [2026-09-25, 33번 섹션 — S1] 세계 달력 효과(봄의 축제 등) —
+  // world/306가 실제 시각(Date.now()) 기준으로 계산한 배율을 곱한다.
+  if(typeof getCalendarModifiers==='function'){
+    const cal = getCalendarModifiers();
+    if(typeof cal.shopPriceMult==='number') price = Math.round(price * cal.shopPriceMult);
+  }
   return Math.max(1, price);
 }
 window.getDynamicPrice = getDynamicPrice;

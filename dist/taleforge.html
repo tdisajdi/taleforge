@@ -47442,7 +47442,11 @@ ${lines.join("\n")}
     const curLoc = typeof loadCurrentLocation === "function" ? loadCurrentLocation() : null;
     if (!curLoc) return 1;
     const t = typeof TRANSPORT_CONFIG !== "undefined" ? TRANSPORT_CONFIG[transportType || "walk"] : null;
-    const mult = t ? t.speedMult : 1;
+    let mult = t ? t.speedMult : 1;
+    if (typeof getCalendarModifiers === "function") {
+      const cal = getCalendarModifiers();
+      if (typeof cal.travelSpeedMult === "number") mult *= cal.travelSpeedMult;
+    }
     if (t && t.isAir) {
       const days2 = typeof getLocationDistanceDays === "function" ? getLocationDistanceDays(curLoc, destLoc) : null;
       if (days2 === null) return 1;
@@ -55620,26 +55624,81 @@ ${lines.join("\n")}
     window.detectHumanDeedFromText = window.detectHumanDeedFromText;
   }
 
+  // src/data/214-11-날씨-자동-순환.js
+  var WEATHER_CYCLE = ["clear", "clear", "rain", "clear", "fog", "storm", "snow", "clear"];
+  var TIME_CYCLE = ["dawn", "morning", "morning", "midday", "afternoon", "afternoon", "evening", "night", "night", "midnight"];
+  var CALENDAR_MONTHS = [
+    { name: "\uC2F9\uD2B8\uAE30\uC6D4", icon: "\u{1F331}", season: "\uBD04", effect: "\uB9CC\uBB3C\uC774 \uC18C\uC0DD. \uC57D\uCD08 \uCC44\uCDE8\uB7C9 \uC99D\uAC00." },
+    { name: "\uAF43\uBE44\uC6D4", icon: "\u{1F338}", season: "\uBD04", effect: "\uAE30\uBD84\uC774 \uACE0\uC870. \uD611\uC0C1 \uD310\uC815 +5." },
+    { name: "\uC5EC\uB984\uBD88\uC6D4", icon: "\u2600\uFE0F", season: "\uC5EC\uB984", effect: "\uB728\uAC70\uC6B4 \uC5F4\uAE30. \uCCB4\uB825 \uC18C\uBAA8 \uBE60\uB984." },
+    { name: "\uD3ED\uD48D\uC6D4", icon: "\u26C8\uFE0F", season: "\uC5EC\uB984", effect: "\uC7A6\uC740 \uD3ED\uD48D. \uC774\uB3D9 \uD310\uC815 \uC5B4\uB824\uC6C0." },
+    { name: "\uD669\uAE08\uC6D4", icon: "\u{1F33E}", season: "\uAC00\uC744", effect: "\uC218\uD655\uAE30. \uAD50\uC5ED \uD65C\uBC1C, \uACE8\uB4DC \uAC00\uCE58 \uC0C1\uC2B9." },
+    { name: "\uB099\uC5FD\uC6D4", icon: "\u{1F342}", season: "\uAC00\uC744", effect: "\uC11C\uB298\uD55C \uBC14\uB78C. \uC740\uC2E0 \uD310\uC815 +5." },
+    { name: "\uC11C\uB9AC\uC6D4", icon: "\u2744\uFE0F", season: "\uACA8\uC6B8", effect: "\uCD94\uC704. \uC57C\uC678 \uCCB4\uB825 \uC18C\uBAA8 \uC99D\uAC00." },
+    { name: "\uC124\uC6D0\uC6D4", icon: "\u{1F328}\uFE0F", season: "\uACA8\uC6B8", effect: "\uD3ED\uC124. \uC774\uB3D9 \uC18D\uB3C4 \uAC10\uC18C, \uC628\uAE30\uAC00 \uADC0\uD558\uB2E4." }
+  ];
+  var CALENDAR_DAYS_PER_MONTH = 15;
+
   // src/world/306-⑥-세계-시간-달력-시스템-확장.js
+  var CALENDAR_EPOCH_KEY = "tf-calendar-epoch";
+  var REAL_MS_PER_GAME_DAY = 30 * 60 * 1e3;
+  var CALENDAR_BASE_YEAR = 3782;
+  function _getCalendarEpoch() {
+    try {
+      let e = parseInt(lsGet(CALENDAR_EPOCH_KEY) || "0", 10);
+      if (!e) {
+        e = Date.now();
+        lsSet(CALENDAR_EPOCH_KEY, String(e));
+      }
+      return e;
+    } catch (err) {
+      return Date.now();
+    }
+  }
+  function _calendarDayState() {
+    const epoch = _getCalendarEpoch();
+    const totalDays = Math.max(0, Math.floor((Date.now() - epoch) / REAL_MS_PER_GAME_DAY));
+    const monthIdx = Math.floor(totalDays / CALENDAR_DAYS_PER_MONTH) % CALENDAR_MONTHS.length;
+    const dayOfMonth = totalDays % CALENDAR_DAYS_PER_MONTH + 1;
+    const year = CALENDAR_BASE_YEAR + Math.floor(totalDays / (CALENDAR_DAYS_PER_MONTH * CALENDAR_MONTHS.length));
+    const month = CALENDAR_MONTHS[monthIdx];
+    const season = month.season;
+    const moonPhase = totalDays % 30;
+    const isFirstMonthOfSeason = monthIdx % 2 === 0;
+    return {
+      totalDays,
+      monthIdx,
+      dayOfMonth,
+      year,
+      month,
+      season,
+      moonPhase,
+      isFullMoon: moonPhase >= 13 && moonPhase <= 16,
+      isNewMoon: moonPhase === 0 || moonPhase === 29,
+      isWaxingCrescent: moonPhase <= 5,
+      isSpringFestival: isFirstMonthOfSeason && dayOfMonth === 1 && season === "\uBD04",
+      isWinterSolstice: isFirstMonthOfSeason && dayOfMonth === 1 && season === "\uACA8\uC6B8",
+      isSummerSolstice: isFirstMonthOfSeason && dayOfMonth === 15 && season === "\uC5EC\uB984",
+      isHarvestFestival: isFirstMonthOfSeason && dayOfMonth === 15 && season === "\uAC00\uC744",
+      isWinter: season === "\uACA8\uC6B8"
+    };
+  }
   function getCalendarEffect() {
     try {
-      const gt = typeof loadGameTime === "function" ? loadGameTime() : null;
-      if (!gt) return "";
-      const { day, season, year } = gt;
+      const st = _calendarDayState();
       const effects = [];
-      const moonPhase = day % 30;
-      if (moonPhase >= 13 && moonPhase <= 16) {
+      if (st.isFullMoon) {
         effects.push("\u{1F315} \uBCF4\uB984\uB2EC \u2014 \uC218\uC778\uC871 \uC57C\uC218 \uAC01\uC131 \uC704\uD5D8 \uC99D\uAC00, \uC5B8\uB370\uB4DC \uD65C\uC131\uD654");
-      } else if (moonPhase === 0 || moonPhase === 29) {
+      } else if (st.isNewMoon) {
         effects.push("\u{1F311} \uADF8\uBBD0\uB2EC \u2014 \uC5B4\uB460\uC758 \uB9C8\uBC95 \uAC15\uD654, \uC740\uC2E0 \uD310\uC815 \uBCF4\uB108\uC2A4");
-      } else if (moonPhase <= 5) {
+      } else if (st.isWaxingCrescent) {
         effects.push("\u{1F312} \uCD08\uC2B9\uB2EC \u2014 \uC0C8\uB85C\uC6B4 \uC2DC\uC791\uC5D0 \uCD95\uBCF5, \uD0D0\uD5D8 \uD310\uC815 \uC18C\uD3ED \uC0C1\uC2B9");
       }
-      if (day === 1 && season === "\uBD04") effects.push("\u{1F338} \uBD04\uC758 \uCD95\uC81C \u2014 NPC\uB4E4\uC774 \uCD95\uC81C \uBD84\uC704\uAE30, \uC0C1\uC810 20% \uD560\uC778");
-      if (day === 1 && season === "\uACA8\uC6B8") effects.push("\u2744\uFE0F \uB3D9\uC9D3\uB0A0 \u2014 \uC5B8\uB370\uB4DC \uC804\uB825 \uAC15\uD654, \uC2E0\uAD00\uB4E4\uC774 \uC815\uD654 \uC758\uC2DD \uAC70\uD589");
-      if (day === 15 && season === "\uC5EC\uB984") effects.push("\u2600\uFE0F \uD558\uC9C0 \uB300\uC81C \u2014 \uD654\uC5FC \uB9C8\uBC95 \uAC15\uD654, \uC655\uAD6D \uACF3\uACF3 \uACBD\uBE44 \uC99D\uC6D0");
-      if (day === 15 && season === "\uAC00\uC744") effects.push("\u{1F342} \uCD94\uC218\uC81C \u2014 \uC601\uC9C0 \uC218\uC785 \uC99D\uAC00, NPC\uB4E4\uC774 \uAD00\uB300\uD574\uC9D0");
-      const seasonBaseEff = { \uBD04: "\uCD08\uBAA9\uC774 \uC790\uB77C\uACE0 \uD0D0\uD5D8\uD558\uAE30 \uC88B\uC740 \uB0A0\uC528", \uC5EC\uB984: "\uB728\uAC70\uC6B4 \uC5F4\uAE30\uB85C \uD53C\uB85C\uB3C4 \uC99D\uAC00, \uC218\uBD84 \uC12D\uCDE8 \uD544\uC694", \uAC00\uC744: "\uC2DC\uC57C\uAC00 \uB9D1\uC544 \uD0D0\uC0C9 \uC720\uB9AC, \uC801\uB4E4\uC774 \uC608\uBBFC\uD574\uC9D0", \uACA8\uC6B8: "\uC774\uB3D9 \uC18D\uB3C4 \uAC10\uC18C, \uC0DD\uC874 \uC18C\uBAA8\uD488 \uC911\uC694\uC131 \uC99D\uAC00" }[season] || "";
+      if (st.isSpringFestival) effects.push("\u{1F338} \uBD04\uC758 \uCD95\uC81C \u2014 NPC\uB4E4\uC774 \uCD95\uC81C \uBD84\uC704\uAE30, \uC0C1\uC810 20% \uD560\uC778");
+      if (st.isWinterSolstice) effects.push("\u2744\uFE0F \uB3D9\uC9D3\uB0A0 \u2014 \uC5B8\uB370\uB4DC \uC804\uB825 \uAC15\uD654, \uC2E0\uAD00\uB4E4\uC774 \uC815\uD654 \uC758\uC2DD \uAC70\uD589");
+      if (st.isSummerSolstice) effects.push("\u2600\uFE0F \uD558\uC9C0 \uB300\uC81C \u2014 \uD654\uC5FC \uB9C8\uBC95 \uAC15\uD654, \uC655\uAD6D \uACF3\uACF3 \uACBD\uBE44 \uC99D\uC6D0");
+      if (st.isHarvestFestival) effects.push("\u{1F342} \uCD94\uC218\uC81C \u2014 \uC601\uC9C0 \uC218\uC785 \uC99D\uAC00, NPC\uB4E4\uC774 \uAD00\uB300\uD574\uC9D0");
+      const seasonBaseEff = { \uBD04: "\uCD08\uBAA9\uC774 \uC790\uB77C\uACE0 \uD0D0\uD5D8\uD558\uAE30 \uC88B\uC740 \uB0A0\uC528", \uC5EC\uB984: "\uB728\uAC70\uC6B4 \uC5F4\uAE30\uB85C \uD53C\uB85C\uB3C4 \uC99D\uAC00, \uC218\uBD84 \uC12D\uCDE8 \uD544\uC694", \uAC00\uC744: "\uC2DC\uC57C\uAC00 \uB9D1\uC544 \uD0D0\uC0C9 \uC720\uB9AC, \uC801\uB4E4\uC774 \uC608\uBBFC\uD574\uC9D0", \uACA8\uC6B8: "\uC774\uB3D9 \uC18D\uB3C4 \uAC10\uC18C, \uC0DD\uC874 \uC18C\uBAA8\uD488 \uC911\uC694\uC131 \uC99D\uAC00" }[st.season] || "";
       if (seasonBaseEff && !effects.length) effects.push(seasonBaseEff);
       return effects.join(" | ");
     } catch (e) {
@@ -55647,12 +55706,43 @@ ${lines.join("\n")}
     }
   }
   window.getCalendarEffect = getCalendarEffect;
-  window.getCalendarEffect = getCalendarEffect;
+  function getCalendarModifiers2() {
+    try {
+      const st = _calendarDayState();
+      return {
+        // 봄의 축제 — 텍스트가 이미 "상점 20% 할인"이라고 약속한 값 그대로.
+        shopPriceMult: st.isSpringFestival ? 0.8 : 1,
+        // 겨울 — 텍스트("이동 속도 감소")의 방향만 정해져 있어 이번에
+        // 신규로 정한 값(15% 감소).
+        travelSpeedMult: st.isWinter ? 0.85 : 1,
+        // 보름달 — 텍스트("야수 각성 위험 증가")의 방향만 정해져 있어
+        // 이번에 신규로 정한 값(50% 증가).
+        beastRiskMult: st.isFullMoon ? 1.5 : 1,
+        // 추수제 — 텍스트("영지 수입 증가")의 방향만 정해져 있어 이번에
+        // 신규로 정한 값(30% 증가).
+        incomeMult: st.isHarvestFestival ? 1.3 : 1
+      };
+    } catch (e) {
+      return { shopPriceMult: 1, travelSpeedMult: 1, beastRiskMult: 1, incomeMult: 1 };
+    }
+  }
+  window.getCalendarModifiers = getCalendarModifiers2;
+  window.__tfDebugForceCalendarEpochOffset = function(msAgo) {
+    try {
+      const now = Date.now();
+      lsSet(CALENDAR_EPOCH_KEY, String(now - msAgo));
+      return { effect: getCalendarEffect(), modifiers: getCalendarModifiers2(), state: _calendarDayState() };
+    } catch (e) {
+      return null;
+    }
+  };
+  window.__tfDebugCalendarState = function() {
+    return _calendarDayState();
+  };
   function getMoonPhaseIcon() {
     try {
-      const gt = typeof loadGameTime === "function" ? loadGameTime() : null;
-      if (!gt) return "\u{1F319}";
-      const p = (gt.day || 1) % 30;
+      const st = _calendarDayState();
+      const p = st.moonPhase;
       if (p <= 2 || p >= 28) return "\u{1F311}";
       if (p <= 7) return "\u{1F312}";
       if (p <= 12) return "\u{1F313}";
@@ -55668,29 +55758,30 @@ ${lines.join("\n")}
   function renderWorldCalendarPanel() {
     const body = document.getElementById("pb-world-calendar");
     if (!body) return;
-    const gt = typeof loadGameTime === "function" ? loadGameTime() : { day: 1, season: "\uBD04", year: 1, timePhase: 0 };
-    const moonPhase = (gt.day || 1) % 30;
-    const moonPct = Math.round(moonPhase / 29 * 100);
+    const st = _calendarDayState();
+    const moonPct = Math.round(st.moonPhase / 29 * 100);
     const effect = getCalendarEffect();
     const moonIcon = getMoonPhaseIcon();
-    const moonName = moonPhase <= 2 || moonPhase >= 28 ? "\uADF8\uBBD0\uB2EC" : moonPhase <= 7 ? "\uCD08\uC2B9\uB2EC" : moonPhase <= 12 ? "\uC0C1\uD604\uB2EC" : moonPhase <= 17 ? "\uBCF4\uB984\uB2EC" : moonPhase <= 22 ? "\uAE30\uC6B0\uB294\uB2EC" : moonPhase <= 26 ? "\uD558\uD604\uB2EC" : "\uADF8\uBBD0 \uBB34\uB835";
+    const moonName = st.moonPhase <= 2 || st.moonPhase >= 28 ? "\uADF8\uBBD0\uB2EC" : st.moonPhase <= 7 ? "\uCD08\uC2B9\uB2EC" : st.moonPhase <= 12 ? "\uC0C1\uD604\uB2EC" : st.moonPhase <= 17 ? "\uBCF4\uB984\uB2EC" : st.moonPhase <= 22 ? "\uAE30\uC6B0\uB294\uB2EC" : st.moonPhase <= 26 ? "\uD558\uD604\uB2EC" : "\uADF8\uBBD0 \uBB34\uB835";
+    const isFirstMonthOfSeason = st.monthIdx % 2 === 0;
+    const dayInSeason = isFirstMonthOfSeason ? st.dayOfMonth : st.dayOfMonth + CALENDAR_DAYS_PER_MONTH;
     const seasonEvents = {
       \uBD04: [{ day: 1, name: "\uBD04\uC758 \uCD95\uC81C", desc: "\uB9CC\uBB3C\uC774 \uAE68\uC5B4\uB098\uB294 \uB0A0. \uC0C1\uC810 \uD560\uC778, NPC \uC6B0\uD638" }, { day: 15, name: "\uC528\uC557 \uC2EC\uB294 \uB0A0", desc: "\uB18D\uBBFC\uB4E4\uC774 \uC601\uC9C0\uC5D0\uC11C \uBC14\uC058\uAC8C \uC6C0\uC9C1\uC784" }],
       \uC5EC\uB984: [{ day: 1, name: "\uC5EC\uB984 \uAC1C\uC804", desc: "\uAD70\uB300 \uD6C8\uB828 \uC2DC\uC98C \uC2DC\uC791. \uC6A9\uBCD1 \uACE0\uC6A9 \uC218\uC694 \uC99D\uAC00" }, { day: 15, name: "\uD558\uC9C0 \uB300\uC81C", desc: "\uD654\uC5FC \uB9C8\uBC95 \uAC15\uD654. \uC655\uAD6D \uACBD\uBE44 \uC99D\uC6D0" }],
       \uAC00\uC744: [{ day: 1, name: "\uC0AC\uB0E5 \uD574\uAE08", desc: "\uC655\uC2E4 \uC0AC\uB0E5 \uC2DC\uC98C \uC2DC\uC791. \uC232\uC5D0\uC11C \uADC0\uC871\uB4E4 \uBAA9\uACA9 \uAC00\uB2A5" }, { day: 15, name: "\uCD94\uC218\uC81C", desc: "\uC601\uC9C0 \uC218\uC785 \uC99D\uAC00. NPC \uAD00\uB300\uD568 \uC99D\uAC00" }],
       \uACA8\uC6B8: [{ day: 1, name: "\uB3D9\uC9D3\uB0A0", desc: "\uC5B8\uB370\uB4DC \uAC15\uD654. \uC2E0\uAD00\uB4E4 \uC815\uD654 \uC758\uC2DD \uC2DC\uC791" }, { day: 15, name: "\uC5BC\uC74C \uCD95\uC81C", desc: "\uAC15\uC774 \uC5BC\uC5B4\uBD99\uC74C. \uBE59\uC0C1 \uC774\uB3D9 \uAC00\uB2A5, \uC120\uBC15 \uC774\uB3D9 \uBD88\uAC00" }]
-    }[gt.season || "\uBD04"] || [];
+    }[st.season || "\uBD04"] || [];
     body.innerHTML = `
     <div style="padding:10px 14px">
       <div style="font-family:Cinzel,serif;font-size:10px;color:#80b0e0;letter-spacing:1px;margin-bottom:12px">\u23F3 \uC138\uACC4 \uB2EC\uB825</div>
-      
+
       <!-- \uD604\uC7AC \uB0A0\uC9DC -->
       <div style="padding:12px 14px;background:#000a18;border:1px solid #204060;margin-bottom:10px;text-align:center">
         <div style="font-size:28px;margin-bottom:4px">${moonIcon}</div>
-        <div style="font-family:Cinzel,serif;font-size:13px;color:#80b0e0">${gt.season || "\uBD04"} ${gt.year || 1}\uB144 ${gt.day || 1}\uC77C</div>
+        <div style="font-family:Cinzel,serif;font-size:13px;color:#80b0e0">${esc2(st.month.icon)} ${esc2(st.month.name)} \xB7 ${esc2(st.season)} ${st.year}\uB144 ${st.dayOfMonth}\uC77C</div>
         <div style="font-size:10px;color:#5080a0;margin-top:3px">${moonName} (${moonPct}%)</div>
       </div>
-      
+
       <!-- \uB2EC \uC704\uC0C1 \uBC14 -->
       <div style="margin-bottom:12px">
         <div style="font-size:9px;color:var(--dim);margin-bottom:4px">\uB2EC\uC758 \uC704\uC0C1</div>
@@ -55699,18 +55790,18 @@ ${lines.join("\n")}
         </div>
         <div style="display:flex;justify-content:space-between;margin-top:2px;font-size:8px;color:var(--dim)"><span>\u{1F311} \uADF8\uBBD0</span><span>\u{1F313} \uC0C1\uD604</span><span>\u{1F315} \uBCF4\uB984</span><span>\u{1F317} \uD558\uD604</span></div>
       </div>
-      
+
       <!-- \uD604\uC7AC \uD6A8\uACFC -->
       ${effect ? `<div style="padding:10px 12px;background:#040e1e;border:1px solid #1a4060;margin-bottom:10px;border-left:3px solid #4080c0">
         <div style="font-size:9px;color:#4080c0;font-family:Cinzel,serif;margin-bottom:4px">\u26A1 \uD604\uC7AC \uD6A8\uACFC</div>
         <div style="font-size:10px;color:#80a8c8;line-height:1.5">${esc2(effect)}</div>
       </div>` : ""}
-      
+
       <!-- \uC774\uBC88 \uACC4\uC808 \uC774\uBCA4\uD2B8 -->
       <div style="font-family:Cinzel,serif;font-size:9px;color:#6090b0;letter-spacing:1px;margin-bottom:6px">\uC774\uBC88 \uACC4\uC808 \uD2B9\uBCC4\uC77C</div>
       ${seasonEvents.map((e) => {
-      const passed = (gt.day || 1) > e.day;
-      const today = (gt.day || 1) === e.day;
+      const passed = dayInSeason > e.day;
+      const today = dayInSeason === e.day;
       return `<div style="padding:7px 10px;background:${today ? "#0a1e30" : "#050d18"};border:1px solid ${today ? "#4080c0" : "#0a2040"};margin-bottom:4px;display:flex;gap:8px;align-items:flex-start">
           <div style="font-size:9px;color:${today ? "#e0c040" : passed ? "var(--dim)" : "#4080c0"};font-family:Cinzel,serif;min-width:28px">${e.day}\uC77C</div>
           <div>
@@ -55719,14 +55810,13 @@ ${lines.join("\n")}
           </div>
         </div>`;
     }).join("")}
-      
+
       <!-- \uC138\uACC4 \uB2EC\uB825 \uC601\uD5A5 -->
       <div style="margin-top:10px;padding:8px 10px;background:#040810;border:1px dashed #1a3050;font-size:9px;color:var(--dim);line-height:1.6">
-        \u{1F4A1} \uB2EC\uB825 \uD6A8\uACFC\uB294 AI \uC11C\uC0AC\uC640 \uD310\uC815\uC5D0 \uC790\uB3D9\uC73C\uB85C \uBC18\uC601\uB429\uB2C8\uB2E4.<br>\uBCF4\uB984\uB2EC \u2014 \uC218\uC778\uC871 \uC57C\uC218\uD654 \uC704\uD5D8, \uB3D9\uC9D3\uB0A0 \u2014 \uC5B8\uB370\uB4DC \uAC15\uD654, \uCD95\uC81C\uC77C \u2014 NPC \uBC30\uCE58/\uBC18\uC751 \uBCC0\uD654
+        \u{1F4A1} \uB2EC\uB825 \uD6A8\uACFC\uB294 \uC0C1\uC810 \uAC00\uACA9\xB7\uC774\uB3D9 \uC18D\uB3C4\xB7\uC218\uC778\uC871 \uC57C\uC218\uD654\xB7\uC601\uC9C0 \uC218\uC785\uC5D0 \uC2E4\uC81C\uB85C \uBC18\uC601\uB429\uB2C8\uB2E4.<br>\uBCF4\uB984\uB2EC \u2014 \uC218\uC778\uC871 \uC57C\uC218\uD654 \uC704\uD5D8+50%, \uACA8\uC6B8 \u2014 \uC774\uB3D9 \uC18D\uB3C4-15%, \uBD04\uC758 \uCD95\uC81C \u2014 \uC0C1\uC810\uAC00-20%, \uCD94\uC218\uC81C \u2014 \uC601\uC9C0\uC218\uC785+30%
       </div>
     </div>`;
   }
-  window.renderWorldCalendarPanel = renderWorldCalendarPanel;
   window.renderWorldCalendarPanel = renderWorldCalendarPanel;
 
   // src/misc/303-③-자동-모험-연대기-Living-Chronicle.js
@@ -60343,7 +60433,11 @@ export default TALEFORGE_HARDCODE_RULES;
     if (!isBeastRace()) return;
     const ba = loadBeastAwakening();
     const def = BEAST_INSTINCT_GAIN[instinctType];
-    const gain = customGain !== void 0 ? customGain : def?.gain || 5;
+    let gain = customGain !== void 0 ? customGain : def?.gain || 5;
+    if (typeof getCalendarModifiers === "function") {
+      const cal = getCalendarModifiers();
+      if (typeof cal.beastRiskMult === "number") gain = Math.round(gain * cal.beastRiskMult);
+    }
     ba.points = Math.min(1e3, (ba.points || 0) + gain);
     ba.instinct = ba.instinct || {};
     if (instinctType) ba.instinct[instinctType] = (ba.instinct[instinctType] || 0) + 1;
@@ -62719,7 +62813,11 @@ export default TALEFORGE_HARDCODE_RULES;
       const tp = DEMESNE_TRADE_PARTNERS.find((p) => p.id === pid);
       return sum + (tp ? tp.income : 0);
     }, 0);
-    const income = Math.max(0, Math.floor(res.tax * 0.6)) + tradeIncome;
+    let income = Math.max(0, Math.floor(res.tax * 0.6)) + tradeIncome;
+    if (typeof getCalendarModifiers === "function") {
+      const cal = getCalendarModifiers();
+      if (typeof cal.incomeMult === "number") income = Math.round(income * cal.incomeMult);
+    }
     if (income > 0) {
       if (typeof addGoldWithExchange === "function") addGoldWithExchange(income, "\uC601\uC9C0 \uC138\uC218");
       else {
@@ -79142,10 +79240,6 @@ ${simDesc}` : playerRep;
     }
   };
 
-  // src/data/214-11-날씨-자동-순환.js
-  var WEATHER_CYCLE = ["clear", "clear", "rain", "clear", "fog", "storm", "snow", "clear"];
-  var TIME_CYCLE = ["dawn", "morning", "morning", "midday", "afternoon", "afternoon", "evening", "night", "night", "midnight"];
-
   // src/economy/332-정착지-경제-평판-시스템.js
   var LOCATION_ECONOMY_KEY = "tf-location-economy";
   var PROSPERITY_BASELINE = 50;
@@ -79345,6 +79439,10 @@ ${simDesc}` : playerRep;
       if (typeof mech.priceMultiplier === "number") {
         price = Math.round(price * mech.priceMultiplier);
       }
+    }
+    if (typeof getCalendarModifiers === "function") {
+      const cal = getCalendarModifiers();
+      if (typeof cal.shopPriceMult === "number") price = Math.round(price * cal.shopPriceMult);
     }
     return Math.max(1, price);
   }
@@ -86320,21 +86418,10 @@ ${lines.join("\n")}
   window.recordTransportTimeCost = recordTransportTimeCost;
   function timeCostToCalendar(totalCost) {
     const totalDays = Math.floor(totalCost / TIME_COST_PER_DAY);
-    const MONTHS = [
-      { name: "\uC2F9\uD2B8\uAE30\uC6D4", icon: "\u{1F331}", season: "\uBD04", effect: "\uB9CC\uBB3C\uC774 \uC18C\uC0DD. \uC57D\uCD08 \uCC44\uCDE8\uB7C9 \uC99D\uAC00." },
-      { name: "\uAF43\uBE44\uC6D4", icon: "\u{1F338}", season: "\uBD04", effect: "\uAE30\uBD84\uC774 \uACE0\uC870. \uD611\uC0C1 \uD310\uC815 +5." },
-      { name: "\uC5EC\uB984\uBD88\uC6D4", icon: "\u2600\uFE0F", season: "\uC5EC\uB984", effect: "\uB728\uAC70\uC6B4 \uC5F4\uAE30. \uCCB4\uB825 \uC18C\uBAA8 \uBE60\uB984." },
-      { name: "\uD3ED\uD48D\uC6D4", icon: "\u26C8\uFE0F", season: "\uC5EC\uB984", effect: "\uC7A6\uC740 \uD3ED\uD48D. \uC774\uB3D9 \uD310\uC815 \uC5B4\uB824\uC6C0." },
-      { name: "\uD669\uAE08\uC6D4", icon: "\u{1F33E}", season: "\uAC00\uC744", effect: "\uC218\uD655\uAE30. \uAD50\uC5ED \uD65C\uBC1C, \uACE8\uB4DC \uAC00\uCE58 \uC0C1\uC2B9." },
-      { name: "\uB099\uC5FD\uC6D4", icon: "\u{1F342}", season: "\uAC00\uC744", effect: "\uC11C\uB298\uD55C \uBC14\uB78C. \uC740\uC2E0 \uD310\uC815 +5." },
-      { name: "\uC11C\uB9AC\uC6D4", icon: "\u2744\uFE0F", season: "\uACA8\uC6B8", effect: "\uCD94\uC704. \uC57C\uC678 \uCCB4\uB825 \uC18C\uBAA8 \uC99D\uAC00." },
-      { name: "\uC124\uC6D0\uC6D4", icon: "\u{1F328}\uFE0F", season: "\uACA8\uC6B8", effect: "\uD3ED\uC124. \uC774\uB3D9 \uC18D\uB3C4 \uAC10\uC18C, \uC628\uAE30\uAC00 \uADC0\uD558\uB2E4." }
-    ];
-    const DAYS_PER_MONTH = 15;
-    const monthIdx = Math.floor(totalDays / DAYS_PER_MONTH) % MONTHS.length;
-    const dayOfMonth = totalDays % DAYS_PER_MONTH + 1;
-    const year = 3782 + Math.floor(totalDays / (DAYS_PER_MONTH * MONTHS.length));
-    return { month: MONTHS[monthIdx], dayOfMonth, year, totalDays };
+    const monthIdx = Math.floor(totalDays / CALENDAR_DAYS_PER_MONTH) % CALENDAR_MONTHS.length;
+    const dayOfMonth = totalDays % CALENDAR_DAYS_PER_MONTH + 1;
+    const year = 3782 + Math.floor(totalDays / (CALENDAR_DAYS_PER_MONTH * CALENDAR_MONTHS.length));
+    return { month: CALENDAR_MONTHS[monthIdx], dayOfMonth, year, totalDays };
   }
   window.timeCostToCalendar = timeCostToCalendar;
   window.timeCostToCalendar = timeCostToCalendar;
@@ -92922,6 +93009,7 @@ ${lines.join("\n")}
         lsDel(DIARY_KEY);
         lsDel(typeof GAME_TIME_KEY !== "undefined" ? GAME_TIME_KEY : "tf-game-time");
         lsDel("tf-timecost");
+        lsDel("tf-calendar-epoch");
         if (typeof TIMELINE_KEY !== "undefined") lsDel(TIMELINE_KEY);
         lsDel(typeof PREV_DESC_KEY !== "undefined" ? PREV_DESC_KEY : "tf-prev-narrations");
         lsDel("tf-boss-state");
@@ -134006,7 +134094,8 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
       }
       if (dx || dy) {
         const len = Math.hypot(dx, dy);
-        const speed = FIELD_BASE_SPEED * Math.min(FIELD_MOUNT_SPEED_CAP, currentTransportConfig().speedMult || 1);
+        const calSpeedMult = typeof getCalendarModifiers === "function" ? getCalendarModifiers().travelSpeedMult || 1 : 1;
+        const speed = FIELD_BASE_SPEED * Math.min(FIELD_MOUNT_SPEED_CAP, currentTransportConfig().speedMult || 1) * calSpeedMult;
         const frameScale = dt / REF_FRAME_MS;
         dx = dx / len * speed * frameScale;
         dy = dy / len * speed * frameScale;

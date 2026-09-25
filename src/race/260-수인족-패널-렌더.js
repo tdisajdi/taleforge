@@ -379,7 +379,15 @@ export function gainBeastAwakening(instinctType, customGain, silent) {
   if (!isBeastRace()) return;
   const ba = loadBeastAwakening();
   const def = BEAST_INSTINCT_GAIN[instinctType];
-  const gain = customGain !== undefined ? customGain : (def?.gain || 5);
+  let gain = customGain !== undefined ? customGain : (def?.gain || 5);
+  // [2026-09-25, 33번 섹션 — S1] 세계 달력 효과(보름달) — 실제 시각
+  // 기준 야수화 위험 배율을 곱한다. 이 함수가 모든 야수화 게이지
+  // 증가(AI 텍스트 감지·수동 버튼 전부)의 유일한 진입점이라 여기
+  // 한 곳만 고치면 전부 반영됨.
+  if(typeof getCalendarModifiers==='function'){
+    const cal = getCalendarModifiers();
+    if(typeof cal.beastRiskMult==='number') gain = Math.round(gain * cal.beastRiskMult);
+  }
   ba.points = Math.min(1000, (ba.points || 0) + gain);
   ba.instinct = ba.instinct || {};
   if (instinctType) ba.instinct[instinctType] = (ba.instinct[instinctType] || 0) + 1;
@@ -2447,7 +2455,13 @@ export function tickDemesneResources(){
   const tradeIncome=(d.tradePartners||[]).reduce((sum,pid)=>{
     const tp=DEMESNE_TRADE_PARTNERS.find(p=>p.id===pid); return sum+(tp?tp.income:0);
   },0);
-  const income=Math.max(0,Math.floor(res.tax*0.6))+tradeIncome;
+  let income=Math.max(0,Math.floor(res.tax*0.6))+tradeIncome;
+  // [2026-09-25, 33번 섹션 — S1] 세계 달력 효과(추수제) — 실제 시각
+  // 기준 영지 수입 배율을 곱한다.
+  if(typeof getCalendarModifiers==='function'){
+    const cal = getCalendarModifiers();
+    if(typeof cal.incomeMult==='number') income = Math.round(income * cal.incomeMult);
+  }
   if(income>0){
     if(typeof addGoldWithExchange==='function') addGoldWithExchange(income, '영지 세수'); else { S.gold=(S.gold||0)+income; saveGold(S.gold); } window.updateHeader();
     d.totalIncome=(d.totalIncome||0)+income;

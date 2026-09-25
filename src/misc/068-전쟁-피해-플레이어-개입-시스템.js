@@ -835,6 +835,30 @@ export function renderFactionList(pb){
       <button onclick="if(typeof renderFactionPowerPanel==='function') renderFactionPowerPanel();"
         style="background:var(--bg-input);border:1px solid var(--border);color:var(--gold);font-size:9px;padding:3px 8px;cursor:pointer;font-family:'Cinzel',serif;margin-left:4px">📊 힘의 구도</button>
     </div>
+    ${(typeof window.FACTION_DEFS!=='undefined' && typeof window.getFactionStatus==='function' && typeof window.loadFactionRepV17==='function') ? (()=>{
+      // [35번 섹션, M3(world/219) 재설계] 천계/마계만 로컬로 살린 별도
+      // 평판 시스템(world/219, 저장 키 tf-faction-rep-v2) — 이 목록의
+      // 세력들(npc/067, tf-factions)과는 데이터 소스가 완전히 달라
+      // 같은 상세 화면 클릭 경로에 억지로 합치지 않고, 읽기 전용
+      // 게이지 2개로만 별도 표시한다.
+      const fr = window.loadFactionRepV17();
+      const rows = ['celestial','infernal'].map(id=>{
+        const def = window.FACTION_DEFS[id]; if(!def) return '';
+        const r = (fr[id]?.rep) ?? (def.baseRep ?? 50);
+        const status = window.getFactionStatus(id);
+        return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+          <span style="width:60px;font-size:9px;color:var(--dim);font-family:'Cinzel',serif">${def.icon} ${def.name}</span>
+          <div style="flex:1;height:5px;background:var(--bg-screen);border-radius:3px;overflow:hidden">
+            <div style="height:100%;width:${r}%;background:${def.icon==='👼'?'#80b0e8':'#c85050'};border-radius:3px"></div>
+          </div>
+          <span style="font-size:9px;color:var(--dim);width:56px;text-align:right">${status} ${r}</span>
+        </div>`;
+      }).join('');
+      return `<div style="border:1px dashed var(--border);background:var(--bg-screen);padding:9px 11px;margin-bottom:10px">
+        <div style="font-family:'Cinzel',serif;font-size:9px;color:var(--dim);letter-spacing:1px;margin-bottom:7px">🌌 천계·마계 평판</div>
+        ${rows}
+      </div>`;
+    })() : ''}
     ${Object.entries(factions).map(([name, f])=>{
       const r = rep[name]||0;
       const pct = Math.round((r+100)/2);

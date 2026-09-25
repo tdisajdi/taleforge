@@ -10,6 +10,7 @@ import { _markDirty, loadNPCs, saveSession, saveStatsSplit } from '../misc/001-b
 import { saveStats } from '../patches/299-플레이-통계-성향-분석-시스템-v57-완전판.js';
 import { RACE_DEFS } from '../race/013-종족-시스템.js';
 import { esc, lsDel, lsGet, lsSet, showToast, toast } from '../utils.js';
+import { changeFactionRep } from '../world/219-17-세력-명성-변경-상태-조회.js';
 import { updateWorldDB } from '../world/145-⑥-세계-상태-DB.js';
 import { loadCycleCount } from './014-환생-누적-시스템-110번.js';
 
@@ -1563,6 +1564,9 @@ export function gainDemonCorruption(sinType, customGain) {
   const sinDef = DEMON_SIN_GAIN[sinType];
   const gain = customGain !== undefined ? customGain : (sinDef?.gain || 5);
   dc.points = Math.min(1000, (dc.points || 0) + gain);
+  // [35번 섹션, M3(world/219) 재설계] 개인 타락도 증가가 세력 단위
+  // 마계 평판(world/219)에도 소폭 반영 — 기존 gain 값에서 1/3 비례.
+  if(typeof changeFactionRep==='function') changeFactionRep('infernal', Math.round(gain/3));
   dc.sin = dc.sin || {};
   if (sinType) dc.sin[sinType] = (dc.sin[sinType] || 0) + 1;
   dc.history = dc.history || [];
@@ -1607,6 +1611,9 @@ export function reduceDemonCorruption(amount, methodId) {
   if (!isDemon) return;
   const dc = loadDemonCorruption();
   dc.points = Math.max(0, (dc.points || 0) - amount);
+  // [35번 섹션, M3(world/219) 재설계] 정화로 타락이 줄면 마계 평판도
+  // 대칭적으로 같이 낮아진다 — gainDemonCorruption과 동일한 1/3 비례.
+  if(typeof changeFactionRep==='function') changeFactionRep('infernal', -Math.round(amount/3));
   dc.purifyCount = (dc.purifyCount || 0) + 1;
   dc.history = dc.history || [];
   dc.history.push({
@@ -5368,6 +5375,10 @@ export function gainCelestialLight(actType, customGain) {
   const gain = customGain !== undefined ? customGain : (def?.gain || 6);
   const prevPoints = cs.points;
   cs.points = Math.min(1000, (cs.points || 500) + gain);
+  // [35번 섹션, M3(world/219) 재설계] 세레스티얼 개인 빛 게이지 변화가
+  // 세력 단위 천계 평판(world/219)에도 소폭 반영되게 한다 — 기존 gain
+  // 값에서 비례 유도(1/3), 새 배율 체계는 안 만듦.
+  if(typeof changeFactionRep==='function') changeFactionRep('celestial', Math.round(gain/3));
   cs.lightActs = cs.lightActs || {};
   if (actType) cs.lightActs[actType] = (cs.lightActs[actType] || 0) + 1;
   cs.history = cs.history || [];
@@ -5393,6 +5404,9 @@ export function gainCelestialDark(actType, customGain) {
   const gain = customGain !== undefined ? customGain : (def?.gain || -6);
   const prevPoints = cs.points;
   cs.points = Math.max(0, (cs.points || 500) + gain);
+  // [35번 섹션, M3(world/219) 재설계] gain이 음수라 자동으로 천계 평판도
+  // 같이 낮아진다 — gainCelestialLight와 동일한 1/3 비례.
+  if(typeof changeFactionRep==='function') changeFactionRep('celestial', Math.round(gain/3));
   cs.darkActs = cs.darkActs || {};
   if (actType) cs.darkActs[actType] = (cs.darkActs[actType] || 0) + 1;
   cs.history = cs.history || [];

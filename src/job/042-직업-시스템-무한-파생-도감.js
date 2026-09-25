@@ -5,6 +5,7 @@ import { BASE_JOBS, MAIN_QUESTS, NPC_HEROES, SECRET_ENDINGS, WORLD_EVENTS } from
 import { S } from '../data/084-TaleForge-순수-JS-엔진.js';
 import { RACE_DEFS } from '../race/013-종족-시스템.js';
 import { getAllSetItems } from '../items/006-세트-아이템-시스템.js';
+import { changeFactionRep } from '../world/219-17-세력-명성-변경-상태-조회.js';
 import { saveGold, saveInventory } from '../items/007-동적-아이템-생성-시스템-무제한-영구-캐시.js';
 import { dramaticJobChange } from '../items/074-파트2-B-성장-연출-강화.js';
 import { _markDirty, loadNPCs, saveNPCs, saveStatsSplit } from '../misc/001-block0-preamble.js';
@@ -1635,6 +1636,15 @@ export function completeMainQuest(questId, opts){
       q.flags.forEach(f=>{ gsF[f]=true; });
       if(typeof saveGSFlags==='function') saveGSFlags(gsF);
     }catch(e){}
+  }
+  // [35번 섹션, M3(world/219) 재설계] mq25(천계-마계 동맹 성사)는
+  // 종족과 무관하게 전원이 거쳐가는 메인 퀘스트라, 종족 게이트가 걸린
+  // 개인 게이지 훅(위 gainCelestialLight/gainDemonCorruption 등)이
+  // 못 닿는 다른 종족 플레이어에게도 천계/마계 평판이 실제로 움직이는
+  // 유일한 경로다 — 동맹이 성사됐으니 양쪽 다 우호적으로 이동.
+  if(questId === 'mq25' && typeof changeFactionRep==='function'){
+    changeFactionRep('celestial', 15);
+    changeFactionRep('infernal', 15);
   }
   // 보상: 신규 NPC 자동 등록
   if(q.newNpcs && q.newNpcs.length){

@@ -41112,10 +41112,23 @@ ${lines.join("\n")}
         window.updateHeader();
         toast("\u{1F9D8} \uAE4A\uC740 \uBA85\uC0C1\uC73C\uB85C \uBAA8\uB4E0 \uC2A4\uD0EF+2!", 2500);
       },
+      // [2026-09-25 추가] 학자(scholar) 직업 선행 아이템 「고대 지식의
+      // 편린」은 정적 드랍처가 코드 어디에도 없어 AI가 서사 중 지급해줘야만
+      // 얻을 수 있었다(무-API 완주 원칙과 정면으로 어긋나는 진짜 공백 —
+      // job/042의 conditionHint가 스스로 "도서관이나 유적에서 찾을 수
+      // 있는"이라고 적어뒀는데, 정작 도서관/유적 조사 상호작용(바로 이
+      // 액션)에 그 지급 로직이 빠져있었다). 이미 있는 INT 성공 분기에
+      // 확률 드랍으로 연결 — 중복 방지(이미 있으면 다시 안 줌)만 걸고
+      // 새 시스템은 안 만듦.
       investigateRuins: () => {
         if ((S.stats.int || 50) >= 60) {
           S.skillSP += 2;
           saveSkillSP(S.skillSP);
+          if (!S.inventory.some((it) => it && it.id === "ancient_knowledge_fragment") && Math.random() < 0.3) {
+            S.inventory.push({ id: "ancient_knowledge_fragment", name: "\uACE0\uB300 \uC9C0\uC2DD\uC758 \uD3B8\uB9B0", icon: "\u{1F4DC}", rarity: "rare", type: "quest", desc: "\uACE0\uB300 \uBB38\uBA85\uC758 \uC9C0\uC2DD\uC774 \uB2F4\uAE34 \uB0A1\uC740 \uD30C\uD3B8. \uD574\uB3C5\uD560\uC218\uB85D \uC78A\uD600\uC9C4 \uC9C4\uC2E4\uC5D0 \uAC00\uAE4C\uC6CC\uC9C4\uB2E4." });
+            saveInventory(S.inventory);
+            toastHTML(`\u{1F4DC} \uC624\uB798\uB41C \uD30C\uD3B8\uC744 \uBC1C\uACAC\uD588\uB2E4! \u300C\uACE0\uB300 \uC9C0\uC2DD\uC758 \uD3B8\uB9B0\u300D \uD68D\uB4DD`, 3e3);
+          }
           toast("\u{1F50D} \uACE0\uB300 \uC9C0\uC2DD \uBC1C\uACAC! \uC2A4\uD0AC \uD3EC\uC778\uD2B8+2", 2500);
         } else toast("\u{1F50D} \uBB54\uAC00 \uC788\uB294 \uAC83 \uAC19\uC9C0\uB9CC \uD574\uC11D\uD558\uAE30 \uC5B4\uB835\uB2E4", 1500);
       },

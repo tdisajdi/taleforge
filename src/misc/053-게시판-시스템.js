@@ -440,7 +440,15 @@ export function doInteraction(action, cost=0, transportType='walk'){
     payRespects: ()=>{ S.stats.fath=Math.min(999,(S.stats.fath||50)+40); window.updateHeader(); grantTitle('peacemaker'); toast('🪦 망자들의 넋을 기렸다. 신앙심+5', 2500); },
     talkToGhost: ()=>{ updateReputation(15); toast('👻 망자의 영혼이 비밀을 속삭였다. 평판+15', 2500); },
     meditate: ()=>{ const keys=['str','agi','end','mgc','int','luk','per','wil']; keys.forEach(k=>{ S.stats[k]=Math.min(999,(S.stats[k]||50)+15); }); window.updateHeader(); toast('🧘 깊은 명상으로 모든 스탯+2!', 2500); },
-    investigateRuins: ()=>{ if((S.stats.int||50)>=60){ S.skillSP+=2; saveSkillSP(S.skillSP); toast('🔍 고대 지식 발견! 스킬 포인트+2', 2500); } else toast('🔍 뭔가 있는 것 같지만 해석하기 어렵다', 1500); },
+    // [2026-09-25 추가] 학자(scholar) 직업 선행 아이템 「고대 지식의
+    // 편린」은 정적 드랍처가 코드 어디에도 없어 AI가 서사 중 지급해줘야만
+    // 얻을 수 있었다(무-API 완주 원칙과 정면으로 어긋나는 진짜 공백 —
+    // job/042의 conditionHint가 스스로 "도서관이나 유적에서 찾을 수
+    // 있는"이라고 적어뒀는데, 정작 도서관/유적 조사 상호작용(바로 이
+    // 액션)에 그 지급 로직이 빠져있었다). 이미 있는 INT 성공 분기에
+    // 확률 드랍으로 연결 — 중복 방지(이미 있으면 다시 안 줌)만 걸고
+    // 새 시스템은 안 만듦.
+    investigateRuins: ()=>{ if((S.stats.int||50)>=60){ S.skillSP+=2; saveSkillSP(S.skillSP); if(!S.inventory.some(it=>it&&it.id==='ancient_knowledge_fragment') && Math.random()<0.3){ S.inventory.push({ id:'ancient_knowledge_fragment', name:'고대 지식의 편린', icon:'📜', rarity:'rare', type:'quest', desc:'고대 문명의 지식이 담긴 낡은 파편. 해독할수록 잊혀진 진실에 가까워진다.' }); saveInventory(S.inventory); toastHTML(`📜 오래된 파편을 발견했다! 「고대 지식의 편린」 획득`, 3000); } toast('🔍 고대 지식 발견! 스킬 포인트+2', 2500); } else toast('🔍 뭔가 있는 것 같지만 해석하기 어렵다', 1500); },
     ancientRitual: ()=>{ const effects=[()=>{S.stats.mgc=Math.min(999,(S.stats.mgc||50)+80);toast('✨ 고대 마력 흡수! MGC+15',2500);},()=>{applyStatusEffect('blessed');toast('✨ 고대의 축복!',2500);},()=>{S.stats.hp=Math.min((typeof getPlayerMaxHp==='function'?getPlayerMaxHp():999),(S.stats.hp||100)-20);applyStatusEffect('curse');toast('⚠️ 저주가 깃들었다! HP-20, 저주 발동',2500);}]; effects[Math.floor(Math.random()*effects.length)](); window.updateHeader(); },
     visitBar: ()=>{ S.stats.mp=Math.min((typeof getPlayerMaxMp==='function'?getPlayerMaxMp():999),(S.stats.mp||100)+20); updateReputation(5); toast('🍺 바에서 정보를 들었다. MP+20, 평판+5', 2000); },
     contactFixer: ()=>{ const gold=Math.floor(Math.random()*100)+50; if(typeof addGoldWithExchange==='function') addGoldWithExchange(gold, '픽서 의뢰 완료'); else { S.gold+=gold; saveGold(S.gold); } window.updateHeader(); toast(`🤝 픽서 의뢰 완료! 골드+${gold}`, 2500); },

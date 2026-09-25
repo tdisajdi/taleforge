@@ -41187,6 +41187,43 @@ ${lines.join("\n")}
           toast("\u274C \uD568\uC815 \uD574\uC81C \uC2E4\uD328! HP-20", 2e3);
         }
       },
+      // [2026-09-25 추가] 용기사(dragoon) 직업 선행 아이템 「용의 비늘」
+      // — job/042 conditionHint가 "살아있는 용을 찾아 둥지에 가라...
+      // 비늘은 무력으로도, 협상으로도 얻을 수 있다"고 적어뒀고,
+      // unlockCondition도 requireLocation:'용의 둥지'로 이 장소를 직접
+      // 지목한다. 용의 둥지(loc_dragon_lair, data/052)엔 이미 int_steal_hoard
+      // ("보물 강탈 시도", action:'stealHoard')라는 상호작용이 정의돼
+      // 있었지만, doInteraction의 actions 맵에 실제 핸들러가 없어
+      // 이 파일이 만들어진 이래 클릭해도 "상호작용 준비 중..." 안내만
+      // 뜨는 죽은 버튼이었다(다른 두 형제 액션 talkDragon/dragonPact도
+      // 마찬가지로 미구현 — 아래 최종 보고에 "발견했지만 범위 밖"으로
+      // 남김). 이 상호작용 자체가 이 장소에만 쓰이므로(전수 grep 확인)
+      // 별도 장소 id 가드 없이, disarmTrap과 동일한 AGI 판정 구조(같은
+      // 파일의 기존 정밀 판정 패턴 재사용, 숫자도 그대로 재사용해 새
+      // 밸런스를 지어내지 않음)로 "무력"(강탈) 쪽을 구현했다 — 성공하면
+      // "무력으로" 비늘을 챙기고, 실패하면 용의 분노를 사서 다친다
+      // (데이터의 "실패: 전투" 설명과 같은 방향).
+      stealHoard: () => {
+        if ((S.stats.agi || 50) > 60) {
+          if (typeof addGoldWithExchange === "function") addGoldWithExchange(50, "\uBCF4\uBB3C \uAC15\uD0C8 \uC131\uACF5");
+          else {
+            S.gold += 50;
+            saveGold(S.gold);
+          }
+          window.updateHeader();
+          let _scaleMsg = "";
+          if (!S.inventory.some((it) => it && it.id === "dragon_scale_relic") && Math.random() < 0.3) {
+            S.inventory.push({ id: "dragon_scale_relic", name: "\uC6A9\uC758 \uBE44\uB298", icon: "\u{1F409}", rarity: "rare", type: "quest", desc: "\uBCF4\uBB3C\uB354\uBBF8 \uC0AC\uC774\uC5D0\uC11C \uBAB0\uB798 \uB72F\uC5B4\uB0B8 \uC0B4\uC544\uC788\uB294 \uC6A9\uC758 \uBE44\uB298. \uC544\uC9C1\uB3C4 \uC740\uC740\uD55C \uC628\uAE30\uAC00 \uB0A8\uC544\uC788\uB2E4." });
+            saveInventory(S.inventory);
+            _scaleMsg = " \u300C\uC6A9\uC758 \uBE44\uB298\u300D\uAE4C\uC9C0 \uCC59\uACBC\uB2E4!";
+          }
+          toastHTML(`\u{1F4B0} \uBCF4\uBB3C\uB354\uBBF8\uC5D0\uC11C \uAC12\uB098\uAC00\uB294 \uAC83\uC744 \uD6D4\uCCD0\uB0C8\uB2E4! \uACE8\uB4DC+50${_scaleMsg}`, 3e3);
+        } else {
+          S.stats.hp = Math.max(1, (S.stats.hp || 100) - 20);
+          window.updateHeader();
+          toast("\u{1F409} \uC6A9\uC774 \uAE68\uC5B4\uB098 \uBD84\uB178\uD588\uB2E4! \uC804\uD22C\uC5D0 \uD718\uB9D0\uB824 HP-20", 2500);
+        }
+      },
       altarOffer: () => {
         if (S.gold >= 30) {
           S.gold -= 30;
@@ -41207,10 +41244,26 @@ ${lines.join("\n")}
           } else toast("\u{1F50D} \uC218\uC0C9\uD588\uC9C0\uB9CC \uC544\uBB34\uAC83\uB3C4 \uC5C6\uC5C8\uB2E4", 1500);
         });
       },
+      // [2026-09-25 추가] 광전사(berserker) 직업 선행 아이템 「분노의
+      // 인장」도 「고대 지식의 편린」과 정확히 같은 공백이었다 —
+      // job/042의 conditionHint가 "인장은 전투 상점이나 광전사의
+      // 시체에서 발견된다"고 적어뒀는데, 실제로 전사자를 추모하는 이
+      // 상호작용(옛 전장의 「전사자 추모」)에는 지급 로직이 없었다.
+      // payRespects는 다른 8곳(익사자/거인/용/요정 추모 등, 전혀 다른
+      // 테마)과도 공유되는 범용 액션이라, 진짜 전사자·전장 테마인
+      // 「옛 전장」(loc_battlefield, 유일하게 "전사자 추모"라는 이름을
+      // 쓰는 곳)일 때만 드랍이 뜨도록 장소 id로 가드했다 — 그래야
+      // "광전사의 시체" 힌트와 실제로 맞물린다.
       payRespects: () => {
         S.stats.fath = Math.min(999, (S.stats.fath || 50) + 40);
         window.updateHeader();
         grantTitle("peacemaker");
+        const _locWrath = typeof loadCurrentLocation === "function" ? loadCurrentLocation() : null;
+        if (_locWrath?.id === "loc_battlefield" && !S.inventory.some((it) => it && it.id === "seal_of_wrath") && Math.random() < 0.3) {
+          S.inventory.push({ id: "seal_of_wrath", name: "\uBD84\uB178\uC758 \uC778\uC7A5", icon: "\u{1F525}", rarity: "rare", type: "quest", desc: "\uC804\uC7A5\uC5D0\uC11C \uC4F0\uB7EC\uC9C4 \uAD11\uC804\uC0AC\uC758 \uC2DC\uCCB4\uC5D0\uC11C \uBC1C\uACAC\uD55C \uC778\uC7A5. \uC190\uC5D0 \uC950\uBA74 \uC5B5\uB20C\uB9B0 \uBD84\uB178\uAC00 \uB418\uC0B4\uC544\uB098\uB294 \uB4EF\uD558\uB2E4." });
+          saveInventory(S.inventory);
+          toastHTML(`\u{1F525} \uC4F0\uB7EC\uC9C4 \uAD11\uC804\uC0AC\uC758 \uC2DC\uCCB4\uC5D0\uC11C \uC778\uC7A5\uC744 \uBC1C\uACAC\uD588\uB2E4! \u300C\uBD84\uB178\uC758 \uC778\uC7A5\u300D \uD68D\uB4DD`, 3e3);
+        }
         toast("\u{1FAA6} \uB9DD\uC790\uB4E4\uC758 \uB10B\uC744 \uAE30\uB838\uB2E4. \uC2E0\uC559\uC2EC+5", 2500);
       },
       talkToGhost: () => {
@@ -41249,6 +41302,14 @@ ${lines.join("\n")}
           toast("\u{1F50D} \uACE0\uB300 \uC9C0\uC2DD \uBC1C\uACAC! \uC2A4\uD0AC \uD3EC\uC778\uD2B8+2", 2500);
         } else toast("\u{1F50D} \uBB54\uAC00 \uC788\uB294 \uAC83 \uAC19\uC9C0\uB9CC \uD574\uC11D\uD558\uAE30 \uC5B4\uB835\uB2E4", 1500);
       },
+      // [2026-09-25 추가] 어둠의 사제(dark_priest) 직업 선행 아이템
+      // 「이단의 성유」도 같은 공백 — job/042 conditionHint가 "터부시된
+      // 지하 제단이나 버려진 교단 창고에서 찾을 수 있다"고 적어뒀다.
+      // ancientRitual은 4곳(월식 신전·태양 관련 정화 의식 등)이 공유하는
+      // 범용 "옛 의식" 액션이라, 실제로 "지금은 금지된 옛 풍습의 흔적"
+      // 이라고 명시된 유일한 곳(피의 제단 동굴, loc_nw2_bloodaltar)일
+      // 때만 드랍이 뜨도록 장소 id로 가드했다 — 정화용 신전(월식 신전
+      // 등)에서 이단 아이템이 나오면 테마가 어긋나므로 전부 배제.
       ancientRitual: () => {
         const effects = [() => {
           S.stats.mgc = Math.min(999, (S.stats.mgc || 50) + 80);
@@ -41263,12 +41324,27 @@ ${lines.join("\n")}
         }];
         effects[Math.floor(Math.random() * effects.length)]();
         window.updateHeader();
+        const _locOil = typeof loadCurrentLocation === "function" ? loadCurrentLocation() : null;
+        if (_locOil?.id === "loc_nw2_bloodaltar" && !S.inventory.some((it) => it && it.id === "heretic_holy_oil") && Math.random() < 0.3) {
+          S.inventory.push({ id: "heretic_holy_oil", name: "\uC774\uB2E8\uC758 \uC131\uC720", icon: "\u{1F56F}\uFE0F", rarity: "rare", type: "quest", desc: "\uAE08\uC9C0\uB41C \uC61B \uD48D\uC2B5\uC758 \uC81C\uB2E8 \uAD6C\uC11D\uC5D0\uC11C \uCC3E\uC544\uB0B8 \uC131\uC720\uBCD1. \uBC14\uB974\uB294 \uC21C\uAC04 \uC5B4\uB460\uC758 \uC2E0\uACFC\uC758 \uACC4\uC57D\uC774 \uC2DC\uC791\uB41C\uB2E4\uACE0 \uC804\uD574\uC9C4\uB2E4." });
+          saveInventory(S.inventory);
+          toastHTML(`\u{1F56F}\uFE0F \uC81C\uB2E8 \uAD6C\uC11D\uC5D0\uC11C \uB0A1\uC740 \uC131\uC720\uBCD1\uC744 \uBC1C\uACAC\uD588\uB2E4! \u300C\uC774\uB2E8\uC758 \uC131\uC720\u300D \uD68D\uB4DD`, 3e3);
+        }
       },
       visitBar: () => {
         S.stats.mp = Math.min(typeof getPlayerMaxMp === "function" ? getPlayerMaxMp() : 999, (S.stats.mp || 100) + 20);
         updateReputation(5);
         toast("\u{1F37A} \uBC14\uC5D0\uC11C \uC815\uBCF4\uB97C \uB4E4\uC5C8\uB2E4. MP+20, \uD3C9\uD310+5", 2e3);
       },
+      // [2026-09-25 추가] 흑마법사(warlock) 직업 선행 아이템 「금서」도
+      // 같은 공백 — job/042 conditionHint가 "지하 마법 시장이나 버려진
+      // 마법사의 탑에서 금서를 찾아라"고 적어뒀다(31번 섹션에서 확인한
+      // "금서"는 misc/251 암시장에서도 살 수 있지만 그건 방랑자 직업
+      // 전용 우회로일 뿐, 학자·흑마법사 등 다른 직업 경로는 여전히
+      // 막혀있었음). contactFixer는 6곳(모피 상인·항구 브로커 등, 금지
+      // 아이템과 무관한 테마 다수)이 공유하는 범용 액션이라, 실제로
+      // "지하 도시 암시장"인 곳(섀도우마켓, loc_central_underground)
+      // 일 때만 드랍이 뜨도록 장소 id로 가드했다.
       contactFixer: () => {
         const gold = Math.floor(Math.random() * 100) + 50;
         if (typeof addGoldWithExchange === "function") addGoldWithExchange(gold, "\uD53D\uC11C \uC758\uB8B0 \uC644\uB8CC");
@@ -41278,6 +41354,12 @@ ${lines.join("\n")}
         }
         window.updateHeader();
         toast(`\u{1F91D} \uD53D\uC11C \uC758\uB8B0 \uC644\uB8CC! \uACE8\uB4DC+${gold}`, 2500);
+        const _locBook = typeof loadCurrentLocation === "function" ? loadCurrentLocation() : null;
+        if (_locBook?.id === "loc_central_underground" && !S.inventory.some((it) => it && it.id === "forbidden_grimoire") && Math.random() < 0.3) {
+          S.inventory.push({ id: "forbidden_grimoire", name: "\uAE08\uC11C: \uC5B4\uB460\uC758 \uACC4\uC57D", icon: "\u{1F4D5}", rarity: "rare", type: "quest", desc: "\uC554\uD751 \uC0C1\uC778\uC774 \uC2AC\uCA4D \uB0B4\uBBFC \uAE08\uC9C0\uB41C \uB9C8\uBC95\uC11C. \uD45C\uC9C0\uC5D0\uB294 \uB0AF\uC120 \uBB38\uC790\uB85C \uACC4\uC57D\uC758 \uC870\uAC74\uC774 \uC801\uD600 \uC788\uB2E4." });
+          saveInventory(S.inventory);
+          toastHTML(`\u{1F4D5} \uC554\uD751 \uC0C1\uC778\uC774 \uC740\uBC00\uD788 \uAE08\uC11C\uB97C \uAC74\uB138\uB2E4! \u300C\uAE08\uC11C: \uC5B4\uB460\uC758 \uACC4\uC57D\u300D \uD68D\uB4DD`, 3e3);
+        }
       },
       guardDuty: () => {
         if (typeof addGoldWithExchange === "function") addGoldWithExchange(20, "\uACBD\uBE44 \uC644\uB8CC");
@@ -41308,8 +41390,27 @@ ${lines.join("\n")}
         toast("\u{1F300} \uB9C8\uBC95\uC9C4\uC774 \uD65C\uC131\uD654\uB410\uB2E4. \uB2E4\uC74C \uC774\uB3D9 \uC2DC \uBE44\uC6A9 \uC5C6\uC74C.", 2500);
         S._portalReady = true;
       },
+      // [2026-09-25 추가] 시간술사(chronomancer) 직업 선행 아이템 「시간의
+      // 모래시계」도 같은 공백 — job/042 conditionHint가 "부서진 시간의
+      // 모래시계를 수리하는 퀘스트를 완료해야 한다"고 적어뒀지만, 그
+      // 전제인 "모래시계를 어디서 얻는지"에 대응하는 정적 장소가 코드
+      // 어디에도 없었다("시간의 균열"은 quest/086의 JOB_LOC_KEYWORDS
+      // 텍스트 힌트로만 존재하고 실제 LOCATION_DATA 항목이 아님을 확인).
+      // identifyItem은 5곳이 공유하는 범용 "감정" 액션이라, 그중 실제로
+      // "과거와 미래를 볼 수 있다는 예언자"가 사는 두 곳(예언자의 탑
+      // loc_east_oracle_tower·숨겨진 예언자가 사는 벼랑 마을
+      // loc_east_hamlet_crestfall — 둘 다 "시공"을 다루는 예언 테마)
+      // 일 때만 드랍이 뜨도록 장소 id로 가드했다. requireQuest:'시간의
+      // 균열'(아이템과 별개인 퀘스트 완료 조건)은 이번 승인 범위(아이템
+      // 획득 경로) 밖이라 손 안 댐 — 최종 보고서에 정직하게 남긴다.
       identifyItem: () => {
         toast("\u{1F50D} \uC544\uC774\uD15C\uC758 \uC228\uACA8\uC9C4 \uD6A8\uACFC\uAC00 \uBC1D\uD600\uC84C\uB2E4!", 2e3);
+        const _locGlass = typeof loadCurrentLocation === "function" ? loadCurrentLocation() : null;
+        if ((_locGlass?.id === "loc_east_oracle_tower" || _locGlass?.id === "loc_east_hamlet_crestfall") && !S.inventory.some((it) => it && it.id === "hourglass_of_time") && Math.random() < 0.3) {
+          S.inventory.push({ id: "hourglass_of_time", name: "\uC2DC\uAC04\uC758 \uBAA8\uB798\uC2DC\uACC4", icon: "\u23F3", rarity: "rare", type: "quest", desc: "\uC608\uC5B8\uC790\uAC00 \uAC74\uB124\uC900 \uB0A1\uACE0 \uBD80\uC11C\uC9C4 \uBAA8\uB798\uC2DC\uACC4. \uBAA8\uB798\uB294 \uD750\uB974\uC9C0 \uC54A\uC9C0\uB9CC, \uAC00\uB054 \uAC70\uAFB8\uB85C \uD750\uB974\uB294 \uAC83\uCC98\uB7FC \uBCF4\uC77C \uB54C\uAC00 \uC788\uB2E4." });
+          saveInventory(S.inventory);
+          toastHTML(`\u23F3 \uC608\uC5B8\uC790\uAC00 \uB0A1\uC740 \uBAA8\uB798\uC2DC\uACC4\uB97C \uAC74\uB138\uB2E4! \u300C\uC2DC\uAC04\uC758 \uBAA8\uB798\uC2DC\uACC4\u300D \uD68D\uB4DD`, 3e3);
+        }
       },
       jianghuDuel: () => {
         if (Math.random() < 0.5) {

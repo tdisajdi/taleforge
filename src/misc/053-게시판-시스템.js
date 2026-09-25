@@ -435,9 +435,53 @@ export function doInteraction(action, cost=0, transportType='walk'){
     elderTalk: ()=>{ updateReputation(10); toast('👴 장로에게서 귀한 이야기를 들었다. 평판+10', 2500); },
     dungeonExplore: ()=>{ startAIDungeonExplore(); },
     disarmTrap: ()=>{ if((S.stats.agi||50)>60){ if(typeof addGoldWithExchange==='function') addGoldWithExchange(50, '함정 해제 성공'); else { S.gold+=50; saveGold(S.gold); } window.updateHeader(); toast('⚙️ 함정 해제 성공! 골드+50', 2000); } else { S.stats.hp=Math.max(1,(S.stats.hp||100)-20); window.updateHeader(); toast('❌ 함정 해제 실패! HP-20', 2000); } },
+    // [2026-09-25 추가] 용기사(dragoon) 직업 선행 아이템 「용의 비늘」
+    // — job/042 conditionHint가 "살아있는 용을 찾아 둥지에 가라...
+    // 비늘은 무력으로도, 협상으로도 얻을 수 있다"고 적어뒀고,
+    // unlockCondition도 requireLocation:'용의 둥지'로 이 장소를 직접
+    // 지목한다. 용의 둥지(loc_dragon_lair, data/052)엔 이미 int_steal_hoard
+    // ("보물 강탈 시도", action:'stealHoard')라는 상호작용이 정의돼
+    // 있었지만, doInteraction의 actions 맵에 실제 핸들러가 없어
+    // 이 파일이 만들어진 이래 클릭해도 "상호작용 준비 중..." 안내만
+    // 뜨는 죽은 버튼이었다(다른 두 형제 액션 talkDragon/dragonPact도
+    // 마찬가지로 미구현 — 아래 최종 보고에 "발견했지만 범위 밖"으로
+    // 남김). 이 상호작용 자체가 이 장소에만 쓰이므로(전수 grep 확인)
+    // 별도 장소 id 가드 없이, disarmTrap과 동일한 AGI 판정 구조(같은
+    // 파일의 기존 정밀 판정 패턴 재사용, 숫자도 그대로 재사용해 새
+    // 밸런스를 지어내지 않음)로 "무력"(강탈) 쪽을 구현했다 — 성공하면
+    // "무력으로" 비늘을 챙기고, 실패하면 용의 분노를 사서 다친다
+    // (데이터의 "실패: 전투" 설명과 같은 방향).
+    stealHoard: ()=>{ if((S.stats.agi||50)>60){
+        if(typeof addGoldWithExchange==='function') addGoldWithExchange(50, '보물 강탈 성공'); else { S.gold+=50; saveGold(S.gold); }
+        window.updateHeader();
+        let _scaleMsg = '';
+        if(!S.inventory.some(it=>it&&it.id==='dragon_scale_relic') && Math.random()<0.3){
+          S.inventory.push({ id:'dragon_scale_relic', name:'용의 비늘', icon:'🐉', rarity:'rare', type:'quest', desc:'보물더미 사이에서 몰래 뜯어낸 살아있는 용의 비늘. 아직도 은은한 온기가 남아있다.' });
+          saveInventory(S.inventory);
+          _scaleMsg = ' 「용의 비늘」까지 챙겼다!';
+        }
+        toastHTML(`💰 보물더미에서 값나가는 것을 훔쳐냈다! 골드+50${_scaleMsg}`, 3000);
+      } else { S.stats.hp=Math.max(1,(S.stats.hp||100)-20); window.updateHeader(); toast('🐉 용이 깨어나 분노했다! 전투에 휘말려 HP-20', 2500); } },
     altarOffer: ()=>{ if(S.gold>=30){ S.gold-=30; saveGold(S.gold); const keys=['str','agi','end','mgc','int','luk']; const k=keys[Math.floor(Math.random()*keys.length)]; S.stats[k]=Math.min(999,(S.stats[k]||50)+50); window.updateHeader(); toast(`⛩️ 제단의 축복: ${k.toUpperCase()} +8!`, 2500); } else toast('골드 30 필요', 1500); },
     scavenge: ()=>{ rollDynamicScavenge(loadCurrentLocation()?.type||'ruins').then(scavItem=>{ if(scavItem){ S.inventory.push(scavItem); saveInventory(S.inventory); toastHTML(`🔍 ${typeof getEntityIconHTML==='function'?getEntityIconHTML(scavItem,{size:14}):(scavItem.icon)} ${esc(scavItem.name)} 발견! (${esc(scavItem.rarity)})`, 2500); } else toast('🔍 수색했지만 아무것도 없었다', 1500); }); },
-    payRespects: ()=>{ S.stats.fath=Math.min(999,(S.stats.fath||50)+40); window.updateHeader(); grantTitle('peacemaker'); toast('🪦 망자들의 넋을 기렸다. 신앙심+5', 2500); },
+    // [2026-09-25 추가] 광전사(berserker) 직업 선행 아이템 「분노의
+    // 인장」도 「고대 지식의 편린」과 정확히 같은 공백이었다 —
+    // job/042의 conditionHint가 "인장은 전투 상점이나 광전사의
+    // 시체에서 발견된다"고 적어뒀는데, 실제로 전사자를 추모하는 이
+    // 상호작용(옛 전장의 「전사자 추모」)에는 지급 로직이 없었다.
+    // payRespects는 다른 8곳(익사자/거인/용/요정 추모 등, 전혀 다른
+    // 테마)과도 공유되는 범용 액션이라, 진짜 전사자·전장 테마인
+    // 「옛 전장」(loc_battlefield, 유일하게 "전사자 추모"라는 이름을
+    // 쓰는 곳)일 때만 드랍이 뜨도록 장소 id로 가드했다 — 그래야
+    // "광전사의 시체" 힌트와 실제로 맞물린다.
+    payRespects: ()=>{ S.stats.fath=Math.min(999,(S.stats.fath||50)+40); window.updateHeader(); grantTitle('peacemaker');
+      const _locWrath = (typeof loadCurrentLocation==='function') ? loadCurrentLocation() : null;
+      if(_locWrath?.id==='loc_battlefield' && !S.inventory.some(it=>it&&it.id==='seal_of_wrath') && Math.random()<0.3){
+        S.inventory.push({ id:'seal_of_wrath', name:'분노의 인장', icon:'🔥', rarity:'rare', type:'quest', desc:'전장에서 쓰러진 광전사의 시체에서 발견한 인장. 손에 쥐면 억눌린 분노가 되살아나는 듯하다.' });
+        saveInventory(S.inventory);
+        toastHTML(`🔥 쓰러진 광전사의 시체에서 인장을 발견했다! 「분노의 인장」 획득`, 3000);
+      }
+      toast('🪦 망자들의 넋을 기렸다. 신앙심+5', 2500); },
     talkToGhost: ()=>{ updateReputation(15); toast('👻 망자의 영혼이 비밀을 속삭였다. 평판+15', 2500); },
     meditate: ()=>{ const keys=['str','agi','end','mgc','int','luk','per','wil']; keys.forEach(k=>{ S.stats[k]=Math.min(999,(S.stats[k]||50)+15); }); window.updateHeader(); toast('🧘 깊은 명상으로 모든 스탯+2!', 2500); },
     // [2026-09-25 추가] 학자(scholar) 직업 선행 아이템 「고대 지식의
@@ -457,14 +501,65 @@ export function doInteraction(action, cost=0, transportType='walk'){
       const _race053 = (S.character?.race||'');
       if((_race053.includes('드래곤')||_race053.includes('dragon')||_race053.includes('용혈')) && typeof gainDragonFragment==='function' && Math.random()<0.25){ gainDragonFragment('ancient_ruin'); }
       toast('🔍 고대 지식 발견! 스킬 포인트+2', 2500); } else toast('🔍 뭔가 있는 것 같지만 해석하기 어렵다', 1500); },
-    ancientRitual: ()=>{ const effects=[()=>{S.stats.mgc=Math.min(999,(S.stats.mgc||50)+80);toast('✨ 고대 마력 흡수! MGC+15',2500);},()=>{applyStatusEffect('blessed');toast('✨ 고대의 축복!',2500);},()=>{S.stats.hp=Math.min((typeof getPlayerMaxHp==='function'?getPlayerMaxHp():999),(S.stats.hp||100)-20);applyStatusEffect('curse');toast('⚠️ 저주가 깃들었다! HP-20, 저주 발동',2500);}]; effects[Math.floor(Math.random()*effects.length)](); window.updateHeader(); },
+    // [2026-09-25 추가] 어둠의 사제(dark_priest) 직업 선행 아이템
+    // 「이단의 성유」도 같은 공백 — job/042 conditionHint가 "터부시된
+    // 지하 제단이나 버려진 교단 창고에서 찾을 수 있다"고 적어뒀다.
+    // ancientRitual은 4곳(월식 신전·태양 관련 정화 의식 등)이 공유하는
+    // 범용 "옛 의식" 액션이라, 실제로 "지금은 금지된 옛 풍습의 흔적"
+    // 이라고 명시된 유일한 곳(피의 제단 동굴, loc_nw2_bloodaltar)일
+    // 때만 드랍이 뜨도록 장소 id로 가드했다 — 정화용 신전(월식 신전
+    // 등)에서 이단 아이템이 나오면 테마가 어긋나므로 전부 배제.
+    ancientRitual: ()=>{ const effects=[()=>{S.stats.mgc=Math.min(999,(S.stats.mgc||50)+80);toast('✨ 고대 마력 흡수! MGC+15',2500);},()=>{applyStatusEffect('blessed');toast('✨ 고대의 축복!',2500);},()=>{S.stats.hp=Math.min((typeof getPlayerMaxHp==='function'?getPlayerMaxHp():999),(S.stats.hp||100)-20);applyStatusEffect('curse');toast('⚠️ 저주가 깃들었다! HP-20, 저주 발동',2500);}]; effects[Math.floor(Math.random()*effects.length)](); window.updateHeader();
+      const _locOil = (typeof loadCurrentLocation==='function') ? loadCurrentLocation() : null;
+      if(_locOil?.id==='loc_nw2_bloodaltar' && !S.inventory.some(it=>it&&it.id==='heretic_holy_oil') && Math.random()<0.3){
+        S.inventory.push({ id:'heretic_holy_oil', name:'이단의 성유', icon:'🕯️', rarity:'rare', type:'quest', desc:'금지된 옛 풍습의 제단 구석에서 찾아낸 성유병. 바르는 순간 어둠의 신과의 계약이 시작된다고 전해진다.' });
+        saveInventory(S.inventory);
+        toastHTML(`🕯️ 제단 구석에서 낡은 성유병을 발견했다! 「이단의 성유」 획득`, 3000);
+      }
+    },
     visitBar: ()=>{ S.stats.mp=Math.min((typeof getPlayerMaxMp==='function'?getPlayerMaxMp():999),(S.stats.mp||100)+20); updateReputation(5); toast('🍺 바에서 정보를 들었다. MP+20, 평판+5', 2000); },
-    contactFixer: ()=>{ const gold=Math.floor(Math.random()*100)+50; if(typeof addGoldWithExchange==='function') addGoldWithExchange(gold, '픽서 의뢰 완료'); else { S.gold+=gold; saveGold(S.gold); } window.updateHeader(); toast(`🤝 픽서 의뢰 완료! 골드+${gold}`, 2500); },
+    // [2026-09-25 추가] 흑마법사(warlock) 직업 선행 아이템 「금서」도
+    // 같은 공백 — job/042 conditionHint가 "지하 마법 시장이나 버려진
+    // 마법사의 탑에서 금서를 찾아라"고 적어뒀다(31번 섹션에서 확인한
+    // "금서"는 misc/251 암시장에서도 살 수 있지만 그건 방랑자 직업
+    // 전용 우회로일 뿐, 학자·흑마법사 등 다른 직업 경로는 여전히
+    // 막혀있었음). contactFixer는 6곳(모피 상인·항구 브로커 등, 금지
+    // 아이템과 무관한 테마 다수)이 공유하는 범용 액션이라, 실제로
+    // "지하 도시 암시장"인 곳(섀도우마켓, loc_central_underground)
+    // 일 때만 드랍이 뜨도록 장소 id로 가드했다.
+    contactFixer: ()=>{ const gold=Math.floor(Math.random()*100)+50; if(typeof addGoldWithExchange==='function') addGoldWithExchange(gold, '픽서 의뢰 완료'); else { S.gold+=gold; saveGold(S.gold); } window.updateHeader(); toast(`🤝 픽서 의뢰 완료! 골드+${gold}`, 2500);
+      const _locBook = (typeof loadCurrentLocation==='function') ? loadCurrentLocation() : null;
+      if(_locBook?.id==='loc_central_underground' && !S.inventory.some(it=>it&&it.id==='forbidden_grimoire') && Math.random()<0.3){
+        S.inventory.push({ id:'forbidden_grimoire', name:'금서: 어둠의 계약', icon:'📕', rarity:'rare', type:'quest', desc:'암흑 상인이 슬쩍 내민 금지된 마법서. 표지에는 낯선 문자로 계약의 조건이 적혀 있다.' });
+        saveInventory(S.inventory);
+        toastHTML(`📕 암흑 상인이 은밀히 금서를 건넸다! 「금서: 어둠의 계약」 획득`, 3000);
+      }
+    },
     guardDuty: ()=>{ if(typeof addGoldWithExchange==='function') addGoldWithExchange(20, '경비 완료'); else { S.gold+=20; saveGold(S.gold); } updateReputation(8); window.updateHeader(); toast('🛡️ 경비 완료! 골드+20, 평판+8', 2000); },
     barterTrade: ()=>{ toast('🔄 물물교환: 인벤토리 패널에서 아이템을 선택하세요', 2500); window.openP('inventory'); },
     enchantItem: ()=>{ toast('✨ 인벤토리의 장비 아이템에 마법이 깃들었다!', 2500); S.inventory.forEach(item=>{ if(item.type==='equip'&&item.effects){ Object.keys(item.effects).forEach(k=>{ item.effects[k]=(item.effects[k]||0)+3; }); } }); saveInventory(S.inventory); },
     usePortal: ()=>{ toast('🌀 마법진이 활성화됐다. 다음 이동 시 비용 없음.', 2500); S._portalReady=true; },
-    identifyItem: ()=>{ toast('🔍 아이템의 숨겨진 효과가 밝혀졌다!', 2000); },
+    // [2026-09-25 추가] 시간술사(chronomancer) 직업 선행 아이템 「시간의
+    // 모래시계」도 같은 공백 — job/042 conditionHint가 "부서진 시간의
+    // 모래시계를 수리하는 퀘스트를 완료해야 한다"고 적어뒀지만, 그
+    // 전제인 "모래시계를 어디서 얻는지"에 대응하는 정적 장소가 코드
+    // 어디에도 없었다("시간의 균열"은 quest/086의 JOB_LOC_KEYWORDS
+    // 텍스트 힌트로만 존재하고 실제 LOCATION_DATA 항목이 아님을 확인).
+    // identifyItem은 5곳이 공유하는 범용 "감정" 액션이라, 그중 실제로
+    // "과거와 미래를 볼 수 있다는 예언자"가 사는 두 곳(예언자의 탑
+    // loc_east_oracle_tower·숨겨진 예언자가 사는 벼랑 마을
+    // loc_east_hamlet_crestfall — 둘 다 "시공"을 다루는 예언 테마)
+    // 일 때만 드랍이 뜨도록 장소 id로 가드했다. requireQuest:'시간의
+    // 균열'(아이템과 별개인 퀘스트 완료 조건)은 이번 승인 범위(아이템
+    // 획득 경로) 밖이라 손 안 댐 — 최종 보고서에 정직하게 남긴다.
+    identifyItem: ()=>{ toast('🔍 아이템의 숨겨진 효과가 밝혀졌다!', 2000);
+      const _locGlass = (typeof loadCurrentLocation==='function') ? loadCurrentLocation() : null;
+      if((_locGlass?.id==='loc_east_oracle_tower' || _locGlass?.id==='loc_east_hamlet_crestfall') && !S.inventory.some(it=>it&&it.id==='hourglass_of_time') && Math.random()<0.3){
+        S.inventory.push({ id:'hourglass_of_time', name:'시간의 모래시계', icon:'⏳', rarity:'rare', type:'quest', desc:'예언자가 건네준 낡고 부서진 모래시계. 모래는 흐르지 않지만, 가끔 거꾸로 흐르는 것처럼 보일 때가 있다.' });
+        saveInventory(S.inventory);
+        toastHTML(`⏳ 예언자가 낡은 모래시계를 건넸다! 「시간의 모래시계」 획득`, 3000);
+      }
+    },
     jianghuDuel: ()=>{ if(Math.random()<0.5){ updateReputation(20); toast('⚔️ 대련 승리! 명성+20', 2500); } else { S.stats.hp=Math.max(1,(S.stats.hp||100)-15); window.updateHeader(); toast('⚔️ 대련 패배... HP-15', 2000); } },
     buyInfo: ()=>{ updateReputation(10); toast('💬 귀한 정보를 얻었다. 평판+10', 2000); },
     joinSect: ()=>{ toast('🐉 문파 가입 조건을 확인하세요. 강한 스탯과 명성이 필요합니다.', 3000); },

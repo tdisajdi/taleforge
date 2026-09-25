@@ -17390,6 +17390,10 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
     fullpower: { label: "\uC804\uB825 \uD574\uBC29", icon: "\u26A1", gain: 40, desc: "\uC9C4\uC815\uD55C \uB4DC\uB798\uACE4 \uD798 \uD574\uBC29" },
     suppress: { label: "\uB0C9\uC815 \uC720\uC9C0", icon: "\u{1F9CA}", gain: -15, desc: "\uBD84\uB178\uB97C \uC5B5\uB204\uB974\uACE0 \uB0C9\uC815\uD568 \uC720\uC9C0 (\uAC01\uC131\uB3C4 \uAC10\uC18C)" }
   };
+  var DRAGON_BALANCE_SHIFTS = {
+    destroy: { label: "\uD30C\uAD34\uC801 \uD589\uB3D9", icon: "\u{1F525}", amount: -30, desc: "\uC57D\uC790\uB97C \uC9D3\uBC1F\uAC70\uB098 \uC138\uC0C1\uC744 \uD30C\uAD34\uD558\uB294 \uC120\uD0DD\uC744 \uD588\uB2E4" },
+    guard: { label: "\uC218\uD638\uC801 \uD589\uB3D9", icon: "\u{1F6E1}\uFE0F", amount: 30, desc: "\uC57D\uC790\uB97C \uC9C0\uD0A4\uACE0 \uC138\uC0C1\uC744 \uBCF4\uD638\uD558\uB294 \uC120\uD0DD\uC744 \uD588\uB2E4" }
+  };
   var DEMON_SIN_GAIN = {
     contract: { label: "\uACC4\uC57D\xB7\uD611\uBC15", icon: "\u{1F4DC}", gain: 8, desc: "\uBD88\uB9AC\uD55C \uACC4\uC57D \uAC15\uC81C, \uD611\uBC15, \uACF5\uAC08" },
     fear: { label: "\uACF5\uD3EC \uC870\uC7A5", icon: "\u{1F631}", gain: 6, desc: "\uC0C1\uB300\uB97C \uC758\uB3C4\uC801\uC73C\uB85C \uACF5\uD3EC\uC5D0 \uBAB0\uC544\uB123\uC74C" },
@@ -28952,12 +28956,14 @@ ${lines.join("\n")}
       return { bloodline: 50, ancestorType: null, ancestorFragments: 0, ancestorRevealed: false, ancestorHistory: [], heartBalance: 500, hoardType: null, hoardObsession: 0, hoardHistory: [], awakenPoints: 0, awakenCostPending: false, awakenCostCount: 0, awakenHistory: [], history: [] };
     }
   };
+  window.loadDragonHeart = loadDragonHeart;
   var saveDragonHeart = (d) => {
     try {
       lsSet(DRAGON_HEART_KEY, JSON.stringify(d));
     } catch (e) {
     }
   };
+  window.saveDragonHeart = saveDragonHeart;
   var clearDragonHeart = () => lsDel(DRAGON_HEART_KEY);
   function getDragonBalancePhase(balance) {
     for (const p of DRAGON_BALANCE_PHASES) {
@@ -29009,7 +29015,7 @@ ${lines.join("\n")}
     saveDragonHeart(dh);
   }
   window.gainDragonHoard = gainDragonHoard;
-  function gainDragonFragment(triggerId) {
+  function gainDragonFragment2(triggerId) {
     const race = S.character?.race || "";
     if (!race.includes("\uB4DC\uB798\uACE4") && !race.includes("dragon") && !race.includes("\uC6A9\uD608")) return;
     const dh = loadDragonHeart();
@@ -29043,7 +29049,7 @@ ${lines.join("\n")}
     if (dh.ancestorHistory.length > 30) dh.ancestorHistory = dh.ancestorHistory.slice(-30);
     saveDragonHeart(dh);
   }
-  window.gainDragonFragment = gainDragonFragment;
+  window.gainDragonFragment = gainDragonFragment2;
   function shiftDragonBalance(amount) {
     const race = S.character?.race || "";
     if (!race.includes("\uB4DC\uB798\uACE4") && !race.includes("dragon") && !race.includes("\uC6A9\uD608")) return;
@@ -29160,6 +29166,16 @@ ${lines.join("\n")}
       <span style="font-size:9px;color:#8040c0;font-family:'Cinzel',serif">${dh.ancestorFragments}/7</span>
     </div>
     <div style="font-size:9px;color:#604080;margin-top:5px">\u25B8 \uD2B9\uC815 \uD589\uB3D9(\uACE0\uB8E1 \uC870\uC6B0, \uACE0\uB300 \uC720\uC801, \uD3ED\uD48D \uC18D \uC804\uD22C \uB4F1)\uC73C\uB85C \uD30C\uD3B8 \uC218\uC9D1</div>
+    <!-- [F1 FIX] gainDragonFragment\uAC00 ai-prompt/148\uC758 gs.dragon_fragment \uD55C
+         \uACF3\uC5D0\uC11C\uB9CC \uD638\uCD9C\uB418\uACE0 \uC218\uB3D9 \uD2B8\uB9AC\uAC70\uAC00 \uC804\uD600 \uC5C6\uC5C8\uB2E4 \u2014 DRAGON_FRAGMENT_TRIGGERS
+         8\uC885 \uC804\uBD80\uB97C \uBC84\uD2BC\uC73C\uB85C \uB178\uCD9C\uD574 \uAC19\uC740 \uD568\uC218\uB97C \uC9C1\uC811 \uD638\uCD9C\uD55C\uB2E4. -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:8px">
+      ${DRAGON_FRAGMENT_TRIGGERS.map((t) => `
+        <button onclick="gainDragonFragment('${t.id}');renderDragonHeartPanel()"
+          style="padding:6px;background:#0d0018;border:1px solid #6040a044;color:#a080c0;font-size:8px;cursor:pointer;font-family:'Crimson Text',serif;text-align:left;border-radius:2px;line-height:1.3">
+          ${typeof getEntityIconHTML === "function" ? getEntityIconHTML(t, { size: 7 }) : t.icon} ${t.label}
+        </button>`).join("")}
+    </div>
     <div style="margin-top:8px;font-family:'Cinzel',serif;font-size:9px;color:#604080;letter-spacing:1px">\uBC1C\uAD74 \uAE30\uB85D</div>
     ${(dh.ancestorHistory || []).slice(-5).reverse().map((h) => `<div style="display:flex;gap:5px;align-items:center;padding:3px 0;border-bottom:1px solid #200030;font-size:10px"><span>${typeof getEntityIconHTML === "function" ? getEntityIconHTML(h, { size: 16 }) : h.icon}</span><span style="color:#a080c0;flex:1">${h.label}</span><span style="color:#604080;font-size:9px">${h.at || ""}</span></div>`).join("") || '<div style="font-size:10px;color:#403050;text-align:center;padding:6px 0">\uC544\uC9C1 \uD30C\uD3B8\uC774 \uC5C6\uB2E4.</div>'}
   </div>
@@ -29180,8 +29196,16 @@ ${lines.join("\n")}
     </div>
     <div style="font-size:10px;color:#607090;margin-top:4px;text-align:center">${balPhase.desc}</div>
     ${balPhase.phase === "adrift" ? `<div style="margin-top:6px;padding:4px 8px;background:#101010;border:1px solid #303030;font-size:10px;color:#808080;text-align:center">\u26A0\uFE0F \uBC29\uD5A5\uC744 \uC120\uD0DD\uD558\uC9C0 \uBABB\uD55C \uC790 \u2014 \uAC00\uC7A5 \uC57D\uD55C \uC0C1\uD0DC</div>` : ""}
-    <div style="margin-top:8px;padding:5px 8px;background:#0a0500;border:1px dashed #2a1000;border-radius:2px;font-size:9px;color:#5a3010">
-      \u{1F4A1} \uC6A9\uC2EC\uC758 \uADE0\uD615\uC740 \uD30C\uAD34\uC801/\uC218\uD638\uC801 \uD589\uB3D9\uC5D0 \uB530\uB77C \uC790\uC5F0\uC2A4\uB7FD\uAC8C \uC774\uB3D9\uD569\uB2C8\uB2E4. \uC9C1\uC811 \uC870\uC791 \uBD88\uAC00
+    <!-- [F1 FIX] shiftDragonBalance\uAC00 ai-prompt/148\uC758 gs.dragon_balance \uD55C
+         \uACF3\uC5D0\uC11C\uB9CC \uD638\uCD9C\uB418\uACE0("\uC9C1\uC811 \uC870\uC791 \uBD88\uAC00"\uB77C\uACE0 \uC2A4\uC2A4\uB85C \uC548\uB0B4\uD558\uB358 \uBB38\uAD6C) \uC218\uB3D9
+         \uD2B8\uB9AC\uAC70\uAC00 \uC804\uD600 \uC5C6\uC5C8\uB2E4 \u2014 \uAC19\uC740 \uD568\uC218\uB97C \uC9C1\uC811 \uD638\uCD9C\uD558\uB294 \uBC84\uD2BC\uC73C\uB85C \uB300\uCCB4. -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px">
+      ${Object.entries(DRAGON_BALANCE_SHIFTS).map(([id, def]) => `
+        <button onclick="shiftDragonBalance(${def.amount});renderDragonHeartPanel()"
+          style="padding:6px;background:${def.amount < 0 ? "#150500" : "#00050f"};border:1px solid ${def.amount < 0 ? "#e03010" : "#2060e0"}66;color:${def.amount < 0 ? "#e05030" : "#4090e0"};font-size:9px;cursor:pointer;font-family:'Crimson Text',serif;text-align:left;border-radius:2px;line-height:1.3">
+          ${typeof getEntityIconHTML === "function" ? getEntityIconHTML(def, { size: 8 }) : def.icon} ${def.label}
+          <span style="float:right;font-family:'Cinzel',serif">${def.amount > 0 ? "+" : ""}${def.amount}</span>
+        </button>`).join("")}
     </div>
     ${balPhase.skills?.length ? `
       <div style="margin-top:8px;font-family:'Cinzel',serif;font-size:9px;color:#4080c0;letter-spacing:1px">\uD574\uAE08 \uC2A4\uD0AC</div>
@@ -29216,7 +29240,17 @@ ${lines.join("\n")}
       <span style="font-size:9px;color:#d0a020;font-family:'Cinzel',serif">${dh.hoardObsession || 0}</span>
     </div>
     ${DRAGON_HOARD_OBSESSION_EVENTS.filter((e) => e.threshold <= (dh.hoardObsession || 0)).map((e) => `<div style="font-size:9px;color:#a08020;padding:2px 0">\u25B8 ${e.desc}</div>`).join("")}
-    <div style="margin-top:8px;font-size:9px;color:#504020;font-style:italic;text-align:center">\u{1F409} \uBCF4\uBB3C \uC720\uD615\uC740 AI \uC11C\uC0AC\uC5D0\uC11C \uC790\uB3D9 \uACB0\uC815\uB429\uB2C8\uB2E4</div>
+    <!-- [F1 FIX] gainDragonHoard\uAC00 ai-prompt/148\uC758 gs.dragon_hoard \uD55C \uACF3\uC5D0\uC11C\uB9CC
+         \uD638\uCD9C\uB418\uACE0 \uC218\uB3D9 \uD2B8\uB9AC\uAC70\uAC00 \uC804\uD600 \uC5C6\uC5C8\uB2E4 \u2014 DRAGON_HOARD_TYPES 4\uC885\uC744 \uBC84\uD2BC\uC73C\uB85C
+         \uB178\uCD9C. \uD074\uB9AD\uB2F9 \uC9D1\uCC29\uB3C4 +5\uB294 gainDragonHoard\uC758 amount \uBBF8\uC9C0\uC815 \uC2DC \uAE30\uBCF8\uAC12\uACFC
+         \uB3D9\uC77C(\uD568\uC218 \uC790\uCCB4\uAC00 \uC774\uBBF8 \uADF8 \uAE30\uBCF8\uAC12\uC744 \uC4F4\uB2E4). -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:8px">
+      ${Object.entries(DRAGON_HOARD_TYPES).map(([id, def]) => `
+        <button onclick="gainDragonHoard('${id}');renderDragonHeartPanel()"
+          style="padding:6px;background:#0d0800;border:1px solid ${def.color}44;color:${def.color};font-size:8px;cursor:pointer;font-family:'Crimson Text',serif;text-align:left;border-radius:2px;line-height:1.3">
+          ${typeof getEntityIconHTML === "function" ? getEntityIconHTML(def, { size: 7 }) : def.icon} ${def.label}
+        </button>`).join("")}
+    </div>
   </div>
 
   <!-- \u2550\u2550 5. \uAC01\uC131\uC758 \uB300\uAC00 \u2550\u2550 -->
@@ -29249,7 +29283,17 @@ ${lines.join("\n")}
           ${(dh.awakenPoints || 0) >= c.threshold ? '<span style="color:#e040ff">\u25CF</span>' : '<span style="color:#403050">\u25CB</span>'}
         </div>`).join("")}
     </div>
-    <div style="margin-top:8px;font-size:9px;color:#501060;font-style:italic;text-align:center">\u26A1 \uAC01\uC131\uC740 AI \uC11C\uC0AC\uC5D0\uC11C \uC790\uB3D9\uC73C\uB85C \uC313\uC785\uB2C8\uB2E4</div>
+    <!-- [F1 FIX] gainDragonAwakenPoints\uAC00 ai-prompt/148\uC758 gs.dragon_awaken \uD55C
+         \uACF3\uC5D0\uC11C\uB9CC \uD638\uCD9C\uB418\uACE0 \uC218\uB3D9 \uD2B8\uB9AC\uAC70\uAC00 \uC804\uD600 \uC5C6\uC5C8\uB2E4 \u2014 DRAGON_AWAKEN_ACTS 5\uC885\uC744
+         \uBC84\uD2BC\uC73C\uB85C \uB178\uCD9C, gain \uC218\uCE58\uB294 \uADF8 \uD45C\uC5D0 \uC774\uBBF8 \uC815\uC758\uB41C \uAC12\uC744 \uADF8\uB300\uB85C \uC7AC\uC0AC\uC6A9. -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:8px">
+      ${Object.entries(DRAGON_AWAKEN_ACTS).map(([id, def]) => `
+        <button onclick="gainDragonAwakenPoints('${id}');renderDragonHeartPanel()"
+          style="padding:6px;background:#10001a;border:1px solid #a020e044;color:#c060e0;font-size:8px;cursor:pointer;font-family:'Crimson Text',serif;text-align:left;border-radius:2px;line-height:1.3">
+          ${typeof getEntityIconHTML === "function" ? getEntityIconHTML(def, { size: 7 }) : def.icon} ${def.label}
+          <span style="float:right;font-family:'Cinzel',serif">${def.gain > 0 ? "+" : ""}${def.gain}</span>
+        </button>`).join("")}
+    </div>
   </div>
 
   <!-- \u2550\u2550 \uD574\uAE08 \uC2A4\uD0AC \uC804\uCCB4 \u2550\u2550 -->
@@ -41198,6 +41242,10 @@ ${lines.join("\n")}
             saveInventory(S.inventory);
             toastHTML(`\u{1F4DC} \uC624\uB798\uB41C \uD30C\uD3B8\uC744 \uBC1C\uACAC\uD588\uB2E4! \u300C\uACE0\uB300 \uC9C0\uC2DD\uC758 \uD3B8\uB9B0\u300D \uD68D\uB4DD`, 3e3);
           }
+          const _race053 = S.character?.race || "";
+          if ((_race053.includes("\uB4DC\uB798\uACE4") || _race053.includes("dragon") || _race053.includes("\uC6A9\uD608")) && typeof gainDragonFragment === "function" && Math.random() < 0.25) {
+            gainDragonFragment("ancient_ruin");
+          }
           toast("\u{1F50D} \uACE0\uB300 \uC9C0\uC2DD \uBC1C\uACAC! \uC2A4\uD0AC \uD3EC\uC778\uD2B8+2", 2500);
         } else toast("\u{1F50D} \uBB54\uAC00 \uC788\uB294 \uAC83 \uAC19\uC9C0\uB9CC \uD574\uC11D\uD558\uAE30 \uC5B4\uB835\uB2E4", 1500);
       },
@@ -51206,7 +51254,9 @@ ${lines.join("\n")}
     const r = lsGet(LOOPERS_GUILD_KEY);
     return r ? JSON.parse(r) : { status: "unknown", joinedAt: null, rank: 0, knowledgeShared: [] };
   };
+  window.loadLoopersGuild = loadLoopersGuild;
   var saveLoopersGuild = (g) => lsSet(LOOPERS_GUILD_KEY, JSON.stringify(g));
+  window.saveLoopersGuild = saveLoopersGuild;
   var joinLoopersGuild = () => {
     const g = loadLoopersGuild();
     if (g.status === "member") return g;
@@ -51217,11 +51267,13 @@ ${lines.join("\n")}
     saveLoopersGuild(g);
     return g;
   };
+  window.joinLoopersGuild = joinLoopersGuild;
   var rejectLoopersGuild = () => {
     const g = loadLoopersGuild();
     g.status = "hostile";
     saveLoopersGuild(g);
   };
+  window.rejectLoopersGuild = rejectLoopersGuild;
   var rankUpGuild = () => {
     const g = loadLoopersGuild();
     if (g.status !== "member" || (g.rank || 0) >= 4) return false;
@@ -51237,6 +51289,7 @@ ${lines.join("\n")}
     const g = loadLoopersGuild();
     return { ...g, rankData: GUILD_RANKS[g.rank || 0], ranks: GUILD_RANKS };
   };
+  window.getLoopersGuild = getLoopersGuild;
   var DEATH_DEALER_KEY = "taleforge-death-dealer";
   var loadDeathDealer = () => {
     const r = lsGet(DEATH_DEALER_KEY);
@@ -52631,9 +52684,16 @@ ${lines.join("\n")}
           <span style="color:#40a0d0;font-family:'Cinzel',serif">+${a.gain}</span>
         </div>`).join("")}
     </div>` : ""}
-    <!-- \uCC98\uCE58 \uC790\uB3D9 \uC804\uC6A9 -->
+    <!-- [F2 FIX] gainDeathEcho\uAC00 detectDeathEchoFromText(AI \uC11C\uC0AC \uAC10\uC9C0)\uC5D0\uC11C\uB9CC
+         \uD638\uCD9C\uB418\uACE0 \uC218\uB3D9 \uD2B8\uB9AC\uAC70\uAC00 \uC804\uD600 \uC5C6\uC5C8\uB2E4 \u2014 finishLocalCombat(\uB85C\uCEEC \uC804\uD22C \uC2B9\uB9AC
+         \uCC98\uB9AC, misc/328)\uC5D0\uB3C4 \uB2E4\uD06C\uB9C1 \uC2B9\uB9AC \uC2DC \uC790\uB3D9\uC73C\uB85C \uAC78\uB9AC\uAC8C \uC5F0\uACB0\uD588\uC9C0\uB9CC, \uADF8\uC640\uB294
+         \uBCC4\uAC1C\uB85C \uC774 \uD328\uB110\uC5D0\uB3C4 \uAC19\uC740 \uD568\uC218\uB97C \uC9C1\uC811 \uBD80\uB974\uB294 \uBC84\uD2BC\uC744 \uB454\uB2E4(\uC774 \uD30C\uC77C/\uC2DC\uC2A4\uD15C\uC758
+         \uAE30\uC874 \uAD00\uB840\uC0C1 \uBCF4\uC870 \uACBD\uB85C). -->
     <div style="padding:8px 12px">
-      <div style="font-size:9px;color:#203040;font-style:italic;text-align:center;padding:4px 0">\u{1F480} \uCC98\uCE58\uB294 AI \uC11C\uC0AC\uC5D0\uC11C \uC790\uB3D9\uC73C\uB85C \uAC10\uC9C0\uB429\uB2C8\uB2E4</div>
+      <button onclick="gainDeathEcho('\uC9C1\uC811 \uCC98\uCE58', null);renderDeathEchoPanel('${containerId}')"
+        style="width:100%;padding:7px;background:#000a18;border:1px solid ${color}66;color:${color};font-size:9px;cursor:pointer;font-family:'Crimson Text',serif;border-radius:2px">
+        \u{1F480} \uCC98\uCE58 \uAE30\uB85D \u2014 \uBA54\uC544\uB9AC \uD761\uC218
+      </button>
     </div>
   `;
   }
@@ -63971,16 +64031,25 @@ ${lines}`;
                   <div style="font-size:8px;color:#804030">${esc2(def.desc)}</div>
                   <div style="font-size:8px;color:#603020;margin-top:1px">${Object.entries(def.penalty).map(([k, v]) => `${k.toUpperCase()} ${v * count}`).join(" ")}</div>
                 </div>
-                <span style="font-size:8px;color:#4a2a10;font-style:italic">AI \uC790\uB3D9 \uADF9\uBCF5</span>
+                <button onclick="overcomeStigma('${tid}')" style="width:100%;margin-top:5px;padding:5px;background:#001a08;border:1px solid #40c06066;color:#60d090;font-size:8px;cursor:pointer;font-family:'Crimson Text',serif;border-radius:2px">\u2705 \uADF9\uBCF5\uD558\uAE30 (\uC99D\uBA85 +${count * 8 + 10})</button>
               </div>
             </div>`;
     }).join("")}
     </div>
 
-    <!-- \u2463 \uB099\uC778 \uC548\uB0B4 (\uC790\uB3D9 \uC804\uC6A9) -->
+    <!-- \u2463 \uB099\uC778 \uBD80\uC5EC (\uC218\uB3D9) \u2014 [F4 FIX] addStigma/overcomeStigma\uAC00
+         detectHumanStigmaFromText(AI \uC11C\uC0AC \uAC10\uC9C0) \uD55C \uACF3\uC5D0\uC11C\uB9CC \uD638\uCD9C\uB418\uACE0 \uC218\uB3D9
+         \uD2B8\uB9AC\uAC70\uAC00 \uC804\uD600 \uC5C6\uC5C8\uB2E4("AI \uC11C\uC0AC\uC5D0\uC11C \uC790\uB3D9\uC73C\uB85C \uCC0D\uD788\uACE0 \uADF9\uBCF5\uB429\uB2C8\uB2E4"\uB77C\uACE0
+         \uC2A4\uC2A4\uB85C \uC548\uB0B4\uD558\uB358 \uBB38\uAD6C). STIGMA_TYPES(data/026) 6\uC885 \uC804\uBD80\uB97C \uBC84\uD2BC\uC73C\uB85C
+         \uB178\uCD9C\uD574 \uAC19\uC740 \uD568\uC218\uB97C \uC9C1\uC811 \uD638\uCD9C\uD55C\uB2E4. -->
     <div style="padding:8px 12px;border-bottom:1px solid #1a1000">
-      <div style="font-size:9px;color:#5a3020;font-style:italic;text-align:center;padding:4px 0">
-        \u{1F534} \uB099\uC778\uC740 AI \uC11C\uC0AC\uC5D0\uC11C \uC790\uB3D9\uC73C\uB85C \uCC0D\uD788\uACE0 \uADF9\uBCF5\uB429\uB2C8\uB2E4
+      <div style="font-family:'Cinzel',serif;font-size:9px;color:#e06040;letter-spacing:1px;margin-bottom:6px">\u2500\u2500 \uB099\uC778 \uBD80\uC5EC (\uC218\uB3D9) \u2500\u2500</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">
+        ${STIGMA_TYPES.map((t) => `
+          <button onclick="addStigma('${t.id}');renderHumanStigmaPanel()"
+            style="padding:6px;background:#150800;border:1px solid #e0604044;color:#e08060;font-size:8px;cursor:pointer;font-family:'Crimson Text',serif;text-align:left;border-radius:2px;line-height:1.3">
+            ${typeof getEntityIconHTML === "function" ? getEntityIconHTML(t, { size: 7 }) : t.icon} ${t.label}
+          </button>`).join("")}
       </div>
     </div>
 
@@ -66878,6 +66947,68 @@ ${simDesc}` : playerRep;
     /법.*따랐|질서.*유지|신뢰.*얻|명예.*지켰|정의|공정/,
     /화해.*중재|평화.*이끌|갈등.*해소|동맹.*성사/
   ];
+  var WDR_MANUAL_ACTIONS = [
+    {
+      id: "chaos_betray",
+      side: "chaos",
+      icon: "\u{1F5E1}\uFE0F",
+      label: "\uBC30\uC2E0\xB7\uAE30\uB9CC\uD558\uB2E4",
+      desc: "\uB3D9\uB8CC\uB098 \uC758\uB8B0\uC778\uC744 \uBC30\uC2E0\uD558\uAC70\uB098 \uC18D\uC778\uB2E4.",
+      axisDelta: -4,
+      plausGain: 7,
+      plausLabel: "\uD63C\uB3C8\uC801 \uD589\uB3D9"
+    },
+    {
+      id: "chaos_break",
+      side: "chaos",
+      icon: "\u26A0\uFE0F",
+      label: "\uC57D\uC18D\xB7\uADDC\uCE59\uC744 \uC5B4\uAE30\uB2E4",
+      desc: "\uB9FA\uC740 \uACC4\uC57D\uC774\uB098 \uBC95, \uC9C8\uC11C\uB97C \uC5B4\uAE34\uB2E4.",
+      axisDelta: -4,
+      plausGain: 0,
+      plausLabel: ""
+    },
+    {
+      id: "chaos_ignore",
+      side: "chaos",
+      icon: "\u{1F3B2}",
+      label: "\uC704\uAE30\uB97C \uBC29\uCE58\xB7\uC7A5\uB09C\uCE58\uB2E4",
+      desc: "\uACE4\uACBD\uC5D0 \uCC98\uD55C \uC774\uB97C \uAD6C\uD558\uC9C0 \uC54A\uACE0 \uC7A5\uB09C\uC2A4\uB7FD\uAC8C \uD758\uB824\uBCF4\uB0B8\uB2E4.",
+      axisDelta: -4,
+      plausGain: 0,
+      plausLabel: ""
+    },
+    {
+      id: "order_keep",
+      side: "order",
+      icon: "\u{1F91D}",
+      label: "\uC57D\uC18D\uC744 \uC9C0\uD0A4\uB2E4",
+      desc: "\uB9FA\uC740 \uACC4\uC57D\uC774\uB098 \uC758\uB8B0, \uC57D\uC18D\uC744 \uC131\uC2E4\uD788 \uC774\uD589\uD55C\uB2E4.",
+      axisDelta: 4,
+      plausGain: 6,
+      plausLabel: "\uC9C8\uC11C\uC801 \uD589\uB3D9"
+    },
+    {
+      id: "order_law",
+      side: "order",
+      icon: "\u2696\uFE0F",
+      label: "\uBC95\uACFC \uC9C8\uC11C\uB97C \uB530\uB974\uB2E4",
+      desc: "\uBC95\uACFC \uC2E0\uB8B0, \uBA85\uC608, \uACF5\uC815\uD568\uC744 \uC9C0\uD0A8\uB2E4.",
+      axisDelta: 4,
+      plausGain: 0,
+      plausLabel: ""
+    },
+    {
+      id: "order_mediate",
+      side: "order",
+      icon: "\u{1F54A}\uFE0F",
+      label: "\uAC08\uB4F1\uC744 \uC911\uC7AC\uD558\uB2E4",
+      desc: "\uD654\uD574\uB97C \uC774\uB04C\uACE0 \uAC08\uB4F1\uC744 \uD574\uC18C\uD55C\uB2E4.",
+      axisDelta: 4,
+      plausGain: 0,
+      plausLabel: ""
+    }
+  ];
   var WDR_NAME_POOL = [
     "\uCE74\uC5D8",
     "\uB808\uC774\uB098",
@@ -67444,6 +67575,27 @@ ${simDesc}` : playerRep;
   }
   window._isWanderer = _isWanderer;
   window._isWanderer = _isWanderer;
+  function applyWdrAxisShift(axisDelta, plausGain = 0, gainLabel = "") {
+    if (!_isWanderer()) return;
+    if (axisDelta) {
+      const cur = loadWdrAxis();
+      const newAxis = cur + axisDelta;
+      saveWdrAxis(newAxis);
+      const tier = getWdrAxisTier(newAxis);
+      if (Math.abs(axisDelta) >= 4) {
+        const dir = axisDelta < 0 ? "\uD63C\uB3C8" : "\uC9C8\uC11C";
+        typeof showStatRisePopup === "function" && showStatRisePopup(`${tier.icon} ${dir} ${Math.abs(Math.round(axisDelta))}`, tier.color);
+      }
+    }
+    if (plausGain > 0) {
+      const newPlaus = loadWdrPlaus() + plausGain;
+      saveWdrPlaus(newPlaus);
+      showStatRisePopup(`\u2728 \uAC1C\uC5F0\uC131 +${plausGain}`, "#d0c040");
+      if (gainLabel) toast(`\u{1F4D6} \uAC1C\uC5F0\uC131 +${plausGain} [${gainLabel}]`, 2e3);
+    }
+    renderWandererAxisBar();
+  }
+  window.applyWdrAxisShift = applyWdrAxisShift;
   function processWandererAxis(aiText, userMsg) {
     if (!_isWanderer()) return;
     if (!aiText) return;
@@ -67464,24 +67616,20 @@ ${simDesc}` : playerRep;
         break;
       }
     }
-    if (axisDelta !== 0) {
-      const newAxis = cur + axisDelta;
-      saveWdrAxis(newAxis);
-      const tier = getWdrAxisTier(newAxis);
-      if (Math.abs(axisDelta) >= 4) {
-        const dir = axisDelta < 0 ? "\uD63C\uB3C8" : "\uC9C8\uC11C";
-        typeof showStatRisePopup === "function" && showStatRisePopup(`${tier.icon} ${dir} ${Math.abs(Math.round(axisDelta))}`, tier.color);
-      }
-    }
-    if (plausGain > 0) {
-      const newPlaus = loadWdrPlaus() + plausGain;
-      saveWdrPlaus(newPlaus);
-      showStatRisePopup(`\u2728 \uAC1C\uC5F0\uC131 +${plausGain}`, "#d0c040");
-      if (gainLabel) toast(`\u{1F4D6} \uAC1C\uC5F0\uC131 +${plausGain} [${gainLabel}]`, 2e3);
-    }
-    renderWandererAxisBar();
+    applyWdrAxisShift(axisDelta, plausGain, gainLabel);
   }
   window.processWandererAxis = processWandererAxis;
+  function doWdrManualAction(actionId) {
+    if (!_isWanderer()) {
+      toast("\uBC29\uB791\uC790 \uC804\uC6A9 \uD589\uB3D9\uC785\uB2C8\uB2E4", 1500);
+      return;
+    }
+    const action = WDR_MANUAL_ACTIONS.find((a) => a.id === actionId);
+    if (!action) return;
+    applyWdrAxisShift(action.axisDelta, action.plausGain, action.plausLabel);
+    toast(`${action.icon} ${action.label}`, 1800);
+  }
+  window.doWdrManualAction = doWdrManualAction;
   function canUseWdrSkill(skill) {
     const axis = loadWdrAxis();
     const plaus = loadWdrPlaus();
@@ -67621,6 +67769,19 @@ ${simDesc}` : playerRep;
         <span>-100</span><span style="color:${tier.color}">${axis > 0 ? "+" : ""}${axis.toFixed(0)}</span><span>+100</span>
       </div>
       <div style="margin-top:5px;font-size:10px;color:var(--dim);font-style:italic">${tier.desc}</div>
+    </div>
+
+    <!-- \uC218\uB3D9 \uD589\uB3D9 (AI \uC11C\uC0AC \uC5C6\uC774\uB3C4 \uCD95/\uAC1C\uC5F0\uC131\uC744 \uC6C0\uC9C1\uC774\uB294 \uB85C\uCEEC \uB300\uCCB4 \uACBD\uB85C) -->
+    <div style="padding:10px 14px;background:var(--bg-bubble-ai);border:1px solid var(--border);margin-bottom:10px">
+      <div style="font-family:'Cinzel',serif;font-size:9px;color:var(--dim);letter-spacing:1px;margin-bottom:2px">\u2699\uFE0F \uC9C1\uC811 \uD589\uB3D9</div>
+      <div style="font-size:8px;color:var(--dim);margin-bottom:7px">AI \uC11C\uC0AC \uC5C6\uC774\uB3C4 \uB20C\uB7EC\uC11C \uD63C\uB3C8\u2194\uC9C8\uC11C \uCD95\uACFC \uAC1C\uC5F0\uC131\uC744 \uC6C0\uC9C1\uC77C \uC218 \uC788\uC2B5\uB2C8\uB2E4.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+        ${WDR_MANUAL_ACTIONS.map((a) => {
+      const gc = a.side === "chaos" ? "#d05020" : "#4a80c0";
+      return `<button onclick="doWdrManualAction('${a.id}')" title="${a.desc}"
+            style="padding:6px 8px;background:${gc}12;border:1px solid ${gc}44;color:${gc};font-family:'Cinzel',serif;font-size:9px;cursor:pointer;border-radius:2px;text-align:left">${a.icon} ${a.label}</button>`;
+    }).join("")}
+      </div>
     </div>
 
     <!-- \uAC1C\uC5F0\uC131 -->
@@ -118006,8 +118167,8 @@ GS: {"clan_join":"${clanId}"} \uCD9C\uB825.`;
         const amt = typeof gs.dragon_hoard === "object" ? gs.dragon_hoard.amount : void 0;
         gainDragonHoard(ht, amt);
       }
-      if (gs.dragon_fragment && typeof gainDragonFragment === "function") {
-        gainDragonFragment(gs.dragon_fragment);
+      if (gs.dragon_fragment && typeof gainDragonFragment2 === "function") {
+        gainDragonFragment2(gs.dragon_fragment);
       }
       if (gs.dragon_balance !== void 0 && typeof shiftDragonBalance === "function") {
         shiftDragonBalance(Number(gs.dragon_balance) || 0);
@@ -122069,6 +122230,27 @@ summon_add/summon_damage/summon_evolve \u2014 \uC18C\uD658\uC218 \uAD00\uB828`;
           <div style="font-family:'Cinzel',serif;font-size:10px;color:#6080c0;letter-spacing:1.5px;margin-bottom:6px">\u{1F504} \uC5ED\uD560 \uBC18\uC804</div>
           ${rvHtml}
         </div>`);
+        }
+      }
+      if (typeof getLoopersGuild === "function") {
+        const guild = getLoopersGuild();
+        if (guild) {
+          if (guild.status === "unknown") {
+            sections.push(`<div style="margin-bottom:14px">
+            <div style="font-family:'Cinzel',serif;font-size:10px;color:#8060c0;letter-spacing:1.5px;margin-bottom:6px">\u{1F3DB}\uFE0F \uB8E8\uD504 \uC790\uAC01\uC790 \uAE38\uB4DC</div>
+            <div style="padding:8px 10px;background:#0a0800;border:1px solid #2a1a05;font-size:9px;color:var(--dim);margin-bottom:6px">\uBE44\uBC00\uC2A4\uB7EC\uC6B4 \uAE38\uB4DC\uAC00 \uB8E8\uD504\uB97C \uC790\uAC01\uD55C \uB2F9\uC2E0\uC5D0\uAC8C \uC811\uCD09\uD574\uC654\uB2E4. \uADF8\uB4E4\uACFC \uD568\uAED8\uD560 \uAC83\uC778\uAC00?</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+              <button onclick="joinLoopersGuild();toast('\u{1F3DB}\uFE0F \uB8E8\uD504 \uC790\uAC01\uC790 \uAE38\uB4DC\uC5D0 \uAC00\uC785\uD588\uB2E4.',3500);renderLegacyArchivePanel()" style="padding:6px;font-size:9px;background:#1a1005;border:1px solid var(--gold);color:var(--gold);cursor:pointer;border-radius:2px">\uAC00\uC785</button>
+              <button onclick="rejectLoopersGuild();toast('\u{1F3DB}\uFE0F \uAE38\uB4DC\uC758 \uC81C\uC548\uC744 \uAC70\uC808\uD588\uB2E4.',3500);renderLegacyArchivePanel()" style="padding:6px;font-size:9px;background:#1a0505;border:1px solid #6a3030;color:#c08080;cursor:pointer;border-radius:2px">\uAC70\uC808</button>
+            </div>
+          </div>`);
+          } else {
+            sections.push(sectionHtml(
+              "\u{1F3DB}\uFE0F",
+              "\uB8E8\uD504 \uC790\uAC01\uC790 \uAE38\uB4DC",
+              [guild.status === "member" ? `\uC815\uD68C\uC6D0 \u2014 ${guild.rankData?.label || ""} (\uACF5\uC720 \uC9C0\uC2DD ${guild.knowledgeShared?.length || 0}\uAC1C)` : "\uC801\uB300 \uAD00\uACC4 (\uAC00\uC785 \uAC70\uC808\uD568)"]
+            ));
+          }
         }
       }
       if (typeof checkWishAvailable === "function" && checkWishAvailable(cycle) && typeof WISH_OPTIONS !== "undefined") {
@@ -131635,6 +131817,12 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
         if (victory === true) {
           toast(`\u{1F3C6} \uC804\uD22C \uC2B9\uB9AC!`, 3e3);
           if (typeof gainEvoEnergy === "function") gainEvoEnergy(12, "\uC804\uD22C \uC2B9\uB9AC");
+          if (typeof gainDeathEcho === "function") {
+            const _race328 = S.character?.race || "";
+            if (_race328.includes("\uB2E4\uD06C\uB9C1") || _race328.includes("darkling")) {
+              gainDeathEcho(lc.enemies[0]?.name || enemyNames || null, null);
+            }
+          }
           const rarityForExp = lc.enemies.some((e) => e.isBoss) ? "boss" : lc.enemies.some((e) => e.isNamed) ? "rare" : "common";
           if (typeof gainExpFromKill === "function") gainExpFromKill(rarityForExp);
           try {
@@ -131682,6 +131870,7 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
         renderLocalCombatPanel2();
         if ((S?.stats?.hp || 0) <= 0 && typeof window.triggerLoopIfDead === "function") window.triggerLoopIfDead();
       }
+      window.finishLocalCombat = finishLocalCombat;
       function renderTerrainOpportunityBanner(lc) {
         if (!lc.terrainOpportunity || !lc.terrainId) return "";
         const def = typeof TERRAIN_EFFECTS_BATTLE !== "undefined" ? TERRAIN_EFFECTS_BATTLE[lc.terrainId] : null;

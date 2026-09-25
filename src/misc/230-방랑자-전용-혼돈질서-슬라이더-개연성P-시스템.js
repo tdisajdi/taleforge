@@ -1,7 +1,7 @@
 // 방랑자 전용: 혼돈↔질서 슬라이더 & 개연성(P) 시스템
 // Auto-extracted from taleforge.html (original section banner preserved above).
 import { S } from '../data/084-TaleForge-순수-JS-엔진.js';
-import { WDR_AXIS_TIERS, WDR_CHAOS_PATTERNS, WDR_CHAOS_SKILLS, WDR_HERO_TEMPLATES, WDR_NAME_POOL, WDR_ORDER_PATTERNS, WDR_ORDER_SKILLS, WDR_PERSONALITY_HERO, WDR_PERSONALITY_VILLAIN, WDR_PLAUS_TRIGGERS, WDR_RACE_POOL, WDR_RANK_POOL_HERO, WDR_RANK_POOL_VILLAIN, WDR_VILLAIN_TEMPLATES } from '../data/230-방랑자-전용-혼돈질서-슬라이더-개연성P-시스템.js';
+import { WDR_AXIS_TIERS, WDR_CHAOS_PATTERNS, WDR_CHAOS_SKILLS, WDR_HERO_TEMPLATES, WDR_MANUAL_ACTIONS, WDR_NAME_POOL, WDR_ORDER_PATTERNS, WDR_ORDER_SKILLS, WDR_PERSONALITY_HERO, WDR_PERSONALITY_VILLAIN, WDR_PLAUS_TRIGGERS, WDR_RACE_POOL, WDR_RANK_POOL_HERO, WDR_RANK_POOL_VILLAIN, WDR_VILLAIN_TEMPLATES } from '../data/230-방랑자-전용-혼돈질서-슬라이더-개연성P-시스템.js';
 import { closeP, showStatRisePopup } from '../quest/086-퀘스트임무-수락-팝업-시스템.js';
 import { lsGet, lsSet, toast } from '../utils.js';
 import { loadWorldTimer } from './251-통합-처리-함수-매-AI-응답-후-호출.js';
@@ -31,6 +31,40 @@ export function _isWanderer(){
 window._isWanderer = _isWanderer;
 
 window._isWanderer = _isWanderer;
+
+// [로컬 대체 경로用 리팩터] 실제 상태 변경(축 이동 + 개연성 획득 + 팝업/
+// 토스트 + UI 갱신)만 담당하는 핵심 함수. 원래 processWandererAxis 안에
+// "적용" 단계로만 있던 로직을 그대로 분리한 것 — AI 텍스트 파싱(아래
+// processWandererAxis)과, AI 없이 눌리는 수동 버튼(doWdrManualAction)이
+// 이 함수 하나를 공유한다. 이게 WDR_AXIS_KEY/WDR_PLAUS_KEY를 실제로 쓰는
+// 유일한 지점이 되어, "AI 텍스트 경로만 이 상태를 쓸 수 있다"는 원래
+// 버그가 구조적으로 사라진다. AI 텍스트 경로의 자연 회귀(자연 회귀는
+// aiText 매칭 이전의 axisDelta 계산에 포함돼 있었으므로 그대로
+// processWandererAxis 쪽에 남겨 기존 동작을 바꾸지 않았다)는 여기 없다.
+export function applyWdrAxisShift(axisDelta, plausGain=0, gainLabel=''){
+  if(!_isWanderer()) return;
+
+  if(axisDelta){
+    const cur = loadWdrAxis();
+    const newAxis = cur + axisDelta;
+    saveWdrAxis(newAxis);
+    const tier = getWdrAxisTier(newAxis);
+    if(Math.abs(axisDelta) >= 4){
+      const dir = axisDelta < 0 ? '혼돈' : '질서';
+      (typeof showStatRisePopup==='function') && showStatRisePopup(`${tier.icon} ${dir} ${Math.abs(Math.round(axisDelta))}`, tier.color);
+    }
+  }
+
+  if(plausGain > 0){
+    const newPlaus = loadWdrPlaus() + plausGain;
+    saveWdrPlaus(newPlaus);
+    showStatRisePopup(`✨ 개연성 +${plausGain}`, '#d0c040');
+    if(gainLabel) toast(`📖 개연성 +${plausGain} [${gainLabel}]`, 2000);
+  }
+
+  renderWandererAxisBar();
+}
+window.applyWdrAxisShift = applyWdrAxisShift;
 
 export function processWandererAxis(aiText, userMsg){
   if(!_isWanderer()) return;
@@ -62,27 +96,22 @@ export function processWandererAxis(aiText, userMsg){
     }
   }
 
-  // 적용
-  if(axisDelta !== 0){
-    const newAxis = cur + axisDelta;
-    saveWdrAxis(newAxis);
-    const tier = getWdrAxisTier(newAxis);
-    if(Math.abs(axisDelta) >= 4){
-      const dir = axisDelta < 0 ? '혼돈' : '질서';
-      (typeof showStatRisePopup==='function') && showStatRisePopup(`${tier.icon} ${dir} ${Math.abs(Math.round(axisDelta))}`, tier.color);
-    }
-  }
-
-  if(plausGain > 0){
-    const newPlaus = loadWdrPlaus() + plausGain;
-    saveWdrPlaus(newPlaus);
-    showStatRisePopup(`✨ 개연성 +${plausGain}`, '#d0c040');
-    if(gainLabel) toast(`📖 개연성 +${plausGain} [${gainLabel}]`, 2000);
-  }
-
-  renderWandererAxisBar();
+  applyWdrAxisShift(axisDelta, plausGain, gainLabel);
 }
 window.processWandererAxis = processWandererAxis;
+
+// [로컬 대체 경로] AI 서사 없이 이 직업의 패널에서 직접 누르는 수동
+// 행동 버튼 핸들러. WDR_MANUAL_ACTIONS(data/230)에 정의된 값을 그대로
+// applyWdrAxisShift에 넘겨 processWandererAxis와 동일한 실제 상태 변경
+// 경로를 탄다 — AI/API 키 유무와 무관하게 항상 작동한다.
+export function doWdrManualAction(actionId){
+  if(!_isWanderer()){ toast('방랑자 전용 행동입니다', 1500); return; }
+  const action = WDR_MANUAL_ACTIONS.find(a=>a.id===actionId);
+  if(!action) return;
+  applyWdrAxisShift(action.axisDelta, action.plausGain, action.plausLabel);
+  toast(`${action.icon} ${action.label}`, 1800);
+}
+window.doWdrManualAction = doWdrManualAction;
 
 export function canUseWdrSkill(skill){
   const axis = loadWdrAxis();
@@ -239,6 +268,19 @@ export function renderWandererAxisPanel(){
         <span>-100</span><span style="color:${tier.color}">${axis > 0 ? '+' : ''}${axis.toFixed(0)}</span><span>+100</span>
       </div>
       <div style="margin-top:5px;font-size:10px;color:var(--dim);font-style:italic">${tier.desc}</div>
+    </div>
+
+    <!-- 수동 행동 (AI 서사 없이도 축/개연성을 움직이는 로컬 대체 경로) -->
+    <div style="padding:10px 14px;background:var(--bg-bubble-ai);border:1px solid var(--border);margin-bottom:10px">
+      <div style="font-family:'Cinzel',serif;font-size:9px;color:var(--dim);letter-spacing:1px;margin-bottom:2px">⚙️ 직접 행동</div>
+      <div style="font-size:8px;color:var(--dim);margin-bottom:7px">AI 서사 없이도 눌러서 혼돈↔질서 축과 개연성을 움직일 수 있습니다.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+        ${WDR_MANUAL_ACTIONS.map(a=>{
+          const gc = a.side === 'chaos' ? '#d05020' : '#4a80c0';
+          return `<button onclick="doWdrManualAction('${a.id}')" title="${a.desc}"
+            style="padding:6px 8px;background:${gc}12;border:1px solid ${gc}44;color:${gc};font-family:'Cinzel',serif;font-size:9px;cursor:pointer;border-radius:2px;text-align:left">${a.icon} ${a.label}</button>`;
+        }).join('')}
+      </div>
     </div>
 
     <!-- 개연성 -->

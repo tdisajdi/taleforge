@@ -560,8 +560,10 @@ export const getKingdomLegacy = () => {
 export const LOOPERS_GUILD_KEY  = "taleforge-loopers-guild";
 
 export const loadLoopersGuild   = () => { const r = lsGet(LOOPERS_GUILD_KEY); return r ? JSON.parse(r) : { status: "unknown", joinedAt: null, rank: 0, knowledgeShared: [] }; };
+window.loadLoopersGuild = loadLoopersGuild;
 
 export const saveLoopersGuild   = (g) => lsSet(LOOPERS_GUILD_KEY, JSON.stringify(g));
+window.saveLoopersGuild = saveLoopersGuild;
 
 
 export const joinLoopersGuild = () => {
@@ -574,12 +576,18 @@ export const joinLoopersGuild = () => {
   saveLoopersGuild(g);
   return g;
 };
+// [F3 FIX] joinLoopersGuild/rejectLoopersGuild는 지금까지 window에 노출된 적이
+// 없었다(ai-prompt/222는 ES import로 직접 호출해 문제가 없었지만, ui/201의
+// 새 수동 가입/거절 버튼은 onclick="joinLoopersGuild()" 형태의 전역 호출이라
+// 이 바인딩이 없으면 조용히 아무 일도 안 일어난다).
+window.joinLoopersGuild = joinLoopersGuild;
 
 export const rejectLoopersGuild = () => {
   const g = loadLoopersGuild();
   g.status = "hostile";
   saveLoopersGuild(g);
 };
+window.rejectLoopersGuild = rejectLoopersGuild;
 
 export const rankUpGuild = () => {
   const g = loadLoopersGuild();
@@ -597,6 +605,7 @@ export const getLoopersGuild = () => {
   const g = loadLoopersGuild();
   return { ...g, rankData: GUILD_RANKS[g.rank || 0], ranks: GUILD_RANKS };
 };
+window.getLoopersGuild = getLoopersGuild;
 
 export const DEATH_DEALER_KEY  = "taleforge-death-dealer";
 

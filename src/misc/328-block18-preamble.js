@@ -16,6 +16,7 @@ import { loadNPCs, saveChatHistory, saveNPCs } from './001-block0-preamble.js';
 import { gainExpFromKill, getAllSkillDefs } from './009-레벨업-스탯-포인트-배분-시스템.js';
 import { recordFateChoice } from './016-2130번-시스템.js';
 import { recordTimeEcho } from './017-4150번-시스템.js';
+import { gainDeathEcho } from './021-1-죽음의-메아리-시스템.js';
 import { loadParty, saveParty } from './054-이동수단-시스템.js';
 import { saveDiaryEntry } from './076-파트2-D-일기기록-시스템.js';
 import { gainEvoEnergy } from './206-3-진화Evolution-시스템.js';
@@ -1325,6 +1326,17 @@ function finishLocalCombat(lc, victory){
   if(victory===true){
     toast(`🏆 전투 승리!`, 3000);
     if(typeof gainEvoEnergy==='function') gainEvoEnergy(12, '전투 승리');
+    // [F2 FIX] gainDeathEcho(다크링 "죽음의 메아리")가 detectDeathEchoFromText
+    // (AI 서사 감지) 한 곳에서만 호출되고, 실제 승패를 결정하는 이 로컬 전투
+    // 엔진(경험치·루팅·진화 에너지는 이미 여기서 지급)에는 연결이 없었다 —
+    // 같은 함수를 다크링 승리 시 직접 호출(함수 자체가 종족 체크를 한 번 더
+    // 하므로 이중 안전).
+    if(typeof gainDeathEcho==='function'){
+      const _race328 = (S.character?.race||'');
+      if(_race328.includes('다크링') || _race328.includes('darkling')){
+        gainDeathEcho(lc.enemies[0]?.name || enemyNames || null, null);
+      }
+    }
     // [버그 수정] 몬스터가 보스든 잡몹 무리든 상관없이 항상 'common'(최하급)
     // 경험치로 고정되어 있었다 — 전멸시킨 적 중 가장 강한 개체(보스>네임드>
     // 일반) 기준으로 등급을 정해 경험치를 산정한다.
@@ -1393,6 +1405,7 @@ function finishLocalCombat(lc, victory){
   // 경로와 동일한 타이밍을 보장한다.
   if((S?.stats?.hp||0) <= 0 && typeof window.triggerLoopIfDead === 'function') window.triggerLoopIfDead();
 }
+window.finishLocalCombat = finishLocalCombat;
 
 // ── 전투 패널 렌더링 ──
 // ── 현재 대상(첫 번째 생존 적)에게 알려진 약점/저항이 있으면 속성 공격

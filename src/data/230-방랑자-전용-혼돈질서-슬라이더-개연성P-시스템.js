@@ -90,6 +90,31 @@ export const WDR_ORDER_PATTERNS = [
   /화해.*중재|평화.*이끌|갈등.*해소|동맹.*성사/,
 ];
 
+// [로컬 대체 경로] AI 서사(aiText) 없이도 방랑자 축/개연성을 움직일 수
+// 있는 수동 행동 버튼 정의. WDR_CHAOS_PATTERNS/WDR_ORDER_PATTERNS의 3개
+// 카테고리(각각 "배신·파괴형", "규칙·약속 위반형", "방치·장난형" /
+// "약속 이행형", "법·질서 준수형", "중재·화해형")를 그대로 반영하고,
+// axisDelta는 그 패턴들이 텍스트에서 단일 매치될 때 processWandererAxis가
+// 적용하는 것과 같은 값(Math.min(1*4,12)=4)을 재사용한다 — 새 수치를
+// 지어내지 않음. plausGain/plausLabel은 WDR_PLAUS_TRIGGERS의 "혼돈적
+// 행동"(7)·"질서적 행동"(6) 항목을 그대로 재사용(각 진영당 하나씩만
+// 매핑 — 나머지 행동은 축만 움직이고 개연성은 얻지 않아, 텍스트 경로의
+// "한 턴에 하나만" 제한과 성격이 비슷하게 유지됨).
+export const WDR_MANUAL_ACTIONS = [
+  { id:'chaos_betray', side:'chaos', icon:'🗡️', label:'배신·기만하다',
+    desc:'동료나 의뢰인을 배신하거나 속인다.', axisDelta:-4, plausGain:7, plausLabel:'혼돈적 행동' },
+  { id:'chaos_break',  side:'chaos', icon:'⚠️', label:'약속·규칙을 어기다',
+    desc:'맺은 계약이나 법, 질서를 어긴다.', axisDelta:-4, plausGain:0, plausLabel:'' },
+  { id:'chaos_ignore', side:'chaos', icon:'🎲', label:'위기를 방치·장난치다',
+    desc:'곤경에 처한 이를 구하지 않고 장난스럽게 흘려보낸다.', axisDelta:-4, plausGain:0, plausLabel:'' },
+  { id:'order_keep',   side:'order', icon:'🤝', label:'약속을 지키다',
+    desc:'맺은 계약이나 의뢰, 약속을 성실히 이행한다.', axisDelta:4, plausGain:6, plausLabel:'질서적 행동' },
+  { id:'order_law',    side:'order', icon:'⚖️', label:'법과 질서를 따르다',
+    desc:'법과 신뢰, 명예, 공정함을 지킨다.', axisDelta:4, plausGain:0, plausLabel:'' },
+  { id:'order_mediate',side:'order', icon:'🕊️', label:'갈등을 중재하다',
+    desc:'화해를 이끌고 갈등을 해소한다.', axisDelta:4, plausGain:0, plausLabel:'' },
+];
+
 export const WDR_NAME_POOL = [
   '카엘','레이나','소르반','테온','미렐라','다크시','브론','에이라',
   '살리스','베칸','이오나','타른','케드리스','우르바','펠론','세리아',

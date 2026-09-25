@@ -133,9 +133,16 @@ export function renderDeathEchoPanel(containerId) {
           <span style="color:#40a0d0;font-family:'Cinzel',serif">+${a.gain}</span>
         </div>`).join('')}
     </div>` : ''}
-    <!-- 처치 자동 전용 -->
+    <!-- [F2 FIX] gainDeathEcho가 detectDeathEchoFromText(AI 서사 감지)에서만
+         호출되고 수동 트리거가 전혀 없었다 — finishLocalCombat(로컬 전투 승리
+         처리, misc/328)에도 다크링 승리 시 자동으로 걸리게 연결했지만, 그와는
+         별개로 이 패널에도 같은 함수를 직접 부르는 버튼을 둔다(이 파일/시스템의
+         기존 관례상 보조 경로). -->
     <div style="padding:8px 12px">
-      <div style="font-size:9px;color:#203040;font-style:italic;text-align:center;padding:4px 0">💀 처치는 AI 서사에서 자동으로 감지됩니다</div>
+      <button onclick="gainDeathEcho('직접 처치', null);renderDeathEchoPanel('${containerId}')"
+        style="width:100%;padding:7px;background:#000a18;border:1px solid ${color}66;color:${color};font-size:9px;cursor:pointer;font-family:'Crimson Text',serif;border-radius:2px">
+        💀 처치 기록 — 메아리 흡수
+      </button>
     </div>
   `;
 }

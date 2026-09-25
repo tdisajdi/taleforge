@@ -1,7 +1,7 @@
 // 101~130번 환생 누적 시스템
 // Auto-extracted from taleforge.html (original section banner preserved above).
 import { RARITY_COLOR } from '../data/012-궁수-계열-T2-파생-5종-칭호-전사마법사도적-계열과-동일한-절제-원칙.js';
-import { AWARENESS_LEVELS, BLOODVOW_PATHS, BLOODVOW_TYPES, BLOOD_CLASSES, CAROUSEL_ROLES, CELESTIAL_DARKEN_METHODS, CELESTIAL_DARK_GAIN, CELESTIAL_LIGHT_GAIN, CELESTIAL_PHASE_SKILLS, CELESTIAL_PHASE_STATS, CELESTIAL_RESTORE_METHODS, COUNCIL_DECISIONS, COUNCIL_SAGES, COVENANT_ATONEMENT_METHODS, COVENANT_DEED_GAIN, COVENANT_SIN_LOSS, CRAFT_POWER_SKILLS, DARKLING_LIGHT_EXPOSURE, DARKLING_VOID_TYPES, DEIFICATION_CONDITIONS, DEIFICATION_STAGES, DEMON_PURIFY_METHODS, DEMON_SIN_GAIN, DRAGON_ANCESTOR_TYPES, DRAGON_AWAKEN_ACTS, DRAGON_AWAKEN_COSTS, DRAGON_BALANCE_PHASES, DRAGON_FRAGMENT_TRIGGERS, DRAGON_HOARD_OBSESSION_EVENTS, DRAGON_HOARD_TYPES, DWARF_CRAFT_TYPES, ELEMENTAL_ACT_GAIN, ELEMENTAL_RESTORE_METHODS, ELEMENTAL_TABOO_ACTS, ELEMENTAL_TYPES, FEAR_RANKS, GRUDGE_FLOWER_STATES, GRUDGE_RESOLUTIONS, GRUDGE_TYPES, KILL_SENSE_LEVELS, NPC_CRAFT_METHODS, NPC_CRAFT_STAGES, ORC_HONOR_GAINS, ORC_LINEAGE_DEFS, ORC_OATH_TYPES, RED_THREAD_FATES, RUIN_TYPES, TRAP_PATTERNS, TREE_BRANCH_TYPES, WORK_DIFFICULTIES } from '../data/020-101130번-환생-누적-시스템.js';
+import { AWARENESS_LEVELS, BLOODVOW_PATHS, BLOODVOW_TYPES, BLOOD_CLASSES, CAROUSEL_ROLES, CELESTIAL_DARKEN_METHODS, CELESTIAL_DARK_GAIN, CELESTIAL_LIGHT_GAIN, CELESTIAL_PHASE_SKILLS, CELESTIAL_PHASE_STATS, CELESTIAL_RESTORE_METHODS, COUNCIL_DECISIONS, COUNCIL_SAGES, COVENANT_ATONEMENT_METHODS, COVENANT_DEED_GAIN, COVENANT_SIN_LOSS, CRAFT_POWER_SKILLS, DARKLING_LIGHT_EXPOSURE, DARKLING_VOID_TYPES, DEIFICATION_CONDITIONS, DEIFICATION_STAGES, DEMON_PURIFY_METHODS, DEMON_SIN_GAIN, DRAGON_ANCESTOR_TYPES, DRAGON_AWAKEN_ACTS, DRAGON_AWAKEN_COSTS, DRAGON_BALANCE_PHASES, DRAGON_BALANCE_SHIFTS, DRAGON_FRAGMENT_TRIGGERS, DRAGON_HOARD_OBSESSION_EVENTS, DRAGON_HOARD_TYPES, DWARF_CRAFT_TYPES, ELEMENTAL_ACT_GAIN, ELEMENTAL_RESTORE_METHODS, ELEMENTAL_TABOO_ACTS, ELEMENTAL_TYPES, FEAR_RANKS, GRUDGE_FLOWER_STATES, GRUDGE_RESOLUTIONS, GRUDGE_TYPES, KILL_SENSE_LEVELS, NPC_CRAFT_METHODS, NPC_CRAFT_STAGES, ORC_HONOR_GAINS, ORC_LINEAGE_DEFS, ORC_OATH_TYPES, RED_THREAD_FATES, RUIN_TYPES, TRAP_PATTERNS, TREE_BRANCH_TYPES, WORK_DIFFICULTIES } from '../data/020-101130번-환생-누적-시스템.js';
 import { S } from '../data/084-TaleForge-순수-JS-엔진.js';
 import { saveGold } from '../items/007-동적-아이템-생성-시스템-무제한-영구-캐시.js';
 import { dramaticEvolution } from '../items/074-파트2-B-성장-연출-강화.js';
@@ -1013,8 +1013,15 @@ export const loadDragonHeart = () => {
     }));
   } catch(e) { return { bloodline:50, ancestorType:null, ancestorFragments:0, ancestorRevealed:false, ancestorHistory:[], heartBalance:500, hoardType:null, hoardObsession:0, hoardHistory:[], awakenPoints:0, awakenCostPending:false, awakenCostCount:0, awakenHistory:[], history:[] }; }
 };
+// [F1 조사 중 발견, 드라이브바이 수정] loadDragonHeart/saveDragonHeart가 이
+// 파일 자신의 "대가 수용/거부" 버튼(renderDragonHeartPanel의 기존 인라인
+// onclick, 아래쪽) 안에서 이미 전역 호출(onclick="...loadDragonHeart()...")로
+// 쓰이고 있었는데 정작 window에는 한 번도 노출된 적이 없어 그 두 버튼도
+// 조용히 무동작이었다 — F1과 같은 파일·같은 패널이라 함께 고친다.
+window.loadDragonHeart = loadDragonHeart;
 
 export const saveDragonHeart = (d) => { try { lsSet(DRAGON_HEART_KEY, JSON.stringify(d)); } catch(e){} };
+window.saveDragonHeart = saveDragonHeart;
 
 export const clearDragonHeart = () => lsDel(DRAGON_HEART_KEY);
 
@@ -1231,6 +1238,16 @@ export function renderDragonHeartPanel() {
       <span style="font-size:9px;color:#8040c0;font-family:'Cinzel',serif">${dh.ancestorFragments}/7</span>
     </div>
     <div style="font-size:9px;color:#604080;margin-top:5px">▸ 특정 행동(고룡 조우, 고대 유적, 폭풍 속 전투 등)으로 파편 수집</div>
+    <!-- [F1 FIX] gainDragonFragment가 ai-prompt/148의 gs.dragon_fragment 한
+         곳에서만 호출되고 수동 트리거가 전혀 없었다 — DRAGON_FRAGMENT_TRIGGERS
+         8종 전부를 버튼으로 노출해 같은 함수를 직접 호출한다. -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:8px">
+      ${DRAGON_FRAGMENT_TRIGGERS.map(t=>`
+        <button onclick="gainDragonFragment('${t.id}');renderDragonHeartPanel()"
+          style="padding:6px;background:#0d0018;border:1px solid #6040a044;color:#a080c0;font-size:8px;cursor:pointer;font-family:'Crimson Text',serif;text-align:left;border-radius:2px;line-height:1.3">
+          ${typeof getEntityIconHTML==='function'?getEntityIconHTML(t,{size:7}):(t.icon)} ${t.label}
+        </button>`).join('')}
+    </div>
     <div style="margin-top:8px;font-family:'Cinzel',serif;font-size:9px;color:#604080;letter-spacing:1px">발굴 기록</div>
     ${(dh.ancestorHistory||[]).slice(-5).reverse().map(h=>`<div style="display:flex;gap:5px;align-items:center;padding:3px 0;border-bottom:1px solid #200030;font-size:10px"><span>${typeof getEntityIconHTML==='function'?getEntityIconHTML(h,{size:16}):(h.icon)}</span><span style="color:#a080c0;flex:1">${h.label}</span><span style="color:#604080;font-size:9px">${h.at||''}</span></div>`).join('')||'<div style="font-size:10px;color:#403050;text-align:center;padding:6px 0">아직 파편이 없다.</div>'}
   </div>
@@ -1251,8 +1268,16 @@ export function renderDragonHeartPanel() {
     </div>
     <div style="font-size:10px;color:#607090;margin-top:4px;text-align:center">${balPhase.desc}</div>
     ${balPhase.phase==='adrift'?`<div style="margin-top:6px;padding:4px 8px;background:#101010;border:1px solid #303030;font-size:10px;color:#808080;text-align:center">⚠️ 방향을 선택하지 못한 자 — 가장 약한 상태</div>`:''}
-    <div style="margin-top:8px;padding:5px 8px;background:#0a0500;border:1px dashed #2a1000;border-radius:2px;font-size:9px;color:#5a3010">
-      💡 용심의 균형은 파괴적/수호적 행동에 따라 자연스럽게 이동합니다. 직접 조작 불가
+    <!-- [F1 FIX] shiftDragonBalance가 ai-prompt/148의 gs.dragon_balance 한
+         곳에서만 호출되고("직접 조작 불가"라고 스스로 안내하던 문구) 수동
+         트리거가 전혀 없었다 — 같은 함수를 직접 호출하는 버튼으로 대체. -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px">
+      ${Object.entries(DRAGON_BALANCE_SHIFTS).map(([id,def])=>`
+        <button onclick="shiftDragonBalance(${def.amount});renderDragonHeartPanel()"
+          style="padding:6px;background:${def.amount<0?'#150500':'#00050f'};border:1px solid ${def.amount<0?'#e03010':'#2060e0'}66;color:${def.amount<0?'#e05030':'#4090e0'};font-size:9px;cursor:pointer;font-family:'Crimson Text',serif;text-align:left;border-radius:2px;line-height:1.3">
+          ${typeof getEntityIconHTML==='function'?getEntityIconHTML(def,{size:8}):(def.icon)} ${def.label}
+          <span style="float:right;font-family:'Cinzel',serif">${def.amount>0?'+':''}${def.amount}</span>
+        </button>`).join('')}
     </div>
     ${balPhase.skills?.length ? `
       <div style="margin-top:8px;font-family:'Cinzel',serif;font-size:9px;color:#4080c0;letter-spacing:1px">해금 스킬</div>
@@ -1287,7 +1312,17 @@ export function renderDragonHeartPanel() {
       <span style="font-size:9px;color:#d0a020;font-family:'Cinzel',serif">${dh.hoardObsession||0}</span>
     </div>
     ${DRAGON_HOARD_OBSESSION_EVENTS.filter(e=>e.threshold<=(dh.hoardObsession||0)).map(e=>`<div style="font-size:9px;color:#a08020;padding:2px 0">▸ ${e.desc}</div>`).join('')}
-    <div style="margin-top:8px;font-size:9px;color:#504020;font-style:italic;text-align:center">🐉 보물 유형은 AI 서사에서 자동 결정됩니다</div>
+    <!-- [F1 FIX] gainDragonHoard가 ai-prompt/148의 gs.dragon_hoard 한 곳에서만
+         호출되고 수동 트리거가 전혀 없었다 — DRAGON_HOARD_TYPES 4종을 버튼으로
+         노출. 클릭당 집착도 +5는 gainDragonHoard의 amount 미지정 시 기본값과
+         동일(함수 자체가 이미 그 기본값을 쓴다). -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:8px">
+      ${Object.entries(DRAGON_HOARD_TYPES).map(([id,def])=>`
+        <button onclick="gainDragonHoard('${id}');renderDragonHeartPanel()"
+          style="padding:6px;background:#0d0800;border:1px solid ${def.color}44;color:${def.color};font-size:8px;cursor:pointer;font-family:'Crimson Text',serif;text-align:left;border-radius:2px;line-height:1.3">
+          ${typeof getEntityIconHTML==='function'?getEntityIconHTML(def,{size:7}):(def.icon)} ${def.label}
+        </button>`).join('')}
+    </div>
   </div>
 
   <!-- ══ 5. 각성의 대가 ══ -->
@@ -1320,7 +1355,17 @@ export function renderDragonHeartPanel() {
           ${(dh.awakenPoints||0)>=c.threshold?'<span style="color:#e040ff">●</span>':'<span style="color:#403050">○</span>'}
         </div>`).join('')}
     </div>
-    <div style="margin-top:8px;font-size:9px;color:#501060;font-style:italic;text-align:center">⚡ 각성은 AI 서사에서 자동으로 쌓입니다</div>
+    <!-- [F1 FIX] gainDragonAwakenPoints가 ai-prompt/148의 gs.dragon_awaken 한
+         곳에서만 호출되고 수동 트리거가 전혀 없었다 — DRAGON_AWAKEN_ACTS 5종을
+         버튼으로 노출, gain 수치는 그 표에 이미 정의된 값을 그대로 재사용. -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:8px">
+      ${Object.entries(DRAGON_AWAKEN_ACTS).map(([id,def])=>`
+        <button onclick="gainDragonAwakenPoints('${id}');renderDragonHeartPanel()"
+          style="padding:6px;background:#10001a;border:1px solid #a020e044;color:#c060e0;font-size:8px;cursor:pointer;font-family:'Crimson Text',serif;text-align:left;border-radius:2px;line-height:1.3">
+          ${typeof getEntityIconHTML==='function'?getEntityIconHTML(def,{size:7}):(def.icon)} ${def.label}
+          <span style="float:right;font-family:'Cinzel',serif">${def.gain>0?'+':''}${def.gain}</span>
+        </button>`).join('')}
+    </div>
   </div>
 
   <!-- ══ 해금 스킬 전체 ══ -->

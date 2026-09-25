@@ -234,6 +234,16 @@ export const DRAGON_AWAKEN_ACTS = {
   suppress: { label:'냉정 유지',    icon:'🧊', gain:-15, desc:'분노를 억누르고 냉정함 유지 (각성도 감소)' },
 };
 
+// [F1 FIX] shiftDragonBalance(amount)는 gs.dragon_balance(AI 서사 감지)에서만
+// 호출되고 로컬 수동 트리거가 전혀 없었다 — AI 프롬프트에도 이 필드가 얼마를
+// 움직여야 하는지 정해진 값이 없어(자유 수치) 다른 축 시스템(CELESTIAL_LIGHT_
+// GAIN/DARK_GAIN)처럼 그대로 재사용할 표는 없었다. 기존 각성 포인트 행동
+// (DRAGON_AWAKEN_ACTS)의 gain 규모(20~50)에 맞춰 새로 정한 대칭 수치.
+export const DRAGON_BALANCE_SHIFTS = {
+  destroy: { label:'파괴적 행동', icon:'🔥', amount:-30, desc:'약자를 짓밟거나 세상을 파괴하는 선택을 했다' },
+  guard:   { label:'수호적 행동', icon:'🛡️', amount:30,  desc:'약자를 지키고 세상을 보호하는 선택을 했다' },
+};
+
 export const DEMON_SIN_GAIN = {
   contract:    { label:"계약·협박",     icon:"📜", gain:8,  desc:"불리한 계약 강제, 협박, 공갈" },
   fear:        { label:"공포 조장",      icon:"😱", gain:6,  desc:"상대를 의도적으로 공포에 몰아넣음" },

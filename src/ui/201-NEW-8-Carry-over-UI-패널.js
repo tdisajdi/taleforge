@@ -17,7 +17,7 @@ import { checkWishAvailable, getGamblingDebt, getSoulCrystalStatus, getTearCryst
 import { clearMentalCorruption, loadDeification, loadRuins, updateDeification } from '../progression/020-101130번-환생-누적-시스템.js';
 import { getAnnalStats } from '../progression/037-NEW-회차-연보-엔딩-히스토리-갤러리.js';
 import { loadLegacy } from '../progression/156-NG-회차-계승-시스템.js';
-import { getMemoryAuction, loadRoleReversal } from '../race/028-악마족-진명-시스템-Demon-True-Name.js';
+import { getLoopersGuild, getMemoryAuction, joinLoopersGuild, loadRoleReversal, rejectLoopersGuild } from '../race/028-악마족-진명-시스템-Demon-True-Name.js';
 import { esc, toast } from '../utils.js';
 
 export function renderLegacyArchivePanel(){
@@ -175,6 +175,31 @@ export function renderLegacyArchivePanel(){
           <div style="font-family:'Cinzel',serif;font-size:10px;color:#6080c0;letter-spacing:1.5px;margin-bottom:6px">🔄 역할 반전</div>
           ${rvHtml}
         </div>`);
+      }
+    }
+    // [F3 FIX] 루프 자각자 길드 — joinLoopersGuild/rejectLoopersGuild가
+    // ai-prompt/222의 gs.looper_guild(AI 서사 감지) 한 곳에서만 호출되고
+    // 수동 트리거가 전혀 없었다. 가입 이후 랭크업(rankUpGuild)은 이미
+    // quest/086의 회차 진행 틱에서 완전히 로컬로 동작하지만, 그 앞의
+    // "가입 자체"가 막혀 있어 무-API 플레이어는 가입조차 못 했다. getLoopersGuild
+    // 자체가 이미 이 시스템의 해금 조건(5회차+)을 판정하는 함수이므로 그대로
+    // 가시성 게이트로 재사용.
+    if(typeof getLoopersGuild==='function'){
+      const guild = getLoopersGuild();
+      if(guild){
+        if(guild.status === 'unknown'){
+          sections.push(`<div style="margin-bottom:14px">
+            <div style="font-family:'Cinzel',serif;font-size:10px;color:#8060c0;letter-spacing:1.5px;margin-bottom:6px">🏛️ 루프 자각자 길드</div>
+            <div style="padding:8px 10px;background:#0a0800;border:1px solid #2a1a05;font-size:9px;color:var(--dim);margin-bottom:6px">비밀스러운 길드가 루프를 자각한 당신에게 접촉해왔다. 그들과 함께할 것인가?</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+              <button onclick="joinLoopersGuild();toast('🏛️ 루프 자각자 길드에 가입했다.',3500);renderLegacyArchivePanel()" style="padding:6px;font-size:9px;background:#1a1005;border:1px solid var(--gold);color:var(--gold);cursor:pointer;border-radius:2px">가입</button>
+              <button onclick="rejectLoopersGuild();toast('🏛️ 길드의 제안을 거절했다.',3500);renderLegacyArchivePanel()" style="padding:6px;font-size:9px;background:#1a0505;border:1px solid #6a3030;color:#c08080;cursor:pointer;border-radius:2px">거절</button>
+            </div>
+          </div>`);
+        } else {
+          sections.push(sectionHtml('🏛️','루프 자각자 길드',
+            [guild.status === 'member' ? `정회원 — ${guild.rankData?.label||''} (공유 지식 ${guild.knowledgeShared?.length||0}개)` : '적대 관계 (가입 거절함)']));
+        }
       }
     }
     // 100회차 소원

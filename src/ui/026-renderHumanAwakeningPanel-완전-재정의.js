@@ -693,16 +693,25 @@ export function renderHumanStigmaPanel() {
                   <div style="font-size:8px;color:#804030">${esc(def.desc)}</div>
                   <div style="font-size:8px;color:#603020;margin-top:1px">${Object.entries(def.penalty).map(([k,v])=>`${k.toUpperCase()} ${v*count}`).join(' ')}</div>
                 </div>
-                <span style="font-size:8px;color:#4a2a10;font-style:italic">AI 자동 극복</span>
+                <button onclick="overcomeStigma('${tid}')" style="width:100%;margin-top:5px;padding:5px;background:#001a08;border:1px solid #40c06066;color:#60d090;font-size:8px;cursor:pointer;font-family:'Crimson Text',serif;border-radius:2px">✅ 극복하기 (증명 +${count*8+10})</button>
               </div>
             </div>`;
           }).join('')}
     </div>
 
-    <!-- ④ 낙인 안내 (자동 전용) -->
+    <!-- ④ 낙인 부여 (수동) — [F4 FIX] addStigma/overcomeStigma가
+         detectHumanStigmaFromText(AI 서사 감지) 한 곳에서만 호출되고 수동
+         트리거가 전혀 없었다("AI 서사에서 자동으로 찍히고 극복됩니다"라고
+         스스로 안내하던 문구). STIGMA_TYPES(data/026) 6종 전부를 버튼으로
+         노출해 같은 함수를 직접 호출한다. -->
     <div style="padding:8px 12px;border-bottom:1px solid #1a1000">
-      <div style="font-size:9px;color:#5a3020;font-style:italic;text-align:center;padding:4px 0">
-        🔴 낙인은 AI 서사에서 자동으로 찍히고 극복됩니다
+      <div style="font-family:'Cinzel',serif;font-size:9px;color:#e06040;letter-spacing:1px;margin-bottom:6px">── 낙인 부여 (수동) ──</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">
+        ${STIGMA_TYPES.map(t=>`
+          <button onclick="addStigma('${t.id}');renderHumanStigmaPanel()"
+            style="padding:6px;background:#150800;border:1px solid #e0604044;color:#e08060;font-size:8px;cursor:pointer;font-family:'Crimson Text',serif;text-align:left;border-radius:2px;line-height:1.3">
+            ${typeof getEntityIconHTML==='function'?getEntityIconHTML(t,{size:7}):(t.icon)} ${t.label}
+          </button>`).join('')}
       </div>
     </div>
 

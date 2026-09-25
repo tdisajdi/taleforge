@@ -962,6 +962,12 @@ export function moveToLocation(locName, opts){
   if(typeof window.saveDiaryEntry==='function')
     window.saveDiaryEntry('travel', `🗺️ ${prevLoc?.name||'출발지'} → ${loc.name}`, S.msgCount||0);
   if(loc.type==='dungeon') unlockAchievement('enter_dungeon');
+  // [world/ 전수 재감사] world/052의 AI 텍스트 감지 경로(detectAndSetLocation)에는
+  // 있던 'find_shrine'(성소의 발견) 해금이 이 수동 이동 경로에는 없었다 —
+  // 위 enter_dungeon과 똑같은 패턴인데 shrine만 빠져 있어, 지도 클릭 등으로
+  // 직접 이동해 성소에 도착해도(AI 서사가 그 장소명을 언급하지 않는 한)
+  // 이 업적이 영원히 잠겨 있었다.
+  if(loc.type==='shrine') unlockAchievement('find_shrine');
 
   if(typeof window._injectTravelMessage==='function') window._injectTravelMessage(prevLoc, loc, 0);
   else toastHTML(`🗺️ ${typeof getEntityIconHTML==='function'?getEntityIconHTML(loc,{size:14}):(loc.icon)} ${esc(loc.name)} 에 도착했습니다!`, 3000);

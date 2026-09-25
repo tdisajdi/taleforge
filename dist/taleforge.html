@@ -41997,6 +41997,7 @@ ${lines.join("\n")}
     if (typeof window.saveDiaryEntry === "function")
       window.saveDiaryEntry("travel", `\u{1F5FA}\uFE0F ${prevLoc?.name || "\uCD9C\uBC1C\uC9C0"} \u2192 ${loc.name}`, S.msgCount || 0);
     if (loc.type === "dungeon") unlockAchievement("enter_dungeon");
+    if (loc.type === "shrine") unlockAchievement("find_shrine");
     if (typeof window._injectTravelMessage === "function") window._injectTravelMessage(prevLoc, loc, 0);
     else toastHTML(`\u{1F5FA}\uFE0F ${typeof getEntityIconHTML === "function" ? getEntityIconHTML(loc, { size: 14 }) : loc.icon} ${esc2(loc.name)} \uC5D0 \uB3C4\uCC29\uD588\uC2B5\uB2C8\uB2E4!`, 3e3);
     setTimeout(() => {

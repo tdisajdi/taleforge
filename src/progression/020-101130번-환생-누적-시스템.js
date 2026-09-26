@@ -179,6 +179,14 @@ export const restoreRuin = (structureType) => {
   saveRuins(ruins);
   return ruin;
 };
+// [22차 감사 FIX] ui/201(전생의 유산 도감 패널)의 "복구" 버튼이
+// onclick="if(typeof restoreRuin==='function'){restoreRuin(...)...}"로
+// restoreRuin을 호출하는데, 이 IIFE 번들에서는 export만 된 모듈 스코프
+// 식별자가 인라인 onclick(전역 스코프)에서는 절대 보이지 않는다 —
+// window에 노출된 적이 없어 typeof 가드가 항상 false로 막혀버리는,
+// 이 세션에서 반복 발견된 것과 동일한 스코프 불일치 무동작 버그. 폐허
+// 복구 버튼이 아무리 눌러도 조용히 아무 일도 일어나지 않았다.
+window.restoreRuin = restoreRuin;
 
 export const getRuins = () => {
   const cycle = loadCycleCount();

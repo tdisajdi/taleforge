@@ -357,6 +357,17 @@ export async function chooseDungeonAction(choiceId){
         if(item){ item.rarity=rarity; S.inventory.push(item); saveInventory(S.inventory); toast('📦 ' + item.icon + ' ' + item.name + ' 획득! (' + rarity + ')', 3000); ds.itemsFound=(ds.itemsFound||0)+1; }
       }catch(e){ const fi=typeof generateItem==='function'?generateItem(null,rarity):null; if(fi){ S.inventory.push(fi); saveInventory(S.inventory); ds.itemsFound=(ds.itemsFound||0)+1; } }
     }
+    // [data/252 감사, 2026-09-25 추가] 농장 시스템의 마나꽃(CROP_DEFS.manaflower)은
+    // requireSeedItem:'마나꽃 씨앗'을 요구하는데, 이 아이템을 지급하는 코드가
+    // 어디에도 없었다(설명도 "던전에서 희귀 종자를 구해야 심을 수 있다"고
+    // 명시) — misc/053의 고대 룬 비전서/고대 지식의 편린과 정확히 같은 구멍.
+    // 여기(던전 방 판정, 로컬 로직·AI 무관)에 낮은 확률로 연결. 새 시스템은
+    // 안 만들고 기존 인벤토리 지급 패턴만 재사용.
+    if(result.roomCleared && !(S.inventory||[]).some(it=>it&&it.id==='manaflower_seed') && Math.random()<0.04){
+      S.inventory.push({ id:'manaflower_seed', name:'마나꽃 씨앗', icon:'🪻', rarity:'rare', type:'quest', desc:'던전 깊은 곳에서만 발견되는 희귀한 씨앗. 영지 농장에 마나꽃을 심을 수 있다.' });
+      saveInventory(S.inventory);
+      toast('🪻 던전에서 「마나꽃 씨앗」을 발견했다!', 3000);
+    }
     if(typeof gainExpFromAction==='function'){ gainExpFromAction(effRoll>=50, effRoll>=90, false); }
     if(room.roomType==='combat'||room.roomType==='boss'){ if(effRoll>=50) ds.kills=(ds.kills||0)+1; }
     ds.totalGold  = (ds.totalGold||0) + goldChg;

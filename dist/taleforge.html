@@ -12439,6 +12439,21 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
     const r = lsGet(APOCALYPSE_KEY);
     return r ? JSON.parse(r) : { clock: 0, sealed: false, sealCount: 0 };
   };
+  var saveApocalypse = (a) => lsSet(APOCALYPSE_KEY, JSON.stringify(a));
+  var tickApocalypse = (karmaScore, questRate, sealed) => {
+    const apo = loadApocalypse();
+    if (sealed) {
+      apo.sealed = true;
+      apo.sealCount = (apo.sealCount || 0) + 1;
+      apo.clock = Math.max(0, (apo.clock || 0) - 15);
+    } else {
+      const tick = karmaScore >= 70 ? 8 : questRate >= 70 ? 3 : 5;
+      apo.clock = Math.min(100, (apo.clock || 0) + tick);
+    }
+    saveApocalypse(apo);
+    const stage = APOCALYPSE_STAGES.find((s) => (apo.clock || 0) >= s.clock[0] && (apo.clock || 0) <= s.clock[1]) || APOCALYPSE_STAGES[5];
+    return { ...apo, stageData: stage };
+  };
   var getApocalypseStatus = () => {
     const apo = loadApocalypse();
     const stage = APOCALYPSE_STAGES.find((s) => (apo.clock || 0) >= s.clock[0] && (apo.clock || 0) <= s.clock[1]) || APOCALYPSE_STAGES[0];
@@ -28103,6 +28118,16 @@ ${lines.join("\n")}
     }
     saveRuins(ruins);
   };
+  var restoreRuin = (structureType) => {
+    const ruins = loadRuins();
+    const ruin = ruins.find((r) => r.id === structureType);
+    if (!ruin) return false;
+    ruin.restored = true;
+    ruin.restoredAt = (/* @__PURE__ */ new Date()).toISOString();
+    saveRuins(ruins);
+    return ruin;
+  };
+  window.restoreRuin = restoreRuin;
   var getRuins = () => {
     const cycle = loadCycleCount();
     if (cycle < 1) return [];
@@ -78534,6 +78559,11 @@ ${simDesc}` : playerRep;
           }
         }
       }
+      if (result.roomCleared && !(S.inventory || []).some((it) => it && it.id === "manaflower_seed") && Math.random() < 0.04) {
+        S.inventory.push({ id: "manaflower_seed", name: "\uB9C8\uB098\uAF43 \uC528\uC557", icon: "\u{1FABB}", rarity: "rare", type: "quest", desc: "\uB358\uC804 \uAE4A\uC740 \uACF3\uC5D0\uC11C\uB9CC \uBC1C\uACAC\uB418\uB294 \uD76C\uADC0\uD55C \uC528\uC557. \uC601\uC9C0 \uB18D\uC7A5\uC5D0 \uB9C8\uB098\uAF43\uC744 \uC2EC\uC744 \uC218 \uC788\uB2E4." });
+        saveInventory(S.inventory);
+        toast("\u{1FABB} \uB358\uC804\uC5D0\uC11C \u300C\uB9C8\uB098\uAF43 \uC528\uC557\u300D\uC744 \uBC1C\uACAC\uD588\uB2E4!", 3e3);
+      }
       if (typeof gainExpFromAction === "function") {
         gainExpFromAction(effRoll >= 50, effRoll >= 90, false);
       }
@@ -92973,6 +93003,7 @@ ${lines.join("\n")}
             growSoulFrequency(cycle, _bondData.deepBonds || 0);
           }
           if (typeof growWorldMemory === "function") growWorldMemory(Math.round(S.stats?.krma || 50), cycle);
+          if (typeof tickApocalypse === "function") tickApocalypse(Math.round(S.stats?.krma || 50), 0, false);
           if (typeof checkCursedCycle === "function") checkCursedCycle(cycle);
           if (typeof overcameCursedCycle === "function") overcameCursedCycle(cycle - 1);
           if (typeof recordDreamProphecy === "function") recordDreamProphecy(S.stats?.wil || 10, S.scenario?.id);

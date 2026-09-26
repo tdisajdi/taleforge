@@ -6783,6 +6783,15 @@ function doReincarnate(){
       growSoulFrequency(cycle, _bondData.deepBonds||0);
     }
     if(typeof growWorldMemory==='function') growWorldMemory(Math.round(S.stats?.krma||50), cycle);
+    // [22차 감사 FIX] tickApocalypse는 이 파일 맨 위에서 import까지 됐지만
+    // 실제 호출부가 어디에도 없어(다른 죽은 훅들과 동일한 증상) 종말 시계가
+    // 영원히 0에 고정돼 있었다 — getApocalypseStatus()는 ai-prompt/077의
+    // 시스템 프롬프트에 매 턴 노출되는데 정작 시계가 절대 진행되지 않는
+    // 죽은 시스템이었다. 같은 회차-시작 블록의 다른 성장형 시스템들과
+    // 동일한 패턴으로 연결한다(questRate는 대응하는 지표가 없어 0 전달 —
+    // tickApocalypse 내부에서 karmaScore>=70 우선 분기, 아니면 questRate
+    // 미달로 기본 tick(5)이 적용되어 안전하다).
+    if(typeof tickApocalypse==='function') tickApocalypse(Math.round(S.stats?.krma||50), 0, false);
     if(typeof checkCursedCycle==='function') checkCursedCycle(cycle);
     if(typeof overcameCursedCycle==='function') overcameCursedCycle(cycle-1);
     if(typeof recordDreamProphecy==='function') recordDreamProphecy(S.stats?.wil||10, S.scenario?.id);

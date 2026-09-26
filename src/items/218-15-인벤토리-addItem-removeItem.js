@@ -310,6 +310,48 @@ window.grantSoul = grantSoul;
 
 window.grantSoul = grantSoul;
 
+// [2026-09-26, 무기 영혼 시스템 완전 무-API 보강] grantSoul()로 만들어지는
+// 소울은 이름 없는 빈 그릇(level 1, bonus/skill 전혀 없음)이고, 실제로
+// 성능을 갖추려면 recordSoulAction→checkSoulLevelUp→
+// requestSoulEvolutionCandidates 흐름을 거쳐야 하는데, 이 흐름은
+// hookSoulGS(아래)를 통해 AI가 실제 <gs> 태그를 낸 턴에만 진행된다 —
+// 완전 무-API 플레이에서는 사실상 영원히 안 돈다. 사용자 요청("낮은
+// 확률로 나오고 준수한 성능이면서 환생해도 유지되는 것")에 맞춰, 이
+// 함수는 grantSoul()로 만든 빈 그릇에 AI 진화 후보 흐름과 똑같은 형태
+// (name/baseBonus/bonus/skill/evolutions)를 즉석에서 채워, 첫 진화를
+// 거친 것과 동등한 수준의 실사용 가능한 소울을 만든다 — 새 성장
+// 시스템을 만드는 게 아니라, AI가 못 채워주는 지점만 로컬 값으로
+// 대신 메운다(레벨/정화도/진화 흐름 자체는 그대로 두어, 나중에 AI가
+// 있을 때 정상적으로 더 진화할 수도 있다).
+const SOUL_LOCAL_AWAKEN_POOL = [
+  { stat:'str', amount:15, skill:{ name:'거친 울림',     desc:'묵직한 타격을 주고받을 때마다 낮게 공명한다.' } },
+  { stat:'agi', amount:15, skill:{ name:'그림자 맞장구', desc:'재빠른 몸놀림에 반응해 옅게 떨린다.' } },
+  { stat:'int', amount:15, skill:{ name:'서늘한 속삭임', desc:'복잡한 상황을 마주할 때마다 서늘하게 속삭인다.' } },
+  { stat:'mgc', amount:12, skill:{ name:'마력의 잔향',   desc:'마법이 발휘될 때마다 옅은 빛으로 반응한다.' } },
+];
+export function grantLocalWeaponSoul(originText){
+  try{
+    const soulId = grantSoul(originText);
+    if(!soulId) return null;
+    const souls = loadSouls();
+    const soul = souls[soulId];
+    if(!soul) return soulId;
+    const pick = SOUL_LOCAL_AWAKEN_POOL[Math.floor(Math.random()*SOUL_LOCAL_AWAKEN_POOL.length)];
+    soul.name = '각성한 혼';
+    soul.baseBonus = { [pick.stat]: pick.amount };
+    soul.bonus = applyPurityMultiplier(soul.baseBonus, soul.purity||1);
+    soul.skill = pick.skill;
+    soul.evolutions = soul.evolutions || [];
+    soul.evolutions.push({ level:soul.level, purity:soul.purity||1, name:soul.name, desc:'무기 없이도 이미 옅은 힘을 품은 채 나타난 드문 혼.', bonus:soul.baseBonus, skill:pick.skill, source:'local', at:S?.msgCount||0 });
+    saveSouls(souls);
+    toast(`✨ 이 혼은 이미 옅은 힘을 머금고 있다 — 무기에 깃들게 할 수 있습니다.`, 4200);
+    return soulId;
+  }catch(e){ return null; }
+}
+window.grantLocalWeaponSoul = grantLocalWeaponSoul;
+
+window.grantLocalWeaponSoul = grantLocalWeaponSoul;
+
 export function tryGrantSoulFromNpc(){ /* removed in v10 */ }
 window.tryGrantSoulFromNpc = tryGrantSoulFromNpc;
 

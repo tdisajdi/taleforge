@@ -1098,6 +1098,19 @@ function finishFieldBattle(){
     const gold = 10 + Math.floor(Math.random()*30);
     if(typeof window.addGoldWithExchange==='function') window.addGoldWithExchange(gold, '필드 전투 전리품');
     else { S.gold = (S.gold||0)+gold; if(typeof window.saveGold==='function') window.saveGold(S.gold); }
+    // [2026-09-26, 무기 영혼 시스템 무-API 보강 — 사용자 요청: "낮은 확률로
+    // 나오고 준수한 성능이면서 환생해도 유지되는" 소울 획득 경로] grantSoul()의
+    // 원래 3개 진입점(GS 소울 부여/소문 히든 퀘스트/대륙별 히든 던전 완파)이
+    // 전부 AI 서사 판단에만 의존해 완전 무-API 플레이에서는 원천적으로
+    // 도달 불가능했다(작업메모장 36번 섹션 발견). 이미 소울을 하나라도
+    // 보유하면 더 이상 그랜트하지 않고(중복 방지, 다른 로컬 드랍들과 동일
+    // 관례), 5% 확률로만 실제 필드 전투 승리 시 성능이 이미 채워진 소울을
+    // 부여한다 — tf-souls는 doReincarnate()의 삭제 목록에 없어 환생해도
+    // 그대로 유지된다(재확인만 함, 별도 구현 불필요).
+    if(typeof window.grantLocalWeaponSoul==='function' && typeof window.loadSouls==='function'
+       && Object.keys(window.loadSouls()||{}).length===0 && Math.random()<0.05){
+      window.grantLocalWeaponSoul('필드에서의 격전 끝에 얻은 뜻밖의 깨달음');
+    }
   }
   if(typeof window.saveSession==='function') window.saveSession();
   if(battleUiRefresh) battleUiRefresh(bs, true);

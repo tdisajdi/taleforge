@@ -94477,6 +94477,35 @@ ${_monsterInfoLine}`;
   }
   window.grantSoul = grantSoul;
   window.grantSoul = grantSoul;
+  var SOUL_LOCAL_AWAKEN_POOL = [
+    { stat: "str", amount: 15, skill: { name: "\uAC70\uCE5C \uC6B8\uB9BC", desc: "\uBB35\uC9C1\uD55C \uD0C0\uACA9\uC744 \uC8FC\uACE0\uBC1B\uC744 \uB54C\uB9C8\uB2E4 \uB0AE\uAC8C \uACF5\uBA85\uD55C\uB2E4." } },
+    { stat: "agi", amount: 15, skill: { name: "\uADF8\uB9BC\uC790 \uB9DE\uC7A5\uAD6C", desc: "\uC7AC\uBE60\uB978 \uBAB8\uB180\uB9BC\uC5D0 \uBC18\uC751\uD574 \uC605\uAC8C \uB5A8\uB9B0\uB2E4." } },
+    { stat: "int", amount: 15, skill: { name: "\uC11C\uB298\uD55C \uC18D\uC0AD\uC784", desc: "\uBCF5\uC7A1\uD55C \uC0C1\uD669\uC744 \uB9C8\uC8FC\uD560 \uB54C\uB9C8\uB2E4 \uC11C\uB298\uD558\uAC8C \uC18D\uC0AD\uC778\uB2E4." } },
+    { stat: "mgc", amount: 12, skill: { name: "\uB9C8\uB825\uC758 \uC794\uD5A5", desc: "\uB9C8\uBC95\uC774 \uBC1C\uD718\uB420 \uB54C\uB9C8\uB2E4 \uC605\uC740 \uBE5B\uC73C\uB85C \uBC18\uC751\uD55C\uB2E4." } }
+  ];
+  function grantLocalWeaponSoul(originText) {
+    try {
+      const soulId = grantSoul(originText);
+      if (!soulId) return null;
+      const souls = loadSouls();
+      const soul = souls[soulId];
+      if (!soul) return soulId;
+      const pick = SOUL_LOCAL_AWAKEN_POOL[Math.floor(Math.random() * SOUL_LOCAL_AWAKEN_POOL.length)];
+      soul.name = "\uAC01\uC131\uD55C \uD63C";
+      soul.baseBonus = { [pick.stat]: pick.amount };
+      soul.bonus = applyPurityMultiplier(soul.baseBonus, soul.purity || 1);
+      soul.skill = pick.skill;
+      soul.evolutions = soul.evolutions || [];
+      soul.evolutions.push({ level: soul.level, purity: soul.purity || 1, name: soul.name, desc: "\uBB34\uAE30 \uC5C6\uC774\uB3C4 \uC774\uBBF8 \uC605\uC740 \uD798\uC744 \uD488\uC740 \uCC44 \uB098\uD0C0\uB09C \uB4DC\uBB38 \uD63C.", bonus: soul.baseBonus, skill: pick.skill, source: "local", at: S?.msgCount || 0 });
+      saveSouls(souls);
+      toast(`\u2728 \uC774 \uD63C\uC740 \uC774\uBBF8 \uC605\uC740 \uD798\uC744 \uBA38\uAE08\uACE0 \uC788\uB2E4 \u2014 \uBB34\uAE30\uC5D0 \uAE43\uB4E4\uAC8C \uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4.`, 4200);
+      return soulId;
+    } catch (e) {
+      return null;
+    }
+  }
+  window.grantLocalWeaponSoul = grantLocalWeaponSoul;
+  window.grantLocalWeaponSoul = grantLocalWeaponSoul;
   function tryGrantSoulFromNpc() {
   }
   window.tryGrantSoulFromNpc = tryGrantSoulFromNpc;
@@ -133520,6 +133549,9 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
       else {
         S.gold = (S.gold || 0) + gold;
         if (typeof window.saveGold === "function") window.saveGold(S.gold);
+      }
+      if (typeof window.grantLocalWeaponSoul === "function" && typeof window.loadSouls === "function" && Object.keys(window.loadSouls() || {}).length === 0 && Math.random() < 0.05) {
+        window.grantLocalWeaponSoul("\uD544\uB4DC\uC5D0\uC11C\uC758 \uACA9\uC804 \uB05D\uC5D0 \uC5BB\uC740 \uB73B\uBC16\uC758 \uAE68\uB2EC\uC74C");
       }
     }
     if (typeof window.saveSession === "function") window.saveSession();

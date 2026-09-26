@@ -501,6 +501,28 @@ export function detectWdrNPCFromText(text){
 }
 window.detectWdrNPCFromText = detectWdrNPCFromText;
 
+// [2026-09-26, 방랑자 명부 로컬 발견 트리거 신설 — 작업메모장 38번 섹션]
+// 위 detectWdrNPCFromText()는 AI/로컬 뱅크가 그 NPC의 무작위 이름을
+// 정확히 문자열로 언급해야만 작동하는데, 이름이 role/hook/motivation과
+// 무관하게 완전 무작위로 배정돼 그 어떤 생성기도 사전에 이름을 전달받지
+// 못한다 — AI 유무와 무관하게 구조적으로 거의 영원히 미발견 상태로 남는다.
+// 그래서 텍스트 매칭과 완전히 독립적인 두 번째 발견 경로를 추가한다 —
+// 낮은 확률로 "우연히 그 인물에 대한 소식을 접했다"는 식으로 미발견 NPC
+// 하나를 직접 discovered로 확정한다(호출부가 side를 정해서 부름 —
+// 악역은 전투 승리, 선역은 정착지 방문 시점에 자연스럽게 연결).
+export function tryLocalWdrDiscovery(side){
+  if(!_isWanderer()) return false;
+  const data = loadWdrNPCs();
+  const pool = (side==='villain' ? data.villains : data.heroes).filter(n => !n.discovered);
+  if(!pool.length) return false;
+  const npc = pool[Math.floor(Math.random()*pool.length)];
+  npc.discovered = true;
+  lsSet(WDR_NPC_KEY, JSON.stringify(data));
+  setTimeout(()=>toast(`[${npc.side==='villain'?'적':'우호'}] ${npc.name} 발견!`, 3000, npc), 500);
+  return true;
+}
+window.tryLocalWdrDiscovery = tryLocalWdrDiscovery;
+
 setTimeout(function(){
   try{
     const btmBar = document.querySelector('.btm-bar');

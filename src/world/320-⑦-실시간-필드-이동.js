@@ -1111,6 +1111,14 @@ function finishFieldBattle(){
        && Object.keys(window.loadSouls()||{}).length===0 && Math.random()<0.05){
       window.grantLocalWeaponSoul('필드에서의 격전 끝에 얻은 뜻밖의 깨달음');
     }
+    // [2026-09-26, 방랑자 명부 로컬 발견 트리거 — 작업메모장 38번 섹션]
+    // detectWdrNPCFromText는 AI가 그 NPC의 무작위 이름을 정확히 언급해야만
+    // 작동해 구조적으로 거의 발동 불가능하다 — 전투 승리라는 "적대 세력과
+    // 얽히는" 자연스러운 계기에 낮은 확률(8%)로 악역 NPC 한 명을 직접
+    // 발견 처리한다(중복 없음, tryLocalWdrDiscovery가 미발견 목록에서만 고름).
+    if(typeof window.tryLocalWdrDiscovery==='function' && Math.random()<0.08){
+      window.tryLocalWdrDiscovery('villain');
+    }
   }
   if(typeof window.saveSession==='function') window.saveSession();
   if(battleUiRefresh) battleUiRefresh(bs, true);
@@ -1680,6 +1688,14 @@ function enterScreen(nodeId, fromNodeId){
     // 화면 하나 자체가 곧 그 장소다 — 실제로 여기 도착한 것으로 게임의
     // 현재 위치 상태를 갱신한다(기존 이동 시스템과 동일한 진짜 상태 변경).
     saveCurrentLocation(screen.node.loc);
+    // [2026-09-26, 방랑자 명부 로컬 발견 트리거 — 작업메모장 38번 섹션]
+    // 선역 NPC는 hook 서술이 "동행하게 된다"/"만남" 등 정착지·사교 테마라,
+    // 정착지(SETTLEMENT_TYPES) 도착이라는 자연스러운 계기에 낮은 확률(8%)로
+    // 미발견 선역 NPC 한 명을 직접 발견 처리한다 — 위 전투 승리(악역) 훅과
+    // 대칭되는 두 번째 로컬 진입점.
+    if(SETTLEMENT_TYPES.has(screen.node.loc.type) && typeof window.tryLocalWdrDiscovery==='function' && Math.random()<0.08){
+      window.tryLocalWdrDiscovery('hero');
+    }
     // [2026-09-18 습격 라운드] 지금 이 정착지가 습격을 받는 중이면 도착
     // 즉시 경고 — buildScreen()이 이미 syncRaidPacksForScreen으로 습격대를
     // 화면에 심어뒀으므로, 그 경고와 함께 실제로 화면 위에서 마주치게 된다.

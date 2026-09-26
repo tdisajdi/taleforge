@@ -68437,6 +68437,18 @@ ${simDesc}` : playerRep;
     if (changed) lsSet(WDR_NPC_KEY, JSON.stringify(data));
   }
   window.detectWdrNPCFromText = detectWdrNPCFromText;
+  function tryLocalWdrDiscovery(side) {
+    if (!_isWanderer()) return false;
+    const data = loadWdrNPCs();
+    const pool = (side === "villain" ? data.villains : data.heroes).filter((n) => !n.discovered);
+    if (!pool.length) return false;
+    const npc = pool[Math.floor(Math.random() * pool.length)];
+    npc.discovered = true;
+    lsSet(WDR_NPC_KEY, JSON.stringify(data));
+    setTimeout(() => toast(`[${npc.side === "villain" ? "\uC801" : "\uC6B0\uD638"}] ${npc.name} \uBC1C\uACAC!`, 3e3, npc), 500);
+    return true;
+  }
+  window.tryLocalWdrDiscovery = tryLocalWdrDiscovery;
   setTimeout(function() {
     try {
       const btmBar = document.querySelector(".btm-bar");
@@ -133553,6 +133565,9 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
       if (typeof window.grantLocalWeaponSoul === "function" && typeof window.loadSouls === "function" && Object.keys(window.loadSouls() || {}).length === 0 && Math.random() < 0.05) {
         window.grantLocalWeaponSoul("\uD544\uB4DC\uC5D0\uC11C\uC758 \uACA9\uC804 \uB05D\uC5D0 \uC5BB\uC740 \uB73B\uBC16\uC758 \uAE68\uB2EC\uC74C");
       }
+      if (typeof window.tryLocalWdrDiscovery === "function" && Math.random() < 0.08) {
+        window.tryLocalWdrDiscovery("villain");
+      }
     }
     if (typeof window.saveSession === "function") window.saveSession();
     if (battleUiRefresh) battleUiRefresh(bs, true);
@@ -134082,6 +134097,9 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
     RT.partyTrail = new Array(240).fill({ x: RT.player.x, y: RT.player.y });
     if (screen.node.kind === "location") {
       saveCurrentLocation(screen.node.loc);
+      if (SETTLEMENT_TYPES.has(screen.node.loc.type) && typeof window.tryLocalWdrDiscovery === "function" && Math.random() < 0.08) {
+        window.tryLocalWdrDiscovery("hero");
+      }
       const raidRec = isRaidVulnerable(screen.node.loc) ? loadRaidState2()[screen.node.loc.id] : null;
       if (raidRec && raidRec.state === "threatened") {
         showFieldToast(`\u{1F525} ${screen.node.loc.name}\uC774(\uAC00) \uC2B5\uACA9\uB2F9\uD558\uACE0 \uC788\uB2E4! \uACBD\uBE44\uBCD1\uB4E4\uACFC \uD568\uAED8 \uB9C9\uC544\uB0B4\uC57C \uD55C\uB2E4`);

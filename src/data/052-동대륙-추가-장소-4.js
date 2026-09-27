@@ -475,7 +475,7 @@ export const SPECIAL_LOCATIONS = [
     ],
     interactions:[
       { id:'int_loop_truth', name:'루프 진실 열람', icon:'📖', desc:'INT+WIL 판정. 세계가 몇 번 반복됐는지 기록 열람. 메타 지식 획득.', action:'loopTruth' },
-      { id:'int_seal_map', name:'봉인석 지도 복사', icon:'🗺️', desc:'AGI+INT 판정. 경보 피해 8개 봉인석 위치 복사.', action:'sealMap' },
+      { id:'int_seal_map', name:'봉인석 지도 복사', icon:'🗺️', desc:'AGI+INT 판정. 경보 피해 11개 봉인석 위치 복사.', action:'sealMap' },
       { id:'int_arcanus_ai', name:'자동 마법 방어와 교섭', icon:'🤖', desc:'MGC+INT 판정. 아르카누스가 설계한 자동 방어 시스템과 대화.', action:'arcanuAI' },
     ],
     priceModifier: 2.3,
@@ -603,9 +603,9 @@ export const SPECIAL_LOCATIONS = [
   },
   {
     id:'loc_seal_nexus', name:'봉인의 넥서스', icon:'🔯', type:'dungeon', dungeonTier:4,
-    desc:'8개 봉인석이 처음 만들어진 장소. 세계수 이그드라의 심장 파편들이 여기서 분리됐다. 세계 자체가 이 장소를 중심으로 뒤틀려 있다. 봉인이 모두 해제되면 이곳이 활성화된다.',
-    triggerKeywords:['봉인의 넥서스','봉인석 원점','8개 봉인','세계수 심장','봉인석 창조','넥서스','봉인 핵심'],
-    lore:'감시자가 세계수의 심장을 분리해 8개 봉인석으로 나눈 장소. 세계수가 쇠락한 진짜 원인. 여기서 봉인석을 재결합하면 세계수가 소생한다.',
+    desc:'11개 봉인석이 처음 만들어진 장소. 세계수 이그드라의 심장 파편들이 여기서 분리됐다. 세계 자체가 이 장소를 중심으로 뒤틀려 있다. 봉인이 모두 해제되면 이곳이 활성화된다.',
+    triggerKeywords:['봉인의 넥서스','봉인석 원점','11개 봉인','세계수 심장','봉인석 창조','넥서스','봉인 핵심'],
+    lore:'감시자가 세계수의 심장을 분리해 11개 봉인석으로 나눈 장소. 세계수가 쇠락한 진짜 원인. 여기서 봉인석을 재결합하면 세계수가 소생한다.',
     shops:[
       { name:'봉인석 수호자 유해', items:[
         {id:'seal_master_robe',name:'봉인술사의 로브',icon:'🔯',rarity:'legendary',type:'equip',desc:'봉인석 에너지 완전 흡수. MGC·WIL +40. 봉인석 무기화 가능.',price:8000, effects:{mgc:300,wil:250,int:150,fath:120}},

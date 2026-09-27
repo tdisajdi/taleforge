@@ -483,7 +483,16 @@ const LOC_GEN_INTERACTION_BANK = [
 const LOC_GEN_INFO_BANK = [
   { tier:'useful', icon:'📜', title:'현지 정보', content:'이곳에 대해 알아두면 도움이 될 만한 이야기가 떠돈다.' },
   { tier:'useful', icon:'🗣️', title:'떠도는 소문', content:'최근 이 근방에서 심상찮은 소문이 돌고 있다.' },
+  { tier:'useful', icon:'🧭', title:'길잡이의 조언', content:'낯선 이라면 해가 지기 전에 이곳을 벗어나는 게 좋다는 조언이 돈다.' },
+  { tier:'useful', icon:'🍺', title:'주막의 이야기', content:'술자리에서 흘러나온 이야기가 이곳 사정을 어렴풋이 알려준다.' },
+  { tier:'useful', icon:'🪧', title:'거리의 경고', content:'벽에 붙은 낡은 경고문이 이 근방의 위험을 짐작하게 한다.' },
+  { tier:'useful', icon:'👥', title:'주민들의 걱정', content:'주민들 사이에 이곳 사정을 두고 근심스러운 말들이 오간다.' },
+  { tier:'useful', icon:'📦', title:'상인의 귀띔', content:'지나가던 상인이 이곳 물가와 형편에 대해 슬쩍 알려준다.' },
+  { tier:'useful', icon:'🕯️', title:'밤의 소문', content:'해가 진 뒤에만 도는 조심스러운 이야기가 있다.' },
   { tier:'special', icon:'✨', title:'숨겨진 이야기', content:'이곳에는 겉보기와 다른 사연이 숨어 있는 듯하다.' },
+  { tier:'special', icon:'🔮', title:'예감', content:'무언가 아직 드러나지 않은 사연이 이곳에 얽혀 있는 듯한 예감이 든다.' },
+  { tier:'special', icon:'🗝️', title:'봉인된 사연', content:'누군가 일부러 감춰둔 듯한 사연의 흔적이 이곳에 남아 있다.' },
+  { tier:'special', icon:'👁️', title:'남다른 시선', content:'이곳을 남다르게 바라보는 이가 있다는 이야기가 조용히 돈다.' },
 ];
 function _locGenClassify(trigger, context){
   const t = ((trigger||'')+' '+(context||'')).toLowerCase();

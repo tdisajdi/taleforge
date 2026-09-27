@@ -62,6 +62,13 @@ export function saveCurrentLocation(d){
     if(d && d.name && typeof addExploredLocation==='function'){
       addExploredLocation(d.name, S.scenario?.id, d.type);
     }
+    // [2026-09-26, 39번 섹션 D] 수집 도감('locations')이 AI 텍스트
+    // 정규식에조차 대응 항목이 없어 100% 미채워지던 것 — 위 대륙 방문
+    // 트래킹·웨이포인트 등록·탐사기록과 같은 이유로 이 공통 경로에서
+    // 등록한다(AI 여부와 무관하게 항상 동작).
+    if(d && d.name && typeof window.recordCollectionItem==='function'){
+      window.recordCollectionItem('locations', d.name);
+    }
   }catch(e){}
 }
 window.saveCurrentLocation = saveCurrentLocation;

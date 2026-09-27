@@ -39257,6 +39257,9 @@ ${lines.join("\n")}
       if (d && d.name && typeof addExploredLocation === "function") {
         addExploredLocation(d.name, S.scenario?.id, d.type);
       }
+      if (d && d.name && typeof window.recordCollectionItem === "function") {
+        window.recordCollectionItem("locations", d.name);
+      }
     } catch (e) {
     }
   }
@@ -104278,7 +104281,18 @@ ${lines}${poolSection}`;
     const r = lsGet(INVENTORY_KEY);
     return r ? JSON.parse(r) : [];
   };
-  var saveInventory = (inv) => lsSet(INVENTORY_KEY, JSON.stringify(inv));
+  var saveInventory = (inv) => {
+    try {
+      if (typeof window.recordCollectionItem === "function") {
+        const prevNames = new Set((loadInventory() || []).map((i) => i && i.name));
+        (inv || []).forEach((it) => {
+          if (it && it.name && !prevNames.has(it.name)) window.recordCollectionItem("items", it.name);
+        });
+      }
+    } catch (e) {
+    }
+    lsSet(INVENTORY_KEY, JSON.stringify(inv));
+  };
   var clearInventory = () => lsDel(INVENTORY_KEY);
   var loadEquipped = () => {
     const r = lsGet(EQUIPPED_KEY);
@@ -132199,7 +132213,10 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
             if (!m) m = monsters.find((x) => x.name === baseName && x._localCombatEngaged);
             if (!m) return;
             m.hp = units.reduce((s, u) => s + Math.max(0, u.hp), 0);
-            if (victory === true && units.every((u) => u.hp <= 0)) m.status = "dead";
+            if (victory === true && units.every((u) => u.hp <= 0)) {
+              m.status = "dead";
+              if (typeof window.recordCollectionItem === "function") window.recordCollectionItem("enemies", baseName);
+            }
           });
           if (typeof saveMonsters === "function") saveMonsters(monsters);
           if (typeof renderMonsters === "function") renderMonsters();
@@ -133548,12 +133565,17 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
     }
     if (typeof window.updateHeader === "function") window.updateHeader();
     if (win) {
+      if (typeof window.recordCollectionItem === "function") {
+        bs.enemies.forEach((e) => {
+          if (e && e.name) window.recordCollectionItem("enemies", e.name.replace(/\(부상\)$/, "").replace(/\s*\d+$/, ""));
+        });
+      }
       const avgLv = bs.enemies.reduce((s, e) => s + (e.srcLevel || 10), 0) / Math.max(1, bs.enemies.length);
       const loot = typeof rollLoot === "function" ? rollLoot(Math.max(1, Math.round(avgLv)), false) : [];
       if (loot && loot.length) {
         S.inventory = S.inventory || [];
         loot.forEach((it) => S.inventory.push(it));
-        if (typeof window.saveInventory === "function") window.saveInventory(S.inventory);
+        saveInventory(S.inventory);
         toastHTML2(loot.map((it) => `\u{1F381} ${typeof getEntityIconHTML2 === "function" ? getEntityIconHTML2(it, { size: 14 }) : it.icon || ""} ${esc2(it.name)}`).join(" "), 3200);
       }
       const gold = 10 + Math.floor(Math.random() * 30);

@@ -37,7 +37,7 @@ import { CONTINENT_TERRAIN, CONTINENT_PROPER_NAME_ICON } from '../data/255-상�
 import { loadCurrentLocation, saveCurrentLocation, getLocationLevelBand } from './052-동대륙-추가-장소-4.js';
 import { getPlayerMaxHp, calcMonsterAttackDamage, loadParty, saveParty } from '../misc/054-이동수단-시스템.js';
 import { TRANSPORT_CONFIG } from '../data/054-이동수단-시스템.js';
-import { rollLoot } from '../items/007-동적-아이템-생성-시스템-무제한-영구-캐시.js';
+import { rollLoot, saveInventory } from '../items/007-동적-아이템-생성-시스템-무제한-영구-캐시.js';
 import { triggerLoopIfDead } from '../progression/220-18-회차루프-시스템.js';
 import { changeLocationReputation, changeProsperity, getLocationEconomySummary, setTradeRouteStatus } from '../economy/332-정착지-경제-평판-시스템.js';
 import { esc, toast, toastHTML, getEntityIconHTML, lsGet, lsSet } from '../utils.js';
@@ -1087,12 +1087,19 @@ function finishFieldBattle(){
   }
   if(typeof window.updateHeader==='function') window.updateHeader();
   if(win){
+    // [2026-09-26, 39번 섹션 D — 수집 도감 'enemies' 로컬 연동] 필드 전투도
+    // 이 세션에서 실제 게임이 쓰는 전투 경로 중 하나라 misc/328의 로컬
+    // 전투 몬스터 처치 훅과 대칭으로 여기서도 기록한다(이름 중복은
+    // recordCollectionItem 내부에서 카운트만 늘리고 안전하게 처리됨).
+    if(typeof window.recordCollectionItem==='function'){
+      bs.enemies.forEach(e=>{ if(e && e.name) window.recordCollectionItem('enemies', e.name.replace(/\(부상\)$/,'').replace(/\s*\d+$/,'')); });
+    }
     const avgLv = bs.enemies.reduce((s,e)=>s+(e.srcLevel||10),0)/Math.max(1,bs.enemies.length);
     const loot = (typeof rollLoot==='function') ? rollLoot(Math.max(1,Math.round(avgLv)), false) : [];
     if(loot && loot.length){
       S.inventory = S.inventory||[];
       loot.forEach(it=>S.inventory.push(it));
-      if(typeof window.saveInventory==='function') window.saveInventory(S.inventory);
+      saveInventory(S.inventory);
       toastHTML(loot.map(it=>`🎁 ${typeof getEntityIconHTML==='function'?getEntityIconHTML(it,{size:14}):(it.icon||'')} ${esc(it.name)}`).join(' '), 3200);
     }
     const gold = 10 + Math.floor(Math.random()*30);

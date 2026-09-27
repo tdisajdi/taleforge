@@ -1287,7 +1287,14 @@ function finishLocalCombat(lc, victory){
       if(!m) m = monsters.find(x=>x.name===baseName && x._localCombatEngaged); // 무리 — baseName으로 원본 매치
       if(!m) return;
       m.hp = units.reduce((s,u)=>s+Math.max(0,u.hp), 0);
-      if(victory===true && units.every(u=>u.hp<=0)) m.status = 'dead';
+      if(victory===true && units.every(u=>u.hp<=0)){
+        m.status = 'dead';
+        // [2026-09-26, 39번 섹션 D] 수집 도감('enemies')이 AI 텍스트
+        // 정규식에만 의존하던 문제 — 실제 로컬 전투 엔진(이 파일, misc/327~328
+        // 이 완전히 대체한 실제 전투 경로)이 몬스터를 확정으로 처치하는
+        // 이 지점에서 직접 기록한다.
+        if(typeof window.recordCollectionItem==='function') window.recordCollectionItem('enemies', baseName);
+      }
     });
     if(typeof saveMonsters==='function') saveMonsters(monsters);
     if(typeof renderMonsters==='function') renderMonsters();

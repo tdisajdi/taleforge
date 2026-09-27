@@ -1238,7 +1238,22 @@ export const clearGold      = () => lsDel(GOLD_KEY);
 
 export const loadInventory  = () => { const r = lsGet(INVENTORY_KEY); return r ? JSON.parse(r) : []; };
 
-export const saveInventory  = (inv) => lsSet(INVENTORY_KEY, JSON.stringify(inv));
+// [2026-09-26, 39번 섹션 D — 수집 도감(patches/322 recordCollectionItem)이
+// AI 말풍선 텍스트 정규식에만 의존하고, 실제 아이템을 주는 로컬 경로들
+// (전투 전리품/랜덤 이벤트/퀘스트 보상/GS 필드 처리 등 17개 이상 파일이
+// S.inventory를 직접 건드림, 단일 호출 지점이 없음)과 전혀 연결돼 있지
+// 않았다 — 36번 섹션 발견, "다음 라운드 처리" 예약분. 개별 호출부를
+// 전부 고치는 대신, 그 경로들이 결국 전부 통과하는 이 저장 함수 하나에서
+// 저장 전/후 아이템명 차집합으로 "새로 생긴 아이템"을 감지해 기록한다.
+export const saveInventory  = (inv) => {
+  try{
+    if(typeof window.recordCollectionItem==='function'){
+      const prevNames = new Set((loadInventory()||[]).map(i=>i && i.name));
+      (inv||[]).forEach(it=>{ if(it && it.name && !prevNames.has(it.name)) window.recordCollectionItem('items', it.name); });
+    }
+  }catch(e){}
+  lsSet(INVENTORY_KEY, JSON.stringify(inv));
+};
 
 export const clearInventory = () => lsDel(INVENTORY_KEY);
 

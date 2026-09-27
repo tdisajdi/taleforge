@@ -13473,7 +13473,11 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
     const key = "lore_" + locId;
     recordWorldSecret(key, locName + "\uC758 \uC9C4\uC2E4", loreSummary || "", S.scenario?.id || "");
     S._nextInjectedContext = (S._nextInjectedContext || "") + ` [\u{1F513} \uC7A5\uC18C \uC815\uBCF4 \uD574\uAE08: ${locName}] ${loreSummary || ""} \u2014 \uC774 \uC815\uBCF4\uB97C \uC11C\uC0AC\uC5D0 \uC790\uC5F0\uC2A4\uB7FD\uAC8C \uB179\uC5EC\uB77C.`;
-    if (reason) toast(`\u{1F4DC} ${locName} \u2014 ${reason}`, 3e3);
+    if (loreSummary) {
+      toastHTML2(`<div style="font-family:'Cinzel',serif;font-size:10px;color:#e0b060;margin-bottom:4px">\u{1F4DC} ${esc2(locName)}\uC758 \uC9C4\uC2E4</div><div style="font-size:11px;color:#ddd;line-height:1.6">${esc2(loreSummary)}</div>` + (reason ? `<div style="font-size:9px;color:#888;margin-top:5px">\u2014 ${esc2(reason)}</div>` : ""), 6e3);
+    } else if (reason) {
+      toast(`\u{1F4DC} ${locName} \u2014 ${reason}`, 3e3);
+    }
   }
   window.unlockLocationLore = unlockLocationLore;
   window.unlockLocationLore = unlockLocationLore;
@@ -66276,7 +66280,6 @@ ${cycleStatus} | ${chapterStatus} | ${sealStatus} | ${treeStatus}`;
       if (frag.id === "hist_inf_001") {
         if (gsF["mq21_done"]) {
           unlockLocationLore("hist_" + frag.id, frag.title, frag.content, frag.trigger);
-          recordWorldSecret("hist_" + frag.id, frag.title, frag.content, S.scenario?.id || "");
         }
         return;
       }
@@ -66285,7 +66288,6 @@ ${cycleStatus} | ${chapterStatus} | ${sealStatus} | ${treeStatus}`;
         const intStat = S?.stats?.int || 0;
         if (isCapital && intStat >= 60) {
           unlockLocationLore("hist_" + frag.id, frag.title, frag.content, frag.trigger);
-          recordWorldSecret("hist_" + frag.id, frag.title, frag.content, S.scenario?.id || "");
         }
         return;
       }
@@ -66295,13 +66297,11 @@ ${cycleStatus} | ${chapterStatus} | ${sealStatus} | ${treeStatus}`;
         const silarielTrust = silariel?.relationship || 0;
         if (silarielTrust >= 90) {
           unlockLocationLore("hist_" + frag.id, frag.title, frag.content, frag.trigger);
-          recordWorldSecret("hist_" + frag.id, frag.title, frag.content, S.scenario?.id || "");
         }
         return;
       }
       if (trig.includes(locId) && locId) {
         unlockLocationLore("hist_" + frag.id, frag.title, frag.content, frag.trigger);
-        recordWorldSecret("hist_" + frag.id, frag.title, frag.content, S.scenario?.id || "");
       }
     });
   }
@@ -102336,6 +102336,7 @@ ${job.icon} ${job.name}\uC73C\uB85C \uC804\uC9C1\uD558\uACA0\uC2B5\uB2C8\uAE4C?
           </div>
         </div>
         <div style="font-size:11px;color:var(--dim);line-height:1.6">${esc2(chapter.desc || "")}</div>
+        ${chapter.fullDesc && chapter.fullDesc !== chapter.desc ? `<div style="font-size:10px;color:#a08860;line-height:1.7;font-style:italic;margin-top:6px;padding-top:6px;border-top:1px solid #e0b06022">${esc2(chapter.fullDesc)}</div>` : ""}
         <div style="margin-top:7px">
           ${chapter.canAdvance ? `<button onclick="advanceMainQuestChapter('${esc2(chapter.id)}')" style="width:100%;padding:6px;background:#1a1200;border:1px solid #e0b06066;color:#e0b060;font-family:'Cinzel',serif;font-size:9px;cursor:pointer;border-radius:2px">\u{1F4D6} \uC774 \uC7A5\uC744 \uB9C8\uBB34\uB9AC\uD558\uACE0 \uB2E4\uC74C\uC73C\uB85C \uB118\uC5B4\uAC00\uAE30</button>` : `<div style="padding:5px 8px;background:#0a0a0a;border:1px solid #3a3a3a;font-size:9px;color:#606060;font-family:'Cinzel',serif;text-align:center">\uC774\uC57C\uAE30\uAC00 \uC870\uAE08 \uB354 \uC9C4\uD589\uB418\uBA74 \uB2E4\uC74C\uC73C\uB85C \uB118\uC5B4\uAC08 \uC218 \uC788\uC2B5\uB2C8\uB2E4 (${chapter.turnsElapsed}/${chapter.turnsNeeded}\uD134)</div>`}
         </div>

@@ -1168,6 +1168,7 @@ export function renderQuests(){
           </div>
         </div>
         <div style="font-size:11px;color:var(--dim);line-height:1.6">${esc(chapter.desc||'')}</div>
+        ${(chapter.fullDesc && chapter.fullDesc!==chapter.desc) ? `<div style="font-size:10px;color:#a08860;line-height:1.7;font-style:italic;margin-top:6px;padding-top:6px;border-top:1px solid #e0b06022">${esc(chapter.fullDesc)}</div>` : ''}
         <div style="margin-top:7px">
           ${chapter.canAdvance
             ? `<button onclick="advanceMainQuestChapter('${esc(chapter.id)}')" style="width:100%;padding:6px;background:#1a1200;border:1px solid #e0b06066;color:#e0b060;font-family:'Cinzel',serif;font-size:9px;cursor:pointer;border-radius:2px">📖 이 장을 마무리하고 다음으로 넘어가기</button>`

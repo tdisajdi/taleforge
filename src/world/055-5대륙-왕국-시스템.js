@@ -3,7 +3,7 @@
 import { AIDEN_PROFILE, ARCANUS_LOOP_PROFILE, ASMODEUS_PROFILE, BEELZEBUB_PROFILE, CABAL_OFFICERS, CELESTIAL_FACTIONS, CONTINENT_RULER_NPCS, FACTION_LEADER_NPCS, GABRIEL_PROFILE, INFERNAL_FACTIONS, JOB_MASTER_NPCS, LEONARD_PROFILE, LOOP_REMEMBERERS, MALAKAR_PROFILE, MICHAEL_PROFILE, MYTH_ORIGIN_REVELATION, NPC_TARIEL, PRIMORDIAL_CHAOS, RACE_RULER_NPCS, SEAL_GUARDIANS, SILARIEL_PROFILE, SILVER_PROFILE, SOCIAL_RANK_NPCS, WATCHER_IDENTITY, WORLD_HISTORY_FRAGMENTS, WORLD_LORE, WORLD_WILL_MANIFESTATION } from '../data/055-5대륙-왕국-시스템.js';
 import { S } from '../data/084-TaleForge-순수-JS-엔진.js';
 import { loadNPCs } from '../misc/001-block0-preamble.js';
-import { isLocLoreUnlocked, recordWorldSecret, unlockLocationLore } from '../misc/016-2130번-시스템.js';
+import { isLocLoreUnlocked, unlockLocationLore } from '../misc/016-2130번-시스템.js';
 import { loadFactionRep } from '../npc/067-③-NPC-관계망-시스템.js';
 import { gainDwarfCraft } from '../progression/020-101130번-환생-누적-시스템.js';
 import { loadElfMemory, saveElfMemory } from '../ui/025-통합-패널-공허-확장-탭-시스템.js';
@@ -44,8 +44,13 @@ export function detectHistoryFragment(aiText, userMsg){
     // 히든 루트 전용 진실이 표면 루트에 새지 않도록 명시적 게이트를 건다.
     if(frag.id === 'hist_inf_001'){
       if(gsF['mq21_done']){ // 히든 루트 21장(진실의 무게) 이후에만 발견 가능
+        // [44번 라운드] unlockLocationLore()가 내부에서 이미 같은
+        // 내용으로 recordWorldSecret()을 호출한다(키만 'lore_'+id로
+        // 다름) — 여기서 또 호출하면 서로 다른 secretId로 중복
+        // 레코드가 쌓이고, recordWorldSecret 자신의 토스트(🔍 정보
+        // 파편 획득)가 unlockLocationLore의 새 본문 토스트를 곧바로
+        // 덮어써버리는 버그가 있었다(발견·수정, 상세는 44번 섹션).
         unlockLocationLore('hist_'+frag.id, frag.title, frag.content, frag.trigger);
-        recordWorldSecret('hist_'+frag.id, frag.title, frag.content, S.scenario?.id||'');
       }
       return;
     }
@@ -56,8 +61,7 @@ export function detectHistoryFragment(aiText, userMsg){
       const isCapital = locId === 'loc_capital' || (loc?.name||'').includes('왕도');
       const intStat = S?.stats?.int || 0;
       if(isCapital && intStat >= 60){
-        unlockLocationLore('hist_'+frag.id, frag.title, frag.content, frag.trigger);
-        recordWorldSecret('hist_'+frag.id, frag.title, frag.content, S.scenario?.id||'');
+        unlockLocationLore('hist_'+frag.id, frag.title, frag.content, frag.trigger); // 중복 recordWorldSecret 제거(44번 섹션)
       }
       return;
     }
@@ -66,15 +70,13 @@ export function detectHistoryFragment(aiText, userMsg){
       const silariel = npcs.find(n=>n.name==='실라리엘');
       const silarielTrust = silariel?.relationship || 0;
       if(silarielTrust >= 90){
-        unlockLocationLore('hist_'+frag.id, frag.title, frag.content, frag.trigger);
-        recordWorldSecret('hist_'+frag.id, frag.title, frag.content, S.scenario?.id||'');
+        unlockLocationLore('hist_'+frag.id, frag.title, frag.content, frag.trigger); // 중복 recordWorldSecret 제거(44번 섹션)
       }
       return;
     }
     // 장소 기반 트리거
     if(trig.includes(locId) && locId){
-      unlockLocationLore('hist_'+frag.id, frag.title, frag.content, frag.trigger);
-      recordWorldSecret('hist_'+frag.id, frag.title, frag.content, S.scenario?.id||'');
+      unlockLocationLore('hist_'+frag.id, frag.title, frag.content, frag.trigger); // 중복 recordWorldSecret 제거(44번 섹션)
     }
   });
 }

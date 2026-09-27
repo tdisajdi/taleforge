@@ -3,7 +3,7 @@
 import { AGE_PARADOX_DEFS, CURSE_RING_ACTIONS, ENDING_THEMES, FALSE_MEMORY_POOL, INJURY_PART_DEFS, WORLD_TREE_STAGES } from '../data/016-2130번-시스템.js';
 import { S } from '../data/084-TaleForge-순수-JS-엔진.js';
 import { loadCycleCount } from '../progression/014-환생-누적-시스템-110번.js';
-import { lsDel, lsGet, lsSet, toast } from '../utils.js';
+import { esc, lsDel, lsGet, lsSet, toast, toastHTML } from '../utils.js';
 
 export const RELATIONSHIP_LEGACY_KEY = "taleforge-rellegacy";
 
@@ -52,7 +52,17 @@ export function unlockLocationLore(locId, locName, loreSummary, reason){
   recordWorldSecret(key, locName+'의 진실', loreSummary||'', S.scenario?.id||'');
   S._nextInjectedContext = (S._nextInjectedContext||'') +
     ` [🔓 장소 정보 해금: ${locName}] ${loreSummary||''} — 이 정보를 서사에 자연스럽게 녹여라.`;
-  if(reason) toast(`📜 ${locName} — ${reason}`, 3000);
+  // [44번 라운드] 완전 로컬 폴백에서는 S._nextInjectedContext(AI 전용
+  // 채널)가 안 읽혀 본문(loreSummary)이 플레이어에게 한 글자도 안
+  // 보이던 문제 — 발견 토스트 자체가 본문까지 보여주도록 확장
+  // (새 패널 아님, 기존 toast() 대신 이미 있는 toastHTML() 재사용).
+  if(loreSummary){
+    toastHTML(`<div style="font-family:'Cinzel',serif;font-size:10px;color:#e0b060;margin-bottom:4px">📜 ${esc(locName)}의 진실</div>`+
+      `<div style="font-size:11px;color:#ddd;line-height:1.6">${esc(loreSummary)}</div>`+
+      (reason ? `<div style="font-size:9px;color:#888;margin-top:5px">— ${esc(reason)}</div>` : ''), 6000);
+  } else if(reason){
+    toast(`📜 ${locName} — ${reason}`, 3000);
+  }
 }
 window.unlockLocationLore = unlockLocationLore;
 

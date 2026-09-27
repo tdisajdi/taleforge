@@ -240,6 +240,82 @@ export const FIVE_CONTINENTS = {
   },
 };
 
+// [2026-09-27] northeast2/northwest2/southeast2 — 8-11~8-23 작업에서
+// 기존 왕국의 섬을 나눠 신설된 3개 왕국(은월 왕정/강철턱 부족/핏빛
+// 깃발단)이 시작 대륙(START_CONTINENTS)에 추가됐는데, 이 오프닝
+// 프롤로그 프롬프트가 참조하는 FIVE_CONTINENTS에는 대응 항목이 없어서
+// 새 플레이어가 이 3개 왕국에서 시작하면 왕국 세부 정보가 통째로
+// 비어버렸다(발견·정정). 새로 지어내지 않고 data/055의
+// CONTINENT_RULER_NPCS(리시엘 은월 3세/크라둔 강철턱/로자린드 크림슨)의
+// origin/coreWound와 data/042의 실제 장소(은월궁 왕도 루나베일/강철턱
+// 요새/핏빛 함대 본부, 폐위된 왕조의 지하묘/잊혀진 전쟁 무덤/침몰
+// 함대의 무덤)를 그대로 요약해 채운다.
+FIVE_CONTINENTS.northeast2 = {
+  id: 'northeast2', label: '은월 왕정', icon: '✨', color: '#9a86e0', direction: '북동(달빛 숲 옆 섬 동편)',
+  theme: '달의 여신 신앙 · 정복 왕조의 후예 · 형식 뒤에 숨은 옛 왕조의 비밀',
+  atmosphere: '섬 동편 절반을 다스리는 엘프 분파의 왕정. 예복은 화려하되 색은 늘 검거나 짙은 남색 — 상복에 가깝다는 뒷말이 있다.',
+  kingdom: {
+    name: '은월 왕정', icon: '🌘',
+    capital: '은월궁 왕도 루나베일', capitalIcon: '🌒',
+    ruler: '리시엘 은월 3세', rulerIcon: '🌘',
+    desc: '몇 세대 전 세계수 신앙에서 갈라져 나온 엘프 귀족 일파가 달의 여신 신앙을 앞세워 토착 왕조를 무너뜨리고 세운 왕정. 리시엘은 그 정복자의 5대손이다.',
+    lore: '왕정 지하 깊은 곳에 옛 왕조의 무덤이 아직 그대로 있다는 것, 그리고 그 존재를 왕가가 대대로 공식 부정해왔다는 것이 즉위와 함께 전해지는 비밀이다. 리시엘은 물려받은 왕관이 아니라 스스로 다시 벼려낸 왕관만을 쓴다.',
+    culture: '달의 여신 신앙·형식과 절차·정복 왕조의 후예',
+    specialty: '은세공·달빛 마법',
+    military: '왕실 근위대',
+    relations: { northeast: '경계', center: '무관심' },
+    uniqueLocation: { name: '폐위된 왕조의 지하묘', icon: '⚰️', desc: '왕정 지하에 잠든 옛 왕조의 무덤. 왕가가 대대로 공식적으로 부정해온 존재다.' },
+    npcs: [
+      { name: '리시엘 은월 3세', icon: '🌘', role: '은월 왕정 여왕. 형식과 절차 뒤에 오래된 두려움을 숨긴 인물.' },
+    ],
+    events: ['옛 왕조 무덤의 존재가 드러남', '달빛 숲과의 오랜 갈등'],
+  }
+};
+
+FIVE_CONTINENTS.northwest2 = {
+  id: 'northwest2', label: '강철턱 부족', icon: '🔨', color: '#d09858', direction: '북서(드워프 왕국 옆 섬 동편)',
+  theme: '오크 부족 연합 · 강철로 벼려 붙인 명예 · 왜곡된 조약의 진실',
+  atmosphere: '드워프 왕국과의 영토 전쟁에서 산 절반을 잃고 패퇴한 오크 부족이 세운 실리적인 부족 연합. 명예보다 생존을 앞세운다.',
+  kingdom: {
+    name: '강철턱 부족', icon: '🪓',
+    capital: '강철턱 요새', capitalIcon: '🪓',
+    ruler: '크라둔 강철턱', rulerIcon: '🪓',
+    desc: '드워프 전쟁망치에 턱을 부수고도 물러서지 않고 싸움을 이어간 초대 전사장의 이름을 딴 부족. 크라둔은 그 다섯 번째 후계자다.',
+    lore: '전쟁을 끝낸 옛 조약서가 「잊혀진 전쟁 무덤」 깊은 곳에 묻혀 있다는 것을 족장만이 안다 — 그러나 그 조약이 정확히 무엇을 약속했는지는 크라둔 자신도 전문을 읽지 못했다.',
+    culture: '거칠지만 계산적인 실리주의·부족 생존 최우선',
+    specialty: '제련·전리품 교역',
+    military: '강철턱 전사단',
+    relations: { northwest: '긴장', center: '무관심' },
+    uniqueLocation: { name: '잊혀진 전쟁 무덤', icon: '💀', desc: '검은 협곡 아래, 드워프 왕국과의 옛 조약서 원문이 묻혀 있는 곳.' },
+    npcs: [
+      { name: '크라둔 강철턱', icon: '🪓', role: '강철턱 부족 족장. 거칠지만 계산적인 실리주의자.' },
+    ],
+    events: ['검은 협곡의 정체불명의 기계 소리', '조약서를 둘러싼 부족 내부 갈등'],
+  }
+};
+
+FIVE_CONTINENTS.southeast2 = {
+  id: 'southeast2', label: '핏빛 깃발단', icon: '🩸', color: '#d05868', direction: '남동(해적 연합 옆 섬 동편)',
+  theme: '해적왕에게 반기를 든 이탈 함대 · 처형자들의 바다 · 배신을 용서 않는 자',
+  atmosphere: '발타자르 함대의 처형 명령을 거부하고 갈라져 나온 함선들이 세운 세력. 배신을 절대 용서하지 않는다 — 자신이 한때 배신자였기 때문에.',
+  kingdom: {
+    name: '핏빛 깃발단', icon: '🩸',
+    capital: '핏빛 함대 본부', capitalIcon: '🩸',
+    ruler: '로자린드 크림슨', rulerIcon: '🗡️',
+    desc: '한때 해적왕 발타자르 함대의 가장 신임받던 부선장이었던 로자린드가, 반란 선원 처형 명령을 거부하고 이탈해 세운 세력.',
+    lore: '이탈 전투에서 양쪽 함대의 상당수가 침몰했고, 그 잔해가 지금도 「침몰 함대의 무덤」에 가라앉아 있다. 로자린드는 발타자르에게 배운 공포 정치를 그대로 물려받아 쓰고 있다는 자각에 스스로 갉아먹힌다.',
+    culture: '단호하고 잔혹하리만치 실용적인 처형자들의 규율',
+    specialty: '노획물 경매·해상 약탈',
+    military: '핏빛 함대',
+    relations: { southeast: '적대', center: '무관심' },
+    uniqueLocation: { name: '침몰 함대의 무덤', icon: '⚓', desc: '해적왕 발타자르 함대와의 이탈 전투 잔해가 가라앉아 있는 곳.' },
+    npcs: [
+      { name: '로자린드 크림슨', icon: '🗡️', role: '핏빛 깃발단 단장. 옛 상관 발타자르와의 애증에 묶인 인물.' },
+    ],
+    events: ['처형대 광장의 배신자 공개 처단', '테네브라 해구를 향한 위험한 야심'],
+  }
+};
+
 FIVE_CONTINENTS.central = FIVE_CONTINENTS.center;
 
 FIVE_CONTINENTS.northeast_cont = FIVE_CONTINENTS.northeast;

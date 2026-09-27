@@ -835,6 +835,22 @@ export const START_CONTINENTS=[
       {id:'northwest', label:'북서 대륙',  icon:'⛏️', svgIcon:`<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4 C4 4 9 4 12 7 C15 10 15 15 15 15" stroke-linejoin="round"/><path d="M20 4 C20 4 15 4 12 7" stroke-linejoin="round"/><path d="M6 20 L15 11" stroke-width="1.8"/></svg>`, color:'#a07848',
        desc:'드워프 지하 왕국. 수백km 지하 도시, 고대 기계 문명, 잠들어 있는 기계 군단.',
        lore:'용광로 왕도 이그드하르 아래 고대 기계 신전이 발견됐다. 기어들이 다시 돌기 시작했다.'},
+      // [2026-09-27] northeast2/northwest2/southeast2 — 8-11~8-23 작업에서
+      // 기존 왕국의 섬을 나눠 신설된 3개 왕국이 시작 대륙 후보에 여태
+      // 반영된 적이 없었다(40번 섹션에서 발견, 별도 라운드로 미룸). desc/
+      // lore는 새로 지어내지 않고 data/055의 CONTINENT_RULER_NPCS(리시엘
+      // 은월 3세/크라둔 강철턱/로자린드 크림슨)의 origin·coreWound를
+      // 그대로 요약, color는 economy/255 CONTINENT_THEME_COLOR의
+      // strokeLight를 그대로 재사용.
+      {id:'northeast2', label:'은월 왕정',  icon:'✨', svgIcon:`<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4 C11 4 8 7.5 8 12 C8 16.5 11 20 15 20 C12.5 20 10.5 16.5 10.5 12 C10.5 7.5 12.5 4 15 4 Z" stroke-linejoin="round"/><path d="M18 6 L18.6 7.4 L20 8 L18.6 8.6 L18 10 L17.4 8.6 L16 8 L17.4 7.4 Z" fill="currentColor" stroke-width="0.8"/></svg>`, color:'#9a86e0',
+       desc:'세계수 신앙에서 갈라져 나온 엘프 분파의 달의 여신 왕정. 형식과 절차로 옛 정복의 흔적을 덮어둔 냉철한 왕가.',
+       lore:'왕도 루나베일 지하에 폐위된 옛 왕조의 무덤이 잠들어 있다. 왕가는 그 존재를 대대로 공식 부정해왔다.'},
+      {id:'northwest2', label:'강철턱 부족', icon:'🔨', svgIcon:`<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 L12 21" stroke-width="1.8"/><path d="M12 4 C15 3 18 4.5 18 7.5 C18 10 15.5 11 12 10.5" stroke-linejoin="round"/></svg>`, color:'#d09858',
+       desc:'드워프 왕국과의 전쟁에서 턱을 잃고도 강철로 벼려 붙인 전사장의 후예, 오크 부족 연합. 명예보다 부족의 생존을 앞세우는 실리주의.',
+       lore:'검은 협곡 아래 잊혀진 전쟁 무덤에 드워프 왕국과의 옛 조약서 원문이 묻혀 있다.'},
+      {id:'southeast2', label:'핏빛 깃발단', icon:'🩸', svgIcon:`<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3 L6 21" stroke-width="1.8"/><path d="M6 4 L17 7 L6 11 Z" stroke-linejoin="round"/></svg>`, color:'#d05868',
+       desc:'해적왕의 처형 명령을 거부하고 갈라져 나온 이탈 함대가 세운 해적단. 배신을 절대 용서하지 않는 처형자들의 바다.',
+       lore:'침몰 함대의 무덤에 창설 전쟁의 잔해가 가라앉아 있고, 처형대 광장에서는 지금도 배신자를 공개 처단한다.'},
 ];
 window.START_CONTINENTS = START_CONTINENTS;
 
@@ -1044,7 +1060,7 @@ export function renderSetupStep(){
           <div style="color:#9060c0;display:flex;flex-shrink:0"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3" stroke-linejoin="round"/><circle cx="8" cy="8" r="1.3" fill="currentColor" stroke="none"/><circle cx="16" cy="8" r="1.3" fill="currentColor" stroke="none"/><circle cx="8" cy="16" r="1.3" fill="currentColor" stroke="none"/><circle cx="16" cy="16" r="1.3" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none"/></svg></div>
           <div>
             <div class="race-name" style="color:#9060c0;font-size:11px">랜덤 대륙</div>
-            <div style="font-size:9px;color:var(--dim);margin-top:2px;line-height:1.4">게임 시작 시 8대륙 중 하나가 무작위로 선택됩니다.</div>
+            <div style="font-size:9px;color:var(--dim);margin-top:2px;line-height:1.4">게임 시작 시 11개 왕국 중 하나가 무작위로 선택됩니다.</div>
           </div>
         </div>
       </div>
@@ -1444,11 +1460,14 @@ export function startGame(){
   S.scenario = {...MEDIEVAL_SCENARIO};
   // 랜덤 대륙 처리
   if(window.setupChar.startContinent==='random'){
-    const allC=['central','north','east','west','south','northeast','southeast','northwest'];
-    const allCLabel=['중앙 대륙','북대륙','동대륙','서대륙','남대륙','북동 대륙','남동 군도','북서 대륙'];
-    const ri=Math.floor(Math.random()*allC.length);
-    window.setupChar.startContinent=allC[ri];
-    window.setupChar.startContinentLabel=allCLabel[ri];
+    // [2026-09-27] 독립적으로 하드코딩된 8개짜리 대륙 배열/라벨 배열이었던
+    // 걸 START_CONTINENTS(단일 진짜 데이터) 자체에서 뽑도록 바꿔, 새 왕국을
+    // 추가할 때 이 자리를 또 따로 안 고쳐도 되게 했다 — 신규 3개 왕국
+    // (northeast2/northwest2/southeast2) 추가가 이 자리를 놓쳐 안 반영될
+    // 뻔했던 걸 계기로 이 중복 자체를 없앤 것.
+    const ri=Math.floor(Math.random()*START_CONTINENTS.length);
+    window.setupChar.startContinent=START_CONTINENTS[ri].id;
+    window.setupChar.startContinentLabel=START_CONTINENTS[ri].label;
   }
   const char={...window.setupChar, scenario:S.scenario?.era||'', customWorldSetting:S.scenario?.customWorldSetting||''};
   // [신규] 이 생을 방랑자로 시작했는지 기록 — 캐릭터 생성 화면에서
@@ -1556,6 +1575,9 @@ export function startGame(){
       northeast: { per:7, mgc:6, luk:5 },          // 엘프 고원 — 인지·마법·운
       southeast: { agi:8, disg:6, luk:6 },         // 해적 군도 — 민첩·위장·운
       northwest: { end:8, str:5, int:5 },           // 드워프 지하 — 체력·근력·지성
+      northeast2: { fath:6, mgc:6, wil:5 },        // 은월 왕정 — 달의 여신 신앙·마법·의지
+      northwest2: { str:8, end:6, fear:5 },        // 강철턱 부족 — 근력·체력·위압
+      southeast2: { agi:7, disg:5, fear:6 },       // 핏빛 깃발단 — 민첩·위장·위압
       celestial: { fath:10, wil:7, mgc:5 },        // 천계 — 신앙·의지·마법
       infernal:  { str:8, fear:8, mad:5 },          // 마계 — 근력·공포·광기
     };
@@ -1578,6 +1600,9 @@ export function startGame(){
       northeast: { id:'item_starleaf',          icon:'🍃', name:'별빛 잎사귀',          rarity:'uncommon', desc:'세계수에서 떨어진 잎. 별빛 마법 판정 +10, 야간 은신 보너스.',         effects:{mgc:5,per:5}, slot:'misc' },
       southeast: { id:'item_sea_serpent_scale', icon:'🐍', name:'해룡 비늘',            rarity:'uncommon', desc:'남동 군도 해룡에게서 채취한 비늘. 수중 이동 자유, 독 저항.',          effects:{agi:5},   slot:'misc' },
       northwest: { id:'item_runic_hammer',      icon:'⚒️', name:'룬 각인 망치',         rarity:'uncommon', desc:'드워프 장인이 만든 소형 망치. 기계·자물쇠 조작 +15, STR +5.',         effects:{str:5},   slot:'weapon' },
+      northeast2: { id:'item_moonsilver_charm', icon:'🌙', name:'월광 부적',            rarity:'uncommon', desc:'은월 왕정의 은세공 부적. 달빛 마법 판정 강화. MGC +5.',              effects:{mgc:5},   slot:'misc' },
+      northwest2: { id:'item_ironjaw_token',    icon:'🪓', name:'강철턱 표식',           rarity:'uncommon', desc:'강철턱 부족 전사의 표식. 부족 전사들 사이에서 신뢰를 얻는다. STR +5.', effects:{str:5},   slot:'misc' },
+      southeast2: { id:'item_crimson_flag',     icon:'🩸', name:'핏빛 깃발 표식',        rarity:'uncommon', desc:'핏빛 깃발단의 상징. 해적 사회에서 위협을 준다. FEAR +5.',            effects:{fear:5},  slot:'misc' },
       celestial: { id:'item_celestial_shard',   icon:'✨', name:'천계 수정 파편',        rarity:'rare',     desc:'천계에서 떨어진 빛의 조각. FATH +10, 어둠·저주 완전 저항.',          effects:{fath:10}, slot:'misc' },
       infernal:  { id:'item_hellfire_coal',     icon:'🔥', name:'지옥 불씨',            rarity:'rare',     desc:'마계의 영원히 꺼지지 않는 불씨. STR +8, 화염 공격력 대폭 증가.',      effects:{str:8},   slot:'misc' },
     };
@@ -1632,6 +1657,9 @@ export function startGame(){
       northeast: { id:'cq_northeast_prophecy', icon:'🌿', title:'세계수의 예언',           desc:'달빛 예언단이 당신을 지목했다는 전언이 전해졌다. 세계수 신전으로 향하라.',               reward:'골드 +60, 예언사 호감 +20', aiHint:'엘프 고원의 별빛과 고목 숲 분위기, 예언단의 신비로운 분위기를 첫 장면에 담아라.' },
       southeast: { id:'cq_southeast_treasure', icon:'🏴‍☠️', title:'군도의 숨겨진 보물',   desc:'술에 취한 해적이 잠꼬대로 읊은 좌표 하나. 그것이 전설의 보물지도 조각인지도 모른다.',   reward:'골드 +120, 해적 명성 +15', aiHint:'바다 냄새와 항구의 소란스러운 분위기, 해적들 사이의 긴장을 첫 장면에 녹여라.' },
       northwest: { id:'cq_northwest_deep',     icon:'⛏️', title:'지하 갱도의 이상 징후',   desc:'지하 갱도 최심층에서 이상한 소리가 들린다는 보고가 장인 조합에 접수됐다.',               reward:'골드 +90, 드워프 신뢰 +20', aiHint:'지하 도시의 용광로 소리와 장인들의 분위기, 깊은 지하의 불안함을 첫 장면에 담아라.' },
+      northeast2: { id:'cq_ne2_moontomb',      icon:'⚰️', title:'옛 왕조의 그림자',        desc:'왕정 지하에서 정체불명의 소음이 들린다는 소문이 돈다. 은월 왕정의 비밀에 다가서라.',   reward:'골드 +70, 은월 왕정 신뢰 +15', aiHint:'달빛 왕정의 냉철한 형식과 그 뒤에 숨은 불안을 첫 장면에 담아라.' },
+      northwest2: { id:'cq_nw2_wargrave',      icon:'💀', title:'전쟁 무덤의 조약서',       desc:'화톳불 마을 노파가 잊혀진 전쟁 무덤 속 조약서 이야기를 꺼낸다.',                       reward:'골드 +80, 강철턱 부족 신뢰 +15', aiHint:'거친 부족 전사들의 실리주의와 오래된 전쟁의 그림자를 첫 장면에 담아라.' },
+      southeast2: { id:'cq_se2_sunkenfleet',   icon:'⚓', title:'침몰 함대의 잔해',         desc:'핏빛 깃발단 선원들 사이에서 침몰 함대의 잔해에 대한 소문이 돈다.',                     reward:'골드 +100, 핏빛 깃발단 명성 +15', aiHint:'처형자들의 살벌한 규율과 바다의 살기를 첫 장면에 담아라.' },
       celestial: { id:'cq_celestial_trial',    icon:'✨', title:'천계의 첫 시련',           desc:'대천사장 미카엘이 당신에게 첫 번째 시련을 하달했다. 천계의 이름에 걸맞은 행동을 보여라.', reward:'신앙 +20, 천계 명성 +30', aiHint:'황금빛 천상 도시의 성스러운 분위기와 천사들의 엄숙함을 첫 장면에 담아라.' },
       infernal:  { id:'cq_infernal_survive',   icon:'🔥', title:'마계의 생존자',             desc:'마계에 발을 들인 이상 강함을 증명해야 살아남는다. 마계 투기장에 참가해 이름을 알려라.', reward:'STR +5, 마계 명성 +25', aiHint:'마계의 용암 평원과 악마들의 시선, 생존 압박감을 첫 장면에 생생하게 담아라.' },
     };

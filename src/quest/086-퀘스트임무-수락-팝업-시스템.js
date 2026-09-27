@@ -1406,6 +1406,9 @@ export async function doStartChat(){
     northeast:'북동 대륙 — 세계수와 별빛 고원의 엘프 왕국. 신비로운 예언과 오랜 숲의 땅.',
     southeast:'남동 군도 — 해적과 항해자들이 지배하는 섬들의 바다. 보물과 해구의 전설이 살아 있는 땅.',
     northwest:'북서 대륙 — 지하 갱도와 용광로의 드워프 왕국. 고대 기계와 장인 조합의 땅.',
+    northeast2:'은월 왕정 — 세계수 신앙에서 갈라져 나온 엘프 분파의 달의 여신 왕정. 형식과 절차 뒤에 정복의 흔적을 감춘 땅.',
+    northwest2:'강철턱 부족 — 드워프 왕국과의 전쟁에서 턱을 잃고도 물러서지 않은 전사장의 후예, 오크 부족 연합의 땅.',
+    southeast2:'핏빛 깃발단 — 해적왕의 처형 명령을 거부하고 갈라져 나온 이탈 함대의 땅. 배신을 용서 않는 처형자들의 바다.',
   };
   const continentId = char.startContinent || 'central';
   const continentLabel = char.startContinentLabel || '중앙 대륙';

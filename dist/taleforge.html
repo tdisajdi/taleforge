@@ -66391,6 +66391,52 @@ ${cycleStatus} | ${chapterStatus} | ${sealStatus} | ${treeStatus}`;
   }
   window.detectHistoryFragment = detectHistoryFragment2;
   window.detectHistoryFragment = detectHistoryFragment2;
+  var LOOP_REMEMBERER_CONTINENT = {
+    rem_old_innkeeper: "central",
+    rem_east_sculptor: "east",
+    rem_south_child: "south",
+    rem_north_warrior: "north"
+  };
+  function isLoopRemembererDiscovered(id) {
+    return loadWorldSecrets().some((s) => s.secretId === "remember_" + id);
+  }
+  window.isLoopRemembererDiscovered = isLoopRemembererDiscovered;
+  function revealLoopRememberer(rem) {
+    if (!rem || isLoopRemembererDiscovered(rem.id)) return false;
+    recordWorldSecret("remember_" + rem.id, rem.name, rem.secretInfo, S.scenario?.id || "");
+    S._nextInjectedContext = (S._nextInjectedContext || "") + ` [\u{1F513} \uB8E8\uD504 \uAE30\uC5B5\uC790 \uBC1C\uACAC: ${rem.name}] ${rem.secretInfo || ""} \u2014 \uC774 \uC778\uBB3C\uC774 \uB8E8\uD504\uB97C \uC740\uC5F0\uC911\uC5D0 \uAE30\uC5B5\uD558\uACE0 \uC788\uB2E4\uB294 \uC778\uC0C1\uC744 \uC11C\uC0AC\uC5D0 \uC790\uC5F0\uC2A4\uB7FD\uAC8C \uB179\uC5EC\uB77C.`;
+    toastHTML2(`<div style="font-family:'Cinzel',serif;color:#ffd700;font-size:15px;margin-bottom:4px;">\u{1F50D} ${esc2(rem.name)}</div><div style="font-size:13px;line-height:1.5;">${esc2(rem.secretInfo || "")}</div>` + (rem.hint ? `<div style="font-size:11px;color:#999;margin-top:4px;">\u2014 ${esc2(rem.hint)}</div>` : ""), 6e3);
+    return true;
+  }
+  window.revealLoopRememberer = revealLoopRememberer;
+  function isSealGuardianDiscovered(sealId) {
+    return loadWorldSecrets().some((s) => s.secretId === "guardian_" + sealId);
+  }
+  window.isSealGuardianDiscovered = isSealGuardianDiscovered;
+  function revealSealGuardian(seal) {
+    if (!seal || isSealGuardianDiscovered(seal.sealId)) return false;
+    recordWorldSecret("guardian_" + seal.sealId, seal.guardianName, seal.guardianNote, S.scenario?.id || "");
+    S._nextInjectedContext = (S._nextInjectedContext || "") + ` [\u{1F513} \uBD09\uC778 \uC218\uD638\uC790 \uBC1C\uACAC: ${seal.guardianName}] ${seal.guardianNote || ""} \u2014 \uC774 \uC778\uBB3C\uC774 ${seal.sealName}\uC744 \uC9C0\uD0A4\uACE0 \uC788\uB2E4\uB294 \uC0AC\uC2E4\uC744 \uC11C\uC0AC\uC5D0 \uC790\uC5F0\uC2A4\uB7FD\uAC8C \uB179\uC5EC\uB77C.`;
+    toastHTML2(`<div style="font-family:'Cinzel',serif;color:#ffd700;font-size:15px;margin-bottom:4px;">\u{1F50D} ${esc2(seal.guardianName)}</div><div style="font-size:13px;line-height:1.5;">${esc2(seal.guardianNote || "")}</div><div style="font-size:11px;color:#999;margin-top:4px;">\u2014 ${esc2(seal.sealName)}</div>`, 6e3);
+    return true;
+  }
+  window.revealSealGuardian = revealSealGuardian;
+  function tryLocalLoreDiscovery(loc) {
+    try {
+      const continent = loc?.continent;
+      if (!continent) return;
+      if (Math.random() < 0.06) {
+        const rem = LOOP_REMEMBERERS.find((r) => LOOP_REMEMBERER_CONTINENT[r.id] === continent && !isLoopRemembererDiscovered(r.id));
+        if (rem) revealLoopRememberer(rem);
+      }
+      if (Math.random() < 0.06) {
+        const seal = SEAL_GUARDIANS.find((s) => s.sealId === "seal_" + continent && !isSealGuardianDiscovered(s.sealId));
+        if (seal) revealSealGuardian(seal);
+      }
+    } catch (e) {
+    }
+  }
+  window.tryLocalLoreDiscovery = tryLocalLoreDiscovery;
   window.CELESTIAL_FACTIONS = CELESTIAL_FACTIONS;
   window.ASMODEUS_PROFILE = ASMODEUS_PROFILE;
   window.CABAL_OFFICERS = CABAL_OFFICERS;
@@ -134757,6 +134803,9 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
       saveCurrentLocation(screen.node.loc);
       if (SETTLEMENT_TYPES.has(screen.node.loc.type) && typeof window.tryLocalWdrDiscovery === "function" && Math.random() < 0.08) {
         window.tryLocalWdrDiscovery("hero");
+      }
+      if (typeof window.tryLocalLoreDiscovery === "function") {
+        window.tryLocalLoreDiscovery(screen.node.loc);
       }
       const raidRec = isRaidVulnerable(screen.node.loc) ? loadRaidState2()[screen.node.loc.id] : null;
       if (raidRec && raidRec.state === "threatened") {

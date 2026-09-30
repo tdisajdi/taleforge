@@ -3,11 +3,11 @@
 import { AIDEN_PROFILE, ARCANUS_LOOP_PROFILE, ASMODEUS_PROFILE, BEELZEBUB_PROFILE, CABAL_OFFICERS, CELESTIAL_FACTIONS, CONTINENT_RULER_NPCS, FACTION_LEADER_NPCS, GABRIEL_PROFILE, INFERNAL_FACTIONS, JOB_MASTER_NPCS, LEONARD_PROFILE, LOOP_REMEMBERERS, MALAKAR_PROFILE, MICHAEL_PROFILE, MYTH_ORIGIN_REVELATION, NPC_TARIEL, PRIMORDIAL_CHAOS, RACE_RULER_NPCS, SEAL_GUARDIANS, SILARIEL_PROFILE, SILVER_PROFILE, SOCIAL_RANK_NPCS, WATCHER_IDENTITY, WORLD_HISTORY_FRAGMENTS, WORLD_LORE, WORLD_WILL_MANIFESTATION } from '../data/055-5대륙-왕국-시스템.js';
 import { S } from '../data/084-TaleForge-순수-JS-엔진.js';
 import { loadNPCs } from '../misc/001-block0-preamble.js';
-import { isLocLoreUnlocked, unlockLocationLore } from '../misc/016-2130번-시스템.js';
+import { isLocLoreUnlocked, unlockLocationLore, loadWorldSecrets, recordWorldSecret } from '../misc/016-2130번-시스템.js';
 import { loadFactionRep } from '../npc/067-③-NPC-관계망-시스템.js';
 import { gainDwarfCraft } from '../progression/020-101130번-환생-누적-시스템.js';
 import { loadElfMemory, saveElfMemory } from '../ui/025-통합-패널-공허-확장-탭-시스템.js';
-import { lsGet, lsSet, toast } from '../utils.js';
+import { esc, lsGet, lsSet, toast, toastHTML } from '../utils.js';
 import { loadCurrentLocation } from './052-동대륙-추가-장소-4.js';
 import { loadGSFlags } from './145-⑥-세계-상태-DB.js';
 
@@ -83,6 +83,73 @@ export function detectHistoryFragment(aiText, userMsg){
 window.detectHistoryFragment = detectHistoryFragment;
 
 window.detectHistoryFragment = detectHistoryFragment;
+
+// [46-③ 로컬 발견 시스템, 2026-09-30] LOOP_REMEMBERERS(4명)·SEAL_GUARDIANS
+// (8명)는 window에 노출은 돼 있었지만 그걸 읽는 소비처가 코드 전체에
+// 0곳이었다 — WORLD_LORE 등 다른 신화 데이터와 달리 AI 프롬프트 채널
+// (religion/061)에도 안 닿는 완전히 죽은 데이터였다. 38번 섹션의
+// tryLocalWdrDiscovery(정착지 도착 시 낮은 확률로 미발견 항목 1개를
+// 직접 확정) 패턴을 그대로 재사용해, 기존 misc/016의 recordWorldSecret
+// (저장+중복방지+토스트)만으로 새 저장소 없이 발견 가능하게 만든다.
+const LOOP_REMEMBERER_CONTINENT = {
+  rem_old_innkeeper: 'central',
+  rem_east_sculptor: 'east',
+  rem_south_child: 'south',
+  rem_north_warrior: 'north',
+};
+
+export function isLoopRemembererDiscovered(id){
+  return loadWorldSecrets().some(s=>s.secretId==='remember_'+id);
+}
+window.isLoopRemembererDiscovered = isLoopRemembererDiscovered;
+
+export function revealLoopRememberer(rem){
+  if(!rem || isLoopRemembererDiscovered(rem.id)) return false;
+  recordWorldSecret('remember_'+rem.id, rem.name, rem.secretInfo, S.scenario?.id||'');
+  S._nextInjectedContext = (S._nextInjectedContext||'') +
+    ` [🔓 루프 기억자 발견: ${rem.name}] ${rem.secretInfo||''} — 이 인물이 루프를 은연중에 기억하고 있다는 인상을 서사에 자연스럽게 녹여라.`;
+  toastHTML(`<div style="font-family:'Cinzel',serif;color:#ffd700;font-size:15px;margin-bottom:4px;">🔍 ${esc(rem.name)}</div>`+
+    `<div style="font-size:13px;line-height:1.5;">${esc(rem.secretInfo||'')}</div>`+
+    (rem.hint ? `<div style="font-size:11px;color:#999;margin-top:4px;">— ${esc(rem.hint)}</div>` : ''), 6000);
+  return true;
+}
+window.revealLoopRememberer = revealLoopRememberer;
+
+export function isSealGuardianDiscovered(sealId){
+  return loadWorldSecrets().some(s=>s.secretId==='guardian_'+sealId);
+}
+window.isSealGuardianDiscovered = isSealGuardianDiscovered;
+
+export function revealSealGuardian(seal){
+  if(!seal || isSealGuardianDiscovered(seal.sealId)) return false;
+  recordWorldSecret('guardian_'+seal.sealId, seal.guardianName, seal.guardianNote, S.scenario?.id||'');
+  S._nextInjectedContext = (S._nextInjectedContext||'') +
+    ` [🔓 봉인 수호자 발견: ${seal.guardianName}] ${seal.guardianNote||''} — 이 인물이 ${seal.sealName}을 지키고 있다는 사실을 서사에 자연스럽게 녹여라.`;
+  toastHTML(`<div style="font-family:'Cinzel',serif;color:#ffd700;font-size:15px;margin-bottom:4px;">🔍 ${esc(seal.guardianName)}</div>`+
+    `<div style="font-size:13px;line-height:1.5;">${esc(seal.guardianNote||'')}</div>`+
+    `<div style="font-size:11px;color:#999;margin-top:4px;">— ${esc(seal.sealName)}</div>`, 6000);
+  return true;
+}
+window.revealSealGuardian = revealSealGuardian;
+
+export function tryLocalLoreDiscovery(loc){
+  try{
+    const continent = loc?.continent;
+    if(!continent) return;
+    if(Math.random() < 0.06){
+      const rem = LOOP_REMEMBERERS.find(r => LOOP_REMEMBERER_CONTINENT[r.id]===continent && !isLoopRemembererDiscovered(r.id));
+      if(rem) revealLoopRememberer(rem);
+    }
+    if(Math.random() < 0.06){
+      // seal_northeast2/northwest2/southeast2는 존재하지 않는다(31번
+      // 섹션에서 이미 결정된 대로, 신규 3개 왕국에 새 봉인석/수호자를
+      // 지어내지 않음 — .find가 자연히 undefined를 반환해 no-op됨).
+      const seal = SEAL_GUARDIANS.find(s => s.sealId === 'seal_'+continent && !isSealGuardianDiscovered(s.sealId));
+      if(seal) revealSealGuardian(seal);
+    }
+  }catch(e){}
+}
+window.tryLocalLoreDiscovery = tryLocalLoreDiscovery;
 
 window.CELESTIAL_FACTIONS = CELESTIAL_FACTIONS;
 

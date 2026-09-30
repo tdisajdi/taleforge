@@ -1703,6 +1703,13 @@ function enterScreen(nodeId, fromNodeId){
     if(SETTLEMENT_TYPES.has(screen.node.loc.type) && typeof window.tryLocalWdrDiscovery==='function' && Math.random()<0.08){
       window.tryLocalWdrDiscovery('hero');
     }
+    // [2026-09-30, 루프 기억자·봉인 수호자 로컬 발견 트리거 — 작업메모장
+    // 46-③ 섹션] LOOP_REMEMBERERS/SEAL_GUARDIANS는 위 방랑자 명부와 완전히
+    // 같은 성격(발견 트리거만 전혀 없던 죽은 데이터)이라, 같은 정착지 도착
+    // 계기에 각각 독립적으로 낮은 확률(6%)로 발견을 시도한다.
+    if(typeof window.tryLocalLoreDiscovery==='function'){
+      window.tryLocalLoreDiscovery(screen.node.loc);
+    }
     // [2026-09-18 습격 라운드] 지금 이 정착지가 습격을 받는 중이면 도착
     // 즉시 경고 — buildScreen()이 이미 syncRaidPacksForScreen으로 습격대를
     // 화면에 심어뒀으므로, 그 경고와 함께 실제로 화면 위에서 마주치게 된다.

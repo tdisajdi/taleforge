@@ -1,6 +1,8 @@
 // 시스템 11~20
 // Auto-extracted from taleforge.html (original section banner preserved above).
 import { BLOODLINE_EVOLUTION, DEATH_BONUS_DEFS, FORBIDDEN_SKILL_DEFS, INHERITABLE_STATS, TRAUMA_DEFS } from '../data/015-시스템-1120.js';
+import { S } from '../data/084-TaleForge-순수-JS-엔진.js';
+import { saveSkills } from '../job/002-스킬-시스템.js';
 import { loadCycleCount } from '../progression/014-환생-누적-시스템-110번.js';
 import { growButterflyIndex } from '../progression/019-71100번-환생-누적-시스템.js';
 import { lsDel, lsGet, lsSet } from '../utils.js';
@@ -19,6 +21,13 @@ export const unlockForbiddenSkill = (conditionKey) => {
   );
   if (toUnlock.length > 0) {
     saveForbiddenSkills([...already, ...toUnlock.map(f => f.id)]);
+    // 46-② 발견: 위 저장만으로는 getAllSkillDefs()/renderSkills()/useSkill()
+    // 어디에도 노출되지 않아 실제로는 영원히 못 쓰는 스킬이 되던 버그 —
+    // 이 게임의 유일한 "보유" 플래그(S.unlockedSkills)를 같이 세팅해
+    // 일반 스킬과 동일한 경로로 보이고 쓰이게 한다.
+    const su = S.unlockedSkills || (S.unlockedSkills = {});
+    toUnlock.forEach(f => { su[f.id] = true; });
+    saveSkills(su);
   }
   return toUnlock;
 };
@@ -27,6 +36,8 @@ export const getUnlockedForbiddenSkills = () => {
   const ids = loadForbiddenSkills();
   return FORBIDDEN_SKILL_DEFS.filter(f => ids.includes(f.id));
 };
+window.unlockForbiddenSkill = unlockForbiddenSkill;
+window.getUnlockedForbiddenSkills = getUnlockedForbiddenSkills;
 
 export const BUTTERFLY_KEY = "taleforge-butterfly";
 

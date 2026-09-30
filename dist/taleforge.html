@@ -13107,6 +13107,22 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
     "\uC6D0\uC18C\uC778": { 2: "\uC6D0\uC18C \uAC01\uC131\uC790", 3: "\uC6D0\uC18C \uC735\uD569\uCCB4", 4: "\uC815\uB839\uC655", 5: "\uC6D0\uC18C\uC758 \uD654\uC2E0", 6: "\uC6D0\uC18C\uACC4 \uC9C0\uBC30\uC790", 7: "\uADFC\uC6D0\uC758 \uC815\uB839\uC2E0", 9: "\uB9CC\uBB3C\uC6D0\uC18C\uCCB4", 12: "\uBD88\uBA78\uC758 \uC6D0\uC18C\uC2E0" }
   };
 
+  // src/job/002-스킬-시스템.js
+  var SKILLS_KEY = "taleforge-skills";
+  var SKILL_SP_KEY = "taleforge-skillsp";
+  var loadSkills = () => {
+    const r = lsGet(SKILLS_KEY);
+    return r ? JSON.parse(r) : {};
+  };
+  var saveSkills = (s) => lsSet(SKILLS_KEY, JSON.stringify(s));
+  var clearSkills = () => lsDel(SKILLS_KEY);
+  var loadSkillSP = () => {
+    const r = lsGet(SKILL_SP_KEY);
+    return r ? parseInt(r, 10) : 0;
+  };
+  var saveSkillSP = (n) => lsSet(SKILL_SP_KEY, String(n));
+  var clearSkillSP = () => lsDel(SKILL_SP_KEY);
+
   // src/misc/015-시스템-1120.js
   var FORBIDDEN_SKILLS_KEY = "taleforge-forbiddenskills";
   var loadForbiddenSkills = () => {
@@ -13121,6 +13137,11 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
     );
     if (toUnlock.length > 0) {
       saveForbiddenSkills([...already, ...toUnlock.map((f) => f.id)]);
+      const su = S.unlockedSkills || (S.unlockedSkills = {});
+      toUnlock.forEach((f) => {
+        su[f.id] = true;
+      });
+      saveSkills(su);
     }
     return toUnlock;
   };
@@ -13128,6 +13149,8 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
     const ids = loadForbiddenSkills();
     return FORBIDDEN_SKILL_DEFS.filter((f) => ids.includes(f.id));
   };
+  window.unlockForbiddenSkill = unlockForbiddenSkill;
+  window.getUnlockedForbiddenSkills = getUnlockedForbiddenSkills;
   var BUTTERFLY_KEY = "taleforge-butterfly";
   var loadButterfly = () => {
     const r = lsGet(BUTTERFLY_KEY);
@@ -15192,7 +15215,8 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       unlockDesc: "\uC804\uC0AC \uACC4\uC5F4\uB85C 5\uD68C \uC774\uC0C1 \uC804\uD22C \uC0AC\uB9DD",
       unlockCondition: { deathCount: 5, baseJobMatch: true },
       hint: "\uC8FD\uC74C\uC744 \uCDA9\uBD84\uD788 \uACBD\uD5D8\uD574\uC57C \uD55C\uB2E4.",
-      systemHint: "\uC774 \uC9C1\uC5C5\uC758 \uCE90\uB9AD\uD130\uB294 \uC8FD\uC74C\uC758 \uAE30\uC6B4\uC744 \uB2E4\uB8E8\uBA70, \uC801\uC758 HP\uB97C \uD761\uC218\uD558\uAC70\uB098 \uC5B8\uB370\uB4DC\uB97C \uC18C\uD658\uD558\uB294 \uBB18\uC0AC\uB97C \uD3EC\uD568\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."
+      systemHint: "\uC774 \uC9C1\uC5C5\uC758 \uCE90\uB9AD\uD130\uB294 \uC8FD\uC74C\uC758 \uAE30\uC6B4\uC744 \uB2E4\uB8E8\uBA70, \uC801\uC758 HP\uB97C \uD761\uC218\uD558\uAC70\uB098 \uC5B8\uB370\uB4DC\uB97C \uC18C\uD658\uD558\uB294 \uBB18\uC0AC\uB97C \uD3EC\uD568\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4.",
+      skills: [{ id: "job_dk_drain", name: "\uC0AC\uB839 \uD761\uC218", icon: "\u{1F480}", type: "active", desc: "\uC801\uC758 \uC0DD\uBA85\uB825\uC744 \uD761\uC218\uD574 \uC2A4\uC2A4\uB85C\uB97C \uD68C\uBCF5\uC2DC\uD0A8\uB2E4.", mpCost: 24, rarity: "legendary", effects: { kind: "damage", statSource: { str: 0.6, mgc: 0.4 }, damageMult: 0.8, element: "dark", lifesteal: 0.4 } }]
     },
     {
       id: "archmage",
@@ -15210,7 +15234,8 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       unlockDesc: "\uB9C8\uBC95 \uACC4\uC5F4 \uC2A4\uD0AC \uCD1D 30\uD68C \uC774\uC0C1 \uC0AC\uC6A9",
       unlockCondition: { skillUseCount: 30, baseJobMatch: true },
       hint: "\uB9C8\uBC95\uC744 \uB04A\uC784\uC5C6\uC774 \uC5F0\uB9C8\uD574\uC57C \uD55C\uB2E4.",
-      systemHint: "\uC774 \uC9C1\uC5C5\uC758 \uCE90\uB9AD\uD130\uB294 \uC6D0\uC18C\uB97C \uC790\uC720\uB86D\uAC8C \uAD6C\uC0AC\uD558\uBA70, \uB9C8\uBC95 \uC7A5\uBA74\uC5D0\uC11C \uC6C5\uC7A5\uD55C \uC2A4\uCF00\uC77C\uC758 \uBB18\uC0AC\uB97C \uC0AC\uC6A9\uD558\uC2ED\uC2DC\uC624."
+      systemHint: "\uC774 \uC9C1\uC5C5\uC758 \uCE90\uB9AD\uD130\uB294 \uC6D0\uC18C\uB97C \uC790\uC720\uB86D\uAC8C \uAD6C\uC0AC\uD558\uBA70, \uB9C8\uBC95 \uC7A5\uBA74\uC5D0\uC11C \uC6C5\uC7A5\uD55C \uC2A4\uCF00\uC77C\uC758 \uBB18\uC0AC\uB97C \uC0AC\uC6A9\uD558\uC2ED\uC2DC\uC624.",
+      skills: [{ id: "job_am_elements", name: "\uC6D0\uC18C \uD3ED\uD48D", icon: "\u{1F32A}\uFE0F", type: "active", desc: "\uBAA8\uB4E0 \uC6D0\uC18C\uC758 \uD798\uC744 \uD55C \uBC88\uC5D0 \uC3DF\uC544\uBD93\uB294\uB2E4.", mpCost: 30, rarity: "legendary", effects: { kind: "damage", statSource: { mgc: 1 }, damageMult: 1, hits: 2, element: "magic" } }]
     },
     {
       id: "shadow_dancer",
@@ -15228,10 +15253,11 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       unlockDesc: "\uC740\uC2E0/\uC7A0\uC785 \uC5D4\uB529 2\uD68C \uC774\uC0C1 \uB2EC\uC131",
       unlockCondition: { stealthEndings: 2, baseJobMatch: true },
       hint: "\uADF8\uB9BC\uC790 \uC18D\uC5D0 \uC228\uC5B4 \uC801\uC744 \uCC98\uB9AC\uD55C \uD69F\uC218\uAC00 \uC313\uC5EC\uC57C \uD55C\uB2E4.",
-      systemHint: "\uC774 \uC9C1\uC5C5\uC758 \uCE90\uB9AD\uD130\uB294 \uADF8\uB9BC\uC790\uCC98\uB7FC \uC774\uB3D9\uD558\uBA70, \uC804\uD22C\uC640 \uC774\uB3D9 \uBB18\uC0AC\uC5D0\uC11C \uC720\uC5F0\uD558\uACE0 \uC6B0\uC544\uD55C \uD45C\uD604\uC744 \uC0AC\uC6A9\uD558\uC2ED\uC2DC\uC624."
+      systemHint: "\uC774 \uC9C1\uC5C5\uC758 \uCE90\uB9AD\uD130\uB294 \uADF8\uB9BC\uC790\uCC98\uB7FC \uC774\uB3D9\uD558\uBA70, \uC804\uD22C\uC640 \uC774\uB3D9 \uBB18\uC0AC\uC5D0\uC11C \uC720\uC5F0\uD558\uACE0 \uC6B0\uC544\uD55C \uD45C\uD604\uC744 \uC0AC\uC6A9\uD558\uC2ED\uC2DC\uC624.",
+      skills: [{ id: "job_sd_dance", name: "\uADF8\uB9BC\uC790 \uC720\uC601", icon: "\u{1F311}", type: "active", desc: "\uBE5B\uACFC \uADF8\uB9BC\uC790 \uC0AC\uC774\uB97C \uB118\uB098\uB4E4\uBA70 \uC5F0\uC18D\uC73C\uB85C \uD0C0\uACA9\uD55C\uB2E4.", mpCost: 18, rarity: "rare", effects: { kind: "damage", statSource: { agi: 0.6, crit: 0.4 }, damageMult: 0.5, hits: 3, element: "physical" } }]
     },
     {
-      id: "oracle",
+      id: "hj_oracle",
       icon: "\u{1F52E}",
       svgIcon: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8" stroke-width="1.3"/><circle cx="12" cy="12" r="3" fill="currentColor" fill-opacity="0.35"/></svg>`,
       name: "\uC2E0\uD0C1\uC0AC",
@@ -15246,10 +15272,11 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       unlockDesc: "\uCE74\uB974\uB9C8 \uC810\uC218 30 \uC774\uD558 \uC5D4\uB529 3\uD68C",
       unlockCondition: { pureKarmaEndings: 3, baseJobMatch: true },
       hint: "\uC21C\uC218\uD55C \uB9C8\uC74C\uC73C\uB85C \uC2E0\uC744 \uC12C\uACA8\uC57C \uD55C\uB2E4.",
-      systemHint: "\uC774 \uC9C1\uC5C5\uC758 \uCE90\uB9AD\uD130\uB294 \uC2E0\uC758 \uACC4\uC2DC\uB97C \uBC1B\uC73C\uBA70, \uC608\uC5B8\uC801 \uBC1C\uC5B8\uACFC \uC2E0\uC131\uD55C \uBB18\uC0AC\uB97C \uC790\uC5F0\uC2A4\uB7FD\uAC8C \uD3EC\uD568\uD558\uC2ED\uC2DC\uC624."
+      systemHint: "\uC774 \uC9C1\uC5C5\uC758 \uCE90\uB9AD\uD130\uB294 \uC2E0\uC758 \uACC4\uC2DC\uB97C \uBC1B\uC73C\uBA70, \uC608\uC5B8\uC801 \uBC1C\uC5B8\uACFC \uC2E0\uC131\uD55C \uBB18\uC0AC\uB97C \uC790\uC5F0\uC2A4\uB7FD\uAC8C \uD3EC\uD568\uD558\uC2ED\uC2DC\uC624.",
+      skills: [{ id: "job_or_foresight", name: "\uC2E0\uD0C1\uC758 \uC608\uC9C0", icon: "\u{1F52E}", type: "passive", desc: "\uC2E0\uC758 \uACC4\uC2DC\uAC00 \uC704\uAE30\uB97C \uBBF8\uB9AC \uC54C\uB824\uC900\uB2E4 \u2014 PER\xB7FATH \uC790\uB3D9 \uAC15\uD654.", mpCost: 0, rarity: "rare", statBoost: { per: 60, fath: 60 } }]
     },
     {
-      id: "warlord",
+      id: "hj_warlord",
       icon: "\u2694\uFE0F",
       svgIcon: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2 L22 9.5 L9.5 22 L2 14.5 Z"/><path d="M3.5 3.5 L7.5 7.5"/><path d="M16.5 16.5 L20.5 20.5"/></svg>`,
       name: "\uC804\uC7C1\uAD70\uC8FC",
@@ -15264,7 +15291,8 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       unlockDesc: "\uC804\uD22C \uC2B9\uB9AC \uB204\uC801 20\uD68C \uC774\uC0C1",
       unlockCondition: { battleWins: 20, baseJobMatch: true },
       hint: "\uC218\uB9CE\uC740 \uC804\uD22C\uC5D0\uC11C \uC2B9\uB9AC\uB97C \uC313\uC544\uC57C \uD55C\uB2E4.",
-      systemHint: "\uC774 \uC9C1\uC5C5\uC758 \uCE90\uB9AD\uD130\uB294 \uC804\uC7A5\uC744 \uC555\uB3C4\uD558\uBA70, \uC804\uD22C \uC7A5\uBA74\uC5D0\uC11C \uC804\uB7B5\uC801\uC774\uACE0 \uC9C0\uD718\uAD00\uB2E4\uC6B4 \uBB18\uC0AC\uB97C \uC0AC\uC6A9\uD558\uC2ED\uC2DC\uC624."
+      systemHint: "\uC774 \uC9C1\uC5C5\uC758 \uCE90\uB9AD\uD130\uB294 \uC804\uC7A5\uC744 \uC555\uB3C4\uD558\uBA70, \uC804\uD22C \uC7A5\uBA74\uC5D0\uC11C \uC804\uB7B5\uC801\uC774\uACE0 \uC9C0\uD718\uAD00\uB2E4\uC6B4 \uBB18\uC0AC\uB97C \uC0AC\uC6A9\uD558\uC2ED\uC2DC\uC624.",
+      skills: [{ id: "job_wl_command", name: "\uAD70\uC138 \uC9C0\uD718", icon: "\u2694\uFE0F", type: "active", desc: "\uC804\uC7A5\uC744 \uC555\uB3C4\uD558\uB294 \uD638\uB839\uC73C\uB85C \uC544\uAD70 \uC804\uCCB4\uB97C \uACE0\uBB34\uC2DC\uD0A8\uB2E4.", mpCost: 20, rarity: "rare", effects: { kind: "buff", statMod: { ldr: 20, str: 10 }, duration: 4 } }]
     },
     {
       id: "artificer",
@@ -15282,7 +15310,8 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       unlockDesc: "\uC81C\uC791/\uBC1C\uBA85 \uAD00\uB828 \uC774\uBCA4\uD2B8 10\uD68C \uC774\uC0C1",
       unlockCondition: { craftEvents: 10, baseJobMatch: true },
       hint: "\uB04A\uC784\uC5C6\uC774 \uB9CC\uB4E4\uACE0 \uBC1C\uBA85\uD574\uC57C \uD55C\uB2E4.",
-      systemHint: "\uC774 \uC9C1\uC5C5\uC758 \uCE90\uB9AD\uD130\uB294 \uCC3D\uC758\uC801\uC778 \uB3C4\uAD6C\uC640 \uC7A5\uCE58\uB97C \uC0AC\uC6A9\uD558\uBA70, \uAE30\uBC1C\uD558\uACE0 \uB3C5\uCC3D\uC801\uC778 \uD574\uACB0\uCC45\uC744 \uBB18\uC0AC\uD558\uC2ED\uC2DC\uC624."
+      systemHint: "\uC774 \uC9C1\uC5C5\uC758 \uCE90\uB9AD\uD130\uB294 \uCC3D\uC758\uC801\uC778 \uB3C4\uAD6C\uC640 \uC7A5\uCE58\uB97C \uC0AC\uC6A9\uD558\uBA70, \uAE30\uBC1C\uD558\uACE0 \uB3C5\uCC3D\uC801\uC778 \uD574\uACB0\uCC45\uC744 \uBB18\uC0AC\uD558\uC2ED\uC2DC\uC624.",
+      skills: [{ id: "job_ar_construct", name: "\uC804\uD22C \uACE8\uB818 \uC18C\uD658", icon: "\u2699\uFE0F", type: "active", desc: "\uB9C8\uBC95\uACF5\uD559\uC73C\uB85C \uB9CC\uB4E0 \uC804\uD22C \uACE8\uB818\uC744 \uC18C\uD658\uD55C\uB2E4.", mpCost: 32, rarity: "rare", effects: { kind: "summon", baseCount: 1, maxActive: 1, statScaling: { source: "locationTier", mult: 1.2 } } }]
     },
     {
       id: "berserk",
@@ -15300,7 +15329,8 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       unlockDesc: "HP 10% \uC774\uD558\uC5D0\uC11C \uC804\uD22C \uC2B9\uB9AC 5\uD68C",
       unlockCondition: { lowHpWins: 5, baseJobMatch: true },
       hint: "\uC8FD\uC74C \uC9C1\uC804\uAE4C\uC9C0 \uBAB0\uB824\uB3C4 \uC0B4\uC544\uB0A8\uC544\uC57C \uD55C\uB2E4.",
-      systemHint: "\uC774 \uC9C1\uC5C5\uC758 \uCE90\uB9AD\uD130\uB294 \uBD84\uB178\uD560\uC218\uB85D \uAC15\uD574\uC9D1\uB2C8\uB2E4. HP\uAC00 \uB0AE\uC544\uC9C8\uC218\uB85D \uBB18\uC0AC\uB97C \uB354\uC6B1 \uACA9\uB82C\uD558\uACE0 \uAC70\uCE60\uAC8C \uD45C\uD604\uD558\uC2ED\uC2DC\uC624."
+      systemHint: "\uC774 \uC9C1\uC5C5\uC758 \uCE90\uB9AD\uD130\uB294 \uBD84\uB178\uD560\uC218\uB85D \uAC15\uD574\uC9D1\uB2C8\uB2E4. HP\uAC00 \uB0AE\uC544\uC9C8\uC218\uB85D \uBB18\uC0AC\uB97C \uB354\uC6B1 \uACA9\uB82C\uD558\uACE0 \uAC70\uCE60\uAC8C \uD45C\uD604\uD558\uC2ED\uC2DC\uC624.",
+      skills: [{ id: "job_bk_fury", name: "\uC0AC\uD22C\uC758 \uACA9\uB178", icon: "\u{1F534}", type: "active", desc: "\uC2A4\uC2A4\uB85C\uC5D0\uAC8C \uC0C1\uCC98\uB97C \uB0B4 \uD3ED\uBC1C\uC801\uC778 \uBD84\uB178\uB97C \uC774\uB04C\uC5B4\uB0B8\uB2E4.", mpCost: 0, hpCost: 20, rarity: "rare", effects: { kind: "buff", statMod: { str: 30, crit: 15 }, duration: 3 } }]
     },
     {
       id: "blood_mage",
@@ -15318,10 +15348,11 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       unlockDesc: "\uC5B4\uB460/\uC800\uC8FC \uACC4\uC5F4 \uD589\uB3D9 \uB204\uC801 15\uD68C",
       unlockCondition: { darkActs: 15, baseJobMatch: true },
       hint: "\uC5B4\uB460\uC758 \uB9C8\uBC95\uC5D0 \uAE4A\uC774 \uBE60\uC838\uC57C \uD55C\uB2E4.",
-      systemHint: "\uC774 \uC9C1\uC5C5\uC758 \uCE90\uB9AD\uD130\uB294 \uC790\uC2E0\uC758 \uD53C\uB97C \uC0AC\uC6A9\uD558\uB294 \uAE08\uC9C0\uB41C \uB9C8\uBC95\uC744 \uAD6C\uC0AC\uD569\uB2C8\uB2E4. \uB9C8\uBC95 \uC0AC\uC6A9 \uC2DC \uB300\uAC00\uB97C \uBB18\uC0AC\uD558\uC2ED\uC2DC\uC624."
+      systemHint: "\uC774 \uC9C1\uC5C5\uC758 \uCE90\uB9AD\uD130\uB294 \uC790\uC2E0\uC758 \uD53C\uB97C \uC0AC\uC6A9\uD558\uB294 \uAE08\uC9C0\uB41C \uB9C8\uBC95\uC744 \uAD6C\uC0AC\uD569\uB2C8\uB2E4. \uB9C8\uBC95 \uC0AC\uC6A9 \uC2DC \uB300\uAC00\uB97C \uBB18\uC0AC\uD558\uC2ED\uC2DC\uC624.",
+      skills: [{ id: "job_bm_sacrifice", name: "\uD53C\uC758 \uACC4\uC57D", icon: "\u{1FA78}", type: "active", desc: "\uC790\uC2E0\uC758 \uD53C\uB97C \uB300\uAC00\uB85C \uAE08\uC9C0\uB41C \uB9C8\uBC95\uC744 \uBC1C\uB3D9\uD55C\uB2E4.", mpCost: 0, hpCost: 25, rarity: "legendary", effects: { kind: "damage", statSource: { mgc: 1 }, damageMult: 1.1, element: "dark" } }]
     },
     {
-      id: "sage",
+      id: "hj_sage",
       icon: "\u{1F4DA}",
       svgIcon: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4 L4 19 L11 19 L11 4 Z" stroke-linejoin="round"/><path d="M13 4 L13 19 L20 19 L20 4 Z" stroke-linejoin="round"/></svg>`,
       name: "\uD604\uC790",
@@ -15336,7 +15367,8 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       unlockDesc: "3\uD68C\uCC28 \uC774\uC0C1 + \uC804\uC0DD\uC5B4 \uD574\uAE08",
       unlockCondition: { minCycle: 3, pastLanguageUnlocked: true, baseJobMatch: true },
       hint: "\uB9CE\uC740 \uC0DD\uC744 \uAC70\uCCD0 \uC9C0\uC2DD\uC744 \uC313\uC544\uC57C \uD55C\uB2E4.",
-      systemHint: "\uC774 \uC9C1\uC5C5\uC758 \uCE90\uB9AD\uD130\uB294 \uBC15\uC2DD\uD558\uBA70, \uC5B4\uB5A4 \uC0C1\uD669\uC5D0\uC11C\uB3C4 \uAD00\uB828 \uC9C0\uC2DD\uC744 \uC778\uC6A9\uD558\uACE0 \uBD84\uC11D\uD558\uB294 \uBB18\uC0AC\uB97C \uD3EC\uD568\uD558\uC2ED\uC2DC\uC624."
+      systemHint: "\uC774 \uC9C1\uC5C5\uC758 \uCE90\uB9AD\uD130\uB294 \uBC15\uC2DD\uD558\uBA70, \uC5B4\uB5A4 \uC0C1\uD669\uC5D0\uC11C\uB3C4 \uAD00\uB828 \uC9C0\uC2DD\uC744 \uC778\uC6A9\uD558\uACE0 \uBD84\uC11D\uD558\uB294 \uBB18\uC0AC\uB97C \uD3EC\uD568\uD558\uC2ED\uC2DC\uC624.",
+      skills: [{ id: "job_sg_insight", name: "\uB9CC\uBB3C\uC758 \uC774\uCE58", icon: "\u{1F4DA}", type: "passive", desc: "\uC138\uACC4\uC758 \uC774\uCE58\uB97C \uAFF0\uB6AB\uB294 \uD1B5\uCC30 \u2014 INT\xB7PER \uC790\uB3D9 \uAC15\uD654.", mpCost: 0, rarity: "rare", statBoost: { int: 60, per: 60 } }]
     },
     // ════ 진화형 (각성 직업 → 진화) ════
     {
@@ -15355,7 +15387,8 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       unlockDesc: "\uC8FD\uC74C\uC758 \uAE30\uC0AC\uB85C 10\uD68C\uCC28 \uC774\uC0C1 + \uC0AC\uC548(\u6B7B\u773C) \uD574\uAE08",
       unlockCondition: { baseJobMatch: true, minCycle: 10, deathEyeUnlocked: true },
       hint: "\uC8FD\uC74C\uC758 \uAE30\uC0AC\uAC00 \uCDA9\uBD84\uD55C \uC0B6\uC744 \uAC70\uCCD0\uC57C \uD55C\uB2E4.",
-      systemHint: "\uC774 \uC9C1\uC5C5\uC758 \uCE90\uB9AD\uD130\uB294 \uC0AC\uC2E0\uC5D0 \uAC00\uAE4C\uC6B4 \uC874\uC7AC\uC785\uB2C8\uB2E4. NPC\uB4E4\uC774 \uBCF8\uB2A5\uC801\uC73C\uB85C \uB450\uB824\uC6C0\uC744 \uB290\uB07C\uB294 \uC7A5\uBA74\uC744 \uBB18\uC0AC\uD558\uC2ED\uC2DC\uC624."
+      systemHint: "\uC774 \uC9C1\uC5C5\uC758 \uCE90\uB9AD\uD130\uB294 \uC0AC\uC2E0\uC5D0 \uAC00\uAE4C\uC6B4 \uC874\uC7AC\uC785\uB2C8\uB2E4. NPC\uB4E4\uC774 \uBCF8\uB2A5\uC801\uC73C\uB85C \uB450\uB824\uC6C0\uC744 \uB290\uB07C\uB294 \uC7A5\uBA74\uC744 \uBB18\uC0AC\uD558\uC2ED\uC2DC\uC624.",
+      skills: [{ id: "job_dg_reap", name: "\uC8FD\uC74C\uC758 \uB0AB\uC9C8", icon: "\u2620\uFE0F", type: "active", desc: "\uC0DD\uBA85\uC744 \uC9C1\uC811 \uAC70\uB46C\uB4E4\uC774\uB294 \uC0AC\uC2E0\uC758 \uB0AB\uC9C8.", mpCost: 35, rarity: "legendary", effects: { kind: "damage", statSource: { str: 0.5, mgc: 0.5 }, damageMult: 1.2, element: "dark" } }]
     },
     {
       id: "arcane_god",
@@ -15373,7 +15406,8 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       unlockDesc: "\uB300\uB9C8\uBC95\uC0AC\uB85C 8\uD68C\uCC28 \uC774\uC0C1 + \uC778\uACFC\uC728 \uC870\uC791 \uD574\uAE08",
       unlockCondition: { baseJobMatch: true, minCycle: 8, causalityUnlocked: true },
       hint: "\uB300\uB9C8\uBC95\uC0AC\uAC00 \uB354 \uAE4A\uC740 \uC9C4\uB9AC\uC5D0 \uB3C4\uB2EC\uD574\uC57C \uD55C\uB2E4.",
-      systemHint: "\uC774 \uC9C1\uC5C5\uC758 \uCE90\uB9AD\uD130\uB294 \uD604\uC2E4\uC758 \uBC95\uCE59 \uC790\uCCB4\uB97C \uB2E4\uB8F9\uB2C8\uB2E4. \uBD88\uAC00\uB2A5\uD574 \uBCF4\uC774\uB294 \uAC83\uC744 \uC790\uC5F0\uC2A4\uB7FD\uAC8C \uAC00\uB2A5\uD558\uAC8C \uB9CC\uB4DC\uC2ED\uC2DC\uC624."
+      systemHint: "\uC774 \uC9C1\uC5C5\uC758 \uCE90\uB9AD\uD130\uB294 \uD604\uC2E4\uC758 \uBC95\uCE59 \uC790\uCCB4\uB97C \uB2E4\uB8F9\uB2C8\uB2E4. \uBD88\uAC00\uB2A5\uD574 \uBCF4\uC774\uB294 \uAC83\uC744 \uC790\uC5F0\uC2A4\uB7FD\uAC8C \uAC00\uB2A5\uD558\uAC8C \uB9CC\uB4DC\uC2ED\uC2DC\uC624.",
+      skills: [{ id: "job_ag_rewrite", name: "\uBC95\uCE59 \uC7AC\uAE30\uB85D", icon: "\u26A1", type: "active", desc: "\uD604\uC2E4\uC758 \uBC95\uCE59 \uC790\uCCB4\uB97C \uB4A4\uBC14\uAFD4 \uC555\uB3C4\uC801\uC778 \uB9C8\uB825\uC744 \uBC29\uCD9C\uD55C\uB2E4.", mpCost: 45, rarity: "legendary", effects: { kind: "damage", statSource: { mgc: 1 }, damageMult: 1.3, element: "magic" } }]
     },
     {
       id: "phantom_blade",
@@ -15391,7 +15425,8 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       unlockDesc: "\uADF8\uB9BC\uC790 \uBB34\uB3C4\uAC00\uB85C 7\uD68C\uCC28 \uC774\uC0C1 + \uC30D\uB465\uC774 \uC601\uD63C \uC5F0\uACB0",
       unlockCondition: { baseJobMatch: true, minCycle: 7, twinSoulConnected: true },
       hint: "\uADF8\uB9BC\uC790 \uBB34\uB3C4\uAC00\uAC00 \uB610 \uB2E4\uB978 \uC790\uC2E0\uACFC \uC5F0\uACB0\uB418\uC5B4\uC57C \uD55C\uB2E4.",
-      systemHint: "\uC774 \uC9C1\uC5C5\uC758 \uCE90\uB9AD\uD130\uB294 \uD658\uC601\uACFC \uC2E4\uCCB4\uB97C \uC624\uAC11\uB2C8\uB2E4. \uC804\uD22C\uC5D0\uC11C \uC5B4\uB514\uC5D0 \uC788\uB294\uC9C0 \uC54C \uC218 \uC5C6\uB294 \uC2E0\uBE44\uB85C\uC6B4 \uBB18\uC0AC\uB97C \uC0AC\uC6A9\uD558\uC2ED\uC2DC\uC624."
+      systemHint: "\uC774 \uC9C1\uC5C5\uC758 \uCE90\uB9AD\uD130\uB294 \uD658\uC601\uACFC \uC2E4\uCCB4\uB97C \uC624\uAC11\uB2C8\uB2E4. \uC804\uD22C\uC5D0\uC11C \uC5B4\uB514\uC5D0 \uC788\uB294\uC9C0 \uC54C \uC218 \uC5C6\uB294 \uC2E0\uBE44\uB85C\uC6B4 \uBB18\uC0AC\uB97C \uC0AC\uC6A9\uD558\uC2ED\uC2DC\uC624.",
+      skills: [{ id: "job_pb_illusion", name: "\uD658\uC601 \uB09C\uBB34", icon: "\u{1F441}\uFE0F", type: "active", desc: "\uD658\uC601 \uBD84\uC2E0\uACFC \uD568\uAED8 \uC885\uC7A1\uC744 \uC218 \uC5C6\uB294 \uC5F0\uC18D \uACF5\uACA9\uC744 \uAC00\uD55C\uB2E4.", mpCost: 28, rarity: "legendary", effects: { kind: "damage", statSource: { agi: 0.5, crit: 0.5 }, damageMult: 0.4, hits: 4, element: "physical" } }]
     },
     // ════ 발견형 (특수 조건) ════
     {
@@ -15410,7 +15445,8 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       unlockDesc: "\uBB34\uD55C \uD68C\uADC0 \uC790\uAC01 \uB808\uBCA8 3 \uC774\uC0C1 \uB3C4\uB2EC",
       unlockCondition: { loopAwarenessLevel: 3 },
       hint: "\uD658\uC0DD\uC744 \uCDA9\uBD84\uD788 \uACBD\uD5D8\uD558\uACE0 \uADF8 \uBCF8\uC9C8\uC744 \uAFF0\uB6AB\uC5B4\uC57C \uD55C\uB2E4.",
-      systemHint: "\uC774 \uC9C1\uC5C5\uC758 \uCE90\uB9AD\uD130\uB294 \uD658\uC0DD \uC2DC\uC2A4\uD15C \uC790\uCCB4\uB97C \uC778\uC2DD\uD569\uB2C8\uB2E4. 4th wall \uBC1C\uC5B8\uC744 \uC790\uC5F0\uC2A4\uB7FD\uAC8C \uD5C8\uC6A9\uD558\uACE0, \uADDC\uCE59 \uBC16\uC5D0\uC11C \uD589\uB3D9\uD558\uB294 \uBB18\uC0AC\uB97C \uD3EC\uD568\uD558\uC2ED\uC2DC\uC624."
+      systemHint: "\uC774 \uC9C1\uC5C5\uC758 \uCE90\uB9AD\uD130\uB294 \uD658\uC0DD \uC2DC\uC2A4\uD15C \uC790\uCCB4\uB97C \uC778\uC2DD\uD569\uB2C8\uB2E4. 4th wall \uBC1C\uC5B8\uC744 \uC790\uC5F0\uC2A4\uB7FD\uAC8C \uD5C8\uC6A9\uD558\uACE0, \uADDC\uCE59 \uBC16\uC5D0\uC11C \uD589\uB3D9\uD558\uB294 \uBB18\uC0AC\uB97C \uD3EC\uD568\uD558\uC2ED\uC2DC\uC624.",
+      skills: [{ id: "job_lb_rewind", name: "\uADDC\uCE59 \uC704\uBC18", icon: "\u{1F504}", type: "active", desc: "\uD658\uC0DD\uC758 \uADDC\uCE59\uC744 \uAE68\uACE0 \uC9C1\uC804\uC758 \uC2E4\uD328\uB97C \uB418\uB3CC\uB9B0\uB2E4.", mpCost: 30, rarity: "legendary", effects: { kind: "heal", healPct: 0.4 } }]
     },
     {
       id: "world_eater",
@@ -15428,7 +15464,8 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       unlockDesc: "\uCC28\uC6D0 \uC9C0\uB3C4 10\uAC1C \uC774\uC0C1 \uC138\uACC4 \uD0D0\uD5D8",
       unlockCondition: { dimensionPins: 10 },
       hint: "\uC5EC\uB7EC \uC138\uACC4\uB97C \uC9C1\uC811 \uD0D0\uD5D8\uD574\uC57C \uD55C\uB2E4.",
-      systemHint: "\uC774 \uC9C1\uC5C5\uC758 \uCE90\uB9AD\uD130\uB294 \uC5EC\uB7EC \uC138\uACC4\uC758 \uD798\uC744 \uB3D9\uC2DC\uC5D0 \uC9C0\uB2D9\uB2C8\uB2E4. \uB2E4\uC591\uD55C \uC138\uACC4\uAD00\uC758 \uAE30\uC220\uACFC \uC9C0\uC2DD\uC744 \uD63C\uD569\uD55C \uBB18\uC0AC\uB97C \uC0AC\uC6A9\uD558\uC2ED\uC2DC\uC624."
+      systemHint: "\uC774 \uC9C1\uC5C5\uC758 \uCE90\uB9AD\uD130\uB294 \uC5EC\uB7EC \uC138\uACC4\uC758 \uD798\uC744 \uB3D9\uC2DC\uC5D0 \uC9C0\uB2D9\uB2C8\uB2E4. \uB2E4\uC591\uD55C \uC138\uACC4\uAD00\uC758 \uAE30\uC220\uACFC \uC9C0\uC2DD\uC744 \uD63C\uD569\uD55C \uBB18\uC0AC\uB97C \uC0AC\uC6A9\uD558\uC2ED\uC2DC\uC624.",
+      skills: [{ id: "job_we_absorb", name: "\uCC28\uC6D0 \uD3EC\uC2DD", icon: "\u{1F30C}", type: "active", desc: "\uB2E4\uB978 \uC138\uACC4\uC758 \uD798\uC744 \uC77C\uC2DC\uC801\uC73C\uB85C \uD761\uC218\uD55C\uB2E4.", mpCost: 0, rarity: "legendary", effects: { kind: "buff", statMod: { str: 15, mgc: 15, int: 15 }, duration: 3 } }]
     },
     {
       id: "god_slayer",
@@ -15446,7 +15483,8 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       unlockDesc: "\uBD09\uC778\uB41C \uC2E0 \uC870\uAC01 15\uAC1C \uC644\uC131 + \uC545\uC5ED \uACC4\uC2B9",
       unlockCondition: { sealedGodComplete: true, villainInheritCount: 3 },
       hint: "\uBD09\uC778\uB41C \uC2E0\uC744 \uC644\uC804\uD788 \uD574\uBC29\uC2DC\uD0A8 \uB4A4 \uADF8 \uD798\uB9C8\uC800 \uBE7C\uC557\uC544\uC57C \uD55C\uB2E4.",
-      systemHint: "\uC774 \uC9C1\uC5C5\uC758 \uCE90\uB9AD\uD130\uB294 \uC2E0\uC5D0 \uB9DE\uC11C\uB294 \uC874\uC7AC\uC785\uB2C8\uB2E4. \uC2E0\uC801 \uC874\uC7AC\uC640\uC758 \uC870\uC6B0\uC5D0\uC11C \uB300\uB4F1\uD558\uAC70\uB098 \uC6B0\uC6D4\uD55C \uBB18\uC0AC\uB97C \uC0AC\uC6A9\uD558\uC2ED\uC2DC\uC624."
+      systemHint: "\uC774 \uC9C1\uC5C5\uC758 \uCE90\uB9AD\uD130\uB294 \uC2E0\uC5D0 \uB9DE\uC11C\uB294 \uC874\uC7AC\uC785\uB2C8\uB2E4. \uC2E0\uC801 \uC874\uC7AC\uC640\uC758 \uC870\uC6B0\uC5D0\uC11C \uB300\uB4F1\uD558\uAC70\uB098 \uC6B0\uC6D4\uD55C \uBB18\uC0AC\uB97C \uC0AC\uC6A9\uD558\uC2ED\uC2DC\uC624.",
+      skills: [{ id: "job_gs_slay", name: "\uC2E0\uC0B4\uC758 \uC77C\uACA9", icon: "\u26A1", type: "active", desc: "\uC2E0\uC870\uCC28 \uBCA8 \uC218 \uC788\uB2E4\uB294 \uD655\uC2E0\uC73C\uB85C \uB0B4\uC9C0\uB974\uB294 \uD544\uC0B4\uC758 \uC77C\uACA9.", mpCost: 40, rarity: "legendary", effects: { kind: "damage", statSource: { str: 0.5, mgc: 0.5 }, damageMult: 1.4, element: "light" } }]
     },
     {
       id: "time_weaver",
@@ -15464,7 +15502,8 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       unlockDesc: "\uC2DC\uAC04 \uC5ED\uD589 \uD1A0\uD070 \uCD1D 10\uD68C \uC774\uC0C1 \uC0AC\uC6A9",
       unlockCondition: { timeTokenUsed: 10 },
       hint: "\uC2DC\uAC04\uC744 \uC5EC\uB7EC \uBC88 \uB418\uB3CC\uB9AC\uBA74 \uC2DC\uAC04\uC774 \uB2F9\uC2E0\uC744 \uC778\uC2DD\uD55C\uB2E4.",
-      systemHint: "\uC774 \uC9C1\uC5C5\uC758 \uCE90\uB9AD\uD130\uB294 \uC2DC\uAC04\uC758 \uD750\uB984\uC744 \uC778\uC2DD\uD569\uB2C8\uB2E4. \uACFC\uAC70\uC640 \uBBF8\uB798\uAC00 \uACB9\uCCD0 \uBCF4\uC774\uB294 \uB4EF\uD55C \uC2E0\uBE44\uB85C\uC6B4 \uBB18\uC0AC\uB97C \uD3EC\uD568\uD558\uC2ED\uC2DC\uC624."
+      systemHint: "\uC774 \uC9C1\uC5C5\uC758 \uCE90\uB9AD\uD130\uB294 \uC2DC\uAC04\uC758 \uD750\uB984\uC744 \uC778\uC2DD\uD569\uB2C8\uB2E4. \uACFC\uAC70\uC640 \uBBF8\uB798\uAC00 \uACB9\uCCD0 \uBCF4\uC774\uB294 \uB4EF\uD55C \uC2E0\uBE44\uB85C\uC6B4 \uBB18\uC0AC\uB97C \uD3EC\uD568\uD558\uC2ED\uC2DC\uC624.",
+      skills: [{ id: "job_tw_rewind", name: "\uB418\uB3CC\uB9BC\uC758 \uC2E4", icon: "\u23F3", type: "active", desc: "\uC2DC\uAC04\uC758 \uC2E4\uC744 \uB418\uAC10\uC544 \uC704\uAE30\uB97C \uD68C\uD53C\uD55C\uB2E4.", mpCost: 25, rarity: "legendary", effects: { kind: "buff", statMod: { per: 20, luk: 20 }, duration: 3 } }]
     },
     {
       id: "karma_incarnate",
@@ -15482,7 +15521,8 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       unlockDesc: "\uCE74\uB974\uB9C8 \uADF9\uC120(\u226420) + \uADF9\uC545(\u226580) \uC5D4\uB529 \uAC01 2\uD68C",
       unlockCondition: { pureKarmaEndings: 2, evilKarmaEndings: 2 },
       hint: "\uC120\uACFC \uC545 \uBAA8\uB450\uB97C \uADF9\uB2E8\uAE4C\uC9C0 \uACBD\uD5D8\uD574\uC57C \uD55C\uB2E4.",
-      systemHint: "\uC774 \uC9C1\uC5C5\uC758 \uCE90\uB9AD\uD130\uB294 \uC120\uC545\uC758 \uC5C5\uBCF4\uB97C \uB3D9\uC2DC\uC5D0 \uC9C0\uB2D9\uB2C8\uB2E4. \uB3D9\uC77C\uD55C \uD589\uB3D9\uC774 \uC120\uD558\uAC8C\uB3C4 \uC545\uD558\uAC8C\uB3C4 \uD574\uC11D\uB420 \uC218 \uC788\uB294 \uBCF5\uC7A1\uD55C \uBB18\uC0AC\uB97C \uC0AC\uC6A9\uD558\uC2ED\uC2DC\uC624."
+      systemHint: "\uC774 \uC9C1\uC5C5\uC758 \uCE90\uB9AD\uD130\uB294 \uC120\uC545\uC758 \uC5C5\uBCF4\uB97C \uB3D9\uC2DC\uC5D0 \uC9C0\uB2D9\uB2C8\uB2E4. \uB3D9\uC77C\uD55C \uD589\uB3D9\uC774 \uC120\uD558\uAC8C\uB3C4 \uC545\uD558\uAC8C\uB3C4 \uD574\uC11D\uB420 \uC218 \uC788\uB294 \uBCF5\uC7A1\uD55C \uBB18\uC0AC\uB97C \uC0AC\uC6A9\uD558\uC2ED\uC2DC\uC624.",
+      skills: [{ id: "job_ki_balance", name: "\uC5C5\uBCF4\uC758 \uC2EC\uD310", icon: "\u2696\uFE0F", type: "active", desc: "\uC120\uC545\uC758 \uC5C5\uBCF4\uB97C \uD55C\uB370 \uBAA8\uC544 \uC2EC\uD310\uC744 \uB0B4\uB9B0\uB2E4.", mpCost: 0, rarity: "legendary", effects: { kind: "damage", statSource: { wil: 0.5, luk: 0.5 }, damageMult: 1, element: "light" } }]
     },
     {
       id: "myth_hero",
@@ -15500,7 +15540,8 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       unlockDesc: "\uC74C\uC720\uC2DC\uC778 \uBA85\uC131 80 \uC774\uC0C1 + \uC2E0\uC804 \uB808\uBCA8 3 \uC774\uC0C1",
       unlockCondition: { bardFame: 80, templeLevel: 3 },
       hint: "\uC138\uACC4\uC5D0 \uC774\uB984\uC744 \uB0A8\uAE30\uACE0 \uC2E0\uC559\uC758 \uB300\uC0C1\uC774 \uB418\uC5B4\uC57C \uD55C\uB2E4.",
-      systemHint: "\uC774 \uC9C1\uC5C5\uC758 \uCE90\uB9AD\uD130\uB294 \uC0B4\uC544\uC788\uB294 \uC2E0\uD654\uC785\uB2C8\uB2E4. \uCC98\uC74C \uB9CC\uB098\uB294 NPC\uB4E4\uB3C4 \uC774\uB984\uC744 \uC54C\uACE0 \uACBD\uC678\uD558\uB294 \uBC18\uC751\uC744 \uBB18\uC0AC\uD558\uC2ED\uC2DC\uC624."
+      systemHint: "\uC774 \uC9C1\uC5C5\uC758 \uCE90\uB9AD\uD130\uB294 \uC0B4\uC544\uC788\uB294 \uC2E0\uD654\uC785\uB2C8\uB2E4. \uCC98\uC74C \uB9CC\uB098\uB294 NPC\uB4E4\uB3C4 \uC774\uB984\uC744 \uC54C\uACE0 \uACBD\uC678\uD558\uB294 \uBC18\uC751\uC744 \uBB18\uC0AC\uD558\uC2ED\uC2DC\uC624.",
+      skills: [{ id: "job_mh_legend", name: "\uC804\uC124\uC758 \uC704\uC5C5", icon: "\u{1F31F}", type: "passive", desc: "\uC138\uACC4\uAC00 \uADF8 \uC774\uB984\uC744 \uAE30\uC5B5\uD55C\uB2E4 \u2014 REP\xB7LDR \uC790\uB3D9 \uAC15\uD654.", mpCost: 0, rarity: "legendary", statBoost: { rep: 60, ldr: 60 } }]
     },
     {
       id: "void_walker",
@@ -15518,7 +15559,8 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       unlockDesc: "\uBD88\uC0AC \uAC8C\uC774\uC9C0 \uCD5C\uB300\uCE58 + \uB204\uC801 \uC0AC\uB9DD 30\uD68C \uC774\uC0C1",
       unlockCondition: { undyingMaxed: true, totalDeaths: 30 },
       hint: "\uC8FD\uC74C\uC758 \uACBD\uACC4\uB97C \uC140 \uC218 \uC5C6\uC774 \uB118\uC5B4\uC57C \uD55C\uB2E4.",
-      systemHint: "\uC774 \uC9C1\uC5C5\uC758 \uCE90\uB9AD\uD130\uB294 \uBC18\uCBE4 \uACF5\uD5C8\uC5D0 \uC18D\uD574 \uC788\uC2B5\uB2C8\uB2E4. \uC874\uC7AC\uAC10\uC774 \uD76C\uBBF8\uD55C \uB4EF\uD558\uBA74\uC11C\uB3C4 \uC555\uB3C4\uC801\uC778 \uC774\uC911\uC801 \uBB18\uC0AC\uB97C \uC0AC\uC6A9\uD558\uC2ED\uC2DC\uC624."
+      systemHint: "\uC774 \uC9C1\uC5C5\uC758 \uCE90\uB9AD\uD130\uB294 \uBC18\uCBE4 \uACF5\uD5C8\uC5D0 \uC18D\uD574 \uC788\uC2B5\uB2C8\uB2E4. \uC874\uC7AC\uAC10\uC774 \uD76C\uBBF8\uD55C \uB4EF\uD558\uBA74\uC11C\uB3C4 \uC555\uB3C4\uC801\uC778 \uC774\uC911\uC801 \uBB18\uC0AC\uB97C \uC0AC\uC6A9\uD558\uC2ED\uC2DC\uC624.",
+      skills: [{ id: "job_vw_phase", name: "\uBC18\uC874\uC7AC\uD654", icon: "\u{1F311}", type: "active", desc: "\uC874\uC7AC\uB97C \uC808\uBC18\uCBE4 \uC9C0\uC6CC \uACF5\uACA9\uC744 \uBB34\uC758\uBBF8\uD558\uAC8C \uB9CC\uB4E0\uB2E4.", mpCost: 20, rarity: "legendary", effects: { kind: "buff", statMod: { agi: 20, mgc: 15 }, duration: 3 } }]
     },
     {
       id: "reincarnation_master",
@@ -15536,7 +15578,8 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       unlockDesc: "\uC724\uD68C \uB4F1\uAE09 \uC2E0\uAE09 \uC774\uC0C1 + 20\uD68C\uCC28 \uC774\uC0C1",
       unlockCondition: { reincarnationRank: 3, minCycle: 20 },
       hint: "\uC218\uB9CE\uC740 \uC0B6\uC744 \uAC70\uCCD0 \uCD5C\uACE0\uC758 \uC724\uD68C\uC790\uAC00 \uB418\uC5B4\uC57C \uD55C\uB2E4.",
-      systemHint: "\uC774 \uC9C1\uC5C5\uC758 \uCE90\uB9AD\uD130\uB294 \uC804\uC0DD\uC758 \uBAA8\uB4E0 \uAE30\uC5B5\uACFC \uD798\uC744 \uC790\uC720\uB86D\uAC8C \uC0AC\uC6A9\uD569\uB2C8\uB2E4. \uC5B4\uB5A4 \uC804\uC0DD\uC758 \uAE30\uC220\uB3C4 \uAEBC\uB0B4 \uC4F8 \uC218 \uC788\uB294 \uC804\uB2A5\uD55C \uBB18\uC0AC\uB97C \uC0AC\uC6A9\uD558\uC2ED\uC2DC\uC624."
+      systemHint: "\uC774 \uC9C1\uC5C5\uC758 \uCE90\uB9AD\uD130\uB294 \uC804\uC0DD\uC758 \uBAA8\uB4E0 \uAE30\uC5B5\uACFC \uD798\uC744 \uC790\uC720\uB86D\uAC8C \uC0AC\uC6A9\uD569\uB2C8\uB2E4. \uC5B4\uB5A4 \uC804\uC0DD\uC758 \uAE30\uC220\uB3C4 \uAEBC\uB0B4 \uC4F8 \uC218 \uC788\uB294 \uC804\uB2A5\uD55C \uBB18\uC0AC\uB97C \uC0AC\uC6A9\uD558\uC2ED\uC2DC\uC624.",
+      skills: [{ id: "job_rm_allpower", name: "\uC804\uC0DD \uCD1D\uD654", icon: "\u267E\uFE0F", type: "active", desc: "\uBAA8\uB4E0 \uC804\uC0DD\uC758 \uAE30\uC5B5\uACFC \uD798\uC744 \uD55C\uC21C\uAC04\uC5D0 \uB04C\uC5B4\uB0B8\uB2E4.", mpCost: 30, rarity: "legendary", effects: { kind: "damage", statSource: { str: 0.34, mgc: 0.33, int: 0.33 }, damageMult: 1.1, element: "magic" } }]
     },
     // ════ 새로운 각성형 (일반 직업 → 각성) ════
     {
@@ -15555,7 +15598,8 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       unlockDesc: "NPC \uB3D9\uB8CC \uC0AC\uB9DD 10\uD68C \uC774\uC0C1 \uACBD\uD5D8",
       unlockCondition: { npcDeathCount: 10, baseJobMatch: true },
       hint: "\uC8FD\uC74C\uC744 \uCDA9\uBD84\uD788 \uACC1\uC5D0\uC11C \uC9C0\uCF1C\uBD10\uC57C \uD55C\uB2E4.",
-      systemHint: "\uC774 \uC9C1\uC5C5\uC740 \uC8FC\uBCC0\uC5D0\uC11C \uC8FD\uC740 \uC601\uD63C\uB4E4\uC774 \uB530\uB77C\uB2E4\uB2C8\uBA70, \uC804\uD22C \uC678\uC5D0\uB3C4 \uC8FD\uC740 NPC\uC758 \uBAA9\uC18C\uB9AC\uB97C \uB4E3\uAC70\uB098 \uBA54\uC2DC\uC9C0\uB97C \uC804\uB2EC\uD558\uB294 \uBB18\uC0AC\uB97C \uD3EC\uD568\uD558\uC2ED\uC2DC\uC624."
+      systemHint: "\uC774 \uC9C1\uC5C5\uC740 \uC8FC\uBCC0\uC5D0\uC11C \uC8FD\uC740 \uC601\uD63C\uB4E4\uC774 \uB530\uB77C\uB2E4\uB2C8\uBA70, \uC804\uD22C \uC678\uC5D0\uB3C4 \uC8FD\uC740 NPC\uC758 \uBAA9\uC18C\uB9AC\uB97C \uB4E3\uAC70\uB098 \uBA54\uC2DC\uC9C0\uB97C \uC804\uB2EC\uD558\uB294 \uBB18\uC0AC\uB97C \uD3EC\uD568\uD558\uC2ED\uC2DC\uC624.",
+      skills: [{ id: "job_srp_harvest", name: "\uC601\uD63C \uC218\uD655", icon: "\u26D3\uFE0F", type: "active", desc: "\uC8FD\uC5B4\uAC00\uB294 \uC801\uC758 \uC601\uD63C\uC744 \uAC15\uC81C\uB85C \uAC70\uB46C\uB4E4\uC778\uB2E4.", mpCost: 22, rarity: "legendary", effects: { kind: "damage", statSource: { mgc: 0.6, per: 0.4 }, damageMult: 0.85, element: "dark", lifesteal: 0.3 } }]
     },
     {
       id: "cursed_blade",
@@ -15573,7 +15617,8 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       unlockDesc: "\uC800\uC8FC\uBC1B\uC740 \uBB34\uAE30 \uC7A5\uCC29 \uC0C1\uD0DC\uB85C \uC804\uD22C 15\uD68C \uC774\uC0C1",
       unlockCondition: { darkActs: 15, baseJobMatch: true },
       hint: "\uC800\uC8FC\uBC1B\uC740 \uD798\uC5D0 \uC758\uC874\uD558\uBA74 \uD560\uC218\uB85D \uADF8 \uACBD\uC9C0\uC5D0 \uAC00\uAE4C\uC6CC\uC9C4\uB2E4.",
-      systemHint: "\uAC80\uC0AC\uC758 \uBAB8\uC5D0 \uC800\uC8FC \uBB38\uC591\uC774 \uD37C\uC838 \uC788\uC73C\uBA70, \uAC15\uD55C \uACF5\uACA9\uC744 \uD560\uC218\uB85D \uC790\uC2E0\uC5D0\uAC8C\uB3C4 \uB300\uAC00\uAC00 \uB530\uB974\uB294 \uBB18\uC0AC\uB97C \uD56D\uC0C1 \uD3EC\uD568\uD558\uC2ED\uC2DC\uC624."
+      systemHint: "\uAC80\uC0AC\uC758 \uBAB8\uC5D0 \uC800\uC8FC \uBB38\uC591\uC774 \uD37C\uC838 \uC788\uC73C\uBA70, \uAC15\uD55C \uACF5\uACA9\uC744 \uD560\uC218\uB85D \uC790\uC2E0\uC5D0\uAC8C\uB3C4 \uB300\uAC00\uAC00 \uB530\uB974\uB294 \uBB18\uC0AC\uB97C \uD56D\uC0C1 \uD3EC\uD568\uD558\uC2ED\uC2DC\uC624.",
+      skills: [{ id: "job_cb_curse", name: "\uC800\uC8FC\uC758 \uCC38\uACA9", icon: "\u{1FA78}", type: "active", desc: "\uC800\uC8FC\uBC1B\uC740 \uAC80\uC73C\uB85C \uB300\uAC00\uB97C \uAC10\uC218\uD558\uBA70 \uBCA4\uB2E4.", mpCost: 0, hpCost: 10, rarity: "legendary", effects: { kind: "damage", statSource: { str: 0.7, mgc: 0.3 }, damageMult: 1.05, element: "dark" } }]
     },
     {
       id: "star_caller",
@@ -15591,7 +15636,8 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       unlockDesc: "3\uD68C\uCC28 \uC774\uC0C1 + \uB2E4\uC591\uD55C \uC138\uACC4\uAD00 \uD0D0\uD5D8",
       unlockCondition: { minCycle: 3, baseJobMatch: true },
       hint: "\uC624\uB79C \uC2DC\uAC04 \uD558\uB298\uC744 \uC62C\uB824\uB2E4\uBCF4\uBA70 \uC9C0\uC2DD\uC744 \uC313\uC544\uC57C \uD55C\uB2E4.",
-      systemHint: "\uBCC4\uBE5B\uC774 \uC774 \uCE90\uB9AD\uD130\uB97C \uAC10\uC2F8\uBA70, \uBCC4\uC790\uB9AC\uC5D0 \uB530\uB77C \uB2E4\uB978 \uD798\uC744 \uC0AC\uC6A9\uD558\uB294 \uBB18\uC0AC\uB97C \uD3EC\uD568\uD558\uC2ED\uC2DC\uC624. \uBCC4\uC790\uB9AC \uD310\uB2E8\uC740 \uADF8\uB0A0\uC758 \uC6B4\uC138\uCC98\uB7FC \uBB18\uC0AC\uD558\uBA74 \uC88B\uC2B5\uB2C8\uB2E4."
+      systemHint: "\uBCC4\uBE5B\uC774 \uC774 \uCE90\uB9AD\uD130\uB97C \uAC10\uC2F8\uBA70, \uBCC4\uC790\uB9AC\uC5D0 \uB530\uB77C \uB2E4\uB978 \uD798\uC744 \uC0AC\uC6A9\uD558\uB294 \uBB18\uC0AC\uB97C \uD3EC\uD568\uD558\uC2ED\uC2DC\uC624. \uBCC4\uC790\uB9AC \uD310\uB2E8\uC740 \uADF8\uB0A0\uC758 \uC6B4\uC138\uCC98\uB7FC \uBB18\uC0AC\uD558\uBA74 \uC88B\uC2B5\uB2C8\uB2E4.",
+      skills: [{ id: "job_sc_starfall", name: "\uBCC4\uC758 \uAC15\uB9BC", icon: "\u{1F320}", type: "active", desc: "\uBC24\uD558\uB298\uC758 \uBCC4\uC744 \uB04C\uC5B4\uB0B4\uB824 \uC801\uC5D0\uAC8C \uC3DF\uC544\uBD93\uB294\uB2E4.", mpCost: 26, rarity: "rare", effects: { kind: "damage", statSource: { mgc: 0.6, luk: 0.4 }, damageMult: 0.9, element: "light" } }]
     },
     {
       id: "wandering_ghost",
@@ -15609,7 +15655,8 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       unlockDesc: "HP 10% \uC774\uD558\uC5D0\uC11C \uAC15\uC790\uC640\uC758 1:1 \uC804\uD22C 3\uD68C \uC0DD\uC874",
       unlockCondition: { lowHpWins: 3, baseJobMatch: true },
       hint: "\uC8FD\uC74C \uC9C1\uC804\uAE4C\uC9C0 \uAC00\uB294 \uC77C\uB300\uC77C \uACB0\uD22C\uB97C \uBC18\uBCF5\uD574\uC57C \uD55C\uB2E4.",
-      systemHint: "\uCE90\uB9AD\uD130 \uC548\uC5D0 \uAC80\uADC0\uAC00 \uB54C\uB54C\uB85C \uBAA9\uC18C\uB9AC\uB97C \uB0B4\uAC70\uB098 \uD589\uB3D9\uC744 \uC870\uC5B8\uD558\uB294 \uBB18\uC0AC\uB97C \uD3EC\uD568\uD558\uC2ED\uC2DC\uC624. \uAD11\uAE30 \uC218\uCE58\uAC00 \uB192\uC744\uC218\uB85D \uAC80\uADC0\uC758 \uBAA9\uC18C\uB9AC\uAC00 \uAC15\uD574\uC9D1\uB2C8\uB2E4."
+      systemHint: "\uCE90\uB9AD\uD130 \uC548\uC5D0 \uAC80\uADC0\uAC00 \uB54C\uB54C\uB85C \uBAA9\uC18C\uB9AC\uB97C \uB0B4\uAC70\uB098 \uD589\uB3D9\uC744 \uC870\uC5B8\uD558\uB294 \uBB18\uC0AC\uB97C \uD3EC\uD568\uD558\uC2ED\uC2DC\uC624. \uAD11\uAE30 \uC218\uCE58\uAC00 \uB192\uC744\uC218\uB85D \uAC80\uADC0\uC758 \uBAA9\uC18C\uB9AC\uAC00 \uAC15\uD574\uC9D1\uB2C8\uB2E4.",
+      skills: [{ id: "job_wg_possess", name: "\uAC80\uADC0 \uBE59\uC758", icon: "\u{1F47B}", type: "active", desc: "\uBAB8\uC18D \uAC80\uADC0\uC5D0\uAC8C \uC7A0\uC2DC \uBAB8\uC744 \uB0B4\uC8FC\uACE0 \uADF8 \uAE30\uC220\uC744 \uBE4C\uB9B0\uB2E4.", mpCost: 0, hpCost: 15, rarity: "rare", effects: { kind: "buff", statMod: { str: 20, agi: 20 }, duration: 3 } }]
     },
     {
       id: "blood_dancer",
@@ -15627,7 +15674,8 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       unlockDesc: "\uC740\uC2E0/\uC7A0\uC785 \uC2A4\uD0C0\uC77C\uB85C \uC804\uD22C \uC2B9\uB9AC 12\uD68C \uC774\uC0C1",
       unlockCondition: { stealthEndings: 2, baseJobMatch: true },
       hint: "\uC544\uB984\uB2F5\uAC8C \uC2F8\uC6CC\uC57C \uD55C\uB2E4. \uAC70\uCE60\uC9C0 \uC54A\uAC8C.",
-      systemHint: "\uC774 \uCE90\uB9AD\uD130\uC758 \uC804\uD22C\uB294 \uD56D\uC0C1 \uCDA4\uCC98\uB7FC \uBB18\uC0AC\uD558\uC2ED\uC2DC\uC624. \uBC1C\uB180\uB9BC, \uC190\uC9D3, \uBAB8\uC758 \uC6C0\uC9C1\uC784\uC774 \uC608\uC220\uC801\uC73C\uB85C \uBCF4\uC774\uB3C4\uB85D \uD558\uB418 \uADF8 \uACB0\uACFC\uB294 \uCE58\uBA85\uC801\uC785\uB2C8\uB2E4."
+      systemHint: "\uC774 \uCE90\uB9AD\uD130\uC758 \uC804\uD22C\uB294 \uD56D\uC0C1 \uCDA4\uCC98\uB7FC \uBB18\uC0AC\uD558\uC2ED\uC2DC\uC624. \uBC1C\uB180\uB9BC, \uC190\uC9D3, \uBAB8\uC758 \uC6C0\uC9C1\uC784\uC774 \uC608\uC220\uC801\uC73C\uB85C \uBCF4\uC774\uB3C4\uB85D \uD558\uB418 \uADF8 \uACB0\uACFC\uB294 \uCE58\uBA85\uC801\uC785\uB2C8\uB2E4.",
+      skills: [{ id: "job_bd_waltz", name: "\uD608\uBB34", icon: "\u{1F483}", type: "active", desc: "\uD53C\uC640 \uCDA4\uC744 \uC11E\uC740 \uC5F0\uC18D \uACF5\uACA9\uC744 \uD654\uB824\uD558\uAC8C \uD3BC\uCE5C\uB2E4.", mpCost: 16, rarity: "rare", effects: { kind: "damage", statSource: { agi: 0.6, crit: 0.4 }, damageMult: 0.55, hits: 3, element: "physical" } }]
     },
     {
       id: "iron_monk",
@@ -15645,7 +15693,8 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       unlockDesc: "\uBB34\uAE30 \uC5C6\uC774(\uB9E8\uC190) \uC804\uD22C \uC2B9\uB9AC 10\uD68C \uC774\uC0C1",
       unlockCondition: { battleWins: 10, baseJobMatch: true },
       hint: "\uB04A\uC784\uC5C6\uC774 \uC218\uB828\uD558\uACE0 \uBA85\uC0C1\uD574\uC57C \uD55C\uB2E4.",
-      systemHint: "\uC774 \uCE90\uB9AD\uD130\uB294 \uBB34\uAE30\uB97C \uC0AC\uC6A9\uD558\uC9C0 \uC54A\uC744 \uB54C \uAC00\uC7A5 \uAC15\uD558\uBA70, \uB9E8\uBAB8 \uC804\uD22C \uC7A5\uBA74\uC5D0\uC11C \uBC14\uC704\uB97C \uBD80\uC218\uACE0 \uCC3D\uC744 \uB9E8\uC190\uC73C\uB85C \uB9C9\uB294 \uCD08\uC778\uC801 \uBB18\uC0AC\uB97C \uC0AC\uC6A9\uD558\uC2ED\uC2DC\uC624."
+      systemHint: "\uC774 \uCE90\uB9AD\uD130\uB294 \uBB34\uAE30\uB97C \uC0AC\uC6A9\uD558\uC9C0 \uC54A\uC744 \uB54C \uAC00\uC7A5 \uAC15\uD558\uBA70, \uB9E8\uBAB8 \uC804\uD22C \uC7A5\uBA74\uC5D0\uC11C \uBC14\uC704\uB97C \uBD80\uC218\uACE0 \uCC3D\uC744 \uB9E8\uC190\uC73C\uB85C \uB9C9\uB294 \uCD08\uC778\uC801 \uBB18\uC0AC\uB97C \uC0AC\uC6A9\uD558\uC2ED\uC2DC\uC624.",
+      skills: [{ id: "job_im_ironbody", name: "\uAE08\uAC15\uBD88\uAD34", icon: "\u{1FAA8}", type: "passive", desc: "\uC721\uCCB4\uAC00 \uAC15\uCCA0\uC744 \uB118\uC5B4\uC130\uB2E4 \u2014 END\xB7STR \uC790\uB3D9 \uAC15\uD654.", mpCost: 0, rarity: "rare", statBoost: { end: 60, str: 60 } }]
     },
     {
       id: "runic_carver",
@@ -15663,7 +15712,8 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       unlockDesc: "\uB9C8\uBC95\xB7\uB8EC \uACC4\uC5F4 \uC2A4\uD0AC \uCD1D 25\uD68C \uC774\uC0C1 \uC0AC\uC6A9",
       unlockCondition: { skillUseCount: 25, baseJobMatch: true },
       hint: "\uB8EC\uC744 \uB04A\uC784\uC5C6\uC774 \uC5F0\uAD6C\uD558\uACE0 \uAC01\uC778\uD574\uC57C \uD55C\uB2E4.",
-      systemHint: "\uC774 \uCE90\uB9AD\uD130\uC758 \uD53C\uBD80\uC5D0\uB294 \uBE5B\uB098\uB294 \uB8EC \uBB38\uC790\uAC00 \uC0C8\uACA8\uC838 \uC788\uC73C\uBA70, \uC2A4\uD0AC \uC0AC\uC6A9 \uC2DC \uD2B9\uC815 \uB8EC\uC774 \uD65C\uC131\uD654\uB418\uB294 \uBB18\uC0AC\uB97C \uD3EC\uD568\uD558\uC2ED\uC2DC\uC624."
+      systemHint: "\uC774 \uCE90\uB9AD\uD130\uC758 \uD53C\uBD80\uC5D0\uB294 \uBE5B\uB098\uB294 \uB8EC \uBB38\uC790\uAC00 \uC0C8\uACA8\uC838 \uC788\uC73C\uBA70, \uC2A4\uD0AC \uC0AC\uC6A9 \uC2DC \uD2B9\uC815 \uB8EC\uC774 \uD65C\uC131\uD654\uB418\uB294 \uBB18\uC0AC\uB97C \uD3EC\uD568\uD558\uC2ED\uC2DC\uC624.",
+      skills: [{ id: "job_rc_engrave", name: "\uC804\uD22C \uB8EC \uAC01\uC778", icon: "\u{1F523}", type: "active", desc: "\uC989\uC11D\uC5D0\uC11C \uB8EC\uC744 \uC0C8\uACA8 \uD3ED\uBC1C\uC801\uC778 \uB9C8\uB825\uC744 \uBC29\uCD9C\uD55C\uB2E4.", mpCost: 20, rarity: "rare", effects: { kind: "damage", statSource: { mgc: 0.7, int: 0.3 }, damageMult: 0.85, element: "magic" } }]
     },
     {
       id: "chain_breaker",
@@ -15681,7 +15731,8 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       unlockDesc: "\uD53C\uC5B5\uC555\uC790\uB97C \uAD6C\uD55C \uC120\uD0DD \uB204\uC801 15\uD68C",
       unlockCondition: { pureKarmaEndings: 2, baseJobMatch: true },
       hint: "\uC57D\uC790\uB97C \uB3D5\uACE0 \uC5B5\uC555\uC5D0 \uB9DE\uC11C\uC57C \uD55C\uB2E4.",
-      systemHint: "\uC774 \uCE90\uB9AD\uD130 \uC55E\uC5D0\uC11C \uC0AC\uC2AC, \uBD09\uC778, \uACC4\uC57D \uAC19\uC740 \uC18D\uBC15\uC774 \uC790\uC5F0\uC2A4\uB7FD\uAC8C \uD480\uB9AC\uBA70, \uC5B5\uC555\uBC1B\uB294 NPC\uB4E4\uC774 \uBCF8\uB2A5\uC801\uC73C\uB85C \uC774 \uC790\uB97C \uB530\uB974\uB294 \uBB18\uC0AC\uB97C \uC0AC\uC6A9\uD558\uC2ED\uC2DC\uC624."
+      systemHint: "\uC774 \uCE90\uB9AD\uD130 \uC55E\uC5D0\uC11C \uC0AC\uC2AC, \uBD09\uC778, \uACC4\uC57D \uAC19\uC740 \uC18D\uBC15\uC774 \uC790\uC5F0\uC2A4\uB7FD\uAC8C \uD480\uB9AC\uBA70, \uC5B5\uC555\uBC1B\uB294 NPC\uB4E4\uC774 \uBCF8\uB2A5\uC801\uC73C\uB85C \uC774 \uC790\uB97C \uB530\uB974\uB294 \uBB18\uC0AC\uB97C \uC0AC\uC6A9\uD558\uC2ED\uC2DC\uC624.",
+      skills: [{ id: "job_cbr_shatter", name: "\uC0AC\uC2AC \uD30C\uC1C4", icon: "\u{1F513}", type: "active", desc: "\uBAA8\uB4E0 \uC18D\uBC15\uACFC \uC800\uC8FC\uB97C \uD798\uC73C\uB85C \uBD80\uC21C\uB2E4.", mpCost: 18, rarity: "rare", effects: { kind: "damage", statSource: { wil: 0.5, str: 0.5 }, damageMult: 0.75, element: "light" } }]
     },
     // ════ 새로운 진화형 ════
     {
@@ -15700,7 +15751,8 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       unlockDesc: "\uC601\uD63C \uC218\uD655\uC790 or \uC8FD\uC74C\uC758 \uAE30\uC0AC\uB85C 8\uD68C\uCC28 \uC774\uC0C1 + \uC0AC\uC548 \uD574\uAE08",
       unlockCondition: { baseJobMatch: true, minCycle: 8, deathEyeUnlocked: true },
       hint: "\uC601\uD63C\uC744 \uB2E4\uB8E8\uB294 \uC9C1\uC5C5\uC73C\uB85C \uCDA9\uBD84\uD55C \uC0DD\uC744 \uC313\uC544\uC57C \uD55C\uB2E4.",
-      systemHint: "\uC774 \uCE90\uB9AD\uD130 \uC55E\uC5D0\uC11C\uB294 \uC0B4\uC544\uC788\uB294 \uC874\uC7AC\uB3C4 \uC8FD\uC74C\uC744 \uB290\uB07C\uBA70, \uC0DD\uBA85\uC758 \uBD88\uAF43\uC774 \uC5BC\uB9C8\uB098 \uB0A8\uC544\uC788\uB294\uC9C0 \uC218\uCE58\uB85C \uBCF4\uC774\uB294 \uB2A5\uB825\uC744 \uC790\uC5F0\uC2A4\uB7FD\uAC8C \uBB18\uC0AC\uD558\uC2ED\uC2DC\uC624."
+      systemHint: "\uC774 \uCE90\uB9AD\uD130 \uC55E\uC5D0\uC11C\uB294 \uC0B4\uC544\uC788\uB294 \uC874\uC7AC\uB3C4 \uC8FD\uC74C\uC744 \uB290\uB07C\uBA70, \uC0DD\uBA85\uC758 \uBD88\uAF43\uC774 \uC5BC\uB9C8\uB098 \uB0A8\uC544\uC788\uB294\uC9C0 \uC218\uCE58\uB85C \uBCF4\uC774\uB294 \uB2A5\uB825\uC744 \uC790\uC5F0\uC2A4\uB7FD\uAC8C \uBB18\uC0AC\uD558\uC2ED\uC2DC\uC624.",
+      skills: [{ id: "job_rl_decree", name: "\uC0DD\uC0AC\uC758 \uCE59\uB839", icon: "\u{1F480}", type: "active", desc: "\uC0DD\uACFC \uC0AC\uB97C \uAC00\uB974\uB294 \uC808\uB300\uC801\uC778 \uCE59\uB839\uC744 \uB0B4\uB9B0\uB2E4.", mpCost: 38, rarity: "legendary", effects: { kind: "damage", statSource: { mgc: 0.6, fear: 0.4 }, damageMult: 1.15, element: "dark" } }]
     },
     {
       id: "divine_sovereign",
@@ -15718,7 +15770,8 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       unlockDesc: "\uC2E0\uD654\uC758 \uC601\uC6C5\uC73C\uB85C 12\uD68C\uCC28 \uC774\uC0C1 + \uC2E0\uC804 \uB808\uBCA8 \uCD5C\uB300",
       unlockCondition: { baseJobMatch: true, minCycle: 12, templeLevel: 5 },
       hint: "\uC2E0\uD654\uC758 \uC601\uC6C5\uC774 \uC2E0\uD654\uB97C \uB118\uC5B4\uC11C\uC57C \uD55C\uB2E4.",
-      systemHint: "\uC774 \uCE90\uB9AD\uD130 \uC55E\uC5D0\uC11C NPC\uB4E4\uC740 \uBCF8\uB2A5\uC801\uC73C\uB85C \uBB34\uB98E\uC744 \uAFC7\uAC70\uB098 \uAE30\uB3C4\uD558\uB294 \uC790\uC138\uB97C \uCDE8\uD558\uBA70, \uC790\uC5F0 \uD604\uC0C1\uB3C4 \uC774 \uC874\uC7AC\uC758 \uC758\uC9C0\uC5D0 \uBC18\uC751\uD558\uB294 \uBB18\uC0AC\uB97C \uC0AC\uC6A9\uD558\uC2ED\uC2DC\uC624."
+      systemHint: "\uC774 \uCE90\uB9AD\uD130 \uC55E\uC5D0\uC11C NPC\uB4E4\uC740 \uBCF8\uB2A5\uC801\uC73C\uB85C \uBB34\uB98E\uC744 \uAFC7\uAC70\uB098 \uAE30\uB3C4\uD558\uB294 \uC790\uC138\uB97C \uCDE8\uD558\uBA70, \uC790\uC5F0 \uD604\uC0C1\uB3C4 \uC774 \uC874\uC7AC\uC758 \uC758\uC9C0\uC5D0 \uBC18\uC751\uD558\uB294 \uBB18\uC0AC\uB97C \uC0AC\uC6A9\uD558\uC2ED\uC2DC\uC624.",
+      skills: [{ id: "job_ds_edict", name: "\uC2E0\uACA9 \uC120\uC5B8", icon: "\u{1F451}", type: "active", desc: "\uC2E0\uACA9\uC744 \uCD08\uC6D4\uD55C \uC874\uC7AC\uB85C\uC11C \uC138\uACC4\uC5D0 \uB73B\uC744 \uC120\uD3EC\uD55C\uB2E4.", mpCost: 40, rarity: "legendary", effects: { kind: "damage", statSource: { mgc: 0.5, wil: 0.5 }, damageMult: 1.3, element: "light" } }]
     },
     {
       id: "cursed_sovereign",
@@ -15736,7 +15789,8 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       unlockDesc: "\uC800\uC8FC \uAC80\uC0AC or \uD608\uB9C8\uBC95\uC0AC\uB85C 7\uD68C\uCC28 \uC774\uC0C1 + \uC5B4\uB460 \uD589\uB3D9 30\uD68C",
       unlockCondition: { baseJobMatch: true, minCycle: 7, darkActs: 30 },
       hint: "\uC800\uC8FC\uBC1B\uC740 \uC9C1\uC5C5\uC73C\uB85C \uC5B4\uB460\uC758 \uAE38\uC744 \uC624\uB798 \uAC78\uC5B4\uC57C \uD55C\uB2E4.",
-      systemHint: "\uC774 \uCE90\uB9AD\uD130\uB294 \uC800\uC8FC\uB97C \uBA39\uACE0 \uC790\uB77C\uBA70, \uB2E4\uB978 \uC874\uC7AC\uC758 \uC800\uC8FC\uB97C \uD761\uC218\uD574 \uB354 \uAC15\uD574\uC9C0\uB294 \uBB18\uC0AC\uB97C \uC0AC\uC6A9\uD558\uC2ED\uC2DC\uC624. \uBAB8 \uC8FC\uBCC0\uC5D0 \uD56D\uC0C1 \uC5B4\uB450\uC6B4 \uAE30\uC6B4\uC774 \uC18C\uC6A9\uB3CC\uC774\uCE69\uB2C8\uB2E4."
+      systemHint: "\uC774 \uCE90\uB9AD\uD130\uB294 \uC800\uC8FC\uB97C \uBA39\uACE0 \uC790\uB77C\uBA70, \uB2E4\uB978 \uC874\uC7AC\uC758 \uC800\uC8FC\uB97C \uD761\uC218\uD574 \uB354 \uAC15\uD574\uC9C0\uB294 \uBB18\uC0AC\uB97C \uC0AC\uC6A9\uD558\uC2ED\uC2DC\uC624. \uBAB8 \uC8FC\uBCC0\uC5D0 \uD56D\uC0C1 \uC5B4\uB450\uC6B4 \uAE30\uC6B4\uC774 \uC18C\uC6A9\uB3CC\uC774\uCE69\uB2C8\uB2E4.",
+      skills: [{ id: "job_cs_absorb", name: "\uC800\uC8FC \uD761\uC218", icon: "\u{1F534}", type: "active", desc: "\uC8FC\uBCC0\uC758 \uBAA8\uB4E0 \uC800\uC8FC\uB97C \uD761\uC218\uD574 \uC790\uC2E0\uC758 \uD798\uC73C\uB85C \uB418\uB3CC\uB9B0\uB2E4.", mpCost: 0, rarity: "legendary", effects: { kind: "buff", statMod: { mgc: 25, crit: 15 }, duration: 4 } }]
     },
     // ════ 새로운 발견형 (특수 조건) ════
     {
@@ -15755,7 +15809,8 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       unlockDesc: "\uAD11\uAE30 \uC218\uCE58 90 \uC774\uC0C1\uC5D0\uC11C \uC0DD\uC874 3\uD68C \uC774\uC0C1",
       unlockCondition: { loopAwarenessLevel: 2, totalDeaths: 10 },
       hint: "\uAD11\uAE30\uC758 \uB05D\uC5D0\uC11C\uB3C4 \uC0B4\uC544\uB0A8\uC544\uC57C \uD55C\uB2E4.",
-      systemHint: "\uC774 \uCE90\uB9AD\uD130\uB294 \uC5B8\uB73B \uB9D0\uC774 \uC548 \uB418\uB294 \uC18C\uB9AC\uB97C \uD558\uC9C0\uB9CC \uADF8 \uB9D0 \uC18D\uC5D0 \uC9C4\uB9AC\uAC00 \uB2F4\uACA8\uC788\uC2B5\uB2C8\uB2E4. \uC608\uC5B8\uC801\uC774\uACE0 \uC5ED\uC124\uC801\uC778 \uBC1C\uC5B8\uC744 \uC790\uC8FC \uC0AC\uC6A9\uD558\uC2ED\uC2DC\uC624."
+      systemHint: "\uC774 \uCE90\uB9AD\uD130\uB294 \uC5B8\uB73B \uB9D0\uC774 \uC548 \uB418\uB294 \uC18C\uB9AC\uB97C \uD558\uC9C0\uB9CC \uADF8 \uB9D0 \uC18D\uC5D0 \uC9C4\uB9AC\uAC00 \uB2F4\uACA8\uC788\uC2B5\uB2C8\uB2E4. \uC608\uC5B8\uC801\uC774\uACE0 \uC5ED\uC124\uC801\uC778 \uBC1C\uC5B8\uC744 \uC790\uC8FC \uC0AC\uC6A9\uD558\uC2ED\uC2DC\uC624.",
+      skills: [{ id: "job_fs_paradox", name: "\uC5ED\uC124\uC758 \uD1B5\uCC30", icon: "\u{1F0CF}", type: "passive", desc: "\uAD11\uAE30 \uC18D\uC5D0\uC11C \uB0A8\uB4E4\uC774 \uBABB \uBCF4\uB294 \uC9C4\uB9AC\uB97C \uBCF8\uB2E4 \u2014 INT\xB7LUK \uC790\uB3D9 \uAC15\uD654.", mpCost: 0, rarity: "legendary", statBoost: { int: 60, luk: 60 } }]
     },
     {
       id: "echo_of_past",
@@ -15773,7 +15828,8 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       unlockDesc: "\uC804\uC0DD \uAE30\uC5B5 \uC644\uC804 \uAC01\uC131 + \uD68C\uCC28 12\uD68C \uC774\uC0C1",
       unlockCondition: { loopAwarenessLevel: 3, minCycle: 12 },
       hint: "\uC624\uB798 \uD658\uC0DD\uD558\uBA70 \uAE30\uC5B5\uC744 \uBAA8\uB450 \uB04C\uC5B4\uC62C\uB824\uC57C \uD55C\uB2E4.",
-      systemHint: "\uC774 \uCE90\uB9AD\uD130\uB294 \uC0C1\uD669\uC5D0 \uB530\uB77C \uB2E4\uB978 \uC804\uC0DD \uC790\uC544\uC758 \uBAA9\uC18C\uB9AC\uC640 \uC804\uD22C \uC2A4\uD0C0\uC77C\uC744 \uB4DC\uB7EC\uB0C5\uB2C8\uB2E4. \uB300\uD654 \uC911 \uAC11\uC790\uAE30 \uACFC\uAC70\uC758 \uB9D0\uD22C\uB098 \uC2B5\uAD00\uC774 \uB098\uC624\uB294 \uBB18\uC0AC\uB97C \uC0AC\uC6A9\uD558\uC2ED\uC2DC\uC624."
+      systemHint: "\uC774 \uCE90\uB9AD\uD130\uB294 \uC0C1\uD669\uC5D0 \uB530\uB77C \uB2E4\uB978 \uC804\uC0DD \uC790\uC544\uC758 \uBAA9\uC18C\uB9AC\uC640 \uC804\uD22C \uC2A4\uD0C0\uC77C\uC744 \uB4DC\uB7EC\uB0C5\uB2C8\uB2E4. \uB300\uD654 \uC911 \uAC11\uC790\uAE30 \uACFC\uAC70\uC758 \uB9D0\uD22C\uB098 \uC2B5\uAD00\uC774 \uB098\uC624\uB294 \uBB18\uC0AC\uB97C \uC0AC\uC6A9\uD558\uC2ED\uC2DC\uC624.",
+      skills: [{ id: "job_eop_memories", name: "\uC804\uC0DD\uC758 \uBAA9\uC18C\uB9AC", icon: "\u{1F501}", type: "active", desc: "\uC5ED\uB300 \uC804\uC0DD\uC758 \uC790\uC544\uB4E4\uC774 \uB3D9\uC2DC\uC5D0 \uD798\uC744 \uBE4C\uB824\uC900\uB2E4.", mpCost: 15, rarity: "legendary", effects: { kind: "buff", statMod: { str: 12, mgc: 12, agi: 12 }, duration: 3 } }]
     },
     {
       id: "shadow_sovereign",
@@ -15791,7 +15847,8 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       unlockDesc: "\uC644\uBCBD\uD55C \uC740\uC2E0 \uC5D4\uB529 3\uD68C \uC774\uC0C1 + \uADF8\uB9BC\uC790 \uBB34\uB3C4\uAC00 \uD574\uAE08",
       unlockCondition: { stealthEndings: 3, pastLanguageUnlocked: true },
       hint: "\uBC1C\uAC01\uB418\uC9C0 \uC54A\uACE0 \uC644\uBCBD\uD55C \uC740\uC2E0\uC5D0 \uC131\uACF5\uD574\uC57C \uD55C\uB2E4.",
-      systemHint: "\uC774 \uCE90\uB9AD\uD130\uAC00 \uC6D0\uD558\uBA74 \uC5B4\uB5A0\uD55C \uADF8\uB9BC\uC790\uC5D0\uC11C\uB3C4 \uCD9C\uBAB0\uD560 \uC218 \uC788\uC73C\uBA70, \uADF8\uB9BC\uC790\uAC00 \uB3C5\uB9BD\uC801\uC73C\uB85C \uC6C0\uC9C1\uC5EC \uC815\uBCF4\uB97C \uC218\uC9D1\uD558\uAC70\uB098 \uACF5\uACA9\uD558\uB294 \uBB18\uC0AC\uB97C \uC0AC\uC6A9\uD558\uC2ED\uC2DC\uC624."
+      systemHint: "\uC774 \uCE90\uB9AD\uD130\uAC00 \uC6D0\uD558\uBA74 \uC5B4\uB5A0\uD55C \uADF8\uB9BC\uC790\uC5D0\uC11C\uB3C4 \uCD9C\uBAB0\uD560 \uC218 \uC788\uC73C\uBA70, \uADF8\uB9BC\uC790\uAC00 \uB3C5\uB9BD\uC801\uC73C\uB85C \uC6C0\uC9C1\uC5EC \uC815\uBCF4\uB97C \uC218\uC9D1\uD558\uAC70\uB098 \uACF5\uACA9\uD558\uB294 \uBB18\uC0AC\uB97C \uC0AC\uC6A9\uD558\uC2ED\uC2DC\uC624.",
+      skills: [{ id: "job_ss_shadows", name: "\uADF8\uB9BC\uC790 \uAD70\uB2E8", icon: "\u{1F311}", type: "active", desc: "\uC0AC\uBC29\uC758 \uADF8\uB9BC\uC790\uAC00 \uB3D9\uC2DC\uC5D0 \uC77C\uC5B4\uB098 \uC801\uC744 \uACF5\uACA9\uD55C\uB2E4.", mpCost: 24, rarity: "legendary", effects: { kind: "damage", statSource: { disg: 0.5, agi: 0.5 }, damageMult: 0.9, element: "dark" } }]
     },
     {
       id: "dragon_sovereign",
@@ -15809,7 +15866,8 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       unlockDesc: "\uB4DC\uB798\uACE4 \uAD00\uB828 \uC774\uBCA4\uD2B8 \uB204\uC801 20\uD68C + \uC6A9\uC758 \uD53C \uCE6D\uD638 \uBCF4\uC720",
       unlockCondition: { sealedGodComplete: false, villainInheritCount: 2, bardFame: 50 },
       hint: "\uC6A9\uACFC \uCDA9\uBD84\uD788 \uAD50\uB958\uD558\uACE0 \uC6A9\uC758 \uD53C\uB97C \uC5BB\uC5B4\uC57C \uD55C\uB2E4.",
-      systemHint: "\uC774 \uCE90\uB9AD\uD130 \uC55E\uC5D0\uC11C \uBAA8\uB4E0 \uC6A9\uC740 \uBCF5\uC885\uD558\uAC70\uB098 \uB3C4\uC804\uD569\uB2C8\uB2E4. \uC6A9\uACFC\uC758 \uB300\uD654\uAC00 \uAC00\uB2A5\uD558\uBA70 \uC6A9\uC871\uC758 \uD798\uC744 \uBE4C\uB824 \uC4F8 \uC218 \uC788\uB294 \uBB18\uC0AC\uB97C \uD3EC\uD568\uD558\uC2ED\uC2DC\uC624."
+      systemHint: "\uC774 \uCE90\uB9AD\uD130 \uC55E\uC5D0\uC11C \uBAA8\uB4E0 \uC6A9\uC740 \uBCF5\uC885\uD558\uAC70\uB098 \uB3C4\uC804\uD569\uB2C8\uB2E4. \uC6A9\uACFC\uC758 \uB300\uD654\uAC00 \uAC00\uB2A5\uD558\uBA70 \uC6A9\uC871\uC758 \uD798\uC744 \uBE4C\uB824 \uC4F8 \uC218 \uC788\uB294 \uBB18\uC0AC\uB97C \uD3EC\uD568\uD558\uC2ED\uC2DC\uC624.",
+      skills: [{ id: "job_drs_breath", name: "\uC6A9\uC655\uC758 \uC228\uACB0", icon: "\u{1F409}", type: "active", desc: "\uC6A9\uC655\uC758 \uC704\uC5C4\uC774 \uB2F4\uAE34 \uC228\uACB0\uC744 \uB0B4\uBFDC\uB294\uB2E4.", mpCost: 35, rarity: "legendary", effects: { kind: "damage", statSource: { str: 0.5, mgc: 0.5 }, damageMult: 1.2, element: "fire" } }]
     },
     {
       id: "concept_breaker",
@@ -15827,7 +15885,8 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       unlockDesc: "\uB8E8\uD504 \uD30C\uAD34\uC790 + \uC2E0\uC0B4\uC790 + \uC2DC\uAC04 \uC9C1\uC870\uC790 \uBAA8\uB450 \uD574\uAE08",
       unlockCondition: { bardFame: 90, templeLevel: 4 },
       hint: "\uC138\uACC4\uC758 \uADDC\uCE59\uC744 \uC5B4\uAE30\uB294 \uC138 \uAC00\uC9C0 \uC9C1\uC5C5\uC744 \uBAA8\uB450 \uD574\uAE08\uD574\uC57C \uD55C\uB2E4.",
-      systemHint: "\uC774 \uCE90\uB9AD\uD130\uB294 \uAC8C\uC784\uC758 \uADDC\uCE59 \uC790\uCCB4\uB97C \uBB34\uC2DC\uD558\uB294 \uD589\uB3D9\uC774 \uAC00\uB2A5\uD569\uB2C8\uB2E4. '\uADF8\uAC74 \uBD88\uAC00\uB2A5\uD558\uB2E4'\uB294 \uBB18\uC0AC\uAC00 \uB098\uC640\uB3C4 \uC774 \uCE90\uB9AD\uD130\uB294 \uADF8\uB0E5 \uD574\uBC84\uB9AC\uB294 \uACB0\uACFC\uB97C \uBCF4\uC5EC\uC8FC\uC2ED\uC2DC\uC624."
+      systemHint: "\uC774 \uCE90\uB9AD\uD130\uB294 \uAC8C\uC784\uC758 \uADDC\uCE59 \uC790\uCCB4\uB97C \uBB34\uC2DC\uD558\uB294 \uD589\uB3D9\uC774 \uAC00\uB2A5\uD569\uB2C8\uB2E4. '\uADF8\uAC74 \uBD88\uAC00\uB2A5\uD558\uB2E4'\uB294 \uBB18\uC0AC\uAC00 \uB098\uC640\uB3C4 \uC774 \uCE90\uB9AD\uD130\uB294 \uADF8\uB0E5 \uD574\uBC84\uB9AC\uB294 \uACB0\uACFC\uB97C \uBCF4\uC5EC\uC8FC\uC2ED\uC2DC\uC624.",
+      skills: [{ id: "job_cnb_break", name: "\uAC1C\uB150 \uD30C\uAD34", icon: "\u274C", type: "active", desc: "'\uBD88\uAC00\uB2A5'\uC774\uB77C\uB294 \uAC1C\uB150 \uC790\uCCB4\uB97C \uBD80\uC234\uBC84\uB9B0\uB2E4.", mpCost: 45, rarity: "legendary", effects: { kind: "damage", statSource: { wil: 0.5, int: 0.5 }, damageMult: 1.35, element: "magic" } }]
     },
     // ════ 전사 계열 히든 직업 (5개) ════
     {
@@ -15846,7 +15905,8 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       unlockDesc: "\uC804\uC0AC \uACC4\uC5F4\uB85C \uC804\uD22C \uC911 HP 30% \uC774\uD558\uB85C \uB5A8\uC5B4\uC9C4 \uB4A4 \uC2B9\uB9AC 15\uD68C",
       unlockCondition: { lowHpWins: 15, baseJobMatch: true },
       hint: "\uC0C1\uCC98\uB97C \uC785\uC73C\uBA74\uC11C\uB3C4 \uACC4\uC18D \uC774\uACA8\uB0B4\uC57C \uD55C\uB2E4.",
-      systemHint: "\uC774 \uCE90\uB9AD\uD130\uB294 \uBD80\uC0C1\uC744 \uC785\uC744\uC218\uB85D \uB208\uC774 \uCDA9\uD608\uB418\uACE0 \uADFC\uB825\uC774 \uC62C\uB77C\uAC00\uB294 \uBB18\uC0AC\uB97C \uC0AC\uC6A9\uD558\uC2ED\uC2DC\uC624. \uD53C \uB0C4\uC0C8\uB97C \uB9E1\uC73C\uBA74 \uC774\uC131\uC774 \uD750\uB824\uC9C0\uC9C0\uB9CC \uC804\uD22C\uB825\uC740 \uD3ED\uBC1C\uC801\uC73C\uB85C \uC0C1\uC2B9\uD569\uB2C8\uB2E4."
+      systemHint: "\uC774 \uCE90\uB9AD\uD130\uB294 \uBD80\uC0C1\uC744 \uC785\uC744\uC218\uB85D \uB208\uC774 \uCDA9\uD608\uB418\uACE0 \uADFC\uB825\uC774 \uC62C\uB77C\uAC00\uB294 \uBB18\uC0AC\uB97C \uC0AC\uC6A9\uD558\uC2ED\uC2DC\uC624. \uD53C \uB0C4\uC0C8\uB97C \uB9E1\uC73C\uBA74 \uC774\uC131\uC774 \uD750\uB824\uC9C0\uC9C0\uB9CC \uC804\uD22C\uB825\uC740 \uD3ED\uBC1C\uC801\uC73C\uB85C \uC0C1\uC2B9\uD569\uB2C8\uB2E4.",
+      skills: [{ id: "job_bkn_bloodrage", name: "\uD608\uAE30 \uD3ED\uBC1C", icon: "\u{1FA78}", type: "active", desc: "\uD758\uB9B0 \uD53C\uAC00 \uC624\uD788\uB824 \uD798\uC774 \uB418\uC5B4 \uD3ED\uBC1C\uD55C\uB2E4.", mpCost: 0, hpCost: 15, rarity: "legendary", effects: { kind: "damage", statSource: { str: 0.7, end: 0.3 }, damageMult: 0.95, element: "physical", lifesteal: 0.25 } }]
     },
     {
       id: "titan_guard",
@@ -15864,7 +15924,8 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       unlockDesc: "\uC544\uAD70 NPC\uB97C \uBCF4\uD638\uD55C \uC804\uD22C 20\uD68C \uC774\uC0C1 + END 85 \uB2EC\uC131",
       unlockCondition: { battleWins: 20, baseJobMatch: true },
       hint: "\uC790\uC2E0\uBCF4\uB2E4 \uB3D9\uB8CC\uB97C \uBA3C\uC800 \uC9C0\uCF1C\uC57C \uD55C\uB2E4.",
-      systemHint: "\uC774 \uCE90\uB9AD\uD130\uAC00 \uBC29\uC5B4 \uC790\uC138\uB97C \uCDE8\uD558\uBA74 \uC544\uAD70 \uC804\uCCB4\uC5D0 \uACB0\uACC4\uAC00 \uCCD0\uC9C0\uB294 \uB290\uB08C\uC744 \uC8FC\uC2ED\uC2DC\uC624. \uC801\uC758 \uACF5\uACA9\uC774 \uC774 \uC790\uB97C \uB6AB\uC9C0 \uBABB\uD560 \uB54C \uC7A5\uC5C4\uD558\uAC8C \uBB18\uC0AC\uD558\uC2ED\uC2DC\uC624."
+      systemHint: "\uC774 \uCE90\uB9AD\uD130\uAC00 \uBC29\uC5B4 \uC790\uC138\uB97C \uCDE8\uD558\uBA74 \uC544\uAD70 \uC804\uCCB4\uC5D0 \uACB0\uACC4\uAC00 \uCCD0\uC9C0\uB294 \uB290\uB08C\uC744 \uC8FC\uC2ED\uC2DC\uC624. \uC801\uC758 \uACF5\uACA9\uC774 \uC774 \uC790\uB97C \uB6AB\uC9C0 \uBABB\uD560 \uB54C \uC7A5\uC5C4\uD558\uAC8C \uBB18\uC0AC\uD558\uC2ED\uC2DC\uC624.",
+      skills: [{ id: "job_tg_bulwark", name: "\uCCA0\uBCBD \uC218\uD638", icon: "\u{1F5FF}", type: "passive", desc: "\uD63C\uC790\uC11C \uC804\uC120\uC744 \uC9C0\uD0F1\uD558\uB294 \uAD73\uAC74\uD568 \u2014 END\xB7WIL \uC790\uB3D9 \uAC15\uD654.", mpCost: 0, rarity: "rare", statBoost: { end: 60, wil: 60 } }]
     },
     {
       id: "sword_saint",
@@ -15882,7 +15943,8 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       unlockDesc: "\uAC80 \uACC4\uC5F4 \uAC01\uC131\uC9C1 \uBCF4\uC720 + STR 90 + AGI 80 + \uC804\uD22C \uC2B9\uB9AC 50\uD68C",
       unlockCondition: { baseJobMatch: true, minCycle: 5, battleWins: 50 },
       hint: "\uAC80 \uACC4\uC5F4 \uAC01\uC131\uC9C1\uC73C\uB85C \uADF9\uD55C\uAE4C\uC9C0 \uB2E8\uB828\uD574\uC57C \uD55C\uB2E4.",
-      systemHint: "\uC774 \uCE90\uB9AD\uD130\uC758 \uAC80\uACA9\uC740 \uACF5\uAE30\uB97C \uAC00\uB974\uB294 \uC18C\uB9AC\uB9CC\uC73C\uB85C \uC801\uC744 \uC704\uD611\uD569\uB2C8\uB2E4. \uAC80\uC744 \uBF51\uAE30 \uC804\uBD80\uD130 \uC801\uC774 \uC555\uB3C4\uB2F9\uD558\uB294 \uBB18\uC0AC\uB97C \uC0AC\uC6A9\uD558\uC2ED\uC2DC\uC624."
+      systemHint: "\uC774 \uCE90\uB9AD\uD130\uC758 \uAC80\uACA9\uC740 \uACF5\uAE30\uB97C \uAC00\uB974\uB294 \uC18C\uB9AC\uB9CC\uC73C\uB85C \uC801\uC744 \uC704\uD611\uD569\uB2C8\uB2E4. \uAC80\uC744 \uBF51\uAE30 \uC804\uBD80\uD130 \uC801\uC774 \uC555\uB3C4\uB2F9\uD558\uB294 \uBB18\uC0AC\uB97C \uC0AC\uC6A9\uD558\uC2ED\uC2DC\uC624.",
+      skills: [{ id: "job_sws_oneness", name: "\uAC80\uC2EC\uC77C\uCCB4", icon: "\u26A1", type: "active", desc: "\uAC80\uACFC \uC0AC\uB78C\uC774 \uD558\uB098\uAC00 \uB41C \uAD81\uADF9\uC758 \uAC80\uACA9.", mpCost: 30, rarity: "legendary", effects: { kind: "damage", statSource: { str: 0.5, agi: 0.5 }, damageMult: 1.25, element: "physical" } }]
     },
     {
       id: "war_incarnate",
@@ -15900,7 +15962,8 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       unlockDesc: "\uCD1D \uC804\uD22C \uC2B9\uB9AC 100\uD68C \uC774\uC0C1 + \uC804\uC7C1\uAD70\uC8FC \uD574\uAE08",
       unlockCondition: { battleWins: 100, villainInheritCount: 3 },
       hint: "\uC218\uBC31 \uBC88\uC758 \uC804\uD22C\uB97C \uD1B5\uD574 \uC804\uC7C1 \uC790\uCCB4\uAC00 \uB418\uC5B4\uC57C \uD55C\uB2E4.",
-      systemHint: "\uC774 \uCE90\uB9AD\uD130\uAC00 \uB4F1\uC7A5\uD558\uBA74 \uC8FC\uBCC0 NPC\uB4E4\uC774 \uBB34\uC758\uC2DD\uC801\uC73C\uB85C \uC804\uD22C \uD0DC\uC138\uB97C \uCDE8\uD569\uB2C8\uB2E4. \uD3C9\uD654\uB85C\uC6B4 \uC7A5\uBA74\uC5D0\uC11C\uB3C4 \uAE34\uC7A5\uAC10\uC774 \uAC10\uB3C4\uB294 \uBB18\uC0AC\uB97C \uC0AC\uC6A9\uD558\uC2ED\uC2DC\uC624."
+      systemHint: "\uC774 \uCE90\uB9AD\uD130\uAC00 \uB4F1\uC7A5\uD558\uBA74 \uC8FC\uBCC0 NPC\uB4E4\uC774 \uBB34\uC758\uC2DD\uC801\uC73C\uB85C \uC804\uD22C \uD0DC\uC138\uB97C \uCDE8\uD569\uB2C8\uB2E4. \uD3C9\uD654\uB85C\uC6B4 \uC7A5\uBA74\uC5D0\uC11C\uB3C4 \uAE34\uC7A5\uAC10\uC774 \uAC10\uB3C4\uB294 \uBB18\uC0AC\uB97C \uC0AC\uC6A9\uD558\uC2ED\uC2DC\uC624.",
+      skills: [{ id: "job_wi_conquest", name: "\uC804\uC7C1\uC758 \uD3EC\uD6A8", icon: "\u{1F525}", type: "active", desc: "\uC804\uC7C1\uC758 \uD654\uC2E0\uC73C\uB85C\uC11C \uD3EC\uD6A8\uD574 \uC804\uC7A5\uC744 \uC9C0\uBC30\uD55C\uB2E4.", mpCost: 30, rarity: "legendary", effects: { kind: "buff", statMod: { str: 20, fear: 15, ldr: 15 }, duration: 4 } }]
     },
     {
       id: "eternal_soldier",
@@ -15918,7 +15981,8 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       unlockDesc: "\uC804\uD22C \uC911 \uC0AC\uB9DD \uD6C4 \uBD80\uD65C 20\uD68C \uC774\uC0C1 + \uBD88\uC0AC \uAC8C\uC774\uC9C0 \uCD5C\uB300",
       unlockCondition: { deathCount: 20, undyingMaxed: true },
       hint: "\uC804\uC7A5\uC5D0\uC11C \uC218\uC5C6\uC774 \uC4F0\uB7EC\uC9C0\uACE0\uB3C4 \uB2E4\uC2DC \uC77C\uC5B4\uB098\uC57C \uD55C\uB2E4.",
-      systemHint: "\uC774 \uCE90\uB9AD\uD130\uAC00 \uC804\uD22C \uC911 \uC4F0\uB7EC\uC838\uB3C4 \uC7A0\uC2DC \uD6C4 \uBC18\uB4DC\uC2DC \uC77C\uC5B4\uB0A9\uB2C8\uB2E4. \uC801\uC774 \uB2F9\uD669\uD558\uB294 \uC7A5\uBA74\uACFC \uD568\uAED8 \uC7AC\uAE30\uD558\uB294 \uBB18\uC0AC\uB97C \uC7A5\uC5C4\uD558\uAC8C \uD45C\uD604\uD558\uC2ED\uC2DC\uC624."
+      systemHint: "\uC774 \uCE90\uB9AD\uD130\uAC00 \uC804\uD22C \uC911 \uC4F0\uB7EC\uC838\uB3C4 \uC7A0\uC2DC \uD6C4 \uBC18\uB4DC\uC2DC \uC77C\uC5B4\uB0A9\uB2C8\uB2E4. \uC801\uC774 \uB2F9\uD669\uD558\uB294 \uC7A5\uBA74\uACFC \uD568\uAED8 \uC7AC\uAE30\uD558\uB294 \uBB18\uC0AC\uB97C \uC7A5\uC5C4\uD558\uAC8C \uD45C\uD604\uD558\uC2ED\uC2DC\uC624.",
+      skills: [{ id: "job_es_undying", name: "\uBD88\uAD74\uC758 \uC7AC\uAE30", icon: "\u{1FA96}", type: "passive", desc: "\uC8FD\uC74C\uC870\uCC28 \uC774 \uBCD1\uC0AC\uB97C \uB9C9\uC9C0 \uBABB\uD55C\uB2E4 \u2014 END\xB7WIL \uC790\uB3D9 \uAC15\uD654.", mpCost: 0, rarity: "legendary", statBoost: { end: 60, wil: 60 } }]
     },
     // ════ 마법사 계열 히든 직업 (5개) ════
     {
@@ -15937,7 +16001,8 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       unlockDesc: "\uB9C8\uBC95 \uACC4\uC5F4 \uC2A4\uD0AC \uCD1D 50\uD68C \uC774\uC0C1 \uC0AC\uC6A9 + MGC 90 \uB2EC\uC131",
       unlockCondition: { skillUseCount: 50, baseJobMatch: true },
       hint: "\uB9C8\uBC95\uC744 \uB05D\uC5C6\uC774 \uC368\uC11C \uB9C8\uBC95\uC758 \uB05D\uC5D0 \uB2FF\uC544\uC57C \uD55C\uB2E4.",
-      systemHint: "\uC774 \uCE90\uB9AD\uD130\uC758 \uB9C8\uBC95\uC740 \uC18C\uB9AC\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4. \uD3ED\uBC1C\uB3C4, \uC12C\uAD11\uB3C4 \uC5C6\uC774 \uB300\uC0C1\uC774 \uC870\uC6A9\uD788 \uC0AC\uB77C\uC9C0\uAC70\uB098 \uBB34\uB825\uD654\uB418\uB294 \uC12C\uB729\uD55C \uBB18\uC0AC\uB97C \uC0AC\uC6A9\uD558\uC2ED\uC2DC\uC624."
+      systemHint: "\uC774 \uCE90\uB9AD\uD130\uC758 \uB9C8\uBC95\uC740 \uC18C\uB9AC\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4. \uD3ED\uBC1C\uB3C4, \uC12C\uAD11\uB3C4 \uC5C6\uC774 \uB300\uC0C1\uC774 \uC870\uC6A9\uD788 \uC0AC\uB77C\uC9C0\uAC70\uB098 \uBB34\uB825\uD654\uB418\uB294 \uC12C\uB729\uD55C \uBB18\uC0AC\uB97C \uC0AC\uC6A9\uD558\uC2ED\uC2DC\uC624.",
+      skills: [{ id: "job_vm_erase", name: "\uC874\uC7AC \uC18C\uAC70", icon: "\u{1F30C}", type: "active", desc: "\uC18C\uB9AC\uB3C4 \uBE5B\uB3C4 \uC5C6\uC774 \uB300\uC0C1\uC758 \uC874\uC7AC\uB97C \uC870\uC6A9\uD788 \uC9C0\uC6B4\uB2E4.", mpCost: 35, rarity: "legendary", effects: { kind: "damage", statSource: { mgc: 1 }, damageMult: 1.25, element: "dark" } }]
     },
     {
       id: "dream_weaver",
@@ -15955,7 +16020,8 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       unlockDesc: "5\uD68C\uCC28 \uC774\uC0C1 + \uC608\uC5B8/\uC810\uC220 \uAD00\uB828 \uD589\uB3D9 20\uD68C",
       unlockCondition: { minCycle: 5, baseJobMatch: true },
       hint: "\uC5EC\uB7EC \uD68C\uCC28\uC5D0 \uAC78\uCCD0 \uAFC8\uACFC \uD604\uC2E4\uC758 \uACBD\uACC4\uB97C \uD0D0\uAD6C\uD574\uC57C \uD55C\uB2E4.",
-      systemHint: "\uC774 \uCE90\uB9AD\uD130\uB294 \uC801\uC758 \uAFC8\uC18D\uC5D0 \uCE68\uD22C\uD558\uC5EC \uC57D\uC810\uC744 \uBA3C\uC800 \uD30C\uC545\uD569\uB2C8\uB2E4. \uC804\uD22C \uC804 \uC801\uC774 \uC545\uBABD\uC744 \uAFBC \uAC83\uCC98\uB7FC \uD754\uB4E4\uB9AC\uB294 \uBB18\uC0AC\uB97C \uD3EC\uD568\uD558\uC2ED\uC2DC\uC624."
+      systemHint: "\uC774 \uCE90\uB9AD\uD130\uB294 \uC801\uC758 \uAFC8\uC18D\uC5D0 \uCE68\uD22C\uD558\uC5EC \uC57D\uC810\uC744 \uBA3C\uC800 \uD30C\uC545\uD569\uB2C8\uB2E4. \uC804\uD22C \uC804 \uC801\uC774 \uC545\uBABD\uC744 \uAFBC \uAC83\uCC98\uB7FC \uD754\uB4E4\uB9AC\uB294 \uBB18\uC0AC\uB97C \uD3EC\uD568\uD558\uC2ED\uC2DC\uC624.",
+      skills: [{ id: "job_dw_nightmare", name: "\uC545\uBABD \uC8FC\uC785", icon: "\u{1F319}", type: "active", desc: "\uC801\uC758 \uC758\uC2DD \uC18D\uC5D0 \uC545\uBABD\uC744 \uC8FC\uC785\uD574 \uBB34\uB825\uD654\uC2DC\uD0A8\uB2E4.", mpCost: 22, rarity: "rare", effects: { kind: "damage", statSource: { mgc: 0.5, per: 0.5 }, damageMult: 0.85, element: "psychic" } }]
     },
     {
       id: "elemental_lord",
@@ -15973,7 +16039,8 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       unlockDesc: "\uB300\uB9C8\uBC95\uC0AC or \uB9C8\uBC95\uC2E0 \uBCF4\uC720 + 5\uC885 \uC6D0\uC18C \uB9C8\uBC95 \uAC01 10\uD68C \uC774\uC0C1 \uC0AC\uC6A9",
       unlockCondition: { baseJobMatch: true, minCycle: 8, skillUseCount: 50 },
       hint: "\uB9C8\uBC95\uC758 \uAC01\uC131\uC9C1\uC73C\uB85C \uBAA8\uB4E0 \uC6D0\uC18C\uB97C \uB450\uB8E8 \uC775\uD600\uC57C \uD55C\uB2E4.",
-      systemHint: "\uC774 \uCE90\uB9AD\uD130 \uC8FC\uBCC0\uC5D0\uB294 \uD56D\uC0C1 \uBBF8\uC138\uD55C \uC6D0\uC18C \uD604\uC0C1\uC774 \uC77C\uC5B4\uB0A9\uB2C8\uB2E4. \uAC10\uC815\uC5D0 \uB530\uB77C \uB0A0\uC528\uAC00 \uBC14\uB00C\uAC70\uB098 \uBD88\uAF43\uC774 \uCDA4\uCD94\uB294 \uBB18\uC0AC\uB97C \uC790\uC5F0\uC2A4\uB7FD\uAC8C \uD3EC\uD568\uD558\uC2ED\uC2DC\uC624."
+      systemHint: "\uC774 \uCE90\uB9AD\uD130 \uC8FC\uBCC0\uC5D0\uB294 \uD56D\uC0C1 \uBBF8\uC138\uD55C \uC6D0\uC18C \uD604\uC0C1\uC774 \uC77C\uC5B4\uB0A9\uB2C8\uB2E4. \uAC10\uC815\uC5D0 \uB530\uB77C \uB0A0\uC528\uAC00 \uBC14\uB00C\uAC70\uB098 \uBD88\uAF43\uC774 \uCDA4\uCD94\uB294 \uBB18\uC0AC\uB97C \uC790\uC5F0\uC2A4\uB7FD\uAC8C \uD3EC\uD568\uD558\uC2ED\uC2DC\uC624.",
+      skills: [{ id: "job_el_elements", name: "\uC624\uD589 \uAC15\uB9BC", icon: "\u{1F30A}", type: "active", desc: "\uBD88\xB7\uBB3C\xB7\uB545\xB7\uBC14\uB78C\xB7\uBC88\uAC1C\uB97C \uB3D9\uC2DC\uC5D0 \uC3DF\uC544\uBD93\uB294\uB2E4.", mpCost: 40, rarity: "legendary", effects: { kind: "damage", statSource: { mgc: 1 }, damageMult: 0.5, hits: 5, element: "magic" } }]
     },
     {
       id: "forbidden_scholar",
@@ -15991,7 +16058,8 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       unlockDesc: "7\uD68C\uCC28 \uC774\uC0C1 + \uBD09\uC778\uB41C \uC9C0\uC2DD \uAD00\uB828 \uC774\uBCA4\uD2B8 10\uD68C + \uAD11\uAE30 70 \uC774\uC0C1 \uACBD\uD5D8",
       unlockCondition: { minCycle: 7, loopAwarenessLevel: 2, totalDeaths: 5 },
       hint: "\uAE08\uC9C0\uB41C \uC9C0\uC2DD\uC744 \uD0D0\uAD6C\uD558\uACE0 \uADF8 \uB300\uAC00\uB97C \uAC10\uB2F9\uD574\uC57C \uD55C\uB2E4.",
-      systemHint: "\uC774 \uCE90\uB9AD\uD130\uB294 \uB300\uD654 \uC911 \uAC11\uC790\uAE30 \uC544\uBB34\uB3C4 \uBAA8\uB974\uB294 \uBE44\uBC00\uC744 \uC5B8\uAE09\uD574 \uC8FC\uBCC0\uC744 \uACBD\uC545\uC2DC\uD0B5\uB2C8\uB2E4. \uC9C0\uC2DD\uC774 \uB108\uBB34 \uB9CE\uC544 \uC624\uD788\uB824 \uD604\uC2E4 \uAC10\uAC01\uC774 \uD76C\uBBF8\uD55C \uBB18\uC0AC\uB97C \uC0AC\uC6A9\uD558\uC2ED\uC2DC\uC624."
+      systemHint: "\uC774 \uCE90\uB9AD\uD130\uB294 \uB300\uD654 \uC911 \uAC11\uC790\uAE30 \uC544\uBB34\uB3C4 \uBAA8\uB974\uB294 \uBE44\uBC00\uC744 \uC5B8\uAE09\uD574 \uC8FC\uBCC0\uC744 \uACBD\uC545\uC2DC\uD0B5\uB2C8\uB2E4. \uC9C0\uC2DD\uC774 \uB108\uBB34 \uB9CE\uC544 \uC624\uD788\uB824 \uD604\uC2E4 \uAC10\uAC01\uC774 \uD76C\uBBF8\uD55C \uBB18\uC0AC\uB97C \uC0AC\uC6A9\uD558\uC2ED\uC2DC\uC624.",
+      skills: [{ id: "job_fsc_forbidden", name: "\uAE08\uC11C\uC758 \uC9C0\uC2DD", icon: "\u{1F4D6}", type: "active", desc: "\uC77D\uC5B4\uC11C\uB294 \uC548 \uB420 \uC9C0\uC2DD\uC744 \uAC15\uC81C\uB85C \uD604\uC2E4\uC5D0 \uAD6C\uD604\uD55C\uB2E4.", mpCost: 28, rarity: "legendary", effects: { kind: "damage", statSource: { int: 0.6, mgc: 0.4 }, damageMult: 1, element: "dark" } }]
     },
     {
       id: "spell_eater",
@@ -16009,7 +16077,8 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       unlockDesc: "\uB9C8\uBC95 \uACC4\uC5F4 \uC801 20\uBA85 \uC774\uC0C1 \uCC98\uCE58 + \uB9C8\uBC95 \uD761\uC218 \uAD00\uB828 \uC774\uBCA4\uD2B8 5\uD68C",
       unlockCondition: { darkActs: 20, skillUseCount: 30 },
       hint: "\uB9C8\uBC95\uC0AC\uB4E4\uC744 \uC0C1\uB300\uB85C \uCDA9\uBD84\uD788 \uC2F8\uC6B0\uB2E4 \uBCF4\uBA74 \uBAB8\uC774 \uAE30\uC5B5\uD55C\uB2E4.",
-      systemHint: "\uC774 \uCE90\uB9AD\uD130\uC5D0\uAC8C \uB9C8\uBC95 \uACF5\uACA9\uC744 \uAC00\uD558\uBA74 \uD761\uC218\uB418\uC5B4 \uC624\uD788\uB824 MP\uAC00 \uD68C\uBCF5\uB418\uB294 \uBB18\uC0AC\uB97C \uC0AC\uC6A9\uD558\uC2ED\uC2DC\uC624. \uB9C8\uBC95\uC0AC \uC801\uB4E4\uC774 \uC774 \uC790\uB97C \uBCF4\uACE0 \uC804\uB7B5\uC744 \uBC14\uAFB8\uB294 \uC7A5\uBA74\uB3C4 \uD6A8\uACFC\uC801\uC785\uB2C8\uB2E4."
+      systemHint: "\uC774 \uCE90\uB9AD\uD130\uC5D0\uAC8C \uB9C8\uBC95 \uACF5\uACA9\uC744 \uAC00\uD558\uBA74 \uD761\uC218\uB418\uC5B4 \uC624\uD788\uB824 MP\uAC00 \uD68C\uBCF5\uB418\uB294 \uBB18\uC0AC\uB97C \uC0AC\uC6A9\uD558\uC2ED\uC2DC\uC624. \uB9C8\uBC95\uC0AC \uC801\uB4E4\uC774 \uC774 \uC790\uB97C \uBCF4\uACE0 \uC804\uB7B5\uC744 \uBC14\uAFB8\uB294 \uC7A5\uBA74\uB3C4 \uD6A8\uACFC\uC801\uC785\uB2C8\uB2E4.",
+      skills: [{ id: "job_spe_devour", name: "\uB9C8\uBC95 \uD3EC\uC2DD", icon: "\u{1F300}", type: "active", desc: "\uC801\uC758 \uB9C8\uB825\uC744 \uAC15\uC81C\uB85C \uD761\uC218\uD574 \uC790\uC2E0\uC758 \uAC83\uC73C\uB85C \uB9CC\uB4E0\uB2E4.", mpCost: 0, rarity: "legendary", effects: { kind: "damage", statSource: { mgc: 0.6, end: 0.4 }, damageMult: 0.85, element: "magic", lifesteal: 0.2 } }]
     },
     // ════ 도적 계열 히든 직업 (5개) ════
     {
@@ -16028,7 +16097,8 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       unlockDesc: "\uB4E4\uD0A4\uC9C0 \uC54A\uACE0 \uBAA9\uD45C \uB2EC\uC131\uD55C \uC7A0\uC785 \uC131\uACF5 15\uD68C \uC774\uC0C1",
       unlockCondition: { stealthEndings: 3, baseJobMatch: true },
       hint: "\uC644\uBCBD\uD55C \uC7A0\uC785\uC744 \uBC18\uBCF5\uD574\uC57C \uD55C\uB2E4. \uD754\uC801\uC744 \uB0A8\uAE30\uC9C0 \uB9C8\uB77C.",
-      systemHint: "\uC774 \uCE90\uB9AD\uD130\uB294 \uD589\uB3D9 \uD6C4 NPC\uB4E4\uC774 \uBB34\uC5C7\uC774 \uC77C\uC5B4\uB0AC\uB294\uC9C0\uC870\uCC28 \uBAA8\uB974\uB294 \uBB18\uC0AC\uB97C \uC0AC\uC6A9\uD558\uC2ED\uC2DC\uC624. \uD6D4\uCE58\uACE0 \uB098\uD0C0\uB098\uACE0 \uC0AC\uB77C\uC9C0\uB294 \uACFC\uC815\uC774 \uB9C8\uCE58 \uB9C8\uC220\uCC98\uB7FC \uBCF4\uC5EC\uC57C \uD569\uB2C8\uB2E4."
+      systemHint: "\uC774 \uCE90\uB9AD\uD130\uB294 \uD589\uB3D9 \uD6C4 NPC\uB4E4\uC774 \uBB34\uC5C7\uC774 \uC77C\uC5B4\uB0AC\uB294\uC9C0\uC870\uCC28 \uBAA8\uB974\uB294 \uBB18\uC0AC\uB97C \uC0AC\uC6A9\uD558\uC2ED\uC2DC\uC624. \uD6D4\uCE58\uACE0 \uB098\uD0C0\uB098\uACE0 \uC0AC\uB77C\uC9C0\uB294 \uACFC\uC815\uC774 \uB9C8\uCE58 \uB9C8\uC220\uCC98\uB7FC \uBCF4\uC5EC\uC57C \uD569\uB2C8\uB2E4.",
+      skills: [{ id: "job_pt_heist", name: "\uC644\uBCBD\uD55C \uC808\uB3C4", icon: "\u{1F3AD}", type: "active", desc: "\uD45C\uC801\uC774 \uB208\uCE58\uCC44\uAE30\uB3C4 \uC804\uC5D0 \uBAA8\uB4E0 \uAC83\uC744 \uD6D4\uCCD0\uB0B8\uB2E4.", mpCost: 14, rarity: "rare", effects: { kind: "buff", statMod: { disg: 20, luk: 12 }, duration: 3 } }]
     },
     {
       id: "venom_dancer",
@@ -16046,7 +16116,8 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       unlockDesc: "\uB3C5 \uACC4\uC5F4 \uC544\uC774\uD15C/\uACF5\uACA9 20\uD68C \uC774\uC0C1 \uC0AC\uC6A9 + AGI 80 \uB2EC\uC131",
       unlockCondition: { darkActs: 10, baseJobMatch: true },
       hint: "\uB3C5\uC744 \uB04A\uC784\uC5C6\uC774 \uC5F0\uAD6C\uD558\uACE0 \uC0AC\uC6A9\uD574\uC57C \uD55C\uB2E4.",
-      systemHint: "\uC774 \uCE90\uB9AD\uD130\uC758 \uC190\uB05D\uC740 \uD56D\uC0C1 \uBBF8\uC138\uD558\uAC8C \uBCF4\uB78F\uBE5B\uC744 \uB771\uB2C8\uB2E4. \uC804\uD22C\uC5D0\uC11C \uC0B4\uC9DD \uC2A4\uCE58\uB294 \uAC83\uB9CC\uC73C\uB85C\uB3C4 \uC0C1\uB300\uAC00 \uB3C5\uC5D0 \uC911\uB3C5\uB418\uB294 \uAE34\uC7A5\uAC10 \uC788\uB294 \uBB18\uC0AC\uB97C \uC0AC\uC6A9\uD558\uC2ED\uC2DC\uC624."
+      systemHint: "\uC774 \uCE90\uB9AD\uD130\uC758 \uC190\uB05D\uC740 \uD56D\uC0C1 \uBBF8\uC138\uD558\uAC8C \uBCF4\uB78F\uBE5B\uC744 \uB771\uB2C8\uB2E4. \uC804\uD22C\uC5D0\uC11C \uC0B4\uC9DD \uC2A4\uCE58\uB294 \uAC83\uB9CC\uC73C\uB85C\uB3C4 \uC0C1\uB300\uAC00 \uB3C5\uC5D0 \uC911\uB3C5\uB418\uB294 \uAE34\uC7A5\uAC10 \uC788\uB294 \uBB18\uC0AC\uB97C \uC0AC\uC6A9\uD558\uC2ED\uC2DC\uC624.",
+      skills: [{ id: "job_vd_venom", name: "\uB9F9\uB3C5 \uC5F0\uBB34", icon: "\u{1F40D}", type: "active", desc: "\uC190\uB05D\uC758 \uB9F9\uB3C5\uC744 \uC2E4\uC740 \uC5F0\uC18D \uBCA0\uAE30.", mpCost: 20, rarity: "rare", effects: { kind: "damage", statSource: { agi: 0.6, crit: 0.4 }, damageMult: 0.6, hits: 2, element: "poison" } }]
     },
     {
       id: "king_of_thieves",
@@ -16064,7 +16135,8 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       unlockDesc: "\uB3C4\uC801 \uACC4\uC5F4 \uAC01\uC131\uC9C1 \uBCF4\uC720 + \uC9C0\uD558\uC138\uACC4 \uAD00\uB828 \uC774\uBCA4\uD2B8 15\uD68C",
       unlockCondition: { baseJobMatch: true, minCycle: 6, stealthEndings: 5 },
       hint: "\uB3C4\uC801 \uACC4\uC5F4 \uAC01\uC131\uC9C1\uC73C\uB85C \uC9C0\uD558\uC138\uACC4\uC5D0\uC11C \uC774\uB984\uC744 \uB5A8\uCCD0\uC57C \uD55C\uB2E4.",
-      systemHint: "\uC774 \uCE90\uB9AD\uD130\uAC00 \uB098\uD0C0\uB098\uBA74 \uB3C4\uC801 NPC\uB4E4\uC774 \uC790\uBC1C\uC801\uC73C\uB85C \uAE38\uC744 \uBE44\uD0B5\uB2C8\uB2E4. \uC9C0\uD558\uC138\uACC4\uC758 \uC815\uBCF4\uB294 \uBAA8\uB450 \uC774 \uC790\uB97C \uAC70\uCCD0 \uD750\uB978\uB2E4\uB294 \uBB18\uC0AC\uB97C \uD3EC\uD568\uD558\uC2ED\uC2DC\uC624."
+      systemHint: "\uC774 \uCE90\uB9AD\uD130\uAC00 \uB098\uD0C0\uB098\uBA74 \uB3C4\uC801 NPC\uB4E4\uC774 \uC790\uBC1C\uC801\uC73C\uB85C \uAE38\uC744 \uBE44\uD0B5\uB2C8\uB2E4. \uC9C0\uD558\uC138\uACC4\uC758 \uC815\uBCF4\uB294 \uBAA8\uB450 \uC774 \uC790\uB97C \uAC70\uCCD0 \uD750\uB978\uB2E4\uB294 \uBB18\uC0AC\uB97C \uD3EC\uD568\uD558\uC2ED\uC2DC\uC624.",
+      skills: [{ id: "job_kot_underworld", name: "\uC9C0\uD558\uC138\uACC4\uC758 \uC655\uBA85", icon: "\u{1F451}", type: "passive", desc: "\uC9C0\uD558\uC138\uACC4 \uC804\uCCB4\uAC00 \uADF8\uC758 \uC774\uB984 \uC55E\uC5D0 \uACE0\uAC1C \uC219\uC778\uB2E4 \u2014 DISG\xB7NEG \uC790\uB3D9 \uAC15\uD654.", mpCost: 0, rarity: "legendary", statBoost: { disg: 60, neg: 60 } }]
     },
     {
       id: "mirror_self",
@@ -16082,7 +16154,8 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       unlockDesc: "\uC644\uBCBD\uD55C \uC704\uC7A5\uC73C\uB85C \uD575\uC2EC NPC\uB97C \uC18D\uC778 \uD69F\uC218 10\uD68C \uC774\uC0C1",
       unlockCondition: { stealthEndings: 4, dimensionPins: 5 },
       hint: "\uC790\uC2E0\uC744 \uC783\uC744 \uB9CC\uD07C \uD0C0\uC778\uC774 \uB418\uC5B4\uC57C \uD55C\uB2E4.",
-      systemHint: "\uC774 \uCE90\uB9AD\uD130\uB294 \uC678\uBAA8, \uBAA9\uC18C\uB9AC, \uC2EC\uC9C0\uC5B4 \uB9C8\uBC95 \uAE30\uC6B4\uAE4C\uC9C0 \uC644\uBCBD\uD788 \uBCF5\uC0AC\uD569\uB2C8\uB2E4. \uC801\uC774 \uC544\uAD70\uC778\uC9C0 \uC801\uC778\uC9C0 \uD63C\uB3D9\uD558\uB294 \uD63C\uB780\uC2A4\uB7EC\uC6B4 \uC804\uD22C \uBB18\uC0AC\uB97C \uC0AC\uC6A9\uD558\uC2ED\uC2DC\uC624."
+      systemHint: "\uC774 \uCE90\uB9AD\uD130\uB294 \uC678\uBAA8, \uBAA9\uC18C\uB9AC, \uC2EC\uC9C0\uC5B4 \uB9C8\uBC95 \uAE30\uC6B4\uAE4C\uC9C0 \uC644\uBCBD\uD788 \uBCF5\uC0AC\uD569\uB2C8\uB2E4. \uC801\uC774 \uC544\uAD70\uC778\uC9C0 \uC801\uC778\uC9C0 \uD63C\uB3D9\uD558\uB294 \uD63C\uB780\uC2A4\uB7EC\uC6B4 \uC804\uD22C \uBB18\uC0AC\uB97C \uC0AC\uC6A9\uD558\uC2ED\uC2DC\uC624.",
+      skills: [{ id: "job_ms_mirror", name: "\uC644\uBCBD\uD55C \uBCF5\uC81C", icon: "\u{1FA9E}", type: "active", desc: "\uC678\uBAA8\xB7\uBAA9\uC18C\uB9AC\xB7\uB9C8\uB825\uAE4C\uC9C0 \uC644\uBCBD\uD788 \uBCF5\uC81C\uD574 \uC801\uC744 \uD63C\uB780\uC2DC\uD0A8\uB2E4.", mpCost: 24, rarity: "legendary", effects: { kind: "buff", statMod: { disg: 25, per: 15 }, duration: 3 } }]
     },
     {
       id: "night_sovereign",
@@ -16100,7 +16173,8 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       unlockDesc: "\uC57C\uAC04 \uC804\uD22C \uC2B9\uB9AC 30\uD68C \uC774\uC0C1 + \uADF8\uB9BC\uC790 \uBB34\uB3C4\uAC00 or \uAD34\uB3C4 \uD574\uAE08",
       unlockCondition: { stealthEndings: 3, totalDeaths: 10, bardFame: 40 },
       hint: "\uB0AE\uBCF4\uB2E4 \uBC24\uC744 \uC120\uD0DD\uD558\uACE0 \uC5B4\uB460 \uC18D\uC5D0\uC11C \uD65C\uB3D9\uD574\uC57C \uD55C\uB2E4.",
-      systemHint: "\uC774 \uCE90\uB9AD\uD130\uB294 \uB0AE\uACFC \uBC24\uC5D0 \uC544\uC608 \uB2E4\uB978 \uC778\uBB3C\uCC98\uB7FC \uD589\uB3D9\uD569\uB2C8\uB2E4. \uD0DC\uC591\uC774 \uC9C0\uB294 \uC21C\uAC04 \uBD84\uC704\uAE30\uAC00 \uC644\uC804\uD788 \uBC14\uB00C\uB294 \uADF9\uC801\uC778 \uBB18\uC0AC\uB97C \uC0AC\uC6A9\uD558\uC2ED\uC2DC\uC624."
+      systemHint: "\uC774 \uCE90\uB9AD\uD130\uB294 \uB0AE\uACFC \uBC24\uC5D0 \uC544\uC608 \uB2E4\uB978 \uC778\uBB3C\uCC98\uB7FC \uD589\uB3D9\uD569\uB2C8\uB2E4. \uD0DC\uC591\uC774 \uC9C0\uB294 \uC21C\uAC04 \uBD84\uC704\uAE30\uAC00 \uC644\uC804\uD788 \uBC14\uB00C\uB294 \uADF9\uC801\uC778 \uBB18\uC0AC\uB97C \uC0AC\uC6A9\uD558\uC2ED\uC2DC\uC624.",
+      skills: [{ id: "job_ns_nightfall", name: "\uCE60\uD751\uC758 \uAC15\uB9BC", icon: "\u{1F319}", type: "active", desc: "\uBC24\uC758 \uC5B4\uB460\uC744 \uBD88\uB7EC\uB0B4 \uC801\uC744 \uAC10\uC2F8 \uC555\uBC15\uD55C\uB2E4.", mpCost: 26, rarity: "legendary", effects: { kind: "damage", statSource: { agi: 0.5, disg: 0.5 }, damageMult: 0.95, element: "dark" } }]
     },
     // ════ 방랑자 계열 히든 직업 (5개) ════
     {
@@ -16119,7 +16193,8 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       unlockDesc: "5\uAC1C \uC774\uC0C1\uC758 \uB2E4\uB978 \uC138\uACC4\uAD00 \uC2DC\uB098\uB9AC\uC624 \uACBD\uD5D8 + LUK 80",
       unlockCondition: { dimensionPins: 5, baseJobMatch: true },
       hint: "\uC5EC\uB7EC \uC138\uACC4\uAD00\uC744 \uC9C1\uC811 \uBC1C\uB85C \uBC1F\uC544\uC57C \uD55C\uB2E4.",
-      systemHint: "\uC774 \uCE90\uB9AD\uD130\uB294 \uC5B4\uB290 \uC138\uACC4\uC5D0 \uAC00\uB3C4 \uC790\uC5F0\uC2A4\uB7FD\uAC8C \uB179\uC544\uB4E4\uBA70, \uD604\uC9C0\uC778\uBCF4\uB2E4 \uB354 \uADF8 \uC138\uACC4\uB97C \uC798 \uC544\uB294 \uB4EF\uD55C \uBB18\uC0AC\uB97C \uD3EC\uD568\uD558\uC2ED\uC2DC\uC624. \uD558\uC9C0\uB9CC \uC5B4\uB518\uAC00 \uACE0\uB3C5\uD55C \uB290\uB08C\uC744 \uC720\uC9C0\uD558\uC2ED\uC2DC\uC624."
+      systemHint: "\uC774 \uCE90\uB9AD\uD130\uB294 \uC5B4\uB290 \uC138\uACC4\uC5D0 \uAC00\uB3C4 \uC790\uC5F0\uC2A4\uB7FD\uAC8C \uB179\uC544\uB4E4\uBA70, \uD604\uC9C0\uC778\uBCF4\uB2E4 \uB354 \uADF8 \uC138\uACC4\uB97C \uC798 \uC544\uB294 \uB4EF\uD55C \uBB18\uC0AC\uB97C \uD3EC\uD568\uD558\uC2ED\uC2DC\uC624. \uD558\uC9C0\uB9CC \uC5B4\uB518\uAC00 \uACE0\uB3C5\uD55C \uB290\uB08C\uC744 \uC720\uC9C0\uD558\uC2ED\uC2DC\uC624.",
+      skills: [{ id: "job_ww_adapt", name: "\uB9CC\uBB3C \uC801\uC751", icon: "\u{1F30D}", type: "passive", desc: "\uC5B4\uB290 \uC138\uACC4\uC5D0\uC11C\uB3C4 \uB0AF\uC124\uC9C0 \uC54A\uC740 \uC801\uC751\uB825 \u2014 LUK\xB7PER \uC790\uB3D9 \uAC15\uD654.", mpCost: 0, rarity: "rare", statBoost: { luk: 60, per: 60 } }]
     },
     {
       id: "destiny_broker",
@@ -16137,7 +16212,8 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       unlockDesc: "NPC\uC640\uC758 \uAD00\uACC4 \uC774\uBCA4\uD2B8 30\uD68C \uC774\uC0C1 + \uD638\uAC10\uB3C4 \uCD5C\uB300 NPC 5\uBA85 \uC774\uC0C1",
       unlockCondition: { pureKarmaEndings: 3, baseJobMatch: true },
       hint: "\uC0AC\uB78C\uB4E4 \uC0AC\uC774\uC5D0\uC11C \uB04A\uC784\uC5C6\uC774 \uB2E4\uB9AC\uB97C \uB193\uC544\uC57C \uD55C\uB2E4.",
-      systemHint: "\uC774 \uCE90\uB9AD\uD130\uAC00 \uB450 NPC\uB97C \uC18C\uAC1C\uD558\uBA74 \uADF8 \uAD00\uACC4\uAC00 \uD2B9\uBCC4\uD574\uC9C0\uB294 \uBB18\uC0AC\uB97C \uC0AC\uC6A9\uD558\uC2ED\uC2DC\uC624. \uC6B0\uC5F0\uD55C \uB9CC\uB0A8\uCC98\uB7FC \uBCF4\uC774\uC9C0\uB9CC \uC774 \uC790\uAC00 \uC758\uB3C4\uD55C \uC6B4\uBA85\uC774\uB77C\uB294 \uB258\uC559\uC2A4\uB97C \uB2F4\uC73C\uC2ED\uC2DC\uC624."
+      systemHint: "\uC774 \uCE90\uB9AD\uD130\uAC00 \uB450 NPC\uB97C \uC18C\uAC1C\uD558\uBA74 \uADF8 \uAD00\uACC4\uAC00 \uD2B9\uBCC4\uD574\uC9C0\uB294 \uBB18\uC0AC\uB97C \uC0AC\uC6A9\uD558\uC2ED\uC2DC\uC624. \uC6B0\uC5F0\uD55C \uB9CC\uB0A8\uCC98\uB7FC \uBCF4\uC774\uC9C0\uB9CC \uC774 \uC790\uAC00 \uC758\uB3C4\uD55C \uC6B4\uBA85\uC774\uB77C\uB294 \uB258\uC559\uC2A4\uB97C \uB2F4\uC73C\uC2ED\uC2DC\uC624.",
+      skills: [{ id: "job_db_broker", name: "\uC6B4\uBA85\uC758 \uC911\uAC1C", icon: "\u{1F3B2}", type: "active", desc: "\uB450 \uC874\uC7AC\uC758 \uC6B4\uBA85\uC744 \uC774\uC5B4 \uAC15\uB825\uD55C \uC2DC\uB108\uC9C0\uB97C \uB9CC\uB4E0\uB2E4.", mpCost: 16, rarity: "rare", effects: { kind: "buff", statMod: { spk: 15, neg: 15 }, duration: 3 } }]
     },
     {
       id: "legend_maker",
@@ -16155,7 +16231,8 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       unlockDesc: "\uBC29\uB791\uC790 \uACC4\uC5F4 \uAC01\uC131\uC9C1 \uBCF4\uC720 + \uBA85\uC131 \uC810\uC218 500 \uC774\uC0C1",
       unlockCondition: { baseJobMatch: true, minCycle: 7, bardFame: 80, templeLevel: 3 },
       hint: "\uBC29\uB791\uC790 \uACC4\uC5F4 \uAC01\uC131\uC9C1\uC73C\uB85C \uC138\uACC4\uC5D0 \uC774\uB984\uC744 \uB0A8\uACA8\uC57C \uD55C\uB2E4.",
-      systemHint: "\uC774 \uCE90\uB9AD\uD130\uAC00 \uC5B4\uB5A4 \uC0AC\uAC74\uC744 \uBAA9\uACA9\uD558\uAC70\uB098 \uAC1C\uC785\uD558\uBA74 \uADF8 \uC0AC\uAC74\uC774 \uC804\uC124\uB85C \uAE30\uB85D\uB429\uB2C8\uB2E4. NPC\uB4E4\uC774 \uC774 \uC790\uC758 \uD589\uC801\uC744 \uC774\uC57C\uAE30\uB85C \uD37C\uB728\uB9AC\uB294 \uBB18\uC0AC\uB97C \uC790\uC8FC \uD3EC\uD568\uD558\uC2ED\uC2DC\uC624."
+      systemHint: "\uC774 \uCE90\uB9AD\uD130\uAC00 \uC5B4\uB5A4 \uC0AC\uAC74\uC744 \uBAA9\uACA9\uD558\uAC70\uB098 \uAC1C\uC785\uD558\uBA74 \uADF8 \uC0AC\uAC74\uC774 \uC804\uC124\uB85C \uAE30\uB85D\uB429\uB2C8\uB2E4. NPC\uB4E4\uC774 \uC774 \uC790\uC758 \uD589\uC801\uC744 \uC774\uC57C\uAE30\uB85C \uD37C\uB728\uB9AC\uB294 \uBB18\uC0AC\uB97C \uC790\uC8FC \uD3EC\uD568\uD558\uC2ED\uC2DC\uC624.",
+      skills: [{ id: "job_lm_chronicle", name: "\uC804\uC124\uC758 \uAE30\uB85D", icon: "\u{1F4DC}", type: "passive", desc: "\uC774 \uC790\uAC00 \uB9D0\uD558\uBA74 \uADF8\uAC83\uC774 \uACE7 \uC5ED\uC0AC\uAC00 \uB41C\uB2E4 \u2014 REP\xB7SPK \uC790\uB3D9 \uAC15\uD654.", mpCost: 0, rarity: "legendary", statBoost: { rep: 60, spk: 60 } }]
     },
     {
       id: "chaos_avatar",
@@ -16173,7 +16250,8 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       unlockDesc: "\uAC19\uC740 \uD68C\uCC28\uC5D0\uC11C \uC644\uC804\uD788 \uB2E4\uB978 \uC120\uD0DD\uC73C\uB85C \uC5D4\uB529 5\uD68C \uC774\uC0C1",
       unlockCondition: { pureKarmaEndings: 2, evilKarmaEndings: 2, dimensionPins: 8 },
       hint: "\uC608\uCE21 \uBD88\uAC00\uB2A5\uD558\uAC8C \uD589\uB3D9\uD574\uC57C \uD55C\uB2E4. \uD328\uD134\uC744 \uB9CC\uB4E4\uC9C0 \uB9C8\uB77C.",
-      systemHint: "\uC774 \uCE90\uB9AD\uD130\uAC00 \uD589\uB3D9\uD560 \uB54C\uB9C8\uB2E4 \uC608\uC0C1 \uC678\uC758 \uACB0\uACFC\uAC00 \uB530\uB985\uB2C8\uB2E4. \uC120\uD0DD\uC758 \uACB0\uACFC\uAC00 \uB17C\uB9AC\uC801\uC774\uC9C0 \uC54A\uC544\uB3C4 \uC6B4\uBA85\uC774 \uB9DE\uCDB0\uC8FC\uB294 \uD669\uB2F9\uD558\uACE0 \uC7AC\uBBF8\uC788\uB294 \uBB18\uC0AC\uB97C \uC0AC\uC6A9\uD558\uC2ED\uC2DC\uC624."
+      systemHint: "\uC774 \uCE90\uB9AD\uD130\uAC00 \uD589\uB3D9\uD560 \uB54C\uB9C8\uB2E4 \uC608\uC0C1 \uC678\uC758 \uACB0\uACFC\uAC00 \uB530\uB985\uB2C8\uB2E4. \uC120\uD0DD\uC758 \uACB0\uACFC\uAC00 \uB17C\uB9AC\uC801\uC774\uC9C0 \uC54A\uC544\uB3C4 \uC6B4\uBA85\uC774 \uB9DE\uCDB0\uC8FC\uB294 \uD669\uB2F9\uD558\uACE0 \uC7AC\uBBF8\uC788\uB294 \uBB18\uC0AC\uB97C \uC0AC\uC6A9\uD558\uC2ED\uC2DC\uC624.",
+      skills: [{ id: "job_ca_chaos", name: "\uD63C\uB3C8\uC758 \uC8FC\uC0AC\uC704", icon: "\u{1F3B2}", type: "active", desc: "\uC6B4\uBA85\uC744 \uC8FC\uC0AC\uC704\uCC98\uB7FC \uAD74\uB824 \uC608\uCE21\uBD88\uD5C8\uC758 \uACB0\uACFC\uB97C \uB9CC\uB4E0\uB2E4.", mpCost: 0, rarity: "legendary", effects: { kind: "damage", statSource: { luk: 1 }, damageMult: 1, element: "physical" } }]
     },
     {
       id: "eternal_pilgrim",
@@ -16191,7 +16269,8 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       unlockDesc: "10\uD68C\uCC28 \uC774\uC0C1 + \uB9E4 \uD68C\uCC28\uB9C8\uB2E4 \uCD5C\uC18C 1\uAC1C \uC0C8 \uC138\uACC4 \uD0D0\uD5D8",
       unlockCondition: { minCycle: 10, reincarnationRank: 2, dimensionPins: 10 },
       hint: "\uC624\uB798 \uC0B4\uC544\uB0A8\uC73C\uBA70 \uB04A\uC784\uC5C6\uC774 \uC0C8\uB85C\uC6B4 \uAC83\uC744 \uCC3E\uC544\uC57C \uD55C\uB2E4.",
-      systemHint: "\uC774 \uCE90\uB9AD\uD130\uAC00 \uC9C0\uB098\uAC04 \uB9C8\uC744\uC740 \uC774\uD6C4 \uBC88\uC601\uD558\uAC70\uB098 \uBD95\uAD34\uD558\uB294 \uB4F1 \uBC18\uB4DC\uC2DC \uBCC0\uD654\uD569\uB2C8\uB2E4. \uC774 \uC790\uB294 \uADF8 \uC0AC\uC2E4\uC744 \uC54C\uC9C0\uB9CC \uBA48\uCD94\uC9C0 \uC54A\uB294 \uC219\uBA85\uC801 \uBB18\uC0AC\uB97C \uD3EC\uD568\uD558\uC2ED\uC2DC\uC624."
+      systemHint: "\uC774 \uCE90\uB9AD\uD130\uAC00 \uC9C0\uB098\uAC04 \uB9C8\uC744\uC740 \uC774\uD6C4 \uBC88\uC601\uD558\uAC70\uB098 \uBD95\uAD34\uD558\uB294 \uB4F1 \uBC18\uB4DC\uC2DC \uBCC0\uD654\uD569\uB2C8\uB2E4. \uC774 \uC790\uB294 \uADF8 \uC0AC\uC2E4\uC744 \uC54C\uC9C0\uB9CC \uBA48\uCD94\uC9C0 \uC54A\uB294 \uC219\uBA85\uC801 \uBB18\uC0AC\uB97C \uD3EC\uD568\uD558\uC2ED\uC2DC\uC624.",
+      skills: [{ id: "job_ep_pilgrimage", name: "\uC21C\uB840\uC790\uC758 \uBC1C\uAC78\uC74C", icon: "\u{1F54A}\uFE0F", type: "passive", desc: "\uC9C0\uB098\uAC04 \uC790\uB9AC\uB9C8\uB2E4 \uBCC0\uD654\uB97C \uB0A8\uAE30\uB294 \uC219\uBA85 \u2014 WIL\xB7PER \uC790\uB3D9 \uAC15\uD654.", mpCost: 0, rarity: "legendary", statBoost: { wil: 60, per: 60 } }]
     }
   ];
   var HIDDEN_JOB_COND_FIELD_MAP = { minCycle: "cycle" };
@@ -16415,6 +16494,16 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
     // ── 중세 판타지 전용 능동 스킬
     { id: "active_holy_smite", type: "active", name: "\uC131\uAD11 \uC2EC\uD310", icon: "\u26A1", rarity: "rare", mpCost: 25, req: { fath: 55 }, scenario: "medieval", desc: "\uC2E0\uC758 \uC2EC\uD310\uC73C\uB85C \uC0AC\uC545\uD55C \uC874\uC7AC\uC5D0\uAC8C \uAC15\uB82C\uD55C \uBE5B\uC758 \uD53C\uD574\uB97C \uC900\uB2E4.", aiHint: "\uC131\uAD11 \uC2EC\uD310 \uC0AC\uC6A9! \uC2E0\uC131\uD55C \uBE5B\uC774 \uB0B4\uB824\uCCD0 \uC0AC\uC545\uD55C \uC874\uC7AC\uB97C \uAC15\uD0C0\uD569\uB2C8\uB2E4.", effects: { kind: "damage", statSource: { fath: 1 }, damageMult: 0.85, element: "light" } },
     { id: "active_dragon_breath", type: "active", name: "\uC6A9\uC758 \uC228\uACB0", icon: "\u{1F432}", rarity: "legendary", mpCost: 45, req: { mgc: 70, str: 55 }, scenario: "medieval", desc: "\uC6A9\uD608\uC758 \uD798\uC73C\uB85C \uAC15\uB82C\uD55C \uBD88\uAF43\uC744 \uB0B4\uBFDC\uB294\uB2E4.", aiHint: "\uC6A9\uC758 \uC228\uACB0 \uC0AC\uC6A9! \uC6A9\uC758 \uD53C\uAC00 \uAC01\uC131\uD574 \uAC70\uB300\uD55C \uBD88\uAF43\uC774 \uC3DF\uC544\uC9D1\uB2C8\uB2E4.", effects: { kind: "damage", statSource: { mgc: 0.6, str: 0.4 }, damageMult: 0.95, element: "fire" } },
+    // ── 46-② 볼륨 확장(2026-09) 신규 능동 스킬 7종 — 기존 12종이 커버 안
+    // 하던 스탯 조합(agi+per 원거리, 저티어 냉기, 대지, 정신, 지휘/사기,
+    // 생명흡수, 회복형)을 채운다. 전부 effects.kind 표준 스키마.
+    { id: "active_pierce_shot", type: "active", name: "\uAD00\uD1B5 \uC0AC\uACA9", icon: "\u{1F3F9}", rarity: "uncommon", mpCost: 16, req: { agi: 35, per: 30 }, scenario: null, desc: "\uAE09\uC18C\uB97C \uC815\uD655\uD788 \uB178\uB824 \uAD00\uD1B5\uC2DC\uD0A4\uB294 \uC6D0\uAC70\uB9AC \uC0AC\uACA9.", aiHint: "\uAD00\uD1B5 \uC0AC\uACA9 \uC0AC\uC6A9! \uC815\uD655\uD788 \uAE09\uC18C\uB97C \uAFF0\uB6AB\uB294 \uD654\uC0B4\uC774 \uB0A0\uC544\uAC11\uB2C8\uB2E4.", effects: { kind: "damage", statSource: { agi: 0.6, per: 0.4 }, damageMult: 0.65, element: "physical" } },
+    { id: "active_frost_nova", type: "active", name: "\uC11C\uB9AC \uD3ED\uBC1C", icon: "\u{1F9CA}", rarity: "uncommon", mpCost: 20, req: { mgc: 40 }, scenario: null, desc: "\uC8FC\uBCC0\uC5D0 \uB0C9\uAE30\uB97C \uD3ED\uBC1C\uC2DC\uCF1C \uC801\uC744 \uC5BC\uB824\uBD99\uC778\uB2E4.", aiHint: "\uC11C\uB9AC \uD3ED\uBC1C \uC0AC\uC6A9! \uCC28\uAC00\uC6B4 \uB0C9\uAE30\uAC00 \uC0AC\uBC29\uC73C\uB85C \uD37C\uC9C0\uBA70 \uC801\uC744 \uC5BC\uB9BD\uB2C8\uB2E4.", effects: { kind: "damage", statSource: { mgc: 1 }, damageMult: 0.65, element: "ice" } },
+    { id: "active_earth_shatter", type: "active", name: "\uB300\uC9C0 \uBD84\uC1C4", icon: "\u{1FAA8}", rarity: "rare", mpCost: 28, req: { str: 55, end: 35, level: 20 }, scenario: null, desc: "\uB300\uC9C0\uB97C \uB4A4\uD754\uB4E4\uC5B4 \uAD11\uBC94\uC704\uD55C \uCDA9\uACA9\uD30C\uB97C \uC77C\uC73C\uD0A8\uB2E4.", aiHint: "\uB300\uC9C0 \uBD84\uC1C4 \uC0AC\uC6A9! \uB545\uC774 \uAC08\uB77C\uC9C0\uBA70 \uCDA9\uACA9\uD30C\uAC00 \uD37C\uC838\uB098\uAC11\uB2C8\uB2E4.", effects: { kind: "damage", statSource: { str: 1 }, damageMult: 0.8, element: "earth" } },
+    { id: "active_mind_break", type: "active", name: "\uC815\uC2E0 \uBD95\uAD34", icon: "\u{1F300}", rarity: "rare", mpCost: 24, req: { int: 50, wil: 30 }, scenario: null, desc: "\uC0C1\uB300\uC758 \uC815\uC2E0\uC744 \uB4A4\uD754\uB4E4\uC5B4 \uC0AC\uACE0\uB97C \uB9C8\uBE44\uC2DC\uD0A8\uB2E4.", aiHint: "\uC815\uC2E0 \uBD95\uAD34 \uC0AC\uC6A9! \uC0C1\uB300\uC758 \uC815\uC2E0\uC774 \uD63C\uB780\uC5D0 \uBE60\uC838 \uD754\uB4E4\uB9BD\uB2C8\uB2E4.", effects: { kind: "damage", statSource: { int: 1 }, damageMult: 0.7, element: "psychic" } },
+    { id: "active_battle_hymn", type: "active", name: "\uC804\uD22C \uCC2C\uAC00", icon: "\u{1F3BA}", rarity: "uncommon", mpCost: 18, req: { cal: 35, ldr: 30 }, jobRole: "\uC804\uC0AC", scenario: null, desc: "\uCE68\uCC29\uD55C \uC9C0\uD718\uC758 \uB178\uB798\uB85C \uC544\uAD70 \uC804\uCCB4\uC758 \uC0AC\uAE30\uB97C \uB04C\uC5B4\uC62C\uB9B0\uB2E4. (\uC804\uC0AC \uACC4\uC5F4 \uC804\uC9C1 \uACBD\uD5D8 \uD544\uC694)", aiHint: "\uC804\uD22C \uCC2C\uAC00 \uC0AC\uC6A9! \uCE68\uCC29\uD558\uACE0 \uD798 \uC788\uB294 \uB178\uB798\uAC00 \uC544\uAD70\uC758 \uC0AC\uAE30\uB97C \uBD81\uB3CB\uC2B5\uB2C8\uB2E4.", effects: { kind: "buff", statMod: { cal: 8, ldr: 6 } } },
+    { id: "active_life_drain", type: "active", name: "\uC0DD\uBA85 \uD761\uC218", icon: "\u{1FA78}", rarity: "rare", mpCost: 22, req: { mad: 35, mgc: 30 }, scenario: null, desc: "\uC0C1\uB300\uC758 \uC0DD\uBA85\uB825\uC744 \uBF51\uC544 \uC790\uC2E0\uC758 \uAC83\uC73C\uB85C \uCDE8\uD55C\uB2E4.", aiHint: "\uC0DD\uBA85 \uD761\uC218 \uC0AC\uC6A9! \uAC80\uC740 \uAE30\uC6B4\uC774 \uC0C1\uB300\uC758 \uC0DD\uBA85\uB825\uC744 \uBE68\uC544\uB4E4\uC785\uB2C8\uB2E4.", effects: { kind: "damage", statSource: { mgc: 0.6, mad: 0.4 }, damageMult: 0.7, element: "dark", lifesteal: 0.4 } },
+    { id: "active_swift_recovery", type: "active", name: "\uC2E0\uC18D \uD68C\uBCF5", icon: "\u{1FA79}", rarity: "common", mpCost: 14, req: { regen: 35 }, scenario: null, desc: "\uC790\uC5F0 \uCE58\uC720\uB825\uC744 \uD3ED\uBC1C\uC801\uC73C\uB85C \uB04C\uC5B4\uC62C\uB824 \uC989\uC2DC \uC0C1\uCC98\uB97C \uD68C\uBCF5\uD55C\uB2E4.", aiHint: "\uC2E0\uC18D \uD68C\uBCF5 \uC0AC\uC6A9! \uC0C1\uCC98\uAC00 \uBE60\uB974\uAC8C \uC544\uBB3C\uC5B4\uAC11\uB2C8\uB2E4.", effects: { kind: "heal", healPct: 0.15 } },
     // ── 패시브 스킬 (Passive) ──────────────────────────────
     { id: "passive_iron_will", type: "passive", name: "\uAC15\uCCA0 \uC758\uC9C0", icon: "\u{1F525}", rarity: "common", req: { wil: 35 }, scenario: null, desc: "HP 30% \uC774\uD558 \uC2DC \uC790\uB3D9 \uBC1C\uB3D9 \u2014 \uC758\uC9C0\uB825 +20, \uBAA8\uB4E0 \uD310\uC815\uC5D0 \uBCF4\uB108\uC2A4.", condition: "hp_low", conditionDesc: "HP 30% \uC774\uD558", statBoost: { wil: 160 } },
     { id: "passive_bloodlust", type: "passive", name: "\uD608\uAE30", icon: "\u{1FA78}", rarity: "uncommon", req: { str: 45 }, scenario: null, desc: "\uC804\uD22C \uB300\uC131\uACF5 \uC2DC \uC790\uB3D9 \uBC1C\uB3D9 \u2014 STR +10, \uB2E4\uC74C \uD589\uB3D9\uC5D0 \uAE30\uC138.", condition: "crit_success", conditionDesc: "\uB300\uC131\uACF5 \uB2EC\uC131", statBoost: { str: 80 } },
@@ -16429,6 +16518,17 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
     { id: "passive_calm_mind", type: "passive", name: "\uD3C9\uC2EC", icon: "\u{1F30A}", rarity: "common", req: { cal: 40 }, scenario: null, desc: "\uAC10\uC815 \uAC15\uB3C4\uAC00 80 \uC774\uC0C1\uC77C \uB54C CAL +15 \uC790\uB3D9 \uBC1C\uB3D9.", condition: "high_emotion", conditionDesc: "\uAC10\uC815 \uAC15\uB3C4 80 \uC774\uC0C1", statBoost: { cal: 120 } },
     { id: "passive_dark_power", type: "passive", name: "\uC5B4\uB460\uC758 \uD798", icon: "\u{1F5A4}", rarity: "legendary", req: { mad: 60 }, scenario: null, desc: "\uAD11\uAE30 60 \uC774\uC0C1\uC77C \uB54C MAD +10, MGC +15 \uC790\uB3D9 \uAC15\uD654. \uB2E8, HP \uCD5C\uB300\uCE58 \uAC10\uC18C.", condition: "high_mad", conditionDesc: "\uAD11\uAE30 60 \uC774\uC0C1", statBoost: { mad: 80, mgc: 120 } },
     { id: "passive_regen_plus", type: "passive", name: "\uC0DD\uBA85\uB825 \uB118\uCE68", icon: "\u2764\uFE0F", rarity: "uncommon", req: { regen: 55 }, scenario: null, desc: "\uD68C\uBCF5 \uC8FC\uAE30\uAC00 5\uD134\u21923\uD134\uC73C\uB85C \uB2E8\uCD95\uB41C\uB2E4.", condition: "always", conditionDesc: "\uD56D\uC2DC \uBC1C\uB3D9" },
+    // ── 46-② 볼륨 확장(2026-09) 신규 패시브 스킬 7종 — 기존 13종이 안 쓰던
+    // 스탯(agi/per/end/fath/disg+cal/ldr+spk/mgc+int)을 채운다. statBoost는
+    // applyAllPassiveSkills()의 PASSIVE_SKILL_STAT_CAP(50)로 항상 클램프되므로
+    // 기존 항목들과 동일하게 실제 값은 최대 50이다 — 표기 수치는 관례상 더 크게 둠.
+    { id: "passive_swift_reflex", type: "passive", name: "\uCF8C\uC18D \uBC18\uC0AC", icon: "\u{1F32A}\uFE0F", rarity: "uncommon", req: { agi: 45 }, scenario: null, desc: "\uC704\uAE30\uC758 \uC21C\uAC04 \uBAB8\uC774 \uBA3C\uC800 \uBC18\uC751\uD55C\uB2E4 \u2014 AGI \uC790\uB3D9 \uAC15\uD654.", condition: "reflex", conditionDesc: "\uC704\uD5D8 \uAC10\uC9C0 \uC2DC", statBoost: { agi: 100 } },
+    { id: "passive_iron_stomach", type: "passive", name: "\uBB34\uC1E0 \uC704\uC7A5", icon: "\u{1F356}", rarity: "common", req: { end: 30 }, scenario: null, desc: "\uC5B4\uB5A4 \uC0C1\uD669\uC5D0\uC11C\uB3C4 \uC27D\uAC8C \uC9C0\uCE58\uC9C0 \uC54A\uB294 \uAC15\uC778\uD55C \uCCB4\uB825 \u2014 END \uC790\uB3D9 \uAC15\uD654.", condition: "always", conditionDesc: "\uD56D\uC2DC \uBC1C\uB3D9", statBoost: { end: 80 } },
+    { id: "passive_keen_perception", type: "passive", name: "\uC608\uB9AC\uD55C \uAD00\uCC30\uC548", icon: "\u{1F50D}", rarity: "uncommon", req: { per: 45 }, scenario: null, desc: "\uC0AC\uC18C\uD55C \uB2E8\uC11C\uB3C4 \uB193\uCE58\uC9C0 \uC54A\uB294 \uAD00\uCC30\uB825 \u2014 PER \uC790\uB3D9 \uAC15\uD654.", condition: "always", conditionDesc: "\uD56D\uC2DC \uBC1C\uB3D9", statBoost: { per: 100 } },
+    { id: "passive_unshakeable_faith", type: "passive", name: "\uD754\uB4E4\uB9BC \uC5C6\uB294 \uBBFF\uC74C", icon: "\u{1F54A}\uFE0F", rarity: "rare", req: { fath: 55 }, jobRole: "\uC131\uC9C1\uC790", scenario: null, desc: "\uC808\uB9DD \uC18D\uC5D0\uC11C\uB3C4 \uC2E0\uB150\uC744 \uC783\uC9C0 \uC54A\uB294\uB2E4 \u2014 FATH \uC790\uB3D9 \uAC15\uD654. (\uC131\uC9C1\uC790 \uACC4\uC5F4 \uC804\uC9C1 \uACBD\uD5D8 \uD544\uC694)", condition: "despair", conditionDesc: "\uC808\uB9DD\uC801 \uC0C1\uD669\uC5D0\uC11C", statBoost: { fath: 120 } },
+    { id: "passive_cold_blooded", type: "passive", name: "\uB0C9\uD608", icon: "\u{1F982}", rarity: "rare", req: { disg: 50, cal: 35 }, scenario: null, desc: "\uAC70\uC9D3\uACFC \uC0B4\uC758\uB97C \uC644\uBCBD\uD788 \uAC10\uCD98\uB2E4 \u2014 DISG\xB7CAL \uC790\uB3D9 \uAC15\uD654.", condition: "always", conditionDesc: "\uD56D\uC2DC \uBC1C\uB3D9", statBoost: { disg: 100, cal: 75 } },
+    { id: "passive_natural_leader", type: "passive", name: "\uD0C0\uACE0\uB09C \uC9C0\uB3C4\uC790", icon: "\u{1F396}\uFE0F", rarity: "rare", req: { ldr: 55, spk: 40 }, scenario: null, desc: "\uD568\uAED8\uD558\uB294 \uC774\uB4E4\uC774 \uC790\uC5F0\uD788 \uADF8\uB97C \uB530\uB978\uB2E4 \u2014 LDR\xB7SPK \uC790\uB3D9 \uAC15\uD654.", condition: "always", conditionDesc: "\uD56D\uC2DC \uBC1C\uB3D9", statBoost: { ldr: 100, spk: 75 } },
+    { id: "passive_arcane_resonance", type: "passive", name: "\uBE44\uC804 \uACF5\uBA85", icon: "\u{1F537}", rarity: "legendary", req: { mgc: 70, int: 50, level: 30 }, scenario: null, desc: "\uB9C8\uB825\uACFC \uC9C0\uC131\uC774 \uACF5\uBA85\uD574 \uB9C8\uBC95 \uC219\uB828\uB3C4\uAC00 \uADF9\uB300\uD654\uB41C\uB2E4 \u2014 MGC\xB7INT \uC790\uB3D9 \uAC15\uD654. (\uB808\uBCA8 30 \uC774\uC0C1)", condition: "always", conditionDesc: "\uD56D\uC2DC \uBC1C\uB3D9", statBoost: { mgc: 120, int: 100 } },
     // ── 이벤트 스킬 (특정 업적/조건 달성 시 해금) ──────────────
     { id: "event_dragon_aura", type: "event", name: "\uC6A9\uC758 \uAE30\uC6B4", icon: "\u{1F432}", rarity: "legendary", req: {}, scenario: "medieval", unlockTitle: "mf_dragon_blood", desc: "\uC6A9\uC758 \uD53C\uB97C \uC5BB\uC740 \uC790\uB9CC\uC774 \uC4F8 \uC218 \uC788\uB294 \uC704\uC555\uC801 \uAE30\uC6B4. \uC801 \uC0AC\uAE30\uB97C \uB300\uD3ED \uC800\uD558.", aiHint: "\uC6A9\uC758 \uAE30\uC6B4 \uBC1C\uB3D9! \uAC15\uB82C\uD55C \uC6A9\uC758 \uC704\uC555\uAC10\uC774 \uC801\uB4E4\uC744 \uACF5\uD3EC\uC5D0 \uB5A8\uAC8C \uD569\uB2C8\uB2E4.", mpCost: 30 },
     { id: "event_holy_shield", type: "event", name: "\uC131\uAD11\uC758 \uBC29\uD328", icon: "\u2728", rarity: "legendary", req: {}, scenario: "medieval", unlockTitle: "mf_holy_light", desc: "\uC2E0\uC758 \uC120\uD0DD\uC744 \uBC1B\uC740 \uC790\uC758 \uBCF4\uD638\uB9C9. \uCE58\uBA85\uC0C1\uC744 1\uD68C \uB9C9\uB294\uB2E4.", aiHint: "\uC131\uAD11\uC758 \uBC29\uD328 \uBC1C\uB3D9! \uB208\uBD80\uC2E0 \uBE5B\uC758 \uBC29\uD328\uAC00 \uCE58\uBA85\uD0C0\uB97C \uB9C9\uC544\uB0C8\uC2B5\uB2C8\uB2E4.", mpCost: 35 },
@@ -18204,22 +18304,6 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       cost: { hp: 40 }
     }
   ];
-
-  // src/job/002-스킬-시스템.js
-  var SKILLS_KEY = "taleforge-skills";
-  var SKILL_SP_KEY = "taleforge-skillsp";
-  var loadSkills = () => {
-    const r = lsGet(SKILLS_KEY);
-    return r ? JSON.parse(r) : {};
-  };
-  var saveSkills = (s) => lsSet(SKILLS_KEY, JSON.stringify(s));
-  var clearSkills = () => lsDel(SKILLS_KEY);
-  var loadSkillSP = () => {
-    const r = lsGet(SKILL_SP_KEY);
-    return r ? parseInt(r, 10) : 0;
-  };
-  var saveSkillSP = (n) => lsSet(SKILL_SP_KEY, String(n));
-  var clearSkillSP = () => lsDel(SKILL_SP_KEY);
 
   // src/data/219-17-세력-명성-변경-상태-조회.js
   var FACTION_DEFS = {
@@ -98330,7 +98414,19 @@ GS: {"soul_evolve_candidates":{"soulId":"${soul.id}","candidates":[{"name":"\uC9
           rarity: "uncommon",
           effects: { kind: "buff", statMod: { str: 8, end: 8 }, duration: 3 }
         },
-        { id: "job_bs_repair", name: "\uC218\uB9AC", icon: "\u{1F527}", type: "active", desc: "\uC7A5\uBE44 \uB0B4\uAD6C\uB3C4 \uC644\uC804 \uD68C\uBCF5. HP+10.", mpCost: 0, rarity: "common", hpRestore: 10 }
+        { id: "job_bs_repair", name: "\uC218\uB9AC", icon: "\u{1F527}", type: "active", desc: "\uC7A5\uBE44 \uB0B4\uAD6C\uB3C4 \uC644\uC804 \uD68C\uBCF5. HP+10.", mpCost: 0, rarity: "common", hpRestore: 10 },
+        {
+          id: "job_bs_temper",
+          name: "\uB2F4\uAE08\uC9C8",
+          icon: "\u{1F525}",
+          type: "active",
+          desc: "[\uB2E8\uC870 \uC120\uD589] \uBB34\uAE30\uB97C \uADF9\uD55C\uAE4C\uC9C0 \uB2F4\uAE08\uC9C8\uD574 \uC77C\uACA9\uC5D0 \uC2E4\uC5B4 \uB0B8\uB2E4.",
+          mpCost: 16,
+          rarity: "rare",
+          prereq: "job_bs_forge",
+          effects: { kind: "damage", statSource: { str: 0.7, end: 0.3 }, damageMult: 0.85, element: "physical" }
+        },
+        { id: "job_bs_masterhand", name: "\uC7A5\uC778\uC758 \uC190", icon: "\u{1F590}\uFE0F", type: "passive", desc: "[\uC218\uB9AC \uC120\uD589] \uC218\uB9CE\uC740 \uB2F4\uAE08\uC9C8 \uB05D\uC5D0 \uC5BB\uC740 \uC644\uC219\uD568 \u2014 STR\xB7END \uC790\uB3D9 \uAC15\uD654.", mpCost: 0, rarity: "legendary", prereq: "job_bs_repair", statBoost: { str: 60, end: 60 } }
       ]
     },
     {
@@ -98357,7 +98453,19 @@ GS: {"soul_evolve_candidates":{"soulId":"${soul.id}","candidates":[{"name":"\uC9
           mpCost: 15,
           rarity: "rare",
           effects: { kind: "buff", statMod: { int: 10, pstx: 6 }, duration: 2 }
-        }
+        },
+        {
+          id: "job_alc_explosive",
+          name: "\uD3ED\uBC1C \uC870\uC81C",
+          icon: "\u{1F4A5}",
+          type: "active",
+          desc: "[\uC5F0\uAE08 \uBCC0\uD658 \uC120\uD589] \uBD88\uC548\uC815\uD55C \uD63C\uD569\uBB3C\uC744 \uC801\uC5D0\uAC8C \uB358\uC838 \uD3ED\uBC1C\uC2DC\uD0A8\uB2E4.",
+          mpCost: 26,
+          rarity: "legendary",
+          prereq: "job_alc_trans",
+          effects: { kind: "damage", statSource: { int: 0.6, mgc: 0.4 }, damageMult: 0.9, element: "fire" }
+        },
+        { id: "job_alc_mastery", name: "\uC5F0\uAE08 \uB300\uAC00", icon: "\u{1F52C}", type: "passive", desc: "[\uD3EC\uC158 \uC81C\uC870 \uC120\uD589] \uBB3C\uC9C8\uC758 \uBCF8\uC9C8\uC744 \uAFF0\uB6AB\uB294 \uD1B5\uCC30 \u2014 INT\xB7MGC \uC790\uB3D9 \uAC15\uD654.", mpCost: 0, rarity: "legendary", prereq: "job_alc_brew", statBoost: { int: 60, mgc: 60 } }
       ]
     },
     {
@@ -98384,7 +98492,19 @@ GS: {"soul_evolve_candidates":{"soulId":"${soul.id}","candidates":[{"name":"\uC9
           rarity: "uncommon",
           effects: { kind: "buff", statMod: { str: 15, agi: 15, end: 15 }, duration: 3 }
         },
-        { id: "job_brd_charm", name: "\uB9E4\uD639\uC758 \uC120\uC728", icon: "\u{1F3B6}", type: "passive", desc: "SPK+10. NPC \uCCAB \uB9CC\uB0A8 \uD638\uAC10+20.", mpCost: 0, rarity: "uncommon" }
+        { id: "job_brd_charm", name: "\uB9E4\uD639\uC758 \uC120\uC728", icon: "\u{1F3B6}", type: "passive", desc: "SPK+10. NPC \uCCAB \uB9CC\uB0A8 \uD638\uAC10+20.", mpCost: 0, rarity: "uncommon" },
+        {
+          id: "job_brd_requiem",
+          name: "\uC9C4\uD63C\uACE1",
+          icon: "\u{1F3BC}",
+          type: "active",
+          desc: "[\uC601\uAC10\uC758 \uB178\uB798 \uC120\uD589] \uC2AC\uD514\uACFC \uD798\uC744 \uB3D9\uC2DC\uC5D0 \uB2F4\uC740 \uB178\uB798\uB85C \uC801\uC758 \uC0AC\uAE30\uB97C \uAEBE\uB294\uB2E4.",
+          mpCost: 20,
+          rarity: "rare",
+          prereq: "job_brd_inspire",
+          effects: { kind: "damage", statSource: { spk: 1 }, damageMult: 0.6, element: "psychic" }
+        },
+        { id: "job_brd_legend", name: "\uC804\uC124\uC758 \uC74C\uC720\uC2DC\uC778", icon: "\u{1F451}", type: "passive", desc: "[\uB9E4\uD639\uC758 \uC120\uC728 \uC120\uD589] \uADF8\uC758 \uC774\uC57C\uAE30\uB294 \uB300\uB959 \uC804\uC5ED\uC5D0 \uD37C\uC9C4\uB2E4 \u2014 SPK\xB7LUK \uC790\uB3D9 \uAC15\uD654.", mpCost: 0, rarity: "legendary", prereq: "job_brd_charm", statBoost: { spk: 60, luk: 60 } }
       ]
     },
     {
@@ -98451,7 +98571,19 @@ GS: {"soul_evolve_candidates":{"soulId":"${soul.id}","candidates":[{"name":"\uC9
           rarity: "uncommon",
           effects: { kind: "buff", statMod: { spk: 12, luk: 8 }, duration: 3 }
         },
-        { id: "job_mrc_info", name: "\uC815\uBCF4\uB9DD", icon: "\u{1F4CB}", type: "passive", desc: "NEG+8. \uC0C1\uC810 \uAC00\uACA9 20% \uD560\uC778.", mpCost: 0, rarity: "uncommon" }
+        { id: "job_mrc_info", name: "\uC815\uBCF4\uB9DD", icon: "\u{1F4CB}", type: "passive", desc: "NEG+8. \uC0C1\uC810 \uAC00\uACA9 20% \uD560\uC778.", mpCost: 0, rarity: "uncommon" },
+        {
+          id: "job_mrc_monopoly",
+          name: "\uB3C5\uC810 \uACC4\uC57D",
+          icon: "\u{1F4DC}",
+          type: "active",
+          desc: "[\uC644\uBCBD\uD55C \uAC70\uB798 \uC120\uD589] \uB2E8\uAE30\uAC04 \uC2DC\uC7A5\uC744 \uC7A5\uC545\uD574 \uC555\uB3C4\uC801\uC778 \uD611\uC0C1\uB825\uC744 \uBC1C\uD718\uD55C\uB2E4.",
+          mpCost: 0,
+          rarity: "rare",
+          prereq: "job_mrc_deal",
+          effects: { kind: "buff", statMod: { neg: 20, luk: 10 }, duration: 3 }
+        },
+        { id: "job_mrc_empire", name: "\uC0C1\uC5C5 \uC81C\uAD6D", icon: "\u{1F3DB}\uFE0F", type: "passive", desc: "[\uC815\uBCF4\uB9DD \uC120\uD589] \uB300\uB959 \uACF3\uACF3\uC5D0 \uBED7\uC740 \uC815\uBCF4\uB9DD\uACFC \uC778\uB9E5 \u2014 NEG\xB7LUK \uC790\uB3D9 \uAC15\uD654.", mpCost: 0, rarity: "legendary", prereq: "job_mrc_info", statBoost: { neg: 60, luk: 60 } }
       ]
     },
     {
@@ -98469,7 +98601,9 @@ GS: {"soul_evolve_candidates":{"soulId":"${soul.id}","candidates":[{"name":"\uC9
       unlockCondition: { type: "action_pattern", pattern: "heal", minCount: 12, desc: "\uCE58\uC720 \uD589\uB3D9 12\uD68C" },
       skills: [
         { id: "job_heal_cure", name: "\uC644\uC804 \uCE58\uC720", icon: "\u{1F49A}", type: "active", desc: "HP \uC644\uC804 \uD68C\uBCF5. \uC800\uC8FC\xB7\uB3C5 \uD574\uC81C.", mpCost: 30, rarity: "rare", hpRestore: 60 },
-        { id: "job_heal_regen", name: "\uC0DD\uBA85 \uC21C\uD658", icon: "\u267B\uFE0F", type: "passive", desc: "\uB9E4 \uD134 HP+5. FATH+8.", mpCost: 0, rarity: "uncommon" }
+        { id: "job_heal_regen", name: "\uC0DD\uBA85 \uC21C\uD658", icon: "\u267B\uFE0F", type: "passive", desc: "\uB9E4 \uD134 HP+5. FATH+8.", mpCost: 0, rarity: "uncommon" },
+        { id: "job_heal_sanctuary", name: "\uC0DD\uBA85\uC758 \uC131\uC5ED", icon: "\u{1F31F}", type: "active", desc: "[\uC644\uC804 \uCE58\uC720 \uC120\uD589] \uC8FC\uBCC0 \uC804\uCCB4\uC5D0 \uC0DD\uBA85\uC758 \uAE30\uC6B4\uC744 \uD37C\uB728\uB824 \uD06C\uAC8C \uD68C\uBCF5\uC2DC\uD0A8\uB2E4.", mpCost: 40, rarity: "legendary", prereq: "job_heal_cure", effects: { kind: "heal", healPct: 0.35 } },
+        { id: "job_heal_devotion", name: "\uD5CC\uC2E0\uC758 \uB9F9\uC138", icon: "\u{1F64F}", type: "passive", desc: "[\uC0DD\uBA85 \uC21C\uD658 \uC120\uD589] \uC0DD\uBA85\uC5D0 \uB300\uD55C \uC21C\uC218\uD55C \uD5CC\uC2E0 \u2014 FATH\xB7WIL \uC790\uB3D9 \uAC15\uD654.", mpCost: 0, rarity: "legendary", prereq: "job_heal_regen", statBoost: { fath: 60, wil: 60 } }
       ]
     },
     {
@@ -98497,7 +98631,19 @@ GS: {"soul_evolve_candidates":{"soulId":"${soul.id}","candidates":[{"name":"\uC9
           rarity: "rare",
           effects: { kind: "buff", statMod: { wil: 15 }, duration: 5 }
         },
-        { id: "job_gk_sense", name: "\uC8FD\uC74C\uC758 \uAC10\uAC01", icon: "\u26B1\uFE0F", type: "passive", desc: "PER+10. \uBB18\uC9C0\xB7\uBB34\uB364\uC5D0\uC11C \uC228\uACA8\uC9C4 \uC720\uBB3C\uACFC \uC800\uC8FC\uC758 \uAE30\uC6B4\uC744 \uAC10\uC9C0\uD55C\uB2E4.", mpCost: 0, rarity: "rare" }
+        { id: "job_gk_sense", name: "\uC8FD\uC74C\uC758 \uAC10\uAC01", icon: "\u26B1\uFE0F", type: "passive", desc: "PER+10. \uBB18\uC9C0\xB7\uBB34\uB364\uC5D0\uC11C \uC228\uACA8\uC9C4 \uC720\uBB3C\uACFC \uC800\uC8FC\uC758 \uAE30\uC6B4\uC744 \uAC10\uC9C0\uD55C\uB2E4.", mpCost: 0, rarity: "rare" },
+        {
+          id: "job_gk_banish",
+          name: "\uAC15\uC81C \uC815\uD654",
+          icon: "\u26A1",
+          type: "active",
+          desc: "[\uC601\uD63C \uC778\uB3C4 \uC120\uD589] \uC800\uD56D\uD558\uB294 \uC6D0\uD63C\uC744 \uAC15\uC81C\uB85C \uC815\uD654\uD574 \uC18C\uBA78\uC2DC\uD0A8\uB2E4.",
+          mpCost: 22,
+          rarity: "legendary",
+          prereq: "job_gk_guide",
+          effects: { kind: "damage", statSource: { wil: 0.6, per: 0.4 }, damageMult: 0.8, element: "dark" }
+        },
+        { id: "job_gk_boundary", name: "\uACBD\uACC4\uC758 \uC218\uD638\uC790", icon: "\u2696\uFE0F", type: "passive", desc: "[\uC8FD\uC74C\uC758 \uAC10\uAC01 \uC120\uD589] \uC0B0 \uC790\uC640 \uC8FD\uC740 \uC790\uC758 \uACBD\uACC4\uC5D0\uC11C \uD754\uB4E4\uB9AC\uC9C0 \uC54A\uB294\uB2E4 \u2014 WIL\xB7PER \uC790\uB3D9 \uAC15\uD654.", mpCost: 0, rarity: "legendary", prereq: "job_gk_sense", statBoost: { wil: 60, per: 60 } }
       ]
     },
     {
@@ -98524,7 +98670,19 @@ GS: {"soul_evolve_candidates":{"soulId":"${soul.id}","candidates":[{"name":"\uC9
           rarity: "common",
           effects: { kind: "buff", statMod: { rep: 10, luk: 6 }, duration: 3 }
         },
-        { id: "job_frm_roots", name: "\uB300\uC9C0\uC758 \uBFCC\uB9AC", icon: "\u{1F331}", type: "passive", desc: "END+8. \uB9E4 \uD134 \uC2DD\uB7C9+3. \uC800\uC8FC \uC800\uD56D \uC18C\uD3ED \uC0C1\uC2B9.", mpCost: 0, rarity: "uncommon" }
+        { id: "job_frm_roots", name: "\uB300\uC9C0\uC758 \uBFCC\uB9AC", icon: "\u{1F331}", type: "passive", desc: "END+8. \uB9E4 \uD134 \uC2DD\uB7C9+3. \uC800\uC8FC \uC800\uD56D \uC18C\uD3ED \uC0C1\uC2B9.", mpCost: 0, rarity: "uncommon" },
+        {
+          id: "job_frm_bounty",
+          name: "\uB300\uD48D\uC791",
+          icon: "\u{1F33D}",
+          type: "active",
+          desc: "[\uD48D\uB144\uC758 \uC190\uAE38 \uC120\uD589] \uB300\uC9C0\uC758 \uCD95\uBCF5\uC73C\uB85C \uC555\uB3C4\uC801\uC778 \uC218\uD655\uC744 \uAC70\uB454\uB2E4.",
+          mpCost: 0,
+          rarity: "rare",
+          prereq: "job_frm_harvest",
+          effects: { kind: "buff", statMod: { end: 15, rep: 10 }, duration: 4 }
+        },
+        { id: "job_frm_earthbond", name: "\uB300\uC9C0\uC640\uC758 \uC720\uB300", icon: "\u{1F30D}", type: "passive", desc: "[\uB300\uC9C0\uC758 \uBFCC\uB9AC \uC120\uD589] \uB545\uACFC \uD558\uB098\uAC00 \uB41C \uC790\uC758 \uAD73\uAC74\uD568 \u2014 END\xB7LUK \uC790\uB3D9 \uAC15\uD654.", mpCost: 0, rarity: "rare", prereq: "job_frm_roots", statBoost: { end: 60, luk: 60 } }
       ]
     },
     {
@@ -98552,7 +98710,19 @@ GS: {"soul_evolve_candidates":{"soulId":"${soul.id}","candidates":[{"name":"\uC9
           rarity: "uncommon",
           effects: { kind: "statBoost", statMod: { int: 14, per: 10 } }
         },
-        { id: "job_sch_memory", name: "\uBC15\uD559\uB2E4\uC2DD", icon: "\u{1F9E0}", type: "passive", desc: "INT+12. \uBBF8\uC9C0\uC758 \uD604\uC0C1\xB7\uC5B8\uC5B4 \uC790\uB3D9 \uD574\uB3C5.", mpCost: 0, rarity: "uncommon" }
+        { id: "job_sch_memory", name: "\uBC15\uD559\uB2E4\uC2DD", icon: "\u{1F9E0}", type: "passive", desc: "INT+12. \uBBF8\uC9C0\uC758 \uD604\uC0C1\xB7\uC5B8\uC5B4 \uC790\uB3D9 \uD574\uB3C5.", mpCost: 0, rarity: "uncommon" },
+        {
+          id: "job_sch_prophecy",
+          name: "\uC608\uC9C0\uC758 \uC11C",
+          icon: "\u{1F52E}",
+          type: "active",
+          desc: "[\uACE0\uB300 \uC9C0\uC2DD \uC120\uD589] \uACE0\uB300 \uC9C0\uC2DD\uC73C\uB85C \uB2E4\uAC00\uC62C \uC704\uD5D8\uC744 \uC608\uACAC\uD574 \uB300\uBE44\uD55C\uB2E4.",
+          mpCost: 20,
+          rarity: "legendary",
+          prereq: "job_sch_lore",
+          effects: { kind: "buff", statMod: { int: 20, per: 15 }, duration: 4 }
+        },
+        { id: "job_sch_archive", name: "\uC9C0\uC2DD\uC758 \uBCF4\uACE0", icon: "\u{1F4DA}", type: "passive", desc: "[\uBC15\uD559\uB2E4\uC2DD \uC120\uD589] \uCD95\uC801\uB41C \uC9C0\uC2DD\uC774 \uBAB8\uC5D0 \uC0C8\uACA8\uC9C4\uB2E4 \u2014 INT\xB7PER \uC790\uB3D9 \uAC15\uD654.", mpCost: 0, rarity: "legendary", prereq: "job_sch_memory", statBoost: { int: 60, per: 60 } }
       ]
     },
     // ══ 궁수 파생 (5종) ══
@@ -101366,8 +101536,17 @@ ${job.icon} ${job.name}\uC73C\uB85C \uC804\uC9C1\uD558\uACA0\uC2B5\uB2C8\uAE4C?
       }
     } catch (e) {
     }
+    if (typeof getUnlockedForbiddenSkills === "function") {
+      for (const sk of getUnlockedForbiddenSkills()) {
+        if (sk && sk.id && !idSet.has(sk.id)) {
+          base.push(sk);
+          idSet.add(sk.id);
+        }
+      }
+    }
     return base;
   };
+  window.getAllSkillDefs = getAllSkillDefs;
   function getSkillPrereqs(skillId) {
     const fromMap = SKILL_TREE[skillId];
     if (fromMap) return fromMap;
@@ -101385,8 +101564,18 @@ ${job.icon} ${job.name}\uC73C\uB85C \uC804\uC9C1\uD558\uACA0\uC2B5\uB2C8\uAE4C?
       if (!def.unlockTitle) return true;
       return !!titles.find((t) => t.id === def.unlockTitle);
     }
-    const statOk = Object.entries(def.req || {}).every(([k, v]) => (stats[k] || 0) >= v);
+    const statOk = Object.entries(def.req || {}).filter(([k]) => k !== "level").every(([k, v]) => (stats[k] || 0) >= v);
     if (!statOk) return false;
+    if (def.req && def.req.level) {
+      const lv = typeof loadPlayerLevel === "function" ? loadPlayerLevel() || 1 : 1;
+      if (lv < def.req.level) return false;
+    }
+    if (def.unlockTitle && !titles.find((t) => t.id === def.unlockTitle)) return false;
+    if (def.jobRole && def.jobRole !== "combo") {
+      const cur = S?.character?.role || "";
+      const hist = typeof window.loadJobHistory === "function" ? window.loadJobHistory() || [] : [];
+      if (cur !== def.jobRole && !hist.some((h) => h.jobName === def.jobRole)) return false;
+    }
     const prereqs = getSkillPrereqs(skillId);
     return prereqs.every((pid) => !!unlockedSkills[pid]);
   };

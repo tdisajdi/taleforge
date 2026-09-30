@@ -11,6 +11,7 @@ import { saveSkillSP } from '../job/002-스킬-시스템.js';
 import { EXP_KEY, getAllClearSkillDefs, loadPlayerExp, loadPlayerLevel, savePlayerExp, savePlayerLevel } from '../job/008-클리어-보상-시스템-시나리오-클리어-시-영구-아이템스킬.js';
 import { getAllBaseJobs } from '../job/042-직업-시스템-무한-파생-도감.js';
 import { saveStats } from '../patches/299-플레이-통계-성향-분석-시스템-v57-완전판.js';
+import { getUnlockedForbiddenSkills } from './015-시스템-1120.js';
 import { loadCycleCount } from '../progression/014-환생-누적-시스템-110번.js';
 import { CELESTIAL_COVENANT_STAGES, DEMON_CORRUPTION_STAGES, VAMPIRE_CHRONICLE_STAGES, loadVampireChronicle } from '../progression/020-101130번-환생-누적-시스템.js';
 import { unlockAchievement } from '../progression/187-2-업적-시스템.js';
@@ -664,8 +665,17 @@ export const getAllSkillDefs = () => {
       }
     }
   } catch(e) {}
+  // 🚫 금지된 스킬(전생 조건부) — 실제로 해금된 것만 병합.
+  // unlockForbiddenSkill()이 S.unlockedSkills도 같이 세팅해두므로 여기선
+  // 정의만 보태면 renderSkills()/useSkill()이 나머지를 기존 경로로 처리한다.
+  if(typeof getUnlockedForbiddenSkills === 'function') {
+    for(const sk of getUnlockedForbiddenSkills()){
+      if(sk && sk.id && !idSet.has(sk.id)){ base.push(sk); idSet.add(sk.id); }
+    }
+  }
   return base;
 };
+window.getAllSkillDefs = getAllSkillDefs;
 
 export function getSkillPrereqs(skillId){
   const fromMap = SKILL_TREE[skillId];
@@ -689,9 +699,27 @@ export const getSkillUnlockable = (skillId, unlockedSkills, stats, titles) => {
     return !!titles.find(t => t.id === def.unlockTitle);
   }
 
-  // 스탯 요구 조건
-  const statOk = Object.entries(def.req || {}).every(([k, v]) => (stats[k] || 0) >= v);
+  // 스탯 요구 조건 (level은 숫자 스탯이 아니라 아래에서 별도로 확인)
+  const statOk = Object.entries(def.req || {})
+    .filter(([k]) => k !== 'level')
+    .every(([k, v]) => (stats[k] || 0) >= v);
   if (!statOk) return false;
+
+  // [46-② 버그 수정] 실제 해금 버튼 클릭 판정(getSkillUnlockInfo, job/087)은
+  // 레벨/칭호/직업 조건까지 확인하는데, 카드 표시/필터링용인 이 함수는 여태
+  // 스탯+선행스킬만 봐서 — 그런 조건이 붙은 스킬은 "해금 가능"으로 보였다가
+  // 실제로 누르면 막히는 표시 불일치가 생길 수 있었다(지금까지는 이 조건을
+  // 쓰는 스킬이 없어서 증상이 안 드러났을 뿐). 판정 기준을 동일하게 맞춘다.
+  if (def.req && def.req.level) {
+    const lv = typeof loadPlayerLevel === 'function' ? (loadPlayerLevel() || 1) : 1;
+    if (lv < def.req.level) return false;
+  }
+  if (def.unlockTitle && !titles.find(t => t.id === def.unlockTitle)) return false;
+  if (def.jobRole && def.jobRole !== 'combo') {
+    const cur = S?.character?.role || '';
+    const hist = (typeof window.loadJobHistory === 'function') ? (window.loadJobHistory() || []) : [];
+    if (cur !== def.jobRole && !hist.some(h => h.jobName === def.jobRole)) return false;
+  }
 
   // 선행 스킬 조건 (구식 SKILL_TREE + 신식 prereq 필드 통합)
   const prereqs = getSkillPrereqs(skillId);

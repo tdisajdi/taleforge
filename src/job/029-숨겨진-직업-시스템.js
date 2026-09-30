@@ -23,7 +23,9 @@ export const HIDDEN_JOBS = [
     unlockType:"death_count",    unlockDesc:"전사 계열로 5회 이상 전투 사망",
     unlockCondition:{ deathCount:5, baseJobMatch:true },
     hint:"죽음을 충분히 경험해야 한다.",
-    systemHint:"이 직업의 캐릭터는 죽음의 기운을 다루며, 적의 HP를 흡수하거나 언데드를 소환하는 묘사를 포함할 수 있습니다." },
+    systemHint:"이 직업의 캐릭터는 죽음의 기운을 다루며, 적의 HP를 흡수하거나 언데드를 소환하는 묘사를 포함할 수 있습니다." ,
+    skills:[ {id:'job_dk_drain', name:'사령 흡수', icon:'💀', type:'active', desc:'적의 생명력을 흡수해 스스로를 회복시킨다.', mpCost:24, rarity:'legendary', effects:{ kind:'damage', statSource:{str:0.6,mgc:0.4}, damageMult:0.8, element:'dark', lifesteal:0.4 }} ]
+   },
 
   { id:"archmage",        icon:"🌌", svgIcon:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" stroke-width="1.2"/><circle cx="8" cy="9" r="0.8" fill="currentColor" stroke="none"/><circle cx="15" cy="8" r="0.6" fill="currentColor" stroke="none"/><circle cx="16" cy="14" r="0.9" fill="currentColor" stroke="none"/><circle cx="9" cy="15" r="0.6" fill="currentColor" stroke="none"/></svg>`, name:"대마법사",          rarity:"legendary",
     type:"awakening",     baseJob:["마법사","주술사","마법학자","마도사","소서러"],  scenario:[null],
@@ -33,7 +35,9 @@ export const HIDDEN_JOBS = [
     unlockType:"skill_use",      unlockDesc:"마법 계열 스킬 총 30회 이상 사용",
     unlockCondition:{ skillUseCount:30, baseJobMatch:true },
     hint:"마법을 끊임없이 연마해야 한다.",
-    systemHint:"이 직업의 캐릭터는 원소를 자유롭게 구사하며, 마법 장면에서 웅장한 스케일의 묘사를 사용하십시오." },
+    systemHint:"이 직업의 캐릭터는 원소를 자유롭게 구사하며, 마법 장면에서 웅장한 스케일의 묘사를 사용하십시오." ,
+    skills:[ {id:'job_am_elements', name:'원소 폭풍', icon:'🌪️', type:'active', desc:'모든 원소의 힘을 한 번에 쏟아붓는다.', mpCost:30, rarity:'legendary', effects:{ kind:'damage', statSource:{mgc:1}, damageMult:1.0, hits:2, element:'magic' }} ]
+   },
 
   { id:"shadow_dancer",   icon:"🌑", svgIcon:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8" stroke-width="1.3"/><circle cx="12" cy="12" r="8" fill="currentColor" fill-opacity="0.6" stroke="none"/></svg>`, name:"그림자 무도가",    rarity:"rare",
     type:"awakening",     baseJob:["도적","암살자","자객","닌자","레인저"],  scenario:[null],
@@ -43,9 +47,11 @@ export const HIDDEN_JOBS = [
     unlockType:"scenario_clear", unlockDesc:"은신/잠입 엔딩 2회 이상 달성",
     unlockCondition:{ stealthEndings:2, baseJobMatch:true },
     hint:"그림자 속에 숨어 적을 처리한 횟수가 쌓여야 한다.",
-    systemHint:"이 직업의 캐릭터는 그림자처럼 이동하며, 전투와 이동 묘사에서 유연하고 우아한 표현을 사용하십시오." },
+    systemHint:"이 직업의 캐릭터는 그림자처럼 이동하며, 전투와 이동 묘사에서 유연하고 우아한 표현을 사용하십시오." ,
+    skills:[ {id:'job_sd_dance', name:'그림자 유영', icon:'🌑', type:'active', desc:'빛과 그림자 사이를 넘나들며 연속으로 타격한다.', mpCost:18, rarity:'rare', effects:{ kind:'damage', statSource:{agi:0.6,crit:0.4}, damageMult:0.5, hits:3, element:'physical' }} ]
+   },
 
-  { id:"oracle",          icon:"🔮", svgIcon:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8" stroke-width="1.3"/><circle cx="12" cy="12" r="3" fill="currentColor" fill-opacity="0.35"/></svg>`, name:"신탁사",            rarity:"rare",
+  { id:"hj_oracle",       icon:"🔮", svgIcon:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8" stroke-width="1.3"/><circle cx="12" cy="12" r="3" fill="currentColor" fill-opacity="0.35"/></svg>`, name:"신탁사",            rarity:"rare",
     type:"awakening",     baseJob:["성직자","사제","신관","힐러","수도사"],  scenario:["중세 판타지","나만의 세계",null],
     desc:"신의 말을 직접 듣는 자. 미래를 엿본다.",
     lore:"기도가 쌓여 마침내 신이 직접 귓속에 속삭이기 시작했다. 그 말은 항상 옳다.",
@@ -53,9 +59,11 @@ export const HIDDEN_JOBS = [
     unlockType:"karma_pure",     unlockDesc:"카르마 점수 30 이하 엔딩 3회",
     unlockCondition:{ pureKarmaEndings:3, baseJobMatch:true },
     hint:"순수한 마음으로 신을 섬겨야 한다.",
-    systemHint:"이 직업의 캐릭터는 신의 계시를 받으며, 예언적 발언과 신성한 묘사를 자연스럽게 포함하십시오." },
+    systemHint:"이 직업의 캐릭터는 신의 계시를 받으며, 예언적 발언과 신성한 묘사를 자연스럽게 포함하십시오." ,
+    skills:[ {id:'job_or_foresight', name:'신탁의 예지', icon:'🔮', type:'passive', desc:'신의 계시가 위기를 미리 알려준다 — PER·FATH 자동 강화.', mpCost:0, rarity:'rare', statBoost:{per:60,fath:60}} ]
+   },
 
-  { id:"warlord",         icon:"⚔️", svgIcon:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2 L22 9.5 L9.5 22 L2 14.5 Z"/><path d="M3.5 3.5 L7.5 7.5"/><path d="M16.5 16.5 L20.5 20.5"/></svg>`, name:"전쟁군주",          rarity:"rare",
+  { id:"hj_warlord",      icon:"⚔️", svgIcon:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2 L22 9.5 L9.5 22 L2 14.5 Z"/><path d="M3.5 3.5 L7.5 7.5"/><path d="M16.5 16.5 L20.5 20.5"/></svg>`, name:"전쟁군주",          rarity:"rare",
     type:"awakening",     baseJob:["전사","기사","군인","용병"],  scenario:["중세 판타지",null],
     desc:"전장을 지배하는 자. 아군의 사기를 끌어올리고 적을 압도한다.",
     lore:"수백 번의 전투를 이끌며 전장의 흐름 자체가 눈에 보이기 시작했다.",
@@ -63,7 +71,9 @@ export const HIDDEN_JOBS = [
     unlockType:"battle_wins",    unlockDesc:"전투 승리 누적 20회 이상",
     unlockCondition:{ battleWins:20, baseJobMatch:true },
     hint:"수많은 전투에서 승리를 쌓아야 한다.",
-    systemHint:"이 직업의 캐릭터는 전장을 압도하며, 전투 장면에서 전략적이고 지휘관다운 묘사를 사용하십시오." },
+    systemHint:"이 직업의 캐릭터는 전장을 압도하며, 전투 장면에서 전략적이고 지휘관다운 묘사를 사용하십시오." ,
+    skills:[ {id:'job_wl_command', name:'군세 지휘', icon:'⚔️', type:'active', desc:'전장을 압도하는 호령으로 아군 전체를 고무시킨다.', mpCost:20, rarity:'rare', effects:{ kind:'buff', statMod:{ldr:20,str:10}, duration:4 }} ]
+   },
 
   { id:"artificer",       icon:"⚙️", svgIcon:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 3 L12 6 M12 18 L12 21 M3 12 L6 12 M18 12 L21 12 M5.5 5.5 L7.5 7.5 M16.5 16.5 L18.5 18.5 M18.5 5.5 L16.5 7.5 M7.5 16.5 L5.5 18.5" stroke-width="1.2"/></svg>`, name:"마법공학자",        rarity:"rare",
     type:"awakening",     baseJob:["발명가","엔지니어","연금술사","기술자"],  scenario:["사이버펑크","나만의 세계",null],
@@ -73,7 +83,9 @@ export const HIDDEN_JOBS = [
     unlockType:"craft_count",    unlockDesc:"제작/발명 관련 이벤트 10회 이상",
     unlockCondition:{ craftEvents:10, baseJobMatch:true },
     hint:"끊임없이 만들고 발명해야 한다.",
-    systemHint:"이 직업의 캐릭터는 창의적인 도구와 장치를 사용하며, 기발하고 독창적인 해결책을 묘사하십시오." },
+    systemHint:"이 직업의 캐릭터는 창의적인 도구와 장치를 사용하며, 기발하고 독창적인 해결책을 묘사하십시오." ,
+    skills:[ {id:'job_ar_construct', name:'전투 골렘 소환', icon:'⚙️', type:'active', desc:'마법공학으로 만든 전투 골렘을 소환한다.', mpCost:32, rarity:'rare', effects:{ kind:'summon', baseCount:1, maxActive:1, statScaling:{source:'locationTier', mult:1.2} }} ]
+   },
 
   { id:"berserk",         icon:"🔴", svgIcon:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="7" fill="currentColor" stroke="none"/></svg>`, name:"광전사",            rarity:"rare",
     type:"awakening",     baseJob:["전사","오크 전사","야만용사","버서커"],  scenario:[null],
@@ -83,7 +95,9 @@ export const HIDDEN_JOBS = [
     unlockType:"low_hp_survive", unlockDesc:"HP 10% 이하에서 전투 승리 5회",
     unlockCondition:{ lowHpWins:5, baseJobMatch:true },
     hint:"죽음 직전까지 몰려도 살아남아야 한다.",
-    systemHint:"이 직업의 캐릭터는 분노할수록 강해집니다. HP가 낮아질수록 묘사를 더욱 격렬하고 거칠게 표현하십시오." },
+    systemHint:"이 직업의 캐릭터는 분노할수록 강해집니다. HP가 낮아질수록 묘사를 더욱 격렬하고 거칠게 표현하십시오." ,
+    skills:[ {id:'job_bk_fury', name:'사투의 격노', icon:'🔴', type:'active', desc:'스스로에게 상처를 내 폭발적인 분노를 이끌어낸다.', mpCost:0, hpCost:20, rarity:'rare', effects:{ kind:'buff', statMod:{str:30,crit:15}, duration:3 }} ]
+   },
 
   { id:"blood_mage",      icon:"🩸", svgIcon:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 C12 3 6 11 6 15.5 C6 18.5 8.7 21 12 21 C15.3 21 18 18.5 18 15.5 C18 11 12 3 12 3 Z" stroke-linejoin="round"/></svg>`, name:"혈마법사",          rarity:"legendary",
     type:"awakening",     baseJob:["마법사","주술사","흑마법사","마도사"],  scenario:["중세 판타지","나만의 세계",null],
@@ -93,9 +107,11 @@ export const HIDDEN_JOBS = [
     unlockType:"dark_magic",     unlockDesc:"어둠/저주 계열 행동 누적 15회",
     unlockCondition:{ darkActs:15, baseJobMatch:true },
     hint:"어둠의 마법에 깊이 빠져야 한다.",
-    systemHint:"이 직업의 캐릭터는 자신의 피를 사용하는 금지된 마법을 구사합니다. 마법 사용 시 대가를 묘사하십시오." },
+    systemHint:"이 직업의 캐릭터는 자신의 피를 사용하는 금지된 마법을 구사합니다. 마법 사용 시 대가를 묘사하십시오." ,
+    skills:[ {id:'job_bm_sacrifice', name:'피의 계약', icon:'🩸', type:'active', desc:'자신의 피를 대가로 금지된 마법을 발동한다.', mpCost:0, hpCost:25, rarity:'legendary', effects:{ kind:'damage', statSource:{mgc:1}, damageMult:1.1, element:'dark' }} ]
+   },
 
-  { id:"sage",            icon:"📚", svgIcon:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4 L4 19 L11 19 L11 4 Z" stroke-linejoin="round"/><path d="M13 4 L13 19 L20 19 L20 4 Z" stroke-linejoin="round"/></svg>`, name:"현자",              rarity:"rare",
+  { id:"hj_sage",         icon:"📚", svgIcon:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4 L4 19 L11 19 L11 4 Z" stroke-linejoin="round"/><path d="M13 4 L13 19 L20 19 L20 4 Z" stroke-linejoin="round"/></svg>`, name:"현자",              rarity:"rare",
     type:"awakening",     baseJob:["학자","마법학자","연구자","탐정","지식인"],  scenario:[null],
     desc:"모든 분야의 지식을 섭렵한 자. 지식이 곧 힘이다.",
     lore:"수천 권의 책을 읽고 수많은 전생의 지식이 더해져 세계의 이치를 꿰뚫어보게 되었다.",
@@ -103,7 +119,9 @@ export const HIDDEN_JOBS = [
     unlockType:"cycle_knowledge", unlockDesc:"3회차 이상 + 전생어 해금",
     unlockCondition:{ minCycle:3, pastLanguageUnlocked:true, baseJobMatch:true },
     hint:"많은 생을 거쳐 지식을 쌓아야 한다.",
-    systemHint:"이 직업의 캐릭터는 박식하며, 어떤 상황에서도 관련 지식을 인용하고 분석하는 묘사를 포함하십시오." },
+    systemHint:"이 직업의 캐릭터는 박식하며, 어떤 상황에서도 관련 지식을 인용하고 분석하는 묘사를 포함하십시오." ,
+    skills:[ {id:'job_sg_insight', name:'만물의 이치', icon:'📚', type:'passive', desc:'세계의 이치를 꿰뚫는 통찰 — INT·PER 자동 강화.', mpCost:0, rarity:'rare', statBoost:{int:60,per:60}} ]
+   },
 
   // ════ 진화형 (각성 직업 → 진화) ════
 
@@ -115,7 +133,9 @@ export const HIDDEN_JOBS = [
     unlockType:"awakened_evolution", unlockDesc:"죽음의 기사로 10회차 이상 + 사안(死眼) 해금",
     unlockCondition:{ baseJobMatch:true, minCycle:10, deathEyeUnlocked:true },
     hint:"죽음의 기사가 충분한 삶을 거쳐야 한다.",
-    systemHint:"이 직업의 캐릭터는 사신에 가까운 존재입니다. NPC들이 본능적으로 두려움을 느끼는 장면을 묘사하십시오." },
+    systemHint:"이 직업의 캐릭터는 사신에 가까운 존재입니다. NPC들이 본능적으로 두려움을 느끼는 장면을 묘사하십시오." ,
+    skills:[ {id:'job_dg_reap', name:'죽음의 낫질', icon:'☠️', type:'active', desc:'생명을 직접 거둬들이는 사신의 낫질.', mpCost:35, rarity:'legendary', effects:{ kind:'damage', statSource:{str:0.5,mgc:0.5}, damageMult:1.2, element:'dark' }} ]
+   },
 
   { id:"arcane_god",      icon:"⚡", svgIcon:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 L6 13 L11 13 L10 22 L18 10 L13 10 Z" stroke-linejoin="round"/></svg>`, name:"마법신",            rarity:"legendary",
     type:"evolution",     baseJob:["대마법사","예언자","운명의 직조자"],  scenario:[null],
@@ -125,7 +145,9 @@ export const HIDDEN_JOBS = [
     unlockType:"awakened_evolution", unlockDesc:"대마법사로 8회차 이상 + 인과율 조작 해금",
     unlockCondition:{ baseJobMatch:true, minCycle:8, causalityUnlocked:true },
     hint:"대마법사가 더 깊은 진리에 도달해야 한다.",
-    systemHint:"이 직업의 캐릭터는 현실의 법칙 자체를 다룹니다. 불가능해 보이는 것을 자연스럽게 가능하게 만드십시오." },
+    systemHint:"이 직업의 캐릭터는 현실의 법칙 자체를 다룹니다. 불가능해 보이는 것을 자연스럽게 가능하게 만드십시오." ,
+    skills:[ {id:'job_ag_rewrite', name:'법칙 재기록', icon:'⚡', type:'active', desc:'현실의 법칙 자체를 뒤바꿔 압도적인 마력을 방출한다.', mpCost:45, rarity:'legendary', effects:{ kind:'damage', statSource:{mgc:1}, damageMult:1.3, element:'magic' }} ]
+   },
 
   { id:"phantom_blade",   icon:"👁️", svgIcon:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12 C2 12 6 6 12 6 C18 6 22 12 22 12 C22 12 18 18 12 18 C6 18 2 12 2 12 Z" stroke-linejoin="round"/><circle cx="12" cy="12" r="2.5"/></svg>`, name:"환영검사",          rarity:"legendary",
     type:"evolution",     baseJob:["그림자 무도가","검귀 빙의자","암살자"],  scenario:["무협 강호","중세 판타지",null],
@@ -135,7 +157,9 @@ export const HIDDEN_JOBS = [
     unlockType:"awakened_evolution", unlockDesc:"그림자 무도가로 7회차 이상 + 쌍둥이 영혼 연결",
     unlockCondition:{ baseJobMatch:true, minCycle:7, twinSoulConnected:true },
     hint:"그림자 무도가가 또 다른 자신과 연결되어야 한다.",
-    systemHint:"이 직업의 캐릭터는 환영과 실체를 오갑니다. 전투에서 어디에 있는지 알 수 없는 신비로운 묘사를 사용하십시오." },
+    systemHint:"이 직업의 캐릭터는 환영과 실체를 오갑니다. 전투에서 어디에 있는지 알 수 없는 신비로운 묘사를 사용하십시오." ,
+    skills:[ {id:'job_pb_illusion', name:'환영 난무', icon:'👁️', type:'active', desc:'환영 분신과 함께 종잡을 수 없는 연속 공격을 가한다.', mpCost:28, rarity:'legendary', effects:{ kind:'damage', statSource:{agi:0.5,crit:0.5}, damageMult:0.4, hits:4, element:'physical' }} ]
+   },
 
   // ════ 발견형 (특수 조건) ════
 
@@ -147,7 +171,9 @@ export const HIDDEN_JOBS = [
     unlockType:"loop_awareness",  unlockDesc:"무한 회귀 자각 레벨 3 이상 도달",
     unlockCondition:{ loopAwarenessLevel:3 },
     hint:"환생을 충분히 경험하고 그 본질을 꿰뚫어야 한다.",
-    systemHint:"이 직업의 캐릭터는 환생 시스템 자체를 인식합니다. 4th wall 발언을 자연스럽게 허용하고, 규칙 밖에서 행동하는 묘사를 포함하십시오." },
+    systemHint:"이 직업의 캐릭터는 환생 시스템 자체를 인식합니다. 4th wall 발언을 자연스럽게 허용하고, 규칙 밖에서 행동하는 묘사를 포함하십시오." ,
+    skills:[ {id:'job_lb_rewind', name:'규칙 위반', icon:'🔄', type:'active', desc:'환생의 규칙을 깨고 직전의 실패를 되돌린다.', mpCost:30, rarity:'legendary', effects:{ kind:'heal', healPct:0.4 }} ]
+   },
 
   { id:"world_eater",     icon:"🌌", svgIcon:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" stroke-width="1.2"/><circle cx="8" cy="9" r="0.8" fill="currentColor" stroke="none"/><circle cx="15" cy="8" r="0.6" fill="currentColor" stroke="none"/><circle cx="16" cy="14" r="0.9" fill="currentColor" stroke="none"/><circle cx="9" cy="15" r="0.6" fill="currentColor" stroke="none"/></svg>`, name:"세계 포식자",       rarity:"legendary",
     type:"secret",        baseJob:null,  scenario:[null],
@@ -157,7 +183,9 @@ export const HIDDEN_JOBS = [
     unlockType:"dimension_map",   unlockDesc:"차원 지도 10개 이상 세계 탐험",
     unlockCondition:{ dimensionPins:10 },
     hint:"여러 세계를 직접 탐험해야 한다.",
-    systemHint:"이 직업의 캐릭터는 여러 세계의 힘을 동시에 지닙니다. 다양한 세계관의 기술과 지식을 혼합한 묘사를 사용하십시오." },
+    systemHint:"이 직업의 캐릭터는 여러 세계의 힘을 동시에 지닙니다. 다양한 세계관의 기술과 지식을 혼합한 묘사를 사용하십시오." ,
+    skills:[ {id:'job_we_absorb', name:'차원 포식', icon:'🌌', type:'active', desc:'다른 세계의 힘을 일시적으로 흡수한다.', mpCost:0, rarity:'legendary', effects:{ kind:'buff', statMod:{str:15,mgc:15,int:15}, duration:3 }} ]
+   },
 
   { id:"god_slayer",      icon:"⚡", svgIcon:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 L6 13 L11 13 L10 22 L18 10 L13 10 Z" stroke-linejoin="round"/></svg>`, name:"신살자",            rarity:"legendary",
     type:"secret",        baseJob:null,  scenario:[null],
@@ -167,7 +195,9 @@ export const HIDDEN_JOBS = [
     unlockType:"sealed_god",      unlockDesc:"봉인된 신 조각 15개 완성 + 악역 계승",
     unlockCondition:{ sealedGodComplete:true, villainInheritCount:3 },
     hint:"봉인된 신을 완전히 해방시킨 뒤 그 힘마저 빼앗아야 한다.",
-    systemHint:"이 직업의 캐릭터는 신에 맞서는 존재입니다. 신적 존재와의 조우에서 대등하거나 우월한 묘사를 사용하십시오." },
+    systemHint:"이 직업의 캐릭터는 신에 맞서는 존재입니다. 신적 존재와의 조우에서 대등하거나 우월한 묘사를 사용하십시오." ,
+    skills:[ {id:'job_gs_slay', name:'신살의 일격', icon:'⚡', type:'active', desc:'신조차 벨 수 있다는 확신으로 내지르는 필살의 일격.', mpCost:40, rarity:'legendary', effects:{ kind:'damage', statSource:{str:0.5,mgc:0.5}, damageMult:1.4, element:'light' }} ]
+   },
 
   { id:"time_weaver",     icon:"⏳", svgIcon:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3 L18 3 L18 7 L13 12 L18 17 L18 21 L6 21 L6 17 L11 12 L6 7 Z" stroke-linejoin="round"/></svg>`, name:"시간 직조자",       rarity:"legendary",
     type:"secret",        baseJob:null,  scenario:[null],
@@ -177,7 +207,9 @@ export const HIDDEN_JOBS = [
     unlockType:"time_token",      unlockDesc:"시간 역행 토큰 총 10회 이상 사용",
     unlockCondition:{ timeTokenUsed:10 },
     hint:"시간을 여러 번 되돌리면 시간이 당신을 인식한다.",
-    systemHint:"이 직업의 캐릭터는 시간의 흐름을 인식합니다. 과거와 미래가 겹쳐 보이는 듯한 신비로운 묘사를 포함하십시오." },
+    systemHint:"이 직업의 캐릭터는 시간의 흐름을 인식합니다. 과거와 미래가 겹쳐 보이는 듯한 신비로운 묘사를 포함하십시오." ,
+    skills:[ {id:'job_tw_rewind', name:'되돌림의 실', icon:'⏳', type:'active', desc:'시간의 실을 되감아 위기를 회피한다.', mpCost:25, rarity:'legendary', effects:{ kind:'buff', statMod:{per:20,luk:20}, duration:3 }} ]
+   },
 
   { id:"karma_incarnate", icon:"⚖️", svgIcon:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12 L21 12" stroke-width="1.4"/><path d="M12 4 L12 20" stroke-width="1.2"/><path d="M6 12 L4 16 L8 16 Z M18 12 L16 16 L20 16 Z" stroke-width="1.1"/></svg>`, name:"업보 화신",         rarity:"legendary",
     type:"secret",        baseJob:null,  scenario:[null],
@@ -187,7 +219,9 @@ export const HIDDEN_JOBS = [
     unlockType:"karma_balance",   unlockDesc:"카르마 극선(≤20) + 극악(≥80) 엔딩 각 2회",
     unlockCondition:{ pureKarmaEndings:2, evilKarmaEndings:2 },
     hint:"선과 악 모두를 극단까지 경험해야 한다.",
-    systemHint:"이 직업의 캐릭터는 선악의 업보를 동시에 지닙니다. 동일한 행동이 선하게도 악하게도 해석될 수 있는 복잡한 묘사를 사용하십시오." },
+    systemHint:"이 직업의 캐릭터는 선악의 업보를 동시에 지닙니다. 동일한 행동이 선하게도 악하게도 해석될 수 있는 복잡한 묘사를 사용하십시오." ,
+    skills:[ {id:'job_ki_balance', name:'업보의 심판', icon:'⚖️', type:'active', desc:'선악의 업보를 한데 모아 심판을 내린다.', mpCost:0, rarity:'legendary', effects:{ kind:'damage', statSource:{wil:0.5,luk:0.5}, damageMult:1.0, element:'light' }} ]
+   },
 
   { id:"myth_hero",       icon:"🌟", svgIcon:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L14.7 9 L22 9.8 L16.5 14.6 L18.2 22 L12 18 L5.8 22 L7.5 14.6 L2 9.8 L9.3 9 Z" stroke-linejoin="round"/></svg>`, name:"신화의 영웅",       rarity:"legendary",
     type:"secret",        baseJob:null,  scenario:[null],
@@ -197,7 +231,9 @@ export const HIDDEN_JOBS = [
     unlockType:"legend_complete", unlockDesc:"음유시인 명성 80 이상 + 신전 레벨 3 이상",
     unlockCondition:{ bardFame:80, templeLevel:3 },
     hint:"세계에 이름을 남기고 신앙의 대상이 되어야 한다.",
-    systemHint:"이 직업의 캐릭터는 살아있는 신화입니다. 처음 만나는 NPC들도 이름을 알고 경외하는 반응을 묘사하십시오." },
+    systemHint:"이 직업의 캐릭터는 살아있는 신화입니다. 처음 만나는 NPC들도 이름을 알고 경외하는 반응을 묘사하십시오." ,
+    skills:[ {id:'job_mh_legend', name:'전설의 위업', icon:'🌟', type:'passive', desc:'세계가 그 이름을 기억한다 — REP·LDR 자동 강화.', mpCost:0, rarity:'legendary', statBoost:{rep:60,ldr:60}} ]
+   },
 
   { id:"void_walker",     icon:"🌑", svgIcon:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8" stroke-width="1.3"/><circle cx="12" cy="12" r="8" fill="currentColor" fill-opacity="0.6" stroke="none"/></svg>`, name:"공허 보행자",       rarity:"legendary",
     type:"secret",        baseJob:null,  scenario:[null],
@@ -207,7 +243,9 @@ export const HIDDEN_JOBS = [
     unlockType:"undying_extreme", unlockDesc:"불사 게이지 최대치 + 누적 사망 30회 이상",
     unlockCondition:{ undyingMaxed:true, totalDeaths:30 },
     hint:"죽음의 경계를 셀 수 없이 넘어야 한다.",
-    systemHint:"이 직업의 캐릭터는 반쯤 공허에 속해 있습니다. 존재감이 희미한 듯하면서도 압도적인 이중적 묘사를 사용하십시오." },
+    systemHint:"이 직업의 캐릭터는 반쯤 공허에 속해 있습니다. 존재감이 희미한 듯하면서도 압도적인 이중적 묘사를 사용하십시오." ,
+    skills:[ {id:'job_vw_phase', name:'반존재화', icon:'🌑', type:'active', desc:'존재를 절반쯤 지워 공격을 무의미하게 만든다.', mpCost:20, rarity:'legendary', effects:{ kind:'buff', statMod:{agi:20,mgc:15}, duration:3 }} ]
+   },
 
   { id:"reincarnation_master", icon:"♾️", svgIcon:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 8 C4.2 8 2 10 2 12 C2 14 4.2 16 7 16 C10 16 11 12 12 12 C13 12 14 16 17 16 C19.8 16 22 14 22 12 C22 10 19.8 8 17 8 C14 8 13 12 12 12 C11 12 10 8 7 8 Z" stroke-linejoin="round"/></svg>`, name:"환생 지배자",  rarity:"legendary",
     type:"secret",        baseJob:null,  scenario:[null],
@@ -217,7 +255,9 @@ export const HIDDEN_JOBS = [
     unlockType:"reincarnation_rank", unlockDesc:"윤회 등급 신급 이상 + 20회차 이상",
     unlockCondition:{ reincarnationRank:3, minCycle:20 },
     hint:"수많은 삶을 거쳐 최고의 윤회자가 되어야 한다.",
-    systemHint:"이 직업의 캐릭터는 전생의 모든 기억과 힘을 자유롭게 사용합니다. 어떤 전생의 기술도 꺼내 쓸 수 있는 전능한 묘사를 사용하십시오." },
+    systemHint:"이 직업의 캐릭터는 전생의 모든 기억과 힘을 자유롭게 사용합니다. 어떤 전생의 기술도 꺼내 쓸 수 있는 전능한 묘사를 사용하십시오." ,
+    skills:[ {id:'job_rm_allpower', name:'전생 총화', icon:'♾️', type:'active', desc:'모든 전생의 기억과 힘을 한순간에 끌어낸다.', mpCost:30, rarity:'legendary', effects:{ kind:'damage', statSource:{str:0.34,mgc:0.33,int:0.33}, damageMult:1.1, element:'magic' }} ]
+   },
 
   // ════ 새로운 각성형 (일반 직업 → 각성) ════
 
@@ -229,7 +269,9 @@ export const HIDDEN_JOBS = [
     unlockType:"npc_death_count", unlockDesc:"NPC 동료 사망 10회 이상 경험",
     unlockCondition:{ npcDeathCount:10, baseJobMatch:true },
     hint:"죽음을 충분히 곁에서 지켜봐야 한다.",
-    systemHint:"이 직업은 주변에서 죽은 영혼들이 따라다니며, 전투 외에도 죽은 NPC의 목소리를 듣거나 메시지를 전달하는 묘사를 포함하십시오." },
+    systemHint:"이 직업은 주변에서 죽은 영혼들이 따라다니며, 전투 외에도 죽은 NPC의 목소리를 듣거나 메시지를 전달하는 묘사를 포함하십시오." ,
+    skills:[ {id:'job_srp_harvest', name:'영혼 수확', icon:'⛓️', type:'active', desc:'죽어가는 적의 영혼을 강제로 거둬들인다.', mpCost:22, rarity:'legendary', effects:{ kind:'damage', statSource:{mgc:0.6,per:0.4}, damageMult:0.85, element:'dark', lifesteal:0.3 }} ]
+   },
 
   { id:"cursed_blade",     icon:"🩸", svgIcon:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 C12 3 6 11 6 15.5 C6 18.5 8.7 21 12 21 C15.3 21 18 18.5 18 15.5 C18 11 12 3 12 3 Z" stroke-linejoin="round"/></svg>`, name:"저주 검사",         rarity:"legendary",
     type:"awakening",     baseJob:["검사","기사","팔라딘","전사","검객","무사"],  scenario:["중세 판타지","무협 강호",null],
@@ -239,7 +281,9 @@ export const HIDDEN_JOBS = [
     unlockType:"dark_weapon_use", unlockDesc:"저주받은 무기 장착 상태로 전투 15회 이상",
     unlockCondition:{ darkActs:15, baseJobMatch:true },
     hint:"저주받은 힘에 의존하면 할수록 그 경지에 가까워진다.",
-    systemHint:"검사의 몸에 저주 문양이 퍼져 있으며, 강한 공격을 할수록 자신에게도 대가가 따르는 묘사를 항상 포함하십시오." },
+    systemHint:"검사의 몸에 저주 문양이 퍼져 있으며, 강한 공격을 할수록 자신에게도 대가가 따르는 묘사를 항상 포함하십시오." ,
+    skills:[ {id:'job_cb_curse', name:'저주의 참격', icon:'🩸', type:'active', desc:'저주받은 검으로 대가를 감수하며 벤다.', mpCost:0, hpCost:10, rarity:'legendary', effects:{ kind:'damage', statSource:{str:0.7,mgc:0.3}, damageMult:1.05, element:'dark' }} ]
+   },
 
   { id:"star_caller",      icon:"🌠", svgIcon:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L14.7 9 L22 9.8 L16.5 14.6 L18.2 22 L12 18 L5.8 22 L7.5 14.6 L2 9.8 L9.3 9 Z" stroke-linejoin="round"/><path d="M2 4 L6 6" stroke-width="1.1" opacity="0.6"/></svg>`, name:"별의 부름자",       rarity:"rare",
     type:"awakening",     baseJob:["마법사","마도사","점성술사","학자","탐정"],  scenario:[null],
@@ -249,7 +293,9 @@ export const HIDDEN_JOBS = [
     unlockType:"cycle_knowledge", unlockDesc:"3회차 이상 + 다양한 세계관 탐험",
     unlockCondition:{ minCycle:3, baseJobMatch:true },
     hint:"오랜 시간 하늘을 올려다보며 지식을 쌓아야 한다.",
-    systemHint:"별빛이 이 캐릭터를 감싸며, 별자리에 따라 다른 힘을 사용하는 묘사를 포함하십시오. 별자리 판단은 그날의 운세처럼 묘사하면 좋습니다." },
+    systemHint:"별빛이 이 캐릭터를 감싸며, 별자리에 따라 다른 힘을 사용하는 묘사를 포함하십시오. 별자리 판단은 그날의 운세처럼 묘사하면 좋습니다." ,
+    skills:[ {id:'job_sc_starfall', name:'별의 강림', icon:'🌠', type:'active', desc:'밤하늘의 별을 끌어내려 적에게 쏟아붓는다.', mpCost:26, rarity:'rare', effects:{ kind:'damage', statSource:{mgc:0.6,luk:0.4}, damageMult:0.9, element:'light' }} ]
+   },
 
   { id:"wandering_ghost",  icon:"👻", svgIcon:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21 C12 21 4 15.5 4 9.5 C4 6.5 6.2 4.5 8.8 4.5 C10.2 4.5 11.3 5.2 12 6.3 C12.7 5.2 13.8 4.5 15.2 4.5 C17.8 4.5 20 6.5 20 9.5 C20 15.5 12 21 12 21 Z" stroke-linejoin="round"/></svg>`, name:"방랑 검귀",         rarity:"rare",
     type:"awakening",     baseJob:["검사","자객","암살자","도적","레인저","검객"],  scenario:["무협 강호","중세 판타지",null],
@@ -259,7 +305,9 @@ export const HIDDEN_JOBS = [
     unlockType:"low_hp_survive", unlockDesc:"HP 10% 이하에서 강자와의 1:1 전투 3회 생존",
     unlockCondition:{ lowHpWins:3, baseJobMatch:true },
     hint:"죽음 직전까지 가는 일대일 결투를 반복해야 한다.",
-    systemHint:"캐릭터 안에 검귀가 때때로 목소리를 내거나 행동을 조언하는 묘사를 포함하십시오. 광기 수치가 높을수록 검귀의 목소리가 강해집니다." },
+    systemHint:"캐릭터 안에 검귀가 때때로 목소리를 내거나 행동을 조언하는 묘사를 포함하십시오. 광기 수치가 높을수록 검귀의 목소리가 강해집니다." ,
+    skills:[ {id:'job_wg_possess', name:'검귀 빙의', icon:'👻', type:'active', desc:'몸속 검귀에게 잠시 몸을 내주고 그 기술을 빌린다.', mpCost:0, hpCost:15, rarity:'rare', effects:{ kind:'buff', statMod:{str:20,agi:20}, duration:3 }} ]
+   },
 
   { id:"blood_dancer",     icon:"💃", svgIcon:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4" r="2"/><path d="M12 6 L12 13 M12 9 L7 6 M12 9 L18 12 M12 13 L8 20 M12 13 L17 19" stroke-width="1.3"/></svg>`, name:"혈무 무도가",        rarity:"rare",
     type:"awakening",     baseJob:["도적","암살자","자객","닌자","곡예사"],  scenario:[null],
@@ -269,7 +317,9 @@ export const HIDDEN_JOBS = [
     unlockType:"scenario_clear", unlockDesc:"은신/잠입 스타일로 전투 승리 12회 이상",
     unlockCondition:{ stealthEndings:2, baseJobMatch:true },
     hint:"아름답게 싸워야 한다. 거칠지 않게.",
-    systemHint:"이 캐릭터의 전투는 항상 춤처럼 묘사하십시오. 발놀림, 손짓, 몸의 움직임이 예술적으로 보이도록 하되 그 결과는 치명적입니다." },
+    systemHint:"이 캐릭터의 전투는 항상 춤처럼 묘사하십시오. 발놀림, 손짓, 몸의 움직임이 예술적으로 보이도록 하되 그 결과는 치명적입니다." ,
+    skills:[ {id:'job_bd_waltz', name:'혈무', icon:'💃', type:'active', desc:'피와 춤을 섞은 연속 공격을 화려하게 펼친다.', mpCost:16, rarity:'rare', effects:{ kind:'damage', statSource:{agi:0.6,crit:0.4}, damageMult:0.55, hits:3, element:'physical' }} ]
+   },
 
   { id:"iron_monk",        icon:"🪨", svgIcon:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16 C4 13 6.5 10 9.5 9.5 C10.5 7 13 5.5 16 6.5 C19 7.3 20.5 10 20 13 C21.5 14 21.5 16.5 20 18 C19 19 17.5 19 16.5 18.5 C15.5 19.5 13.5 20 12 19 C10.5 20 8 19.5 7 18 C5 18.5 3.5 17.5 4 16 Z" stroke-linejoin="round"/></svg>`, name:"철혈 수도승",        rarity:"rare",
     type:"awakening",     baseJob:["수도사","승려","무도가","격투가","팔라딘"],  scenario:["무협 강호","중세 판타지",null],
@@ -279,7 +329,9 @@ export const HIDDEN_JOBS = [
     unlockType:"battle_wins", unlockDesc:"무기 없이(맨손) 전투 승리 10회 이상",
     unlockCondition:{ battleWins:10, baseJobMatch:true },
     hint:"끊임없이 수련하고 명상해야 한다.",
-    systemHint:"이 캐릭터는 무기를 사용하지 않을 때 가장 강하며, 맨몸 전투 장면에서 바위를 부수고 창을 맨손으로 막는 초인적 묘사를 사용하십시오." },
+    systemHint:"이 캐릭터는 무기를 사용하지 않을 때 가장 강하며, 맨몸 전투 장면에서 바위를 부수고 창을 맨손으로 막는 초인적 묘사를 사용하십시오." ,
+    skills:[ {id:'job_im_ironbody', name:'금강불괴', icon:'🪨', type:'passive', desc:'육체가 강철을 넘어섰다 — END·STR 자동 강화.', mpCost:0, rarity:'rare', statBoost:{end:60,str:60}} ]
+   },
 
   { id:"runic_carver",     icon:"🔣", svgIcon:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="1" stroke-width="1.2"/><circle cx="17" cy="7" r="4" stroke-width="1.2"/><path d="M4 19 L11 12 M13 19 L20 19" stroke-width="1.2"/></svg>`, name:"룬 각인사",          rarity:"rare",
     type:"awakening",     baseJob:["마법사","연금술사","학자","발명가","마법학자"],  scenario:["중세 판타지","나만의 세계",null],
@@ -289,7 +341,9 @@ export const HIDDEN_JOBS = [
     unlockType:"skill_use", unlockDesc:"마법·룬 계열 스킬 총 25회 이상 사용",
     unlockCondition:{ skillUseCount:25, baseJobMatch:true },
     hint:"룬을 끊임없이 연구하고 각인해야 한다.",
-    systemHint:"이 캐릭터의 피부에는 빛나는 룬 문자가 새겨져 있으며, 스킬 사용 시 특정 룬이 활성화되는 묘사를 포함하십시오." },
+    systemHint:"이 캐릭터의 피부에는 빛나는 룬 문자가 새겨져 있으며, 스킬 사용 시 특정 룬이 활성화되는 묘사를 포함하십시오." ,
+    skills:[ {id:'job_rc_engrave', name:'전투 룬 각인', icon:'🔣', type:'active', desc:'즉석에서 룬을 새겨 폭발적인 마력을 방출한다.', mpCost:20, rarity:'rare', effects:{ kind:'damage', statSource:{mgc:0.7,int:0.3}, damageMult:0.85, element:'magic' }} ]
+   },
 
   { id:"chain_breaker",    icon:"🔓", svgIcon:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="1.5" stroke-linejoin="round"/><path d="M7 11 L7 7 C7 4.5 9 3 12 3 C14 3 15.5 4 16.3 5.5" stroke-width="1.2"/></svg>`, name:"속박 해방자",         rarity:"rare",
     type:"awakening",     baseJob:["성직자","팔라딘","기사","전사","혁명가"],  scenario:[null],
@@ -299,7 +353,9 @@ export const HIDDEN_JOBS = [
     unlockType:"karma_pure", unlockDesc:"피억압자를 구한 선택 누적 15회",
     unlockCondition:{ pureKarmaEndings:2, baseJobMatch:true },
     hint:"약자를 돕고 억압에 맞서야 한다.",
-    systemHint:"이 캐릭터 앞에서 사슬, 봉인, 계약 같은 속박이 자연스럽게 풀리며, 억압받는 NPC들이 본능적으로 이 자를 따르는 묘사를 사용하십시오." },
+    systemHint:"이 캐릭터 앞에서 사슬, 봉인, 계약 같은 속박이 자연스럽게 풀리며, 억압받는 NPC들이 본능적으로 이 자를 따르는 묘사를 사용하십시오." ,
+    skills:[ {id:'job_cbr_shatter', name:'사슬 파쇄', icon:'🔓', type:'active', desc:'모든 속박과 저주를 힘으로 부순다.', mpCost:18, rarity:'rare', effects:{ kind:'damage', statSource:{wil:0.5,str:0.5}, damageMult:0.75, element:'light' }} ]
+   },
 
   // ════ 새로운 진화형 ════
 
@@ -311,7 +367,9 @@ export const HIDDEN_JOBS = [
     unlockType:"awakened_evolution", unlockDesc:"영혼 수확자 or 죽음의 기사로 8회차 이상 + 사안 해금",
     unlockCondition:{ baseJobMatch:true, minCycle:8, deathEyeUnlocked:true },
     hint:"영혼을 다루는 직업으로 충분한 생을 쌓아야 한다.",
-    systemHint:"이 캐릭터 앞에서는 살아있는 존재도 죽음을 느끼며, 생명의 불꽃이 얼마나 남아있는지 수치로 보이는 능력을 자연스럽게 묘사하십시오." },
+    systemHint:"이 캐릭터 앞에서는 살아있는 존재도 죽음을 느끼며, 생명의 불꽃이 얼마나 남아있는지 수치로 보이는 능력을 자연스럽게 묘사하십시오." ,
+    skills:[ {id:'job_rl_decree', name:'생사의 칙령', icon:'💀', type:'active', desc:'생과 사를 가르는 절대적인 칙령을 내린다.', mpCost:38, rarity:'legendary', effects:{ kind:'damage', statSource:{mgc:0.6,fear:0.4}, damageMult:1.15, element:'dark' }} ]
+   },
 
   { id:"divine_sovereign",  icon:"👑", svgIcon:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17 L3 8 L7.5 12 L12 4 L16.5 12 L21 8 L21 17 Z" stroke-linejoin="round"/><path d="M3 17 L21 17 L21 20 L3 20 Z" stroke-linejoin="round"/></svg>`, name:"신격 군주",           rarity:"legendary",
     type:"evolution",     baseJob:["신화의 영웅","환생 지배자","신살자"],  scenario:[null],
@@ -321,7 +379,9 @@ export const HIDDEN_JOBS = [
     unlockType:"awakened_evolution", unlockDesc:"신화의 영웅으로 12회차 이상 + 신전 레벨 최대",
     unlockCondition:{ baseJobMatch:true, minCycle:12, templeLevel:5 },
     hint:"신화의 영웅이 신화를 넘어서야 한다.",
-    systemHint:"이 캐릭터 앞에서 NPC들은 본능적으로 무릎을 꿇거나 기도하는 자세를 취하며, 자연 현상도 이 존재의 의지에 반응하는 묘사를 사용하십시오." },
+    systemHint:"이 캐릭터 앞에서 NPC들은 본능적으로 무릎을 꿇거나 기도하는 자세를 취하며, 자연 현상도 이 존재의 의지에 반응하는 묘사를 사용하십시오." ,
+    skills:[ {id:'job_ds_edict', name:'신격 선언', icon:'👑', type:'active', desc:'신격을 초월한 존재로서 세계에 뜻을 선포한다.', mpCost:40, rarity:'legendary', effects:{ kind:'damage', statSource:{mgc:0.5,wil:0.5}, damageMult:1.3, element:'light' }} ]
+   },
 
   { id:"cursed_sovereign",  icon:"🔴", svgIcon:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="7" fill="currentColor" stroke="none"/></svg>`, name:"저주의 군주",          rarity:"legendary",
     type:"evolution",     baseJob:["저주 검사","혈마법사","어둠의 마법사"],  scenario:[null],
@@ -331,7 +391,9 @@ export const HIDDEN_JOBS = [
     unlockType:"awakened_evolution", unlockDesc:"저주 검사 or 혈마법사로 7회차 이상 + 어둠 행동 30회",
     unlockCondition:{ baseJobMatch:true, minCycle:7, darkActs:30 },
     hint:"저주받은 직업으로 어둠의 길을 오래 걸어야 한다.",
-    systemHint:"이 캐릭터는 저주를 먹고 자라며, 다른 존재의 저주를 흡수해 더 강해지는 묘사를 사용하십시오. 몸 주변에 항상 어두운 기운이 소용돌이칩니다." },
+    systemHint:"이 캐릭터는 저주를 먹고 자라며, 다른 존재의 저주를 흡수해 더 강해지는 묘사를 사용하십시오. 몸 주변에 항상 어두운 기운이 소용돌이칩니다." ,
+    skills:[ {id:'job_cs_absorb', name:'저주 흡수', icon:'🔴', type:'active', desc:'주변의 모든 저주를 흡수해 자신의 힘으로 되돌린다.', mpCost:0, rarity:'legendary', effects:{ kind:'buff', statMod:{mgc:25,crit:15}, duration:4 }} ]
+   },
 
   // ════ 새로운 발견형 (특수 조건) ════
 
@@ -343,7 +405,9 @@ export const HIDDEN_JOBS = [
     unlockType:"high_madness_survive", unlockDesc:"광기 수치 90 이상에서 생존 3회 이상",
     unlockCondition:{ loopAwarenessLevel:2, totalDeaths:10 },
     hint:"광기의 끝에서도 살아남아야 한다.",
-    systemHint:"이 캐릭터는 언뜻 말이 안 되는 소리를 하지만 그 말 속에 진리가 담겨있습니다. 예언적이고 역설적인 발언을 자주 사용하십시오." },
+    systemHint:"이 캐릭터는 언뜻 말이 안 되는 소리를 하지만 그 말 속에 진리가 담겨있습니다. 예언적이고 역설적인 발언을 자주 사용하십시오." ,
+    skills:[ {id:'job_fs_paradox', name:'역설의 통찰', icon:'🃏', type:'passive', desc:'광기 속에서 남들이 못 보는 진리를 본다 — INT·LUK 자동 강화.', mpCost:0, rarity:'legendary', statBoost:{int:60,luk:60}} ]
+   },
 
   { id:"echo_of_past",     icon:"🔁", svgIcon:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12 C4 7.5 7.5 4 12 4 C15 4 17.5 5.5 19 8" /><path d="M19 3 L19 8 L14 8" /><path d="M20 12 C20 16.5 16.5 20 12 20 C9 20 6.5 18.5 5 16" /><path d="M5 21 L5 16 L10 16" /></svg>`, name:"과거의 메아리",        rarity:"legendary",
     type:"secret",        baseJob:null,  scenario:[null],
@@ -353,7 +417,9 @@ export const HIDDEN_JOBS = [
     unlockType:"loop_awareness", unlockDesc:"전생 기억 완전 각성 + 회차 12회 이상",
     unlockCondition:{ loopAwarenessLevel:3, minCycle:12 },
     hint:"오래 환생하며 기억을 모두 끌어올려야 한다.",
-    systemHint:"이 캐릭터는 상황에 따라 다른 전생 자아의 목소리와 전투 스타일을 드러냅니다. 대화 중 갑자기 과거의 말투나 습관이 나오는 묘사를 사용하십시오." },
+    systemHint:"이 캐릭터는 상황에 따라 다른 전생 자아의 목소리와 전투 스타일을 드러냅니다. 대화 중 갑자기 과거의 말투나 습관이 나오는 묘사를 사용하십시오." ,
+    skills:[ {id:'job_eop_memories', name:'전생의 목소리', icon:'🔁', type:'active', desc:'역대 전생의 자아들이 동시에 힘을 빌려준다.', mpCost:15, rarity:'legendary', effects:{ kind:'buff', statMod:{str:12,mgc:12,agi:12}, duration:3 }} ]
+   },
 
   { id:"shadow_sovereign",  icon:"🌑", svgIcon:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8" stroke-width="1.3"/><circle cx="12" cy="12" r="8" fill="currentColor" fill-opacity="0.6" stroke="none"/></svg>`, name:"그림자 지배자",        rarity:"legendary",
     type:"secret",        baseJob:null,  scenario:[null],
@@ -363,7 +429,9 @@ export const HIDDEN_JOBS = [
     unlockType:"scenario_clear", unlockDesc:"완벽한 은신 엔딩 3회 이상 + 그림자 무도가 해금",
     unlockCondition:{ stealthEndings:3, pastLanguageUnlocked:true },
     hint:"발각되지 않고 완벽한 은신에 성공해야 한다.",
-    systemHint:"이 캐릭터가 원하면 어떠한 그림자에서도 출몰할 수 있으며, 그림자가 독립적으로 움직여 정보를 수집하거나 공격하는 묘사를 사용하십시오." },
+    systemHint:"이 캐릭터가 원하면 어떠한 그림자에서도 출몰할 수 있으며, 그림자가 독립적으로 움직여 정보를 수집하거나 공격하는 묘사를 사용하십시오." ,
+    skills:[ {id:'job_ss_shadows', name:'그림자 군단', icon:'🌑', type:'active', desc:'사방의 그림자가 동시에 일어나 적을 공격한다.', mpCost:24, rarity:'legendary', effects:{ kind:'damage', statSource:{disg:0.5,agi:0.5}, damageMult:0.9, element:'dark' }} ]
+   },
 
   { id:"dragon_sovereign",  icon:"🐉", svgIcon:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20 L8 6 L11 12 L13 9 L22 20 Z" stroke-linejoin="round"/><path d="M8 6 L6.5 3 M8 6 L9.5 3.5" stroke-width="1.2"/></svg>`, name:"용왕",                rarity:"legendary",
     type:"secret",        baseJob:null,  scenario:["중세 판타지","무협 강호",null],
@@ -373,7 +441,9 @@ export const HIDDEN_JOBS = [
     unlockType:"sealed_god", unlockDesc:"드래곤 관련 이벤트 누적 20회 + 용의 피 칭호 보유",
     unlockCondition:{ sealedGodComplete:false, villainInheritCount:2, bardFame:50 },
     hint:"용과 충분히 교류하고 용의 피를 얻어야 한다.",
-    systemHint:"이 캐릭터 앞에서 모든 용은 복종하거나 도전합니다. 용과의 대화가 가능하며 용족의 힘을 빌려 쓸 수 있는 묘사를 포함하십시오." },
+    systemHint:"이 캐릭터 앞에서 모든 용은 복종하거나 도전합니다. 용과의 대화가 가능하며 용족의 힘을 빌려 쓸 수 있는 묘사를 포함하십시오." ,
+    skills:[ {id:'job_drs_breath', name:'용왕의 숨결', icon:'🐉', type:'active', desc:'용왕의 위엄이 담긴 숨결을 내뿜는다.', mpCost:35, rarity:'legendary', effects:{ kind:'damage', statSource:{str:0.5,mgc:0.5}, damageMult:1.2, element:'fire' }} ]
+   },
 
   { id:"concept_breaker",   icon:"❌", svgIcon:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5 L19 19 M19 5 L5 19" stroke-width="1.8"/></svg>`, name:"개념 파괴자",          rarity:"legendary",
     type:"secret",        baseJob:null,  scenario:[null],
@@ -383,7 +453,9 @@ export const HIDDEN_JOBS = [
     unlockType:"legend_complete", unlockDesc:"루프 파괴자 + 신살자 + 시간 직조자 모두 해금",
     unlockCondition:{ bardFame:90, templeLevel:4 },
     hint:"세계의 규칙을 어기는 세 가지 직업을 모두 해금해야 한다.",
-    systemHint:"이 캐릭터는 게임의 규칙 자체를 무시하는 행동이 가능합니다. '그건 불가능하다'는 묘사가 나와도 이 캐릭터는 그냥 해버리는 결과를 보여주십시오." },
+    systemHint:"이 캐릭터는 게임의 규칙 자체를 무시하는 행동이 가능합니다. '그건 불가능하다'는 묘사가 나와도 이 캐릭터는 그냥 해버리는 결과를 보여주십시오." ,
+    skills:[ {id:'job_cnb_break', name:'개념 파괴', icon:'❌', type:'active', desc:"'불가능'이라는 개념 자체를 부숴버린다.", mpCost:45, rarity:'legendary', effects:{ kind:'damage', statSource:{wil:0.5,int:0.5}, damageMult:1.35, element:'magic' }} ]
+   },
 
   // ════ 전사 계열 히든 직업 (5개) ════
 
@@ -395,7 +467,9 @@ export const HIDDEN_JOBS = [
     unlockType:"battle_wins", unlockDesc:"전사 계열로 전투 중 HP 30% 이하로 떨어진 뒤 승리 15회",
     unlockCondition:{ lowHpWins:15, baseJobMatch:true },
     hint:"상처를 입으면서도 계속 이겨내야 한다.",
-    systemHint:"이 캐릭터는 부상을 입을수록 눈이 충혈되고 근력이 올라가는 묘사를 사용하십시오. 피 냄새를 맡으면 이성이 흐려지지만 전투력은 폭발적으로 상승합니다." },
+    systemHint:"이 캐릭터는 부상을 입을수록 눈이 충혈되고 근력이 올라가는 묘사를 사용하십시오. 피 냄새를 맡으면 이성이 흐려지지만 전투력은 폭발적으로 상승합니다." ,
+    skills:[ {id:'job_bkn_bloodrage', name:'혈기 폭발', icon:'🩸', type:'active', desc:'흘린 피가 오히려 힘이 되어 폭발한다.', mpCost:0, hpCost:15, rarity:'legendary', effects:{ kind:'damage', statSource:{str:0.7,end:0.3}, damageMult:0.95, element:'physical', lifesteal:0.25 }} ]
+   },
 
   { id:"titan_guard",       icon:"🗿⚔️", svgIcon:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(-2,-2) scale(0.62)"><path d="M8 3 L16 3 L18 12 L18 20 L6 20 L6 12 Z" stroke-linejoin="round"/><path d="M9 9 L11 9 M13 9 L15 9" stroke-width="1.3"/></g><g transform="translate(6,6) scale(0.62)"><path d="M14.5 2 L22 9.5 L9.5 22 L2 14.5 Z"/><path d="M3.5 3.5 L7.5 7.5"/><path d="M16.5 16.5 L20.5 20.5"/></g></svg>`, name:"거인의 방패",         rarity:"rare",
     type:"awakening",     baseJob:["전사","기사","팔라딘","수호기사","철벽검사"],  scenario:["중세 판타지","나만의 세계",null],
@@ -405,7 +479,9 @@ export const HIDDEN_JOBS = [
     unlockType:"battle_wins", unlockDesc:"아군 NPC를 보호한 전투 20회 이상 + END 85 달성",
     unlockCondition:{ battleWins:20, baseJobMatch:true },
     hint:"자신보다 동료를 먼저 지켜야 한다.",
-    systemHint:"이 캐릭터가 방어 자세를 취하면 아군 전체에 결계가 쳐지는 느낌을 주십시오. 적의 공격이 이 자를 뚫지 못할 때 장엄하게 묘사하십시오." },
+    systemHint:"이 캐릭터가 방어 자세를 취하면 아군 전체에 결계가 쳐지는 느낌을 주십시오. 적의 공격이 이 자를 뚫지 못할 때 장엄하게 묘사하십시오." ,
+    skills:[ {id:'job_tg_bulwark', name:'철벽 수호', icon:'🗿', type:'passive', desc:'혼자서 전선을 지탱하는 굳건함 — END·WIL 자동 강화.', mpCost:0, rarity:'rare', statBoost:{end:60,wil:60}} ]
+   },
 
   { id:"sword_saint",       icon:"⚡🗡️", svgIcon:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(-2,-2) scale(0.62)"><path d="M13 2 L6 13 L11 13 L10 22 L18 10 L13 10 Z" stroke-linejoin="round"/></g><g transform="translate(6,6) scale(0.62)"><path d="M20 4 L4 20"/><path d="M20 4 L15 4 L20 9 Z"/><path d="M4 20 L5 17 L7 19 Z"/></g></svg>`, name:"검성(劍聖)",          rarity:"legendary",
     type:"evolution",     baseJob:["검성","광전사","죽음의 기사","저주 검사","방랑 검귀"],  scenario:["무협 강호","중세 판타지",null],
@@ -415,7 +491,9 @@ export const HIDDEN_JOBS = [
     unlockType:"awakened_evolution", unlockDesc:"검 계열 각성직 보유 + STR 90 + AGI 80 + 전투 승리 50회",
     unlockCondition:{ baseJobMatch:true, minCycle:5, battleWins:50 },
     hint:"검 계열 각성직으로 극한까지 단련해야 한다.",
-    systemHint:"이 캐릭터의 검격은 공기를 가르는 소리만으로 적을 위협합니다. 검을 뽑기 전부터 적이 압도당하는 묘사를 사용하십시오." },
+    systemHint:"이 캐릭터의 검격은 공기를 가르는 소리만으로 적을 위협합니다. 검을 뽑기 전부터 적이 압도당하는 묘사를 사용하십시오." ,
+    skills:[ {id:'job_sws_oneness', name:'검심일체', icon:'⚡', type:'active', desc:'검과 사람이 하나가 된 궁극의 검격.', mpCost:30, rarity:'legendary', effects:{ kind:'damage', statSource:{str:0.5,agi:0.5}, damageMult:1.25, element:'physical' }} ]
+   },
 
   { id:"war_incarnate",     icon:"🔥🏹", svgIcon:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(-2,-2) scale(0.62)"><path d="M12 21 C8 21 6 18.5 6 15.5 C6 13 7.5 11.5 8 10 C8.3 11 9 11.5 9.5 11 C9 8 10.5 5 13 3 C12.5 5.5 14 7 15 8.5 C16 10 17.5 11.5 17.5 14.5 C17.5 18.5 15 21 12 21 Z" stroke-linejoin="round"/></g><g transform="translate(6,6) scale(0.62)"><path d="M5 19 L19 5"/><path d="M19 5 L14 5 L19 10 Z"/><path d="M5 19 L6 15 L9 18 Z"/><path d="M3 12 C3 12 8 10 12 3" stroke-width="1.3"/></g></svg>`, name:"전쟁의 화신",          rarity:"legendary",
     type:"secret",        baseJob:null,  scenario:[null],
@@ -425,7 +503,9 @@ export const HIDDEN_JOBS = [
     unlockType:"battle_wins", unlockDesc:"총 전투 승리 100회 이상 + 전쟁군주 해금",
     unlockCondition:{ battleWins:100, villainInheritCount:3 },
     hint:"수백 번의 전투를 통해 전쟁 자체가 되어야 한다.",
-    systemHint:"이 캐릭터가 등장하면 주변 NPC들이 무의식적으로 전투 태세를 취합니다. 평화로운 장면에서도 긴장감이 감도는 묘사를 사용하십시오." },
+    systemHint:"이 캐릭터가 등장하면 주변 NPC들이 무의식적으로 전투 태세를 취합니다. 평화로운 장면에서도 긴장감이 감도는 묘사를 사용하십시오." ,
+    skills:[ {id:'job_wi_conquest', name:'전쟁의 포효', icon:'🔥', type:'active', desc:'전쟁의 화신으로서 포효해 전장을 지배한다.', mpCost:30, rarity:'legendary', effects:{ kind:'buff', statMod:{str:20,fear:15,ldr:15}, duration:4 }} ]
+   },
 
   { id:"eternal_soldier",   icon:"🪖♾️", svgIcon:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(-2,-2) scale(0.62)"><path d="M4 14 C4 8.5 7.5 4 12 4 C16.5 4 20 8.5 20 14 L20 15 L4 15 Z" stroke-linejoin="round"/><path d="M2 15 L22 15" stroke-width="1.6"/></g><g transform="translate(6,6) scale(0.62)"><path d="M7 8 C4.2 8 2 10 2 12 C2 14 4.2 16 7 16 C10 16 11 12 12 12 C13 12 14 16 17 16 C19.8 16 22 14 22 12 C22 10 19.8 8 17 8 C14 8 13 12 12 12 C11 12 10 8 7 8 Z" stroke-linejoin="round"/></g></svg>`, name:"불멸의 병사",          rarity:"legendary",
     type:"secret",        baseJob:null,  scenario:[null],
@@ -435,7 +515,9 @@ export const HIDDEN_JOBS = [
     unlockType:"death_count", unlockDesc:"전투 중 사망 후 부활 20회 이상 + 불사 게이지 최대",
     unlockCondition:{ deathCount:20, undyingMaxed:true },
     hint:"전장에서 수없이 쓰러지고도 다시 일어나야 한다.",
-    systemHint:"이 캐릭터가 전투 중 쓰러져도 잠시 후 반드시 일어납니다. 적이 당황하는 장면과 함께 재기하는 묘사를 장엄하게 표현하십시오." },
+    systemHint:"이 캐릭터가 전투 중 쓰러져도 잠시 후 반드시 일어납니다. 적이 당황하는 장면과 함께 재기하는 묘사를 장엄하게 표현하십시오." ,
+    skills:[ {id:'job_es_undying', name:'불굴의 재기', icon:'🪖', type:'passive', desc:'죽음조차 이 병사를 막지 못한다 — END·WIL 자동 강화.', mpCost:0, rarity:'legendary', statBoost:{end:60,wil:60}} ]
+   },
 
   // ════ 마법사 계열 히든 직업 (5개) ════
 
@@ -447,7 +529,9 @@ export const HIDDEN_JOBS = [
     unlockType:"skill_use", unlockDesc:"마법 계열 스킬 총 50회 이상 사용 + MGC 90 달성",
     unlockCondition:{ skillUseCount:50, baseJobMatch:true },
     hint:"마법을 끝없이 써서 마법의 끝에 닿아야 한다.",
-    systemHint:"이 캐릭터의 마법은 소리가 없습니다. 폭발도, 섬광도 없이 대상이 조용히 사라지거나 무력화되는 섬뜩한 묘사를 사용하십시오." },
+    systemHint:"이 캐릭터의 마법은 소리가 없습니다. 폭발도, 섬광도 없이 대상이 조용히 사라지거나 무력화되는 섬뜩한 묘사를 사용하십시오." ,
+    skills:[ {id:'job_vm_erase', name:'존재 소거', icon:'🌌', type:'active', desc:'소리도 빛도 없이 대상의 존재를 조용히 지운다.', mpCost:35, rarity:'legendary', effects:{ kind:'damage', statSource:{mgc:1}, damageMult:1.25, element:'dark' }} ]
+   },
 
   { id:"dream_weaver",      icon:"🌙🔮", svgIcon:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(-2,-2) scale(0.62)"><path d="M20 12.5 C20 17.7 15.7 22 10.5 22 C7.9 22 5.5 20.9 3.8 19.1 C8.3 19.5 12.6 16.1 12.6 10.8 C12.6 7.5 10.9 4.6 8.4 3 C14.8 2.5 20 6.9 20 12.5 Z" stroke-linejoin="round"/></g><g transform="translate(6,6) scale(0.62)"><circle cx="12" cy="12" r="8" stroke-width="1.3"/><circle cx="12" cy="12" r="3" fill="currentColor" fill-opacity="0.35"/></g></svg>`, name:"꿈의 직조자",          rarity:"rare",
     type:"awakening",     baseJob:["마법사","주술사","정신술사","예언자","신탁사"],  scenario:[null],
@@ -457,7 +541,9 @@ export const HIDDEN_JOBS = [
     unlockType:"cycle_knowledge", unlockDesc:"5회차 이상 + 예언/점술 관련 행동 20회",
     unlockCondition:{ minCycle:5, baseJobMatch:true },
     hint:"여러 회차에 걸쳐 꿈과 현실의 경계를 탐구해야 한다.",
-    systemHint:"이 캐릭터는 적의 꿈속에 침투하여 약점을 먼저 파악합니다. 전투 전 적이 악몽을 꾼 것처럼 흔들리는 묘사를 포함하십시오." },
+    systemHint:"이 캐릭터는 적의 꿈속에 침투하여 약점을 먼저 파악합니다. 전투 전 적이 악몽을 꾼 것처럼 흔들리는 묘사를 포함하십시오." ,
+    skills:[ {id:'job_dw_nightmare', name:'악몽 주입', icon:'🌙', type:'active', desc:'적의 의식 속에 악몽을 주입해 무력화시킨다.', mpCost:22, rarity:'rare', effects:{ kind:'damage', statSource:{mgc:0.5,per:0.5}, damageMult:0.85, element:'psychic' }} ]
+   },
 
   { id:"elemental_lord",    icon:"🌊🔥", svgIcon:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(-2,-2) scale(0.62)"><path d="M2 12 C2 12 5 9 8 12 C11 15 13 12 16 12 C19 12 22 9 22 9 M2 17 C2 17 5 14 8 17 C11 20 13 17 16 17 C19 17 22 14 22 14" stroke-width="1.4"/></g><g transform="translate(6,6) scale(0.62)"><path d="M12 21 C8 21 6 18.5 6 15.5 C6 13 7.5 11.5 8 10 C8.3 11 9 11.5 9.5 11 C9 8 10.5 5 13 3 C12.5 5.5 14 7 15 8.5 C16 10 17.5 11.5 17.5 14.5 C17.5 18.5 15 21 12 21 Z" stroke-linejoin="round"/></g></svg>`, name:"원소 지배자",          rarity:"legendary",
     type:"evolution",     baseJob:["대마법사","마법신","별의 부름자","룬 각인사"],  scenario:[null],
@@ -467,7 +553,9 @@ export const HIDDEN_JOBS = [
     unlockType:"awakened_evolution", unlockDesc:"대마법사 or 마법신 보유 + 5종 원소 마법 각 10회 이상 사용",
     unlockCondition:{ baseJobMatch:true, minCycle:8, skillUseCount:50 },
     hint:"마법의 각성직으로 모든 원소를 두루 익혀야 한다.",
-    systemHint:"이 캐릭터 주변에는 항상 미세한 원소 현상이 일어납니다. 감정에 따라 날씨가 바뀌거나 불꽃이 춤추는 묘사를 자연스럽게 포함하십시오." },
+    systemHint:"이 캐릭터 주변에는 항상 미세한 원소 현상이 일어납니다. 감정에 따라 날씨가 바뀌거나 불꽃이 춤추는 묘사를 자연스럽게 포함하십시오." ,
+    skills:[ {id:'job_el_elements', name:'오행 강림', icon:'🌊', type:'active', desc:'불·물·땅·바람·번개를 동시에 쏟아붓는다.', mpCost:40, rarity:'legendary', effects:{ kind:'damage', statSource:{mgc:1}, damageMult:0.5, hits:5, element:'magic' }} ]
+   },
 
   { id:"forbidden_scholar",  icon:"📖💀", svgIcon:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(-2,-2) scale(0.62)"><path d="M12 6 C10 4.5 6.5 4 4 4.5 L4 18 C6.5 17.5 10 18 12 19.5 C14 18 17.5 17.5 20 18 L20 4.5 C17.5 4 14 4.5 12 6 Z" stroke-linejoin="round"/><path d="M12 6 L12 19.5" stroke-width="1.1"/></g><g transform="translate(6,6) scale(0.62)"><path d="M12 3 C7.5 3 4.5 6.2 4.5 10.5 C4.5 13.2 6 15.3 6 17 L6 18.5 L18 18.5 L18 17 C18 15.3 19.5 13.2 19.5 10.5 C19.5 6.2 16.5 3 12 3 Z" stroke-width="1.3"/><circle cx="9" cy="11" r="1.3" fill="currentColor" stroke="none"/><circle cx="15" cy="11" r="1.3" fill="currentColor" stroke="none"/></g></svg>`, name:"금서 학자",            rarity:"legendary",
     type:"secret",        baseJob:null,  scenario:[null],
@@ -477,7 +565,9 @@ export const HIDDEN_JOBS = [
     unlockType:"cycle_knowledge", unlockDesc:"7회차 이상 + 봉인된 지식 관련 이벤트 10회 + 광기 70 이상 경험",
     unlockCondition:{ minCycle:7, loopAwarenessLevel:2, totalDeaths:5 },
     hint:"금지된 지식을 탐구하고 그 대가를 감당해야 한다.",
-    systemHint:"이 캐릭터는 대화 중 갑자기 아무도 모르는 비밀을 언급해 주변을 경악시킵니다. 지식이 너무 많아 오히려 현실 감각이 희미한 묘사를 사용하십시오." },
+    systemHint:"이 캐릭터는 대화 중 갑자기 아무도 모르는 비밀을 언급해 주변을 경악시킵니다. 지식이 너무 많아 오히려 현실 감각이 희미한 묘사를 사용하십시오." ,
+    skills:[ {id:'job_fsc_forbidden', name:'금서의 지식', icon:'📖', type:'active', desc:'읽어서는 안 될 지식을 강제로 현실에 구현한다.', mpCost:28, rarity:'legendary', effects:{ kind:'damage', statSource:{int:0.6,mgc:0.4}, damageMult:1.0, element:'dark' }} ]
+   },
 
   { id:"spell_eater",        icon:"🌀🔮", svgIcon:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(-2,-2) scale(0.62)"><circle cx="12" cy="12" r="9" stroke-width="1.3"/><path d="M12 12 C12 12 17 8 17 12 C17 16 12 12 12 12 C12 12 7 16 7 12 C7 8 12 12 12 12 Z" stroke-width="1.1"/></g><g transform="translate(6,6) scale(0.62)"><circle cx="12" cy="12" r="8" stroke-width="1.3"/><circle cx="12" cy="12" r="3" fill="currentColor" fill-opacity="0.35"/></g></svg>`, name:"마법 포식자",           rarity:"legendary",
     type:"secret",        baseJob:null,  scenario:[null],
@@ -487,7 +577,9 @@ export const HIDDEN_JOBS = [
     unlockType:"dark_magic", unlockDesc:"마법 계열 적 20명 이상 처치 + 마법 흡수 관련 이벤트 5회",
     unlockCondition:{ darkActs:20, skillUseCount:30 },
     hint:"마법사들을 상대로 충분히 싸우다 보면 몸이 기억한다.",
-    systemHint:"이 캐릭터에게 마법 공격을 가하면 흡수되어 오히려 MP가 회복되는 묘사를 사용하십시오. 마법사 적들이 이 자를 보고 전략을 바꾸는 장면도 효과적입니다." },
+    systemHint:"이 캐릭터에게 마법 공격을 가하면 흡수되어 오히려 MP가 회복되는 묘사를 사용하십시오. 마법사 적들이 이 자를 보고 전략을 바꾸는 장면도 효과적입니다." ,
+    skills:[ {id:'job_spe_devour', name:'마법 포식', icon:'🌀', type:'active', desc:'적의 마력을 강제로 흡수해 자신의 것으로 만든다.', mpCost:0, rarity:'legendary', effects:{ kind:'damage', statSource:{mgc:0.6,end:0.4}, damageMult:0.85, element:'magic', lifesteal:0.2 }} ]
+   },
 
   // ════ 도적 계열 히든 직업 (5개) ════
 
@@ -499,7 +591,9 @@ export const HIDDEN_JOBS = [
     unlockType:"scenario_clear", unlockDesc:"들키지 않고 목표 달성한 잠입 성공 15회 이상",
     unlockCondition:{ stealthEndings:3, baseJobMatch:true },
     hint:"완벽한 잠입을 반복해야 한다. 흔적을 남기지 마라.",
-    systemHint:"이 캐릭터는 행동 후 NPC들이 무엇이 일어났는지조차 모르는 묘사를 사용하십시오. 훔치고 나타나고 사라지는 과정이 마치 마술처럼 보여야 합니다." },
+    systemHint:"이 캐릭터는 행동 후 NPC들이 무엇이 일어났는지조차 모르는 묘사를 사용하십시오. 훔치고 나타나고 사라지는 과정이 마치 마술처럼 보여야 합니다." ,
+    skills:[ {id:'job_pt_heist', name:'완벽한 절도', icon:'🎭', type:'active', desc:'표적이 눈치채기도 전에 모든 것을 훔쳐낸다.', mpCost:14, rarity:'rare', effects:{ kind:'buff', statMod:{disg:20,luk:12}, duration:3 }} ]
+   },
 
   { id:"venom_dancer",      icon:"🐍🗡️", svgIcon:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(-2,-2) scale(0.62)"><path d="M4 6 C4 6 8 4 10 7 C12 10 8 11 10 14 C12 17 16 15 18 18 C19 19.5 18.5 21 17 21" /><circle cx="17" cy="21" r="1" fill="currentColor" stroke="none"/></g><g transform="translate(6,6) scale(0.62)"><path d="M20 4 L4 20"/><path d="M20 4 L15 4 L20 9 Z"/><path d="M4 20 L5 17 L7 19 Z"/></g></svg>`, name:"독무 검객",            rarity:"rare",
     type:"awakening",     baseJob:["도적","암살자","혈무 무도가","닌자","자객"],  scenario:[null],
@@ -509,7 +603,9 @@ export const HIDDEN_JOBS = [
     unlockType:"dark_weapon_use", unlockDesc:"독 계열 아이템/공격 20회 이상 사용 + AGI 80 달성",
     unlockCondition:{ darkActs:10, baseJobMatch:true },
     hint:"독을 끊임없이 연구하고 사용해야 한다.",
-    systemHint:"이 캐릭터의 손끝은 항상 미세하게 보랏빛을 띱니다. 전투에서 살짝 스치는 것만으로도 상대가 독에 중독되는 긴장감 있는 묘사를 사용하십시오." },
+    systemHint:"이 캐릭터의 손끝은 항상 미세하게 보랏빛을 띱니다. 전투에서 살짝 스치는 것만으로도 상대가 독에 중독되는 긴장감 있는 묘사를 사용하십시오." ,
+    skills:[ {id:'job_vd_venom', name:'맹독 연무', icon:'🐍', type:'active', desc:'손끝의 맹독을 실은 연속 베기.', mpCost:20, rarity:'rare', effects:{ kind:'damage', statSource:{agi:0.6,crit:0.4}, damageMult:0.6, hits:2, element:'poison' }} ]
+   },
 
   { id:"king_of_thieves",   icon:"👑🗡️", svgIcon:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(-2,-2) scale(0.62)"><path d="M3 17 L3 8 L7.5 12 L12 4 L16.5 12 L21 8 L21 17 Z" stroke-linejoin="round"/><path d="M3 17 L21 17 L21 20 L3 20 Z" stroke-linejoin="round"/></g><g transform="translate(6,6) scale(0.62)"><path d="M20 4 L4 20"/><path d="M20 4 L15 4 L20 9 Z"/><path d="M4 20 L5 17 L7 19 Z"/></g></svg>`, name:"도적왕",              rarity:"legendary",
     type:"evolution",     baseJob:["그림자 무도가","암살자","해적","괴도","그림자 지배자"],  scenario:[null],
@@ -519,7 +615,9 @@ export const HIDDEN_JOBS = [
     unlockType:"awakened_evolution", unlockDesc:"도적 계열 각성직 보유 + 지하세계 관련 이벤트 15회",
     unlockCondition:{ baseJobMatch:true, minCycle:6, stealthEndings:5 },
     hint:"도적 계열 각성직으로 지하세계에서 이름을 떨쳐야 한다.",
-    systemHint:"이 캐릭터가 나타나면 도적 NPC들이 자발적으로 길을 비킵니다. 지하세계의 정보는 모두 이 자를 거쳐 흐른다는 묘사를 포함하십시오." },
+    systemHint:"이 캐릭터가 나타나면 도적 NPC들이 자발적으로 길을 비킵니다. 지하세계의 정보는 모두 이 자를 거쳐 흐른다는 묘사를 포함하십시오." ,
+    skills:[ {id:'job_kot_underworld', name:'지하세계의 왕명', icon:'👑', type:'passive', desc:'지하세계 전체가 그의 이름 앞에 고개 숙인다 — DISG·NEG 자동 강화.', mpCost:0, rarity:'legendary', statBoost:{disg:60,neg:60}} ]
+   },
 
   { id:"mirror_self",       icon:"🪞🗡️", svgIcon:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(-2,-2) scale(0.62)"><ellipse cx="12" cy="11" rx="7" ry="9" stroke-width="1.3"/><path d="M9 21 L15 21 M12 20 L12 21" stroke-width="1.2"/></g><g transform="translate(6,6) scale(0.62)"><path d="M20 4 L4 20"/><path d="M20 4 L15 4 L20 9 Z"/><path d="M4 20 L5 17 L7 19 Z"/></g></svg>`, name:"거울 자아",            rarity:"legendary",
     type:"secret",        baseJob:null,  scenario:[null],
@@ -529,7 +627,9 @@ export const HIDDEN_JOBS = [
     unlockType:"scenario_clear", unlockDesc:"완벽한 위장으로 핵심 NPC를 속인 횟수 10회 이상",
     unlockCondition:{ stealthEndings:4, dimensionPins:5 },
     hint:"자신을 잃을 만큼 타인이 되어야 한다.",
-    systemHint:"이 캐릭터는 외모, 목소리, 심지어 마법 기운까지 완벽히 복사합니다. 적이 아군인지 적인지 혼동하는 혼란스러운 전투 묘사를 사용하십시오." },
+    systemHint:"이 캐릭터는 외모, 목소리, 심지어 마법 기운까지 완벽히 복사합니다. 적이 아군인지 적인지 혼동하는 혼란스러운 전투 묘사를 사용하십시오." ,
+    skills:[ {id:'job_ms_mirror', name:'완벽한 복제', icon:'🪞', type:'active', desc:'외모·목소리·마력까지 완벽히 복제해 적을 혼란시킨다.', mpCost:24, rarity:'legendary', effects:{ kind:'buff', statMod:{disg:25,per:15}, duration:3 }} ]
+   },
 
   { id:"night_sovereign",   icon:"🌙🗡️", svgIcon:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(-2,-2) scale(0.62)"><path d="M20 12.5 C20 17.7 15.7 22 10.5 22 C7.9 22 5.5 20.9 3.8 19.1 C8.3 19.5 12.6 16.1 12.6 10.8 C12.6 7.5 10.9 4.6 8.4 3 C14.8 2.5 20 6.9 20 12.5 Z" stroke-linejoin="round"/></g><g transform="translate(6,6) scale(0.62)"><path d="M20 4 L4 20"/><path d="M20 4 L15 4 L20 9 Z"/><path d="M4 20 L5 17 L7 19 Z"/></g></svg>`, name:"밤의 지배자",          rarity:"legendary",
     type:"secret",        baseJob:null,  scenario:[null],
@@ -539,7 +639,9 @@ export const HIDDEN_JOBS = [
     unlockType:"sealed_god", unlockDesc:"야간 전투 승리 30회 이상 + 그림자 무도가 or 괴도 해금",
     unlockCondition:{ stealthEndings:3, totalDeaths:10, bardFame:40 },
     hint:"낮보다 밤을 선택하고 어둠 속에서 활동해야 한다.",
-    systemHint:"이 캐릭터는 낮과 밤에 아예 다른 인물처럼 행동합니다. 태양이 지는 순간 분위기가 완전히 바뀌는 극적인 묘사를 사용하십시오." },
+    systemHint:"이 캐릭터는 낮과 밤에 아예 다른 인물처럼 행동합니다. 태양이 지는 순간 분위기가 완전히 바뀌는 극적인 묘사를 사용하십시오." ,
+    skills:[ {id:'job_ns_nightfall', name:'칠흑의 강림', icon:'🌙', type:'active', desc:'밤의 어둠을 불러내 적을 감싸 압박한다.', mpCost:26, rarity:'legendary', effects:{ kind:'damage', statSource:{agi:0.5,disg:0.5}, damageMult:0.95, element:'dark' }} ]
+   },
 
   // ════ 방랑자 계열 히든 직업 (5개) ════
 
@@ -551,7 +653,9 @@ export const HIDDEN_JOBS = [
     unlockType:"dimension_map", unlockDesc:"5개 이상의 다른 세계관 시나리오 경험 + LUK 80",
     unlockCondition:{ dimensionPins:5, baseJobMatch:true },
     hint:"여러 세계관을 직접 발로 밟아야 한다.",
-    systemHint:"이 캐릭터는 어느 세계에 가도 자연스럽게 녹아들며, 현지인보다 더 그 세계를 잘 아는 듯한 묘사를 포함하십시오. 하지만 어딘가 고독한 느낌을 유지하십시오." },
+    systemHint:"이 캐릭터는 어느 세계에 가도 자연스럽게 녹아들며, 현지인보다 더 그 세계를 잘 아는 듯한 묘사를 포함하십시오. 하지만 어딘가 고독한 느낌을 유지하십시오." ,
+    skills:[ {id:'job_ww_adapt', name:'만물 적응', icon:'🌍', type:'passive', desc:'어느 세계에서도 낯설지 않은 적응력 — LUK·PER 자동 강화.', mpCost:0, rarity:'rare', statBoost:{luk:60,per:60}} ]
+   },
 
   { id:"destiny_broker",    icon:"🎲🌍", svgIcon:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(-2,-2) scale(0.62)"><rect x="3" y="3" width="18" height="18" rx="3" stroke-linejoin="round"/><circle cx="8" cy="8" r="1.3" fill="currentColor" stroke="none"/><circle cx="16" cy="8" r="1.3" fill="currentColor" stroke="none"/><circle cx="8" cy="16" r="1.3" fill="currentColor" stroke="none"/><circle cx="16" cy="16" r="1.3" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none"/></g><g transform="translate(6,6) scale(0.62)"><circle cx="12" cy="12" r="9" stroke-width="1.3"/><path d="M3 12 C3 12 7 9 12 12 C17 15 21 12 21 12" stroke-width="1.1"/><path d="M12 3 C12 3 9 7 12 12 C15 17 12 21 12 21" stroke-width="1.1"/></g></svg>`, name:"운명 중개인",           rarity:"rare",
     type:"awakening",     baseJob:["상인","탐정","음유시인","방랑자","외교관"],  scenario:[null],
@@ -561,7 +665,9 @@ export const HIDDEN_JOBS = [
     unlockType:"karma_pure", unlockDesc:"NPC와의 관계 이벤트 30회 이상 + 호감도 최대 NPC 5명 이상",
     unlockCondition:{ pureKarmaEndings:3, baseJobMatch:true },
     hint:"사람들 사이에서 끊임없이 다리를 놓아야 한다.",
-    systemHint:"이 캐릭터가 두 NPC를 소개하면 그 관계가 특별해지는 묘사를 사용하십시오. 우연한 만남처럼 보이지만 이 자가 의도한 운명이라는 뉘앙스를 담으십시오." },
+    systemHint:"이 캐릭터가 두 NPC를 소개하면 그 관계가 특별해지는 묘사를 사용하십시오. 우연한 만남처럼 보이지만 이 자가 의도한 운명이라는 뉘앙스를 담으십시오." ,
+    skills:[ {id:'job_db_broker', name:'운명의 중개', icon:'🎲', type:'active', desc:'두 존재의 운명을 이어 강력한 시너지를 만든다.', mpCost:16, rarity:'rare', effects:{ kind:'buff', statMod:{spk:15,neg:15}, duration:3 }} ]
+   },
 
   { id:"legend_maker",      icon:"📜🌍", svgIcon:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(-2,-2) scale(0.62)"><path d="M6 3 C4.5 3 4 4 4 5 L4 19 C4 20 4.5 21 6 21 L18 21 C19.5 21 20 20 20 19 L20 5 C20 4 19.5 3 18 3 Z" stroke-linejoin="round"/><path d="M8 8 L16 8 M8 12 L16 12 M8 16 L13 16" stroke-width="1.1"/></g><g transform="translate(6,6) scale(0.62)"><circle cx="12" cy="12" r="9" stroke-width="1.3"/><path d="M3 12 C3 12 7 9 12 12 C17 15 21 12 21 12" stroke-width="1.1"/><path d="M12 3 C12 3 9 7 12 12 C15 17 12 21 12 21" stroke-width="1.1"/></g></svg>`, name:"전설 창조자",           rarity:"legendary",
     type:"evolution",     baseJob:["음유시인","신화의 영웅","세계 방랑자","운명 중개인"],  scenario:[null],
@@ -571,7 +677,9 @@ export const HIDDEN_JOBS = [
     unlockType:"awakened_evolution", unlockDesc:"방랑자 계열 각성직 보유 + 명성 점수 500 이상",
     unlockCondition:{ baseJobMatch:true, minCycle:7, bardFame:80, templeLevel:3 },
     hint:"방랑자 계열 각성직으로 세계에 이름을 남겨야 한다.",
-    systemHint:"이 캐릭터가 어떤 사건을 목격하거나 개입하면 그 사건이 전설로 기록됩니다. NPC들이 이 자의 행적을 이야기로 퍼뜨리는 묘사를 자주 포함하십시오." },
+    systemHint:"이 캐릭터가 어떤 사건을 목격하거나 개입하면 그 사건이 전설로 기록됩니다. NPC들이 이 자의 행적을 이야기로 퍼뜨리는 묘사를 자주 포함하십시오." ,
+    skills:[ {id:'job_lm_chronicle', name:'전설의 기록', icon:'📜', type:'passive', desc:'이 자가 말하면 그것이 곧 역사가 된다 — REP·SPK 자동 강화.', mpCost:0, rarity:'legendary', statBoost:{rep:60,spk:60}} ]
+   },
 
   { id:"chaos_avatar",      icon:"🎲💥", svgIcon:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(-2,-2) scale(0.62)"><rect x="3" y="3" width="18" height="18" rx="3" stroke-linejoin="round"/><circle cx="8" cy="8" r="1.3" fill="currentColor" stroke="none"/><circle cx="16" cy="8" r="1.3" fill="currentColor" stroke="none"/><circle cx="8" cy="16" r="1.3" fill="currentColor" stroke="none"/><circle cx="16" cy="16" r="1.3" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none"/></g><g transform="translate(6,6) scale(0.62)"><path d="M12 2 L14 8 L20 6 L16 11 L20 16 L14 14 L12 20 L10 14 L4 16 L8 11 L4 6 L10 8 Z" stroke-linejoin="round"/></g></svg>`, name:"혼돈의 화신",           rarity:"legendary",
     type:"secret",        baseJob:null,  scenario:[null],
@@ -581,7 +689,9 @@ export const HIDDEN_JOBS = [
     unlockType:"legend_complete", unlockDesc:"같은 회차에서 완전히 다른 선택으로 엔딩 5회 이상",
     unlockCondition:{ pureKarmaEndings:2, evilKarmaEndings:2, dimensionPins:8 },
     hint:"예측 불가능하게 행동해야 한다. 패턴을 만들지 마라.",
-    systemHint:"이 캐릭터가 행동할 때마다 예상 외의 결과가 따릅니다. 선택의 결과가 논리적이지 않아도 운명이 맞춰주는 황당하고 재미있는 묘사를 사용하십시오." },
+    systemHint:"이 캐릭터가 행동할 때마다 예상 외의 결과가 따릅니다. 선택의 결과가 논리적이지 않아도 운명이 맞춰주는 황당하고 재미있는 묘사를 사용하십시오." ,
+    skills:[ {id:'job_ca_chaos', name:'혼돈의 주사위', icon:'🎲', type:'active', desc:'운명을 주사위처럼 굴려 예측불허의 결과를 만든다.', mpCost:0, rarity:'legendary', effects:{ kind:'damage', statSource:{luk:1}, damageMult:1.0, element:'physical' }} ]
+   },
 
   { id:"eternal_pilgrim",   icon:"🕊️🌍", svgIcon:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(-2,-2) scale(0.62)"><path d="M12 20 C12 20 4 15.5 4 9.5 C4 6.5 6.2 4.5 8.8 4.5 C10.2 4.5 11.3 5.2 12 6.3 C12.7 5.2 13.8 4.5 15.2 4.5 C17.8 4.5 20 6.5 20 9.5 C20 15.5 12 20 12 20 Z" stroke-linejoin="round"/></g><g transform="translate(6,6) scale(0.62)"><circle cx="12" cy="12" r="9" stroke-width="1.3"/><path d="M3 12 C3 12 7 9 12 12 C17 15 21 12 21 12" stroke-width="1.1"/><path d="M12 3 C12 3 9 7 12 12 C15 17 12 21 12 21" stroke-width="1.1"/></g></svg>`, name:"영원한 순례자",          rarity:"legendary",
     type:"secret",        baseJob:null,  scenario:[null],
@@ -591,7 +701,9 @@ export const HIDDEN_JOBS = [
     unlockType:"reincarnation_rank", unlockDesc:"10회차 이상 + 매 회차마다 최소 1개 새 세계 탐험",
     unlockCondition:{ minCycle:10, reincarnationRank:2, dimensionPins:10 },
     hint:"오래 살아남으며 끊임없이 새로운 것을 찾아야 한다.",
-    systemHint:"이 캐릭터가 지나간 마을은 이후 번영하거나 붕괴하는 등 반드시 변화합니다. 이 자는 그 사실을 알지만 멈추지 않는 숙명적 묘사를 포함하십시오." },
+    systemHint:"이 캐릭터가 지나간 마을은 이후 번영하거나 붕괴하는 등 반드시 변화합니다. 이 자는 그 사실을 알지만 멈추지 않는 숙명적 묘사를 포함하십시오." ,
+    skills:[ {id:'job_ep_pilgrimage', name:'순례자의 발걸음', icon:'🕊️', type:'passive', desc:'지나간 자리마다 변화를 남기는 숙명 — WIL·PER 자동 강화.', mpCost:0, rarity:'legendary', statBoost:{wil:60,per:60}} ]
+   },
 ];
 
 // [20차 감사 FIX] 이 함수는 원래 job.unlockType 문자열로 switch를 타면서,

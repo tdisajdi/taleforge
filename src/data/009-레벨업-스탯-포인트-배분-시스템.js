@@ -75,6 +75,17 @@ export const SKILL_DEFS = [
   { id:"active_holy_smite",type:"active",  name:"성광 심판",    icon:"⚡",  rarity:"rare",      mpCost:25, req:{fath:55},         scenario:"medieval", desc:"신의 심판으로 사악한 존재에게 강렬한 빛의 피해를 준다.", aiHint:"성광 심판 사용! 신성한 빛이 내려쳐 사악한 존재를 강타합니다.", effects:{kind:"damage",statSource:{fath:1},damageMult:0.85,element:"light"} },
   { id:"active_dragon_breath",type:"active",name:"용의 숨결",   icon:"🐲",  rarity:"legendary", mpCost:45, req:{mgc:70,str:55},   scenario:"medieval", desc:"용혈의 힘으로 강렬한 불꽃을 내뿜는다.", aiHint:"용의 숨결 사용! 용의 피가 각성해 거대한 불꽃이 쏟아집니다.", effects:{kind:"damage",statSource:{mgc:0.6,str:0.4},damageMult:0.95,element:"fire"} },
 
+  // ── 46-② 볼륨 확장(2026-09) 신규 능동 스킬 7종 — 기존 12종이 커버 안
+  // 하던 스탯 조합(agi+per 원거리, 저티어 냉기, 대지, 정신, 지휘/사기,
+  // 생명흡수, 회복형)을 채운다. 전부 effects.kind 표준 스키마.
+  { id:"active_pierce_shot", type:"active",  name:"관통 사격",    icon:"🏹",  rarity:"uncommon",  mpCost:16, req:{agi:35,per:30},   scenario:null, desc:"급소를 정확히 노려 관통시키는 원거리 사격.",                          aiHint:"관통 사격 사용! 정확히 급소를 꿰뚫는 화살이 날아갑니다.", effects:{kind:"damage",statSource:{agi:0.6,per:0.4},damageMult:0.65,element:"physical"} },
+  { id:"active_frost_nova",  type:"active",  name:"서리 폭발",    icon:"🧊",  rarity:"uncommon",  mpCost:20, req:{mgc:40},          scenario:null, desc:"주변에 냉기를 폭발시켜 적을 얼려붙인다.",                              aiHint:"서리 폭발 사용! 차가운 냉기가 사방으로 퍼지며 적을 얼립니다.", effects:{kind:"damage",statSource:{mgc:1},damageMult:0.65,element:"ice"} },
+  { id:"active_earth_shatter",type:"active", name:"대지 분쇄",    icon:"🪨",  rarity:"rare",      mpCost:28, req:{str:55,end:35,level:20},   scenario:null, desc:"대지를 뒤흔들어 광범위한 충격파를 일으킨다.",                          aiHint:"대지 분쇄 사용! 땅이 갈라지며 충격파가 퍼져나갑니다.", effects:{kind:"damage",statSource:{str:1},damageMult:0.8,element:"earth"} },
+  { id:"active_mind_break",  type:"active",  name:"정신 붕괴",    icon:"🌀",  rarity:"rare",      mpCost:24, req:{int:50,wil:30},   scenario:null, desc:"상대의 정신을 뒤흔들어 사고를 마비시킨다.",                            aiHint:"정신 붕괴 사용! 상대의 정신이 혼란에 빠져 흔들립니다.", effects:{kind:"damage",statSource:{int:1},damageMult:0.7,element:"psychic"} },
+  { id:"active_battle_hymn", type:"active",  name:"전투 찬가",    icon:"🎺",  rarity:"uncommon",  mpCost:18, req:{cal:35,ldr:30},   jobRole:"전사", scenario:null, desc:"침착한 지휘의 노래로 아군 전체의 사기를 끌어올린다. (전사 계열 전직 경험 필요)", aiHint:"전투 찬가 사용! 침착하고 힘 있는 노래가 아군의 사기를 북돋습니다.", effects:{kind:"buff",statMod:{cal:8,ldr:6}} },
+  { id:"active_life_drain",  type:"active",  name:"생명 흡수",    icon:"🩸",  rarity:"rare",      mpCost:22, req:{mad:35,mgc:30},   scenario:null, desc:"상대의 생명력을 뽑아 자신의 것으로 취한다.",                          aiHint:"생명 흡수 사용! 검은 기운이 상대의 생명력을 빨아들입니다.", effects:{kind:"damage",statSource:{mgc:0.6,mad:0.4},damageMult:0.7,element:"dark",lifesteal:0.4} },
+  { id:"active_swift_recovery",type:"active",name:"신속 회복",    icon:"🩹",  rarity:"common",    mpCost:14, req:{regen:35},        scenario:null, desc:"자연 치유력을 폭발적으로 끌어올려 즉시 상처를 회복한다.",             aiHint:"신속 회복 사용! 상처가 빠르게 아물어갑니다.", effects:{kind:"heal",healPct:0.15} },
+
 
   // ── 패시브 스킬 (Passive) ──────────────────────────────
   { id:"passive_iron_will", type:"passive", name:"강철 의지",    icon:"🔥",  rarity:"common",    req:{wil:35},         scenario:null,       desc:"HP 30% 이하 시 자동 발동 — 의지력 +20, 모든 판정에 보너스.", condition:"hp_low",     conditionDesc:"HP 30% 이하", statBoost:{wil:160} },
@@ -90,6 +101,18 @@ export const SKILL_DEFS = [
   { id:"passive_calm_mind", type:"passive", name:"평심",         icon:"🌊",  rarity:"common",    req:{cal:40},         scenario:null,       desc:"감정 강도가 80 이상일 때 CAL +15 자동 발동.", condition:"high_emotion", conditionDesc:"감정 강도 80 이상", statBoost:{cal:120} },
   { id:"passive_dark_power",type:"passive", name:"어둠의 힘",    icon:"🖤",  rarity:"legendary", req:{mad:60},         scenario:null,       desc:"광기 60 이상일 때 MAD +10, MGC +15 자동 강화. 단, HP 최대치 감소.", condition:"high_mad",   conditionDesc:"광기 60 이상", statBoost:{mad:80,mgc:120} },
   { id:"passive_regen_plus",type:"passive", name:"생명력 넘침",  icon:"❤️",  rarity:"uncommon",  req:{regen:55},       scenario:null,       desc:"회복 주기가 5턴→3턴으로 단축된다.", condition:"always",      conditionDesc:"항시 발동" },
+
+  // ── 46-② 볼륨 확장(2026-09) 신규 패시브 스킬 7종 — 기존 13종이 안 쓰던
+  // 스탯(agi/per/end/fath/disg+cal/ldr+spk/mgc+int)을 채운다. statBoost는
+  // applyAllPassiveSkills()의 PASSIVE_SKILL_STAT_CAP(50)로 항상 클램프되므로
+  // 기존 항목들과 동일하게 실제 값은 최대 50이다 — 표기 수치는 관례상 더 크게 둠.
+  { id:"passive_swift_reflex",   type:"passive", name:"쾌속 반사",    icon:"🌪️", rarity:"uncommon",  req:{agi:45},         scenario:null,       desc:"위기의 순간 몸이 먼저 반응한다 — AGI 자동 강화.", condition:"reflex",       conditionDesc:"위험 감지 시", statBoost:{agi:100} },
+  { id:"passive_iron_stomach",   type:"passive", name:"무쇠 위장",    icon:"🍖", rarity:"common",    req:{end:30},         scenario:null,       desc:"어떤 상황에서도 쉽게 지치지 않는 강인한 체력 — END 자동 강화.", condition:"always",       conditionDesc:"항시 발동", statBoost:{end:80} },
+  { id:"passive_keen_perception",type:"passive", name:"예리한 관찰안", icon:"🔍", rarity:"uncommon",  req:{per:45},         scenario:null,       desc:"사소한 단서도 놓치지 않는 관찰력 — PER 자동 강화.", condition:"always",       conditionDesc:"항시 발동", statBoost:{per:100} },
+  { id:"passive_unshakeable_faith",type:"passive",name:"흔들림 없는 믿음", icon:"🕊️", rarity:"rare", req:{fath:55},        jobRole:"성직자",    scenario:null,       desc:"절망 속에서도 신념을 잃지 않는다 — FATH 자동 강화. (성직자 계열 전직 경험 필요)", condition:"despair",      conditionDesc:"절망적 상황에서", statBoost:{fath:120} },
+  { id:"passive_cold_blooded",   type:"passive", name:"냉혈",         icon:"🦂", rarity:"rare",      req:{disg:50,cal:35}, scenario:null,       desc:"거짓과 살의를 완벽히 감춘다 — DISG·CAL 자동 강화.", condition:"always",       conditionDesc:"항시 발동", statBoost:{disg:100,cal:75} },
+  { id:"passive_natural_leader", type:"passive", name:"타고난 지도자", icon:"🎖️", rarity:"rare",     req:{ldr:55,spk:40},  scenario:null,       desc:"함께하는 이들이 자연히 그를 따른다 — LDR·SPK 자동 강화.", condition:"always",       conditionDesc:"항시 발동", statBoost:{ldr:100,spk:75} },
+  { id:"passive_arcane_resonance",type:"passive",name:"비전 공명",    icon:"🔷", rarity:"legendary", req:{mgc:70,int:50,level:30},  scenario:null,       desc:"마력과 지성이 공명해 마법 숙련도가 극대화된다 — MGC·INT 자동 강화. (레벨 30 이상)", condition:"always", conditionDesc:"항시 발동", statBoost:{mgc:120,int:100} },
 
   // ── 이벤트 스킬 (특정 업적/조건 달성 시 해금) ──────────────
   { id:"event_dragon_aura", type:"event",   name:"용의 기운",    icon:"🐲",  rarity:"legendary", req:{},               scenario:"medieval", unlockTitle:"mf_dragon_blood", desc:"용의 피를 얻은 자만이 쓸 수 있는 위압적 기운. 적 사기를 대폭 저하.", aiHint:"용의 기운 발동! 강렬한 용의 위압감이 적들을 공포에 떨게 합니다.", mpCost:30 },

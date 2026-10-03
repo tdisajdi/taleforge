@@ -92,6 +92,24 @@ export function getDynamicPrice(basePrice, itemRarity){
     const cal = getCalendarModifiers();
     if(typeof cal.shopPriceMult==='number') price = Math.round(price * cal.shopPriceMult);
   }
+
+  // [47번 섹션 ⑤] 천계/마계 평판 파급 — 35번 섹션에서 world/219의
+  // celestial/infernal 평판 게이지는 실제로 오르내리게 만들어졌지만,
+  // 그 값이 "세력 패널에 숫자로만 보이는" 것 말고 다른 시스템에
+  // 영향을 주는 곳이 하나도 없었다(39번 섹션 "D 나머지" 5번 항목).
+  // 전쟁 영향(wars.length) 블록과 같은 성격의 "세계 상태 → 전반적
+  // 물가" 연결 — 천계 신뢰가 두터우면(질서/안정) 교역이 원활해 소폭
+  // 할인, 마계 영향력이 커지면(혼돈/위험) 물자 유통이 불안해져 소폭
+  // 할증된다. 두 축은 서로 독립(동시에 둘 다 적용될 수 있음).
+  if(typeof loadFactionRepV17==='function'){
+    const fr = loadFactionRepV17();
+    const celRep = fr.celestial?.rep ?? 40;
+    const infRep = fr.infernal?.rep ?? 20;
+    let factionMult = 1.0;
+    if(celRep >= 60) factionMult -= 0.05;
+    if(infRep >= 60) factionMult += 0.08;
+    price = Math.round(price * factionMult);
+  }
   return Math.max(1, price);
 }
 window.getDynamicPrice = getDynamicPrice;

@@ -278,6 +278,36 @@ export function advanceNpcStoryStage(npcId){
         saveElfMemory(em);
         toast(`🌳 셀레네스와 실라리엘의 800년 갈등 — 선조의 기억이 한 조각 더 또렷해진다.`, 2800);
       }
+      // [47번 섹션 ⑤] 천계/마계 평판 파급 — 이 자리의 기존 주석이
+      // "다른 종족 NPC(천계/마계/언데드 등)의 서브플롯은 영향 없음"
+      // 이라고 스스로 밝혀뒀던 공백 중 천계/마계 두 개를 메운다(언데드는
+      // 이번 승인 범위 밖). 방향은 종족 보너스(player race 일치)와
+      // 반대 — 오필리아/바알제스는 특정 플레이어 종족이 아니라 세력
+      // 평판(world/219)에 반응한다: 이미 그 세력과 우호 이상이면
+      // NPC가 더 적극적으로 돕고(소액 보상), 적대면 거리를 둔다는
+      // 안내만 뜬다. rep 값 자체는 이 경로에서 건드리지 않음(기존
+      // progression/020 게이지·mq25 완료 훅이 이미 올리는 값을
+      // 그대로 읽기만 함 — 이중 집계 없음).
+      if(npcId === 'npc_race_celestial' && typeof getFactionStatus === 'function'){
+        const st = getFactionStatus('celestial');
+        if(st === '우호' || st === '동맹'){
+          if(typeof window.addGoldWithExchange === 'function') window.addGoldWithExchange(20, '천계 평판 호의');
+          else { S.gold = (S.gold||0) + 20; }
+          toast(`✨ 천계와의 관계(${st}) — 오필리아가 호의로 작은 지원을 보낸다. 💰+20`, 2800);
+        } else if(st === '적대'){
+          toast(`✨ 천계의 경계심(평판: ${st}) 때문에 오필리아가 거리를 둔다.`, 2800);
+        }
+      }
+      if(npcId === 'npc_race_demon' && typeof getFactionStatus === 'function'){
+        const st = getFactionStatus('infernal');
+        if(st === '우호' || st === '동맹'){
+          if(typeof window.addGoldWithExchange === 'function') window.addGoldWithExchange(20, '마계 평판 호의');
+          else { S.gold = (S.gold||0) + 20; }
+          toast(`😈 마계와의 관계(${st}) — 바알제스가 호의로 작은 지원을 보낸다. 💰+20`, 2800);
+        } else if(st === '적대'){
+          toast(`😈 마계의 경계심(평판: ${st}) 때문에 바알제스가 거리를 둔다.`, 2800);
+        }
+      }
     }catch(e2){}
     return stages[npcId];
   }catch(e){ return 0; }

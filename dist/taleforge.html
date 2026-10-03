@@ -18320,14 +18320,14 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
   // src/world/219-17-세력-명성-변경-상태-조회.js
   window.FACTION_DEFS = FACTION_DEFS;
   var FACTION_REP_V17_KEY = "tf-faction-rep-v2";
-  function loadFactionRepV17() {
+  function loadFactionRepV172() {
     try {
       return JSON.parse(lsGet(FACTION_REP_V17_KEY) || "{}");
     } catch (e) {
       return {};
     }
   }
-  window.loadFactionRepV17 = loadFactionRepV17;
+  window.loadFactionRepV17 = loadFactionRepV172;
   function saveFactionRepV17(d) {
     try {
       lsSet(FACTION_REP_V17_KEY, JSON.stringify(d));
@@ -18337,7 +18337,7 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
   window.saveFactionRepV17 = saveFactionRepV17;
   function changeFactionRep(factionId, delta, reason = "") {
     try {
-      const fr = loadFactionRepV17();
+      const fr = loadFactionRepV172();
       if (!fr[factionId]) {
         const def2 = FACTION_DEFS[factionId];
         fr[factionId] = { rep: def2?.baseRep || 50, history: [] };
@@ -18353,9 +18353,9 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
     }
   }
   window.changeFactionRep = changeFactionRep;
-  function getFactionStatus(factionId) {
+  function getFactionStatus2(factionId) {
     try {
-      const fr = loadFactionRepV17();
+      const fr = loadFactionRepV172();
       const rep = fr[factionId]?.rep ?? (FACTION_DEFS[factionId]?.baseRep ?? 50);
       if (rep >= 80) return "\uB3D9\uB9F9";
       if (rep >= 60) return "\uC6B0\uD638";
@@ -18366,13 +18366,13 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       return "\uC911\uB9BD";
     }
   }
-  window.getFactionStatus = getFactionStatus;
+  window.getFactionStatus = getFactionStatus2;
   function getFactionBLS() {
     try {
-      const fr = loadFactionRepV17();
+      const fr = loadFactionRepV172();
       const lines = Object.entries(FACTION_DEFS).map(([id, def]) => {
         const rep = fr[id]?.rep ?? def.baseRep;
-        const status = getFactionStatus(id);
+        const status = getFactionStatus2(id);
         return `${def.icon}${def.name}[ID:${id}]:${rep}(${status})`;
       });
       return lines.length ? `
@@ -18383,7 +18383,7 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
   }
   window.getFactionBLS = getFactionBLS;
   window.changeFactionRep = changeFactionRep;
-  window.getFactionStatus = getFactionStatus;
+  window.getFactionStatus = getFactionStatus2;
   window.getFactionBLS = getFactionBLS;
 
   // src/items/074-파트2-B-성장-연출-강화.js
@@ -66558,6 +66558,30 @@ ${cycleStatus} | ${chapterStatus} | ${sealStatus} | ${treeStatus}`;
           saveElfMemory(em);
           toast(`\u{1F333} \uC140\uB808\uB124\uC2A4\uC640 \uC2E4\uB77C\uB9AC\uC5D8\uC758 800\uB144 \uAC08\uB4F1 \u2014 \uC120\uC870\uC758 \uAE30\uC5B5\uC774 \uD55C \uC870\uAC01 \uB354 \uB610\uB837\uD574\uC9C4\uB2E4.`, 2800);
         }
+        if (npcId === "npc_race_celestial" && typeof getFactionStatus === "function") {
+          const st = getFactionStatus("celestial");
+          if (st === "\uC6B0\uD638" || st === "\uB3D9\uB9F9") {
+            if (typeof window.addGoldWithExchange === "function") window.addGoldWithExchange(20, "\uCC9C\uACC4 \uD3C9\uD310 \uD638\uC758");
+            else {
+              S.gold = (S.gold || 0) + 20;
+            }
+            toast(`\u2728 \uCC9C\uACC4\uC640\uC758 \uAD00\uACC4(${st}) \u2014 \uC624\uD544\uB9AC\uC544\uAC00 \uD638\uC758\uB85C \uC791\uC740 \uC9C0\uC6D0\uC744 \uBCF4\uB0B8\uB2E4. \u{1F4B0}+20`, 2800);
+          } else if (st === "\uC801\uB300") {
+            toast(`\u2728 \uCC9C\uACC4\uC758 \uACBD\uACC4\uC2EC(\uD3C9\uD310: ${st}) \uB54C\uBB38\uC5D0 \uC624\uD544\uB9AC\uC544\uAC00 \uAC70\uB9AC\uB97C \uB454\uB2E4.`, 2800);
+          }
+        }
+        if (npcId === "npc_race_demon" && typeof getFactionStatus === "function") {
+          const st = getFactionStatus("infernal");
+          if (st === "\uC6B0\uD638" || st === "\uB3D9\uB9F9") {
+            if (typeof window.addGoldWithExchange === "function") window.addGoldWithExchange(20, "\uB9C8\uACC4 \uD3C9\uD310 \uD638\uC758");
+            else {
+              S.gold = (S.gold || 0) + 20;
+            }
+            toast(`\u{1F608} \uB9C8\uACC4\uC640\uC758 \uAD00\uACC4(${st}) \u2014 \uBC14\uC54C\uC81C\uC2A4\uAC00 \uD638\uC758\uB85C \uC791\uC740 \uC9C0\uC6D0\uC744 \uBCF4\uB0B8\uB2E4. \u{1F4B0}+20`, 2800);
+          } else if (st === "\uC801\uB300") {
+            toast(`\u{1F608} \uB9C8\uACC4\uC758 \uACBD\uACC4\uC2EC(\uD3C9\uD310: ${st}) \uB54C\uBB38\uC5D0 \uBC14\uC54C\uC81C\uC2A4\uAC00 \uAC70\uB9AC\uB97C \uB454\uB2E4.`, 2800);
+          }
+        }
       } catch (e2) {
       }
       return stages[npcId];
@@ -79878,6 +79902,15 @@ ${simDesc}` : playerRep;
     if (typeof getCalendarModifiers === "function") {
       const cal = getCalendarModifiers();
       if (typeof cal.shopPriceMult === "number") price = Math.round(price * cal.shopPriceMult);
+    }
+    if (typeof loadFactionRepV17 === "function") {
+      const fr = loadFactionRepV17();
+      const celRep = fr.celestial?.rep ?? 40;
+      const infRep = fr.infernal?.rep ?? 20;
+      let factionMult = 1;
+      if (celRep >= 60) factionMult -= 0.05;
+      if (infRep >= 60) factionMult += 0.08;
+      price = Math.round(price * factionMult);
     }
     return Math.max(1, price);
   }

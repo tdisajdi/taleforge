@@ -12,29 +12,6 @@ import { getItemSlot, loadInventory, saveInventory } from './007-동적-아이�
 
 window.ITEM_RARITY = ITEM_RARITY;
 
-export function addItem(item) {
-  try {
-    const inv = typeof loadInventory === 'function' ? loadInventory() : [];
-    const newItem = {
-      id: item.id || ('item_'+Date.now()),
-      name: item.name, icon: item.icon || '📦',
-      rarity: item.rarity || 'common', type: item.type || 'misc',
-      desc: item.desc || '', quantity: item.quantity || 1,
-      obtainedAt: S?.msgCount || 0,
-    };
-    const existing = inv.find(i => i.name === item.name && i.type === item.type);
-    if (existing && item.stackable !== false) {
-      existing.quantity = (existing.quantity || 1) + (item.quantity || 1);
-    } else {
-      inv.push(newItem);
-    }
-    if (typeof saveInventory === 'function') saveInventory(inv);
-    toast(`${item.name} 획득`, 2000, item);
-    return newItem;
-  } catch(e) { return null; }
-}
-window.addItem = addItem;
-
 export function removeItem(itemId, quantity=1) {
   try {
     const inv = typeof loadInventory === 'function' ? loadInventory() : [];
@@ -60,8 +37,6 @@ export function getItemBLS() {
   } catch(e) { return ''; }
 }
 window.getItemBLS = getItemBLS;
-
-window.addItem    = addItem;
 
 window.removeItem = removeItem;
 

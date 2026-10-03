@@ -87762,7 +87762,8 @@ ${lines.join("\n")}
       const vk = _turnVerdictKey(dice.verdict);
       const bank = _turnPickReactBank(cat, vk, dice.stat);
       const tpl = bank[Math.floor(Math.random() * bank.length)];
-      const target = _turnPickTarget();
+      const target = S._pendingTurnNarrativeTarget != null ? S._pendingTurnNarrativeTarget : _turnPickTarget();
+      S._pendingTurnNarrativeTarget = null;
       prose = learned || identityFrag + _fillTargetSlots(tpl, target);
     } else if (!learned && _isLocArrivalMsg(lastUserMsg?.content)) {
       const loc = typeof loadCurrentLocation === "function" ? loadCurrentLocation() : null;
@@ -88723,7 +88724,9 @@ ${lines.join("\n")}
         const FIELD_ENTRY_WINDOW_MS = 3 * 60 * 1e3;
         S._fieldEntryWindowUntil = Date.now() + FIELD_ENTRY_WINDOW_MS;
       }
-      applyTurnRelationEffect(_turnCat, _turnVk, _turnPickTarget());
+      const _turnTarget = _turnPickTarget();
+      S._pendingTurnNarrativeTarget = _turnTarget;
+      applyTurnRelationEffect(_turnCat, _turnVk, _turnTarget);
     }
     try {
       const _mqS = typeof loadMainQuestState === "function" ? loadMainQuestState() : {};
@@ -88802,6 +88805,7 @@ ${lines.join("\n")}
     try {
       const _aiHistory = S.messages.filter((m) => !m.isSystemNote);
       const text = await window.callAI(_aiHistory, finalDiceCtx);
+      S._pendingTurnNarrativeTarget = null;
       let _gsPeekStats = null, _gsPeekGold;
       {
         const _gsPeekMatch = text.match(/<gs>([\s\S]*?)<\/gs>/);
@@ -94480,33 +94484,6 @@ ${_monsterInfoLine}`;
 
   // src/items/218-15-인벤토리-addItem-removeItem.js
   window.ITEM_RARITY = ITEM_RARITY;
-  function addItem(item) {
-    try {
-      const inv = typeof loadInventory === "function" ? loadInventory() : [];
-      const newItem = {
-        id: item.id || "item_" + Date.now(),
-        name: item.name,
-        icon: item.icon || "\u{1F4E6}",
-        rarity: item.rarity || "common",
-        type: item.type || "misc",
-        desc: item.desc || "",
-        quantity: item.quantity || 1,
-        obtainedAt: S?.msgCount || 0
-      };
-      const existing = inv.find((i) => i.name === item.name && i.type === item.type);
-      if (existing && item.stackable !== false) {
-        existing.quantity = (existing.quantity || 1) + (item.quantity || 1);
-      } else {
-        inv.push(newItem);
-      }
-      if (typeof saveInventory === "function") saveInventory(inv);
-      toast(`${item.name} \uD68D\uB4DD`, 2e3, item);
-      return newItem;
-    } catch (e) {
-      return null;
-    }
-  }
-  window.addItem = addItem;
   function removeItem(itemId, quantity = 1) {
     try {
       const inv = typeof loadInventory === "function" ? loadInventory() : [];
@@ -94535,7 +94512,6 @@ ${_monsterInfoLine}`;
     }
   }
   window.getItemBLS = getItemBLS;
-  window.addItem = addItem;
   window.removeItem = removeItem;
   window.getItemBLS = getItemBLS;
   var SOULS_KEY = "tf-souls";
@@ -100715,7 +100691,7 @@ ${job.icon} ${job.name}\uC73C\uB85C \uC804\uC9C1\uD558\uACA0\uC2B5\uB2C8\uAE4C?
     S._pendingMq16ResolutionHint = narrText;
     S._nextInjectedContext = (S._nextInjectedContext || "") + "\n[\uBC29\uAE08 \uB9C8\uC655\uACFC\uC758 \uACB0\uC804\uC774 \uD655\uC815\uB428] " + narrText;
     if (typeof completeMainQuest === "function") completeMainQuest("mq16", { resolved: true });
-    if (typeof window.saveSession === "function") window.saveSession();
+    saveSession();
   }
   window.resolveMq16Confrontation = resolveMq16Confrontation;
   function checkSecretEndings() {
@@ -134303,7 +134279,7 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
         window.tryLocalWdrDiscovery("villain");
       }
     }
-    if (typeof window.saveSession === "function") window.saveSession();
+    saveSession();
     if (battleUiRefresh) battleUiRefresh(bs, true);
     if (!win && typeof triggerLoopIfDead === "function") triggerLoopIfDead();
     if (battleDoneCb) battleDoneCb(win);
@@ -134935,7 +134911,7 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
     }
     RT.transportType = type;
     S._activeTransport = type;
-    if (typeof window.saveSession === "function") window.saveSession();
+    saveSession();
     showFieldToast(`${tc.icon} ${tc.name}(\uC73C)\uB85C \uAC08\uC544\uD0D4\uC2B5\uB2C8\uB2E4`);
     renderTransportStrip();
   };

@@ -889,10 +889,17 @@ export function composeLocalTurnText(history, injectedContext){
     // 있으면 그쪽을 쓰고, 없으면 기존 카테고리 뱅크로 조용히 폴백한다.
     const bank = _turnPickReactBank(cat, vk, dice.stat);
     const tpl = bank[Math.floor(Math.random()*bank.length)];
-    const target = _turnPickTarget();
     // [21번 라운드, 시스템 업그레이드 ①] applyTurnRelationEffect 호출은
     // sendMsg로 옮겼다(AI 유무와 무관하게 항상 동작하도록) — 여기서 또
     // 부르면 이중 적용된다. target은 서사 템플릿 채우기용으로만 남긴다.
+    // [47번 섹션 ④] sendMsg가 같은 턴에 이미 _turnPickTarget()을 한 번
+    // 불러 호감도 효과에 쓴 그 값을 S._pendingTurnNarrativeTarget에
+    // 남겨두므로, 여기서 또 독립적으로 뽑지 않고 그 값을 그대로 이어받아
+    // "호감도가 오른 NPC"와 "서사에 이름이 나온 NPC"가 항상 같게 한다
+    // (그 값이 없는 다른 호출 경로 — 예: 오프닝 — 에서는 그대로 독립 호출로
+    // 안전하게 폴백).
+    const target = (S._pendingTurnNarrativeTarget != null) ? S._pendingTurnNarrativeTarget : _turnPickTarget();
+    S._pendingTurnNarrativeTarget = null;
     prose = learned || (identityFrag + _fillTargetSlots(tpl, target));
   } else if(!learned && _isLocArrivalMsg(lastUserMsg?.content)){
     const loc = (typeof loadCurrentLocation==='function') ? loadCurrentLocation() : null;
@@ -2110,7 +2117,15 @@ export async function sendMsg(userMsg, isChoice=false){
       const FIELD_ENTRY_WINDOW_MS = 3*60*1000; // 3분 — 추격자 포기(2분)/습격 threatened(60초)와 같은 성격의 실제 벽시계 타이머
       S._fieldEntryWindowUntil = Date.now() + FIELD_ENTRY_WINDOW_MS;
     }
-    applyTurnRelationEffect(_turnCat, _turnVk, _turnPickTarget());
+    // [47번 섹션 ④] 호감도가 바뀌는 그 대상과 서사에 이름이 실리는 대상이
+    // 각자 독립적으로 _turnPickTarget()을 다시 호출해 이론상 서로 다른
+    // NPC로 갈릴 수 있던 근사치 문제 — 여기서 한 번만 뽑아 공유 필드에
+    // 남겨두고, composeLocalTurnText(아래, bank tier 전용)가 같은 턴에
+    // 그 값을 그대로 이어받아 쓰게 한다(새 저장소 없음, 이 턴이 끝나면
+    // callAI 호출 직후 바로 비움 — 다음 턴에 안 새게).
+    const _turnTarget = _turnPickTarget();
+    S._pendingTurnNarrativeTarget = _turnTarget;
+    applyTurnRelationEffect(_turnCat, _turnVk, _turnTarget);
   }
 
   // [19번 라운드, mq16 진엔딩 분기 — 새 시스템, 자가복구형 트리거] 16장이
@@ -2215,6 +2230,11 @@ export async function sendMsg(userMsg, isChoice=false){
     // 전체 히스토리에 중복으로 실어 보내 토큰을 낭비할 필요가 없다.
     const _aiHistory = S.messages.filter(m=>!m.isSystemNote);
     const text=await window.callAI(_aiHistory,finalDiceCtx);
+    // [47번 섹션 ④] 클라우드/로컬 AI가 응답해 composeLocalTurnText(bank
+    // tier)가 이번 턴엔 아예 안 불렸을 경우, 공유해둔 타겟이 다음 턴까지
+    // 남아 그때의 호감도 대상과 안 맞게 재사용될 수 있다 — 턴이 끝나는
+    // 이 지점에서 무조건 비운다(이미 소비됐으면 null 재대입이라 안전).
+    S._pendingTurnNarrativeTarget = null;
 
     // [20차 감사 FIX — 3탄] 서사 본문의 "HP-9" 같은 자유 텍스트 정규식
     // 파싱과, 그 아래에서 따로 실행되는 정식 <gs>{"stats":{"hp":-9}}</gs>

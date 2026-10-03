@@ -8,7 +8,7 @@ import { getAllSetItems } from '../items/006-세트-아이템-시스템.js';
 import { changeFactionRep } from '../world/219-17-세력-명성-변경-상태-조회.js';
 import { saveGold, saveInventory } from '../items/007-동적-아이템-생성-시스템-무제한-영구-캐시.js';
 import { dramaticJobChange } from '../items/074-파트2-B-성장-연출-강화.js';
-import { _markDirty, loadNPCs, saveNPCs, saveStatsSplit } from '../misc/001-block0-preamble.js';
+import { _markDirty, loadNPCs, saveNPCs, saveSession, saveStatsSplit } from '../misc/001-block0-preamble.js';
 import { loadJobSkills, saveJobSkills } from '../misc/009-레벨업-스탯-포인트-배분-시스템.js';
 import { loadPermStatBonus } from '../misc/015-시스템-1120.js';
 import { loadLocations, loadOwnedRelics, loadParty } from '../misc/054-이동수단-시스템.js';
@@ -1878,7 +1878,7 @@ export function resolveMq16Confrontation(choice){
   S._pendingMq16ResolutionHint = narrText;
   S._nextInjectedContext = (S._nextInjectedContext||'') + '\n[방금 마왕과의 결전이 확정됨] ' + narrText;
   if(typeof completeMainQuest==='function') completeMainQuest('mq16', {resolved:true});
-  if(typeof window.saveSession==='function') window.saveSession();
+  saveSession();
 }
 window.resolveMq16Confrontation = resolveMq16Confrontation;
 

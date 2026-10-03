@@ -42,6 +42,7 @@ import { triggerLoopIfDead } from '../progression/220-18-회차루프-시스템.
 import { changeLocationReputation, changeProsperity, getLocationEconomySummary, setTradeRouteStatus } from '../economy/332-정착지-경제-평판-시스템.js';
 import { esc, toast, toastHTML, getEntityIconHTML, lsGet, lsSet } from '../utils.js';
 import { loadPlayerLevel } from '../job/008-클리어-보상-시스템-시나리오-클리어-시-영구-아이템스킬.js';
+import { saveSession } from '../misc/001-block0-preamble.js';
 
 // ══════════════════════════════════════════════════════════════════
 // 1) 절차적 "화면 그래프" 생성기 — 왕국(대륙) 하나를 받아
@@ -1127,7 +1128,7 @@ function finishFieldBattle(){
       window.tryLocalWdrDiscovery('villain');
     }
   }
-  if(typeof window.saveSession==='function') window.saveSession();
+  saveSession();
   if(battleUiRefresh) battleUiRefresh(bs, true);
   if(!win && typeof triggerLoopIfDead==='function') triggerLoopIfDead();
   if(battleDoneCb) battleDoneCb(win);
@@ -1821,7 +1822,7 @@ window.switchFieldTransport = function(type){
   }
   RT.transportType = type;
   S._activeTransport = type; // 실제 여행 시스템과 같은 필드에 그대로 기록
-  if(typeof window.saveSession==='function') window.saveSession();
+  saveSession();
   showFieldToast(`${tc.icon} ${tc.name}(으)로 갈아탔습니다`);
   renderTransportStrip();
 };

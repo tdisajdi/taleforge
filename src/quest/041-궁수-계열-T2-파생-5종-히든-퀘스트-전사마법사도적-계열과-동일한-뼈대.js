@@ -32,6 +32,22 @@ export const checkHiddenQuestCondition = (questId, gameData) => {
     case "mythology": return scenario.includes("신화") || scenario.includes("mythology");
     case "apocalypse": return scenario.includes("아포칼") || scenario.includes("apocalypse");
     case "high_mad": return madness >= 50;
+    // [47번 섹션 ⑥] 시간술사(chronomancer) unlockCondition이 요구하는
+    // `requireQuest:'시간의 균열'`이 코드베이스 어디에도 정의된 적
+    // 없는 퀘스트를 가리키고 있던 공백을 메운다 — 아래 "master" 계열
+    // 조건들과 달리 jobId==='chronomancer'를 요구하면 안 된다(그 직업
+    // 자체를 아직 못 얻은 플레이어가 통과해야 하는 선행 조건이기
+    // 때문, "먼저 그 직업이어야 한다"는 순환 조건이 되면 영원히
+    // 불가능해짐). conditionHint("부서진 시간의 모래시계를 수리하는
+    // 퀘스트")를 그대로 따라 — 32번 섹션에서 이미 로컬로 획득 가능하게
+    // 만든 그 아이템을 들고 시공 관련 행동을 충분히 쌓았는지로 판정.
+    case "chronomancer_rift_repair": {
+      try{
+        const hasHourglass = typeof hasItemInInventory==='function' && hasItemInInventory('시간의 모래시계');
+        const actions = typeof loadJobActions==='function' ? loadJobActions() : {};
+        return hasHourglass && (S?.stats?.mgc||0)>=60 && ((actions.time||actions.magic||0)>=4);
+      }catch(e){ return false; }
+    }
     case "blacksmith_master": {
       try{
         const ws = typeof loadWorkshop==='function' ? loadWorkshop() : null;

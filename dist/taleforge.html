@@ -48352,25 +48352,62 @@ ${lines.join("\n")}
       });
       const placedLabels = [];
       const labelPad = 2 * k;
+      const circleRectHit = (cx, cy, r, box) => {
+        const nx = Math.max(box.x1, Math.min(cx, box.x2));
+        const ny = Math.max(box.y1, Math.min(cy, box.y2));
+        const dx = cx - nx, dy = cy - ny;
+        return dx * dx + dy * dy < r * r;
+      };
       markerList.slice().sort((a, b) => a.priority - b.priority || a.c.y - b.c.y).forEach((m) => {
-        const halfW = m.labelText.length * m.fontSize * 0.5 + labelPad;
+        const textW = m.labelText.length * m.fontSize;
+        const halfW = textW * 0.5 + labelPad;
         const lineH = m.fontSize * 1.25;
-        let tier = 0, y = 0, box = null;
-        for (; tier < 6; tier++) {
-          y = m.c.y + m.baseSize * 0.85 + 8 * k + tier * lineH;
-          box = { x1: m.c.x - halfW, x2: m.c.x + halfW, y1: y - lineH * 0.5, y2: y + lineH * 0.5 };
-          const hit = placedLabels.some((p) => p.ownerIdx !== m._idx && box.x1 < p.x2 && box.x2 > p.x1 && box.y1 < p.y2 && box.y2 > p.y1);
-          if (!hit) break;
+        const r = m.baseSize * 0.85;
+        const candidates = [
+          { x: m.c.x + r + 6 * k, y: m.c.y + m.fontSize * 0.3, anchor: "start" },
+          { x: m.c.x, y: m.c.y + r + 8 * k + lineH * 0.5, anchor: "middle" },
+          { x: m.c.x - r - 6 * k, y: m.c.y + m.fontSize * 0.3, anchor: "end" },
+          { x: m.c.x, y: m.c.y - r - 8 * k, anchor: "middle" },
+          { x: m.c.x + r * 0.5, y: m.c.y + r + 8 * k, anchor: "start" },
+          { x: m.c.x - r * 0.5, y: m.c.y + r + 8 * k, anchor: "end" },
+          { x: m.c.x + r * 0.5, y: m.c.y - r - 4 * k, anchor: "start" },
+          { x: m.c.x - r * 0.5, y: m.c.y - r - 4 * k, anchor: "end" }
+        ];
+        let chosen = null;
+        for (const cand of candidates) {
+          const box = cand.anchor === "middle" ? { x1: cand.x - halfW, x2: cand.x + halfW, y1: cand.y - lineH * 0.5, y2: cand.y + lineH * 0.5 } : cand.anchor === "start" ? { x1: cand.x - labelPad, x2: cand.x + textW + labelPad, y1: cand.y - lineH * 0.5, y2: cand.y + lineH * 0.5 } : { x1: cand.x - textW - labelPad, x2: cand.x + labelPad, y1: cand.y - lineH * 0.5, y2: cand.y + lineH * 0.5 };
+          const hitsLabel = placedLabels.some((p) => p.ownerIdx !== m._idx && box.x1 < p.x2 && box.x2 > p.x1 && box.y1 < p.y2 && box.y2 > p.y1);
+          const hitsMarker = !hitsLabel && markerList.some((o) => o._idx !== m._idx && circleRectHit(o.c.x, o.c.y, o.baseSize * 0.85, box));
+          if (!hitsLabel && !hitsMarker) {
+            chosen = { x: cand.x, y: cand.y, anchor: cand.anchor, box };
+            break;
+          }
         }
-        placedLabels.push({ ownerIdx: m._idx, ...box });
-        m.labelY = y;
+        if (!chosen) {
+          let tier = 0, y = 0, box = null;
+          for (; tier < 6; tier++) {
+            y = m.c.y + r + 8 * k + tier * lineH;
+            box = { x1: m.c.x - halfW, x2: m.c.x + halfW, y1: y - lineH * 0.5, y2: y + lineH * 0.5 };
+            const hit = placedLabels.some((p) => p.ownerIdx !== m._idx && box.x1 < p.x2 && box.x2 > p.x1 && box.y1 < p.y2 && box.y2 > p.y1);
+            if (!hit) break;
+          }
+          chosen = { x: m.c.x, y, anchor: "middle", box };
+        }
+        placedLabels.push({ ownerIdx: m._idx, ...chosen.box });
+        m.labelY = chosen.y;
+        m.labelX = chosen.x;
+        m.labelAnchor = chosen.anchor;
       });
       const questTargetIds = new Set([
         ...typeof window.getActiveBulletinQuestTargets === "function" ? window.getActiveBulletinQuestTargets() : [],
         ...typeof window.getActiveAIQuestLocationTargets === "function" ? window.getActiveAIQuestLocationTargets() : []
       ].map((q) => q.locationId));
       markerList.forEach((m) => {
-        const { loc, c, isCurrent, isDungeon, dTier, isExplored, color, baseSize, shapePath, labelText, fontSize, labelY } = m;
+        const { loc, c, isCurrent, isDungeon, dTier, isExplored, color, baseSize, shapePath, labelText, fontSize, labelY, labelX, labelAnchor } = m;
+        const _lx = labelX !== void 0 ? labelX : c.x;
+        const _lAnchor = labelAnchor || "middle";
+        const _tw = labelText.length * fontSize;
+        const _rectX = _lAnchor === "middle" ? _lx - _tw * 0.5 - 1.5 * k : _lAnchor === "start" ? _lx - 1.5 * k : _lx - _tw - 1.5 * k;
         const hasQuestTarget = isExplored && questTargetIds.has(loc.id);
         const manifestHit = isExplored && (typeof window !== "undefined" && window.PIXEL_ART_MANIFEST) ? window.PIXEL_ART_MANIFEST.byId[loc.id] || loc.name && window.PIXEL_ART_MANIFEST.byName[loc.name] : null;
         let iconImg = "";
@@ -48387,8 +48424,8 @@ ${lines.join("\n")}
       ${manifestHit ? "" : `<circle cx="${c.x}" cy="${c.y}" r="${baseSize * 0.55}" fill="${color}" stroke="${color}" stroke-width="${1 * k}" opacity="${isExplored ? 0.9 : 0.6}"/>`}
       ${isCurrent ? `<circle cx="${c.x}" cy="${c.y}" r="${baseSize * 0.95}" fill="none" stroke="${color}" stroke-width="${1 * k}"><animate attributeName="r" values="${baseSize * 0.8};${baseSize * 1.15};${baseSize * 0.8}" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.9;0.3;0.9" dur="2s" repeatCount="indefinite"/></circle>` : ""}
       ${hasQuestTarget ? `<text x="${c.x + baseSize * 0.7}" y="${c.y - baseSize * 0.6}" font-size="${13 * k}" text-anchor="middle">\u2757</text>` : ""}
-      <rect x="${c.x - labelText.length * fontSize * 0.5 - 1.5 * k}" y="${labelY - fontSize * 0.85}" width="${labelText.length * fontSize + 3 * k}" height="${fontSize * 1.15}" fill="#050a05" opacity="0.5" rx="${2 * k}"/>
-      <text x="${c.x}" y="${labelY}" font-size="${fontSize}" fill="${color}" text-anchor="middle" style="font-family:'Cinzel',serif">${esc2(labelText)}</text>
+      <rect x="${_rectX}" y="${labelY - fontSize * 0.85}" width="${_tw + 3 * k}" height="${fontSize * 1.15}" fill="#050a05" opacity="0.5" rx="${2 * k}"/>
+      <text x="${_lx}" y="${labelY}" font-size="${fontSize}" fill="${color}" text-anchor="${_lAnchor}" style="font-family:'Cinzel',serif">${esc2(labelText)}</text>
     </g>`;
       });
     }
@@ -133716,6 +133753,23 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
       }
     }
   }
+  function buildCrossingTrailPoints(x0, y0, x1, y1, seedKey) {
+    const dx = x1 - x0, dy = y1 - y0;
+    const len = Math.hypot(dx, dy) || 1;
+    const px = -dy / len, py = dx / len;
+    const amp = 2 + seedRand(seedKey, "roadAmp") * 3;
+    const freq = 1.2 + seedRand(seedKey, "roadFreq") * 1.3;
+    const phase = seedRand(seedKey, "roadPhase") * Math.PI * 2;
+    const n = Math.max(4, Math.round(len / 3.5));
+    const pts = [];
+    for (let i = 1; i < n; i++) {
+      const t = i / n;
+      const bx = x0 + dx * t, by = y0 + dy * t;
+      const wobble = Math.sin(t * Math.PI * freq + phase) * amp * Math.sin(t * Math.PI);
+      pts.push({ c: bx + px * wobble, r: by + py * wobble });
+    }
+    return pts;
+  }
   function pickPackHome(isWaterScreen, node) {
     if (!isWaterScreen) return { hc: SCREEN_COLS / 2, hr: SCREEN_ROWS / 2 };
     const left = seedRand(node.id, "shoreSide") < 0.5;
@@ -133970,20 +134024,33 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
     });
     const isAirOnlyScreen = node.kind === "connector" && node.neighbors.some((n) => n.crossing === "air-only");
     const isSettlementRoute = isSettlementRouteNode(graph, node) && !isWaterScreen && !isAirOnlyScreen;
+    const isSettlementWaterRoute = isSettlementRouteNode(graph, node) && isWaterScreen;
+    const isSettlementAirRoute = isSettlementRouteNode(graph, node) && isAirOnlyScreen;
     const signposts = [];
+    let crossingTrail = null;
+    const mkSign = (ex, destLoc, icon, note) => {
+      let sc = ex.gc, sr = ex.gr;
+      if (ex.edge === "N") sr += 4;
+      else if (ex.edge === "S") sr -= 4;
+      else if (ex.edge === "W") sc += 4;
+      else sc -= 4;
+      return { c: sc, r: sr, icon, label: destLoc.name + " \uBC29\uBA74" + (note ? ` (${note})` : "") };
+    };
     if (isSettlementRoute && exits.length === 2) {
       stampRoadPath(grid, idx, inB, exits[0].gc, exits[0].gr, exits[1].gc, exits[1].gr, nodeId);
       const locA = graph.locsById.get(node.srcLocs[0]), locB = graph.locsById.get(node.srcLocs[1]);
-      const mkSign = (ex, destLoc) => {
-        let sc = ex.gc, sr = ex.gr;
-        if (ex.edge === "N") sr += 4;
-        else if (ex.edge === "S") sr -= 4;
-        else if (ex.edge === "W") sc += 4;
-        else sc -= 4;
-        return { c: sc, r: sr, icon: "\u{1FAA7}", label: destLoc.name + " \uBC29\uBA74" };
+      if (locA) signposts.push(mkSign(exits[0], locA, "\u{1FAA7}"));
+      if (locB) signposts.push(mkSign(exits[1], locB, "\u{1FAA7}"));
+    } else if ((isSettlementWaterRoute || isSettlementAirRoute) && exits.length === 2) {
+      const locA = graph.locsById.get(node.srcLocs[0]), locB = graph.locsById.get(node.srcLocs[1]);
+      const icon = isSettlementWaterRoute ? "\u26F5" : "\u{1F54A}\uFE0F";
+      const note = isSettlementWaterRoute ? "\uB098\uB8E8\uD130" : "\uBE44\uD589\uB85C";
+      if (locA) signposts.push(mkSign(exits[0], locA, icon, note));
+      if (locB) signposts.push(mkSign(exits[1], locB, icon, note));
+      crossingTrail = {
+        kind: isSettlementWaterRoute ? "water" : "air",
+        points: buildCrossingTrailPoints(exits[0].gc, exits[0].gr, exits[1].gc, exits[1].gr, nodeId)
       };
-      if (locA) signposts.push(mkSign(exits[0], locA));
-      if (locB) signposts.push(mkSign(exits[1], locB));
     }
     let markerPos = null;
     if (node.kind === "location") {
@@ -133998,7 +134065,7 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
     }
     const packs = buildPacksForNode(graph, node, isWaterScreen, exits, markerPos);
     const fog = new Uint8Array(COLS * ROWS);
-    const screen = { nodeId, node, COLS, ROWS, grid, idx, inB, exits, markerPos, packs, biome, isWaterScreen, signposts, fog };
+    const screen = { nodeId, node, COLS, ROWS, grid, idx, inB, exits, markerPos, packs, biome, isWaterScreen, signposts, fog, crossingTrail };
     if (node.kind === "location") syncRaidPacksForScreen(screen, node.loc);
     _screenCache.set(cacheKey, screen);
     return screen;
@@ -135224,6 +135291,19 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
       ctx.font = "9px 'Noto Serif KR',serif";
       ctx.fillStyle = "#f0e6c8";
       ctx.fillText(sp.label, px, py + 11);
+    }
+    if (screen.crossingTrail) {
+      const icon = screen.crossingTrail.kind === "water" ? "\u{1F6DF}" : "\u2601\uFE0F";
+      screen.crossingTrail.points.forEach((p, i) => {
+        if (i % 2 !== 0) return;
+        if (!inFogExplored(p.c, p.r)) return;
+        const px = p.c * TILE - camX, py = p.r * TILE - camY;
+        if (px < -20 || px > VIEW_W + 20 || py < -20 || py > VIEW_H + 20) return;
+        ctx.font = "13px serif";
+        ctx.globalAlpha = 0.75;
+        ctx.fillText(icon, px, py);
+        ctx.globalAlpha = 1;
+      });
     }
     for (const m of screen.packs) {
       if (m.cooldown > 0) continue;

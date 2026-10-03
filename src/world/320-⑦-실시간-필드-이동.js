@@ -256,6 +256,29 @@ function stampRoadPath(grid, idx, inB, x0, y0, x1, y1, seedKey){
     }
   }
 }
+// [47-⑧, 물길·비행 지름길 확장] stampRoadPath와 완전히 같은 사인파 곡선을
+// 쓰지만, 타일을 직접 칠하지 않고 그 곡선 위의 점 좌표만 돌려준다 —
+// 물/공중 지름길은 포장 도로로 바꾸면 안 된다(물 타일을 ROAD_PAVED로
+// 바꾸면 배 없이도 건널 수 있게 되는 회귀가 생김) — 그래서 그리드는 전혀
+// 안 바꾸고, 렌더링 단계에서만 이 점들 위에 장식용 아이콘(부표/구름)을
+// 덧그린다(이동수단 게이팅과 완전히 무관한 순수 시각 요소).
+function buildCrossingTrailPoints(x0,y0,x1,y1,seedKey){
+  const dx = x1-x0, dy = y1-y0;
+  const len = Math.hypot(dx,dy) || 1;
+  const px = -dy/len, py = dx/len;
+  const amp = 2 + seedRand(seedKey,'roadAmp')*3;
+  const freq = 1.2 + seedRand(seedKey,'roadFreq')*1.3;
+  const phase = seedRand(seedKey,'roadPhase') * Math.PI * 2;
+  const n = Math.max(4, Math.round(len/3.5));
+  const pts = [];
+  for(let i=1;i<n;i++){
+    const t = i/n;
+    const bx = x0+dx*t, by = y0+dy*t;
+    const wobble = Math.sin(t*Math.PI*freq + phase) * amp * Math.sin(t*Math.PI);
+    pts.push({ c: bx+px*wobble, r: by+py*wobble });
+  }
+  return pts;
+}
 // 물 화면(isWaterScreen)에서 몬스터 팩 홈 좌표가 화면 중앙(대개 물 한복판)에
 // 잡혀 늑대 무리가 강 위에 떠 있는 것처럼 보이던 기존 버그 수정 — 물이 절대
 // 없는 가장자리 둔치 띠(좌/우 중 한쪽, c<4 또는 c>=COLS-4)로 홈을 비켜 잡는다.
@@ -534,30 +557,53 @@ export function buildScreen(graph, nodeId){
 
   // [2026-09-18, 도로/이정표 라운드] 정착지-정착지 구간(isSettlementRouteNode)
   // 이면서 물길/비행전용 지름길이 아닌(발로 실제로 걸어서 지날 수 있는) connector
-  // 화면에만 포장 도로+이정표를 놓는다. 던전/황야/사건 목적지로 가는 길이나
-  // 물길·하늘길 대체 경로는 "발견의 재미"를 위해 일부러 대상에서 뺀다(과제
-  // 요구사항 그대로). 위 isWaterScreen 판정과 동일한 방식으로
-  // isAirOnlyScreen도 neighbors의 crossing 태그에서 직접 판정한다.
+  // 화면에만 포장 도로+이정표를 놓는다. 던전/황야/사건 목적지로 가는 길은
+  // "발견의 재미"를 위해 일부러 대상에서 뺀다(과제 요구사항 그대로, 지금도
+  // 그대로 유지). 위 isWaterScreen 판정과 동일한 방식으로 isAirOnlyScreen도
+  // neighbors의 crossing 태그에서 직접 판정한다.
+  // [47-⑧, 물길·비행 지름길 확장] 처음엔 "물길·하늘길 대체 경로"까지도
+  // 전부 표시 대상에서 뺐었는데(12번 섹션), 그건 "정착지-정착지" 지름길
+  // 까지도 함께 안 보이게 만드는 과한 제외였다 — 이번엔 "정착지-정착지"
+  // 지름길 중 물/공중인 것에만 한정해서(던전/황야행 물길·하늘길은 여전히
+  // 그대로 안 건드림) 다른 시각 처리(포장 도로가 아니라 장식용 부표/구름
+  // 궤적 + 다른 아이콘의 이정표)로 추가한다.
   const isAirOnlyScreen = node.kind==='connector' && node.neighbors.some(n=>n.crossing==='air-only');
   const isSettlementRoute = isSettlementRouteNode(graph, node) && !isWaterScreen && !isAirOnlyScreen;
+  const isSettlementWaterRoute = isSettlementRouteNode(graph, node) && isWaterScreen;
+  const isSettlementAirRoute = isSettlementRouteNode(graph, node) && isAirOnlyScreen;
   const signposts = [];
+  let crossingTrail = null;
+  // buildChain의 link() 호출 순서상 connector 노드의 neighbors[0]은 항상
+  // "뒤쪽"(locA 방향), neighbors[1]은 항상 "앞쪽"(locB 방향)으로 고정된다
+  // (각 connector는 buildChain 안에서 딱 2번만 link()에 등장 — 처음엔 cid로
+  // 등장해 neighbors[0]에 쌓이고, 다음 반복에서 prev로 등장해 neighbors[1]에
+  // 쌓인다). 그래서 exits[0]/exits[1]과 srcLocs[0]/srcLocs[1]이 그대로
+  // 대응돼, 화면을 새로 안 지어도 "이 출구로 나가면 어느 정착지인가"를
+  // 정확히 알 수 있다.
+  const mkSign = (ex, destLoc, icon, note) => {
+    let sc=ex.gc, sr=ex.gr;
+    if(ex.edge==='N') sr+=4; else if(ex.edge==='S') sr-=4; else if(ex.edge==='W') sc+=4; else sc-=4;
+    return { c:sc, r:sr, icon, label: destLoc.name+' 방면'+(note?` (${note})`:'') };
+  };
   if(isSettlementRoute && exits.length===2){
-    // buildChain의 link() 호출 순서상 connector 노드의 neighbors[0]은 항상
-    // "뒤쪽"(locA 방향), neighbors[1]은 항상 "앞쪽"(locB 방향)으로 고정된다
-    // (각 connector는 buildChain 안에서 딱 2번만 link()에 등장 — 처음엔 cid로
-    // 등장해 neighbors[0]에 쌓이고, 다음 반복에서 prev로 등장해 neighbors[1]에
-    // 쌓인다). 그래서 exits[0]/exits[1]과 srcLocs[0]/srcLocs[1]이 그대로
-    // 대응돼, 화면을 새로 안 지어도 "이 출구로 나가면 어느 정착지인가"를
-    // 정확히 알 수 있다.
     stampRoadPath(grid, idx, inB, exits[0].gc, exits[0].gr, exits[1].gc, exits[1].gr, nodeId);
     const locA = graph.locsById.get(node.srcLocs[0]), locB = graph.locsById.get(node.srcLocs[1]);
-    const mkSign = (ex, destLoc) => {
-      let sc=ex.gc, sr=ex.gr;
-      if(ex.edge==='N') sr+=4; else if(ex.edge==='S') sr-=4; else if(ex.edge==='W') sc+=4; else sc-=4;
-      return { c:sc, r:sr, icon:'🪧', label: destLoc.name+' 방면' };
+    if(locA) signposts.push(mkSign(exits[0], locA, '🪧'));
+    if(locB) signposts.push(mkSign(exits[1], locB, '🪧'));
+  } else if((isSettlementWaterRoute || isSettlementAirRoute) && exits.length===2){
+    // 포장 도로는 안 그린다(그리드를 안 바꿈) — 물 타일을 ROAD_PAVED로
+    // 바꾸면 배 없이도 건널 수 있게 되는 회귀가 생기므로, 이동수단 게이팅
+    // (checkScreenTransition의 crossing 검사)에 전혀 영향 없는 순수 장식
+    // 요소(crossingTrail, 렌더링 전용)만 추가한다.
+    const locA = graph.locsById.get(node.srcLocs[0]), locB = graph.locsById.get(node.srcLocs[1]);
+    const icon = isSettlementWaterRoute ? '⛵' : '🕊️';
+    const note = isSettlementWaterRoute ? '나루터' : '비행로';
+    if(locA) signposts.push(mkSign(exits[0], locA, icon, note));
+    if(locB) signposts.push(mkSign(exits[1], locB, icon, note));
+    crossingTrail = {
+      kind: isSettlementWaterRoute ? 'water' : 'air',
+      points: buildCrossingTrailPoints(exits[0].gc, exits[0].gr, exits[1].gc, exits[1].gr, nodeId),
     };
-    if(locA) signposts.push(mkSign(exits[0], locA));
-    if(locB) signposts.push(mkSign(exits[1], locB));
   }
 
   let markerPos = null;
@@ -582,7 +628,7 @@ export function buildScreen(graph, nodeId){
   // 구역이 다시 어두워지지 않는다(새로고침하면 _screenCache 자체가 메모리
   // 상태라 초기화됨 — packs 등 이 화면의 다른 런타임 상태와 동일한 범위).
   const fog = new Uint8Array(COLS*ROWS);
-  const screen = { nodeId, node, COLS, ROWS, grid, idx, inB, exits, markerPos, packs, biome, isWaterScreen, signposts, fog };
+  const screen = { nodeId, node, COLS, ROWS, grid, idx, inB, exits, markerPos, packs, biome, isWaterScreen, signposts, fog, crossingTrail };
   if(node.kind==='location') syncRaidPacksForScreen(screen, node.loc);
   _screenCache.set(cacheKey, screen);
   return screen;
@@ -1950,6 +1996,21 @@ function renderFieldCanvas(){
     ctx.font='18px serif'; ctx.fillStyle='#e6cf82'; ctx.fillText(sp.icon, px, py-6);
     ctx.font="9px 'Noto Serif KR',serif"; ctx.fillStyle='#f0e6c8';
     ctx.fillText(sp.label, px, py+11);
+  }
+
+  // [47-⑧, 물길·비행 지름길 확장] 포장 도로(stampRoadPath)는 그리드를
+  // 바꿔서 물 타일을 건널 수 없게 막는 FT_BLOCKING 성질까지 없애버리므로
+  // (12번 섹션 참고, 이번에도 그리드는 안 건드림) 여기선 순수 장식
+  // 궤적만 그린다 — 지형과 같은 "탐사되면 계속 보임" 취급.
+  if(screen.crossingTrail){
+    const icon = screen.crossingTrail.kind==='water' ? '🛟' : '☁️';
+    screen.crossingTrail.points.forEach((p,i)=>{
+      if(i%2!==0) return;
+      if(!inFogExplored(p.c, p.r)) return;
+      const px = p.c*TILE-camX, py = p.r*TILE-camY;
+      if(px<-20||px>VIEW_W+20||py<-20||py>VIEW_H+20) return;
+      ctx.font='13px serif'; ctx.globalAlpha=0.75; ctx.fillText(icon, px, py); ctx.globalAlpha=1;
+    });
   }
 
   // 몬스터/경비병 팩 — 지형과 달리 "지금 시야 안일 때만"(이동하는 대상을

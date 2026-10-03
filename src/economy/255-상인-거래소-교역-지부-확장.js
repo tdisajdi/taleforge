@@ -2263,29 +2263,70 @@ export function renderLandMapSVG(){
 
   // 우선순위(허브/현재위치 먼저) → 화면 y좌표 순으로 배치해서, 중요한
   // 지명이 먼저 좋은 자리를 차지하게 한다.
-  // 참고: 다른 마커의 아이콘 자체까지 장애물로 등록하는 방식도 시도해
-  // 봤지만, 장소가 촘촘한 대륙(MIN_DIST=95)에서는 아이콘끼리 이미 거의
-  // 붙어있어서 오히려 이름표가 계속 튕겨나가 더 지저분해졌다. 그래서
-  // 이름표끼리의 충돌만 피하는 쪽으로 되돌렸다 — 아이콘 한두 개와 살짝
-  // 겹치는 것보다, 이름표 줄 전체가 널뛰는 게 더 안 좋은 결과였다.
+  // [47-⑧, 라벨-마커 겹침 재시도] 예전엔 다른 마커의 아이콘까지 "장애물"로
+  // 등록하고 안 겹치는 자리를 전역으로 찾다가, 장소가 촘촘한 대륙(MIN_DIST=95)
+  // 에서는 라벨이 대륙 반대편까지 튕겨나가는 부작용이 있어서 라벨끼리의
+  // 충돌만 피하는 아래쪽 1열 쌓기로 되돌렸었다(이 주석 바로 아래 로직). 이번엔
+  // "전역 탐색" 대신 "마커 바로 주변 8방향 중 하나만 짧게 시도하고, 전부
+  // 막히면 즉시 그 기존 방식으로 포기"하는 식으로 탐색 범위 자체를 마커
+  // 바로 옆으로 좁혀서 재시도한다 — 자리를 못 찾아도 항상 이번 수정 전과
+  // 동일한 결과로 떨어지므로, 최악의 경우에도 지금보다 나빠지지 않는다.
   markerList.forEach((m,i)=>{ m._idx = i; });
   const placedLabels = [];
   const labelPad = 2*k;
+  const circleRectHit = (cx, cy, r, box) => {
+    const nx = Math.max(box.x1, Math.min(cx, box.x2));
+    const ny = Math.max(box.y1, Math.min(cy, box.y2));
+    const dx = cx-nx, dy = cy-ny;
+    return (dx*dx+dy*dy) < r*r;
+  };
   markerList
     .slice()
     .sort((a,b)=> a.priority-b.priority || a.c.y-b.c.y)
     .forEach(m=>{
-      const halfW = m.labelText.length * m.fontSize * 0.5 + labelPad;
+      const textW = m.labelText.length * m.fontSize;
+      const halfW = textW*0.5 + labelPad;
       const lineH = m.fontSize * 1.25;
-      let tier = 0, y = 0, box = null;
-      for(; tier<6; tier++){
-        y = m.c.y + m.baseSize*0.85 + 8*k + tier*lineH;
-        box = { x1:m.c.x-halfW, x2:m.c.x+halfW, y1:y-lineH*0.5, y2:y+lineH*0.5 };
-        const hit = placedLabels.some(p=> p.ownerIdx!==m._idx && box.x1<p.x2 && box.x2>p.x1 && box.y1<p.y2 && box.y2>p.y1);
-        if(!hit) break;
+      const r = m.baseSize*0.85;
+      // 8방향 근접 후보(가까운 순) — middle은 라벨 중앙이 그 x에 오고,
+      // start/end는 그 x에서 각각 오른쪽/왼쪽으로 글자가 뻗어나간다.
+      const candidates = [
+        { x:m.c.x + r + 6*k, y:m.c.y + m.fontSize*0.3,      anchor:'start'  },
+        { x:m.c.x,           y:m.c.y + r + 8*k + lineH*0.5, anchor:'middle' },
+        { x:m.c.x - r - 6*k, y:m.c.y + m.fontSize*0.3,      anchor:'end'    },
+        { x:m.c.x,           y:m.c.y - r - 8*k,             anchor:'middle' },
+        { x:m.c.x + r*0.5,   y:m.c.y + r + 8*k,             anchor:'start'  },
+        { x:m.c.x - r*0.5,   y:m.c.y + r + 8*k,             anchor:'end'    },
+        { x:m.c.x + r*0.5,   y:m.c.y - r - 4*k,             anchor:'start'  },
+        { x:m.c.x - r*0.5,   y:m.c.y - r - 4*k,             anchor:'end'    },
+      ];
+      let chosen = null;
+      for(const cand of candidates){
+        const box = cand.anchor==='middle'
+          ? { x1:cand.x-halfW, x2:cand.x+halfW, y1:cand.y-lineH*0.5, y2:cand.y+lineH*0.5 }
+          : cand.anchor==='start'
+            ? { x1:cand.x-labelPad, x2:cand.x+textW+labelPad, y1:cand.y-lineH*0.5, y2:cand.y+lineH*0.5 }
+            : { x1:cand.x-textW-labelPad, x2:cand.x+labelPad, y1:cand.y-lineH*0.5, y2:cand.y+lineH*0.5 };
+        const hitsLabel = placedLabels.some(p=> p.ownerIdx!==m._idx && box.x1<p.x2 && box.x2>p.x1 && box.y1<p.y2 && box.y2>p.y1);
+        const hitsMarker = !hitsLabel && markerList.some(o=> o._idx!==m._idx && circleRectHit(o.c.x, o.c.y, o.baseSize*0.85, box));
+        if(!hitsLabel && !hitsMarker){ chosen = { x:cand.x, y:cand.y, anchor:cand.anchor, box }; break; }
       }
-      placedLabels.push({ ownerIdx:m._idx, ...box });
-      m.labelY = y;
+      if(!chosen){
+        // 8방향 전부 막혔으면 예전(이번 수정 전) 방식 그대로 — 마커와의
+        // 충돌은 다시 허용하고 라벨끼리만 피하며 아래로 층층이 쌓는다.
+        let tier = 0, y = 0, box = null;
+        for(; tier<6; tier++){
+          y = m.c.y + r + 8*k + tier*lineH;
+          box = { x1:m.c.x-halfW, x2:m.c.x+halfW, y1:y-lineH*0.5, y2:y+lineH*0.5 };
+          const hit = placedLabels.some(p=> p.ownerIdx!==m._idx && box.x1<p.x2 && box.x2>p.x1 && box.y1<p.y2 && box.y2>p.y1);
+          if(!hit) break;
+        }
+        chosen = { x:m.c.x, y, anchor:'middle', box };
+      }
+      placedLabels.push({ ownerIdx:m._idx, ...chosen.box });
+      m.labelY = chosen.y;
+      m.labelX = chosen.x;
+      m.labelAnchor = chosen.anchor;
     });
 
   // [19번 라운드, [대기] #15 — 퀘스트 위치 표시, 새 시스템] misc/053이
@@ -2303,7 +2344,15 @@ export function renderLandMapSVG(){
     ...(typeof window.getActiveAIQuestLocationTargets==='function' ? window.getActiveAIQuestLocationTargets() : []),
   ].map(q=>q.locationId));
   markerList.forEach(m=>{
-    const { loc, c, isCurrent, isDungeon, dTier, isExplored, color, baseSize, shapePath, labelText, fontSize, labelY } = m;
+    const { loc, c, isCurrent, isDungeon, dTier, isExplored, color, baseSize, shapePath, labelText, fontSize, labelY, labelX, labelAnchor } = m;
+    // [47-⑧] 라벨이 마커 중앙 아래가 아니라 옆/위 등 다른 자리로 옮겨졌을
+    // 수 있으므로, 배경 사각형·텍스트 둘 다 실제 배치(labelX/labelAnchor)를
+    // 따라간다 — labelX/labelAnchor가 없으면(이론상 항상 세팅되지만 안전하게)
+    // 기존처럼 마커 중앙 아래로 폴백.
+    const _lx = (labelX!==undefined) ? labelX : c.x;
+    const _lAnchor = labelAnchor || 'middle';
+    const _tw = labelText.length*fontSize;
+    const _rectX = _lAnchor==='middle' ? _lx-_tw*0.5-1.5*k : _lAnchor==='start' ? _lx-1.5*k : _lx-_tw-1.5*k;
     // [22-4, fog of war] 안 가본 곳은 퀘스트 배지·던전 등급 표시도 함께
     // 가린다 — 실제로 가보기 전엔 그 장소가 무슨 퀘스트와 관련 있는지도
     // 몰라야 자연스럽다(도트 그림·테두리 링도 아래에서 같이 숨김).
@@ -2349,8 +2398,8 @@ export function renderLandMapSVG(){
         : `<circle cx="${c.x}" cy="${c.y}" r="${baseSize*0.55}" fill="${color}" stroke="${color}" stroke-width="${1*k}" opacity="${isExplored?0.9:0.6}"/>`}
       ${isCurrent?`<circle cx="${c.x}" cy="${c.y}" r="${baseSize*0.95}" fill="none" stroke="${color}" stroke-width="${1*k}"><animate attributeName="r" values="${baseSize*0.8};${baseSize*1.15};${baseSize*0.8}" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.9;0.3;0.9" dur="2s" repeatCount="indefinite"/></circle>`:''}
       ${hasQuestTarget?`<text x="${c.x+baseSize*0.7}" y="${c.y-baseSize*0.6}" font-size="${13*k}" text-anchor="middle">❗</text>`:''}
-      <rect x="${c.x-labelText.length*fontSize*0.5-1.5*k}" y="${labelY-fontSize*0.85}" width="${labelText.length*fontSize+3*k}" height="${fontSize*1.15}" fill="#050a05" opacity="0.5" rx="${2*k}"/>
-      <text x="${c.x}" y="${labelY}" font-size="${fontSize}" fill="${color}" text-anchor="middle" style="font-family:'Cinzel',serif">${esc(labelText)}</text>
+      <rect x="${_rectX}" y="${labelY-fontSize*0.85}" width="${_tw+3*k}" height="${fontSize*1.15}" fill="#050a05" opacity="0.5" rx="${2*k}"/>
+      <text x="${_lx}" y="${labelY}" font-size="${fontSize}" fill="${color}" text-anchor="${_lAnchor}" style="font-family:'Cinzel',serif">${esc(labelText)}</text>
     </g>`;
   });
   }

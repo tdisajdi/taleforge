@@ -48,6 +48,40 @@ export const checkHiddenQuestCondition = (questId, gameData) => {
         return hasHourglass && (S?.stats?.mgc||0)>=60 && ((actions.time||actions.magic||0)>=4);
       }catch(e){ return false; }
     }
+    // [47번 섹션 ⑥-추가] chronomancer_rift_repair와 같은 패턴의
+    // 공백(성기사/검성/암살자/상인 unlockCondition의 requireQuest/
+    // requireLocation이 가리키는 퀘스트가 코드베이스 어디에도 정의된
+    // 적 없음)을 메운다. 전부 jobId 게이트가 없음 — 그 직업이 되기
+    // 전에 통과해야 하는 선행 조건이라 jobId==='paladin' 같은 조건을
+    // 걸면 영원히 불가능해지는 순환이 되기 때문(chronomancer와 동일
+    // 원칙). 각 직업의 conditionHint 서술을 그대로 따라 이미 있는
+    // 로컬 신호(종교 귀속/스탯/행동 기록/장소 방문)로만 판정한다.
+    case "paladin_vow_of_temple": {
+      try{
+        const religion = typeof getPlayerReligion==='function' ? getPlayerReligion() : null;
+        const actions = typeof loadJobActions==='function' ? loadJobActions() : {};
+        return religion==='temple' && (S?.stats?.fath||0)>=50 && (actions.heal||0)>=5;
+      }catch(e){ return false; }
+    }
+    case "swordmaster_trial": {
+      try{
+        const pstats = typeof loadStats==='function' ? loadStats() : {};
+        return (S?.stats?.str||0)>=65 && (pstats.critSuccessCount||0)>=3;
+      }catch(e){ return false; }
+    }
+    case "assassin_initiation": {
+      try{
+        const visitedGuild = typeof hasVisitedLocation==='function' && hasVisitedLocation('암살자 길드');
+        const actions = typeof loadJobActions==='function' ? loadJobActions() : {};
+        return visitedGuild && (actions.stealth||0)>=15;
+      }catch(e){ return false; }
+    }
+    case "merchant_first_big_deal": {
+      try{
+        const actions = typeof loadJobActions==='function' ? loadJobActions() : {};
+        return (S?.gold||0)>=150 && (actions.trade||0)>=5;
+      }catch(e){ return false; }
+    }
     case "blacksmith_master": {
       try{
         const ws = typeof loadWorkshop==='function' ? loadWorkshop() : null;

@@ -1310,6 +1310,50 @@ export function renderQuests(){
     }
   }catch(e){}
 
+  // ── 4-A. 게시판(bulletin) 의뢰 진행 기록 — [47번 섹션 ③, 새 화면]
+  // 지금까지 게시판 UI(misc/053 renderBulletinBoard)는 그 장소 캐시에
+  // 남은 의뢰에만 "진행중"/"완료됨" 배지를 보여줬을 뿐, 수락한 의뢰가
+  // 실제로 어떻게 진행돼왔는지(턴별 기록)를 보여줄 화면이 코드 어디에도
+  // 없었다 — 바로 위 "4. NPC 퀘스트" 섹션이 `type!=='bulletin'`으로
+  // 명시적으로 걸러내고 있던 바로 그 공백. recordQuestProgressTurn()이
+  // 이제 활성 게시판 의뢰도 histByQid에 같이 기록하므로(quest/086),
+  // 여기서 그 기록을 그대로 읽어 보여준다 — 새 저장소 없음.
+  try{
+    const bulletinQs = (loadQuests()||[]).filter(q=>q.type==='bulletin');
+    if(bulletinQs.length){
+      const accepted3 = loadAcceptedBulletin();
+      sections.push(`<div style="font-family:'Cinzel',serif;font-size:9px;color:#70a0c0;letter-spacing:2px;margin:12px 0 6px;opacity:.8">📋 게시판 의뢰</div>`);
+      const sorted3 = [...bulletinQs].sort((a,b)=>{ const o={active:0,completed:1}; return (o[a.status]||2)-(o[b.status]||2); });
+      sections.push(sorted3.map(q=>{
+        const done = q.status==='completed';
+        const col3 = done?'#60a060':'#70a0c0';
+        const uid3 = q.id.replace('bulletin_','');
+        const acc3 = accepted3.find(a=>a.uid===uid3);
+        const hist = histByQid[q.id]||[];
+        return `<div style="padding:10px 11px;background:#0d0800;border:1px solid ${col3}44;border-left:3px solid ${col3};margin-bottom:5px">
+          <div style="display:flex;align-items:center;gap:7px;margin-bottom:4px">
+            <span style="font-size:16px">${typeof getEntityIconHTML==='function'?getEntityIconHTML(q,{size:16}):(q.icon||"📋")}</span>
+            <div style="flex:1">
+              <div style="font-family:'Cinzel',serif;font-size:10px;color:${col3}">${esc(q.title)}</div>
+              <div style="font-size:8px;color:${col3}88;margin-top:1px">${done?'완료':'진행중'}</div>
+            </div>
+            ${done?'<span style="color:#60a060;font-size:13px">✓</span>':''}
+          </div>
+          <div style="font-size:11px;color:var(--dim);line-height:1.5">${esc(q.desc||'')}</div>
+          ${acc3&&acc3.targetLocationName?`<div style="font-size:9px;color:#8fb0c8;margin-top:3px">📍 ${esc(acc3.targetLocationIcon||'')} ${esc(acc3.targetLocationName)}</div>`:''}
+          <div style="font-size:9px;color:#f1c40f;margin-top:4px">💰 보상: ${q.reward||0}G</div>
+          ${hist.length?`<div style="margin-top:6px;padding:5px 7px;background:#0a0800;border:1px solid #2a1a05;border-radius:2px">
+            <div style="font-size:8px;color:var(--dim);margin-bottom:3px;font-family:'Cinzel',serif">진행 기록 (${hist.length}턴)</div>
+            ${hist.slice(-3).map(h=>`<div style="font-size:9px;color:#6a5a3a;line-height:1.5;margin-bottom:2px">
+              <span style="color:var(--dim)">턴 ${h.turn}</span> · ${esc((h.userMsg||'').slice(0,30))}
+              ${h.scene?`<div style="font-size:9px;color:#4a3a2a;line-height:1.4;margin-top:1px">${esc(h.scene.slice(0,80))}...</div>`:''}
+            </div>`).join('')}
+          </div>`:`<div style="font-size:9px;color:#4a4a4a;margin-top:5px;font-style:italic">아직 진행 기록이 없습니다</div>`}
+        </div>`;
+      }).join(''));
+    }
+  }catch(e){}
+
   // ── 4-B. NPC 대화 의뢰 (AI 생성) ──
   try{
     const dlgQs = loadNpcDlgQuests();

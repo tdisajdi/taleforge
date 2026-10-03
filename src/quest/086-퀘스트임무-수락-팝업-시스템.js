@@ -7617,6 +7617,15 @@ function recordQuestProgressTurn(userMsg, aiText){
         entries.push({ qid: q.id, turn, userMsg: um, scene });
       });
     }
+    // [47번 섹션 ③] 게시판(bulletin) 의뢰 — 11번 섹션 원칙대로 보류했던
+    // "진행 히스토리를 보여줄 화면이 없다"는 공백을 job/087에 새 섹션으로
+    // 메웠으므로, 그 화면이 읽는 histByQid['bulletin_'+uid]를 여기서
+    // 채운다(활성 상태일 때만 — 완료된 의뢰는 더 안 쌓음).
+    if(typeof loadQuests==='function'){
+      (loadQuests()||[]).filter(q=>q && q.type==='bulletin' && q.status==='active').forEach(q=>{
+        entries.push({ qid: q.id, turn, userMsg: um, scene });
+      });
+    }
     if(!entries.length) return;
     const hist = JSON.parse(lsGet(QUEST_HISTORY_KEY) || '[]');
     hist.push(...entries);

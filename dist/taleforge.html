@@ -93960,6 +93960,11 @@ ${_monsterInfoLine}`;
             entries.push({ qid: q.id, turn, userMsg: um, scene });
           });
         }
+        if (typeof loadQuests === "function") {
+          (loadQuests() || []).filter((q) => q && q.type === "bulletin" && q.status === "active").forEach((q) => {
+            entries.push({ qid: q.id, turn, userMsg: um, scene });
+          });
+        }
         if (!entries.length) return;
         const hist = JSON.parse(lsGet(QUEST_HISTORY_KEY) || "[]");
         hist.push(...entries);
@@ -102901,6 +102906,45 @@ ${job.icon} ${job.name}\uC73C\uB85C \uC804\uC9C1\uD558\uACA0\uC2B5\uB2C8\uAE4C?
           </div>
           <div style="font-size:11px;color:var(--dim);line-height:1.5">${esc2(q.desc || q.description || "")}</div>
           ${q.reward ? `<div style="font-size:10px;color:#f1c40f;margin-top:4px">\uBCF4\uC0C1: ${esc2(String(q.reward))}</div>` : ""}
+        </div>`;
+        }).join(""));
+      }
+    } catch (e) {
+    }
+    try {
+      const bulletinQs = (loadQuests() || []).filter((q) => q.type === "bulletin");
+      if (bulletinQs.length) {
+        const accepted3 = loadAcceptedBulletin();
+        sections.push(`<div style="font-family:'Cinzel',serif;font-size:9px;color:#70a0c0;letter-spacing:2px;margin:12px 0 6px;opacity:.8">\u{1F4CB} \uAC8C\uC2DC\uD310 \uC758\uB8B0</div>`);
+        const sorted3 = [...bulletinQs].sort((a, b) => {
+          const o = { active: 0, completed: 1 };
+          return (o[a.status] || 2) - (o[b.status] || 2);
+        });
+        sections.push(sorted3.map((q) => {
+          const done = q.status === "completed";
+          const col3 = done ? "#60a060" : "#70a0c0";
+          const uid3 = q.id.replace("bulletin_", "");
+          const acc3 = accepted3.find((a) => a.uid === uid3);
+          const hist = histByQid[q.id] || [];
+          return `<div style="padding:10px 11px;background:#0d0800;border:1px solid ${col3}44;border-left:3px solid ${col3};margin-bottom:5px">
+          <div style="display:flex;align-items:center;gap:7px;margin-bottom:4px">
+            <span style="font-size:16px">${typeof getEntityIconHTML === "function" ? getEntityIconHTML(q, { size: 16 }) : q.icon || "\u{1F4CB}"}</span>
+            <div style="flex:1">
+              <div style="font-family:'Cinzel',serif;font-size:10px;color:${col3}">${esc2(q.title)}</div>
+              <div style="font-size:8px;color:${col3}88;margin-top:1px">${done ? "\uC644\uB8CC" : "\uC9C4\uD589\uC911"}</div>
+            </div>
+            ${done ? '<span style="color:#60a060;font-size:13px">\u2713</span>' : ""}
+          </div>
+          <div style="font-size:11px;color:var(--dim);line-height:1.5">${esc2(q.desc || "")}</div>
+          ${acc3 && acc3.targetLocationName ? `<div style="font-size:9px;color:#8fb0c8;margin-top:3px">\u{1F4CD} ${esc2(acc3.targetLocationIcon || "")} ${esc2(acc3.targetLocationName)}</div>` : ""}
+          <div style="font-size:9px;color:#f1c40f;margin-top:4px">\u{1F4B0} \uBCF4\uC0C1: ${q.reward || 0}G</div>
+          ${hist.length ? `<div style="margin-top:6px;padding:5px 7px;background:#0a0800;border:1px solid #2a1a05;border-radius:2px">
+            <div style="font-size:8px;color:var(--dim);margin-bottom:3px;font-family:'Cinzel',serif">\uC9C4\uD589 \uAE30\uB85D (${hist.length}\uD134)</div>
+            ${hist.slice(-3).map((h) => `<div style="font-size:9px;color:#6a5a3a;line-height:1.5;margin-bottom:2px">
+              <span style="color:var(--dim)">\uD134 ${h.turn}</span> \xB7 ${esc2((h.userMsg || "").slice(0, 30))}
+              ${h.scene ? `<div style="font-size:9px;color:#4a3a2a;line-height:1.4;margin-top:1px">${esc2(h.scene.slice(0, 80))}...</div>` : ""}
+            </div>`).join("")}
+          </div>` : `<div style="font-size:9px;color:#4a4a4a;margin-top:5px;font-style:italic">\uC544\uC9C1 \uC9C4\uD589 \uAE30\uB85D\uC774 \uC5C6\uC2B5\uB2C8\uB2E4</div>`}
         </div>`;
         }).join(""));
       }

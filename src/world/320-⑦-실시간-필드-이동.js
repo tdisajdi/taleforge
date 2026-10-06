@@ -33,7 +33,7 @@
 // 아래 "1.5) 정착지 습격 시스템" 섹션과 작업메모장.md 10번 섹션 참고.
 import { S } from '../data/084-TaleForge-순수-JS-엔진.js';
 import { getAllLandLocations, getLocationCoord } from '../economy/255-상인-거래소-교역-지부-확장.js';
-import { CONTINENT_TERRAIN, CONTINENT_PROPER_NAME_ICON } from '../data/255-상인-거래소-교역-지부-확장.js';
+import { CONTINENT_TERRAIN, CONTINENT_PROPER_NAME_ICON, ROAD_EDGES, WORLD_MAP_ZONES } from '../data/255-상인-거래소-교역-지부-확장.js';
 import { loadCurrentLocation, saveCurrentLocation, getLocationLevelBand } from './052-동대륙-추가-장소-4.js';
 import { getPlayerMaxHp, calcMonsterAttackDamage, loadParty, saveParty } from '../misc/054-이동수단-시스템.js';
 import { TRANSPORT_CONFIG } from '../data/054-이동수단-시스템.js';
@@ -130,8 +130,87 @@ function primMST(locs){
 
 const _graphCache = new Map(); // continentKey -> { sig, graph }
 
+// ══════════════════════════════════════════════════════════════════
+// 1-A-보조) 왕국 간 경계 커넥터 — 11개 왕국의 화면 그래프를 하나로
+// 잇기 위한 데이터. [2026-10-04, c) 왕국 간 실시간 연결]
+//
+// 본토 5왕국(central/north/south/east/west)은 실제 대로 데이터
+// (data/255의 ROAD_EDGES — 8-1번 섹션에서 "본토 5개는 이미 로드로
+// 이어진 하나의 땅덩어리"로 확정된 세계관 데이터)에서 두 도시가 서로
+// 다른 왕국에 속하는 항목만 뽑아 육로 경계로 쓴다. 전체 11왕국은
+// 각 왕국의 유일한 항구(type:'port')끼리 왕국 중심 좌표(WORLD_MAP_ZONES)
+// 거리 기준 최소 신장 트리(MST)로 엮어 해상 경계로 쓴다 — 이러면 섬
+// 6왕국도 최소 한 번은 가장 가까운 다른 왕국과 뱃길로 이어지고, 항구가
+// 아닌 임의의 해안에서는 애초에 이 경계 체인이 시작되지 않으므로
+// "항구를 통해서만 출입항"(d) 요구사항이 설계 자체로 지켜진다.
+// ══════════════════════════════════════════════════════════════════
+let _landKingdomEdgesCache = null;
+function getLandKingdomEdges(){
+  if(_landKingdomEdgesCache) return _landKingdomEdgesCache;
+  const all = (typeof window.getAllLocations==='function') ? window.getAllLocations() : [];
+  const byName = new Map(all.map(l=>[l.name, l]));
+  const edges = [];
+  for(const [an, bn] of ROAD_EDGES){
+    const a = byName.get(an), b = byName.get(bn);
+    if(a && b && a.continent && b.continent && a.continent!==b.continent) edges.push({ a, b });
+  }
+  _landKingdomEdgesCache = edges;
+  return edges;
+}
+let _seaKingdomEdgesCache = null;
+function getSeaKingdomEdges(){
+  if(_seaKingdomEdgesCache) return _seaKingdomEdgesCache;
+  const keys = Object.keys(WORLD_MAP_ZONES);
+  if(keys.length<2){ _seaKingdomEdgesCache = []; return _seaKingdomEdgesCache; }
+  const inTree = new Set([0]);
+  const remaining = new Set(keys.map((_,i)=>i).filter(i=>i!==0));
+  const edges = [];
+  while(remaining.size){
+    let best=null, bestD=Infinity, bestI=null;
+    for(const i of inTree){
+      const za = WORLD_MAP_ZONES[keys[i]];
+      for(const j of remaining){
+        const zb = WORLD_MAP_ZONES[keys[j]];
+        const d = Math.hypot(za.cx-zb.cx, za.cy-zb.cy);
+        if(d<bestD){ bestD=d; best=j; bestI=i; }
+      }
+    }
+    if(best==null) break;
+    edges.push([keys[bestI], keys[best]]);
+    inTree.add(best); remaining.delete(best);
+  }
+  _seaKingdomEdgesCache = edges;
+  return edges;
+}
+function getKingdomPort(continentKey){
+  const all = (typeof window.getAllLocations==='function') ? window.getAllLocations() : [];
+  return all.find(l=>l.continent===continentKey && l.type==='port') || null;
+}
+// 두 장소 사이의 체인 길이를 정할 때 쓰는 거리 추정 — 둘 다 실제 좌표가
+// 있으면(본토 land 경계) 그걸 쓰고, 항구처럼 좌표가 없는 장소(해상
+// 경계 — 항구는 바다지도 전용이라 computeContinentLayout에 안 올라가
+// getLocationCoord가 null을 반환함)는 왕국 중심(zone) 간 거리로 대신한다.
+function boundaryDist(fromLoc, toLoc){
+  const d = worldDist(fromLoc, toLoc);
+  if(d < 90000) return d;
+  const za = WORLD_MAP_ZONES[fromLoc.continent], zb = WORLD_MAP_ZONES[toLoc.continent];
+  if(za && zb) return Math.hypot(za.cx-zb.cx, za.cy-zb.cy);
+  return 2000;
+}
+// 왕국 자체 locsRaw에, 그 왕국의 유일한 항구(coastal:true라
+// getAllLandLocations()에서 걸러질 수 있음)를 다시 포함시킨다 — 항구는
+// 해상 경계 커넥터의 유일한 게이트 노드라 반드시 실시간 필드 그래프의
+// 진짜 노드여야 한다(다른 coastal 전용 장소는 그대로 제외 — 바다지도
+// 전용 장식 콘텐츠일 뿐 필드로 걸어다닐 곳이 아님).
+function getKingdomRawLocations(continentKey){
+  const land = getAllLandLocations().filter(l => l.continent === continentKey);
+  if(land.some(l=>l.type==='port')) return land;
+  const port = getKingdomPort(continentKey);
+  return port ? [...land, port] : land;
+}
+
 export function buildKingdomGraph(continentKey){
-  const locsRaw = getAllLandLocations().filter(l => l.continent === continentKey);
+  const locsRaw = getKingdomRawLocations(continentKey);
   const sig = locsRaw.map(l=>l.name).sort().join('|');
   const cached = _graphCache.get(continentKey);
   if(cached && cached.sig === sig) return cached.graph;
@@ -160,6 +239,34 @@ export function buildKingdomGraph(continentKey){
     }
     link(prev, toId, length===0 ? crossing : 'land');
   }
+  // [c) 왕국 간 실시간 연결] 경계 커넥터 전용 체인 — 일반 buildChain과
+  // 다른 점 두 가지: (1) 긴 왕국 간 여정 전체가 일관되게 땅/바다로
+  // 보이도록 매 구간 전부 같은 crossing을 유지한다(일반 buildChain은
+  // 첫 구간만 crossing이고 나머진 'land' — 짧은 강 건너기 전용이라 그걸로
+  // 충분했지만, 왕국 하나를 통째로 건너는 해상 구간은 전체가 물이어야
+  // 자연스럽다). (2) 마지막 한 칸은 반대쪽 노드가 이 그래프의 nodes
+  // 맵에 없는(다른 왕국 소속) "한쪽 방향" 링크다 — 상대 왕국은 자기
+  // 그래프를 만들 때 자기 쪽에서 똑같이 독립적인 체인을 추가하므로,
+  // buildKingdomGraph가 모든 왕국에 대해 호출되기만 하면 양방향이
+  // 자연히 생긴다(화면 자체를 두 그래프가 공유하지 않음 — connector id가
+  // continentKey로 접두되어 있어 충돌도 없음).
+  function buildBoundaryChain(fromId, toId, length, crossing, srcLocIds, crossContinent){
+    let prev = fromId;
+    for(let i=0;i<length;i++){
+      const cid = newConnId();
+      nodes.set(cid, { id:cid, kind:'connector', neighbors:[], srcLocs:srcLocIds, midT:(i+1)/(length+1) });
+      link(prev, cid, crossing);
+      prev = cid;
+    }
+    nodes.get(prev).neighbors.push({ to:toId, crossing, crossContinent });
+  }
+  function addBoundaryChain(fromLoc, toLoc, crossing){
+    if(!nodes.has(fromLoc.id)) return; // 이 왕국에 그 게이트 장소가 없으면(이론상 없음) 안전하게 스킵
+    locsById.set(toLoc.id, toLoc); // 반대쪽 노드는 없어도 "이름 조회"(이정표 등)는 가능하게 등록
+    const dist = boundaryDist(fromLoc, toLoc);
+    const chainLen = Math.max(2, Math.min(5, Math.round(dist/700)));
+    buildBoundaryChain(fromLoc.id, toLoc.id, chainLen, crossing, [fromLoc.id, toLoc.id], toLoc.continent);
+  }
 
   const mstEdges = primMST(locsRaw);
   for(const [ia, ib] of mstEdges){
@@ -184,6 +291,20 @@ export function buildKingdomGraph(continentKey){
     if(seedRand(edgeKey,'air') < 0.22){
       buildChain(locA.id, locB.id, 1, 'air-only', [locA.id, locB.id]);
     }
+  }
+
+  // [c) 왕국 간 실시간 연결] 경계 커넥터 — 본토는 실제 대로(ROAD_EDGES)로
+  // 땅, 전체 11왕국은 항구끼리 해상 MST로. 두 helper 다 이 왕국이 그
+  // 경계의 한쪽 끝일 때만 "이 왕국 쪽에서 보는" 체인 하나를 추가한다.
+  for(const edge of getLandKingdomEdges()){
+    if(edge.a.continent===continentKey) addBoundaryChain(edge.a, edge.b, 'land');
+    else if(edge.b.continent===continentKey) addBoundaryChain(edge.b, edge.a, 'land');
+  }
+  for(const [ka, kb] of getSeaKingdomEdges()){
+    if(ka!==continentKey && kb!==continentKey) continue;
+    const other = ka===continentKey ? kb : ka;
+    const myPort = getKingdomPort(continentKey), otherPort = getKingdomPort(other);
+    if(myPort && otherPort) addBoundaryChain(myPort, otherPort, 'water');
   }
 
   // [2026-09-22, 24번 섹션 22-3 후속] 확장 이전 구 4개 대륙(north/south/
@@ -1834,6 +1955,19 @@ function checkScreenTransition(){
     if(stillChasing.length){
       screen._pursuerLeftAt = Date.now();
       screen._pursuerNames = stillChasing.map(p=>p.name);
+    }
+    // [c) 왕국 간 실시간 연결] 이 출구가 다른 왕국 그래프로 건너가는
+    // 경계 커넥터의 마지막 한 칸이면(ex.crossContinent), 지금 그래프를
+    // 그 왕국 걸로 통째로 바꿔서 들어간다 — 두 그래프는 화면 id 공간이
+    // 전혀 안 겹치므로(continentKey 접두), fromNodeId는 null로 둬서
+    // enterScreen이 "출구 쪽에서 들어온 것"이 아니라 그 화면의 기본
+    // 진입점(장소면 markerPos, 아니면 화면 중앙)을 쓰게 한다.
+    if(ex.crossContinent){
+      const nextGraph = buildKingdomGraph(ex.crossContinent);
+      if(!nextGraph){ showFieldToast('그 왕국은 아직 실시간 필드 데이터가 없습니다'); return; }
+      RT.graph = nextGraph;
+      enterScreen(ex.to, null);
+      return;
     }
     enterScreen(ex.to, screen.nodeId);
     return;

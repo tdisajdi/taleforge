@@ -49912,7 +49912,7 @@ ${lines.join("\n")}
       const _prevScrollPos = _prevScroll ? { left: _prevScroll.scrollLeft, top: _prevScroll.scrollTop } : null;
       const _vb = getLandMapViewBox();
       const _curMode = S._landMapViewMode || "continent";
-      const _dispW = _curMode === "world" ? 2600 : S._landMapSelectedGroup && !S._landMapSelectedContinent ? 1700 : 1150;
+      const _dispW = _curMode === "world" ? 4e3 : S._landMapSelectedGroup && !S._landMapSelectedContinent ? 2600 : 1700;
       const _dispH = Math.round(_dispW * (_vb.h / _vb.w));
       const _iconTargetMult = _curMode === "world" ? 1.15 : S._landMapSelectedGroup && !S._landMapSelectedContinent ? 1.2 : 1.35;
       S._landMapIconScaleAdj = _iconTargetMult * (780 / _dispW);
@@ -133664,8 +133664,71 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
     return edges;
   }
   var _graphCache = /* @__PURE__ */ new Map();
+  var _landKingdomEdgesCache = null;
+  function getLandKingdomEdges() {
+    if (_landKingdomEdgesCache) return _landKingdomEdgesCache;
+    const all = typeof window.getAllLocations === "function" ? window.getAllLocations() : [];
+    const byName = new Map(all.map((l) => [l.name, l]));
+    const edges = [];
+    for (const [an, bn] of ROAD_EDGES) {
+      const a = byName.get(an), b = byName.get(bn);
+      if (a && b && a.continent && b.continent && a.continent !== b.continent) edges.push({ a, b });
+    }
+    _landKingdomEdgesCache = edges;
+    return edges;
+  }
+  var _seaKingdomEdgesCache = null;
+  function getSeaKingdomEdges() {
+    if (_seaKingdomEdgesCache) return _seaKingdomEdgesCache;
+    const keys = Object.keys(WORLD_MAP_ZONES);
+    if (keys.length < 2) {
+      _seaKingdomEdgesCache = [];
+      return _seaKingdomEdgesCache;
+    }
+    const inTree = /* @__PURE__ */ new Set([0]);
+    const remaining = new Set(keys.map((_, i) => i).filter((i) => i !== 0));
+    const edges = [];
+    while (remaining.size) {
+      let best = null, bestD = Infinity, bestI = null;
+      for (const i of inTree) {
+        const za = WORLD_MAP_ZONES[keys[i]];
+        for (const j of remaining) {
+          const zb = WORLD_MAP_ZONES[keys[j]];
+          const d = Math.hypot(za.cx - zb.cx, za.cy - zb.cy);
+          if (d < bestD) {
+            bestD = d;
+            best = j;
+            bestI = i;
+          }
+        }
+      }
+      if (best == null) break;
+      edges.push([keys[bestI], keys[best]]);
+      inTree.add(best);
+      remaining.delete(best);
+    }
+    _seaKingdomEdgesCache = edges;
+    return edges;
+  }
+  function getKingdomPort(continentKey) {
+    const all = typeof window.getAllLocations === "function" ? window.getAllLocations() : [];
+    return all.find((l) => l.continent === continentKey && l.type === "port") || null;
+  }
+  function boundaryDist(fromLoc, toLoc) {
+    const d = worldDist(fromLoc, toLoc);
+    if (d < 9e4) return d;
+    const za = WORLD_MAP_ZONES[fromLoc.continent], zb = WORLD_MAP_ZONES[toLoc.continent];
+    if (za && zb) return Math.hypot(za.cx - zb.cx, za.cy - zb.cy);
+    return 2e3;
+  }
+  function getKingdomRawLocations(continentKey) {
+    const land = getAllLandLocations().filter((l) => l.continent === continentKey);
+    if (land.some((l) => l.type === "port")) return land;
+    const port = getKingdomPort(continentKey);
+    return port ? [...land, port] : land;
+  }
   function buildKingdomGraph(continentKey) {
-    const locsRaw = getAllLandLocations().filter((l) => l.continent === continentKey);
+    const locsRaw = getKingdomRawLocations(continentKey);
     const sig = locsRaw.map((l) => l.name).sort().join("|");
     const cached = _graphCache.get(continentKey);
     if (cached && cached.sig === sig) return cached.graph;
@@ -133692,6 +133755,23 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
       }
       link(prev, toId, length === 0 ? crossing : "land");
     }
+    function buildBoundaryChain(fromId, toId, length, crossing, srcLocIds, crossContinent) {
+      let prev = fromId;
+      for (let i = 0; i < length; i++) {
+        const cid = newConnId();
+        nodes.set(cid, { id: cid, kind: "connector", neighbors: [], srcLocs: srcLocIds, midT: (i + 1) / (length + 1) });
+        link(prev, cid, crossing);
+        prev = cid;
+      }
+      nodes.get(prev).neighbors.push({ to: toId, crossing, crossContinent });
+    }
+    function addBoundaryChain(fromLoc, toLoc, crossing) {
+      if (!nodes.has(fromLoc.id)) return;
+      locsById.set(toLoc.id, toLoc);
+      const dist = boundaryDist(fromLoc, toLoc);
+      const chainLen = Math.max(2, Math.min(5, Math.round(dist / 700)));
+      buildBoundaryChain(fromLoc.id, toLoc.id, chainLen, crossing, [fromLoc.id, toLoc.id], toLoc.continent);
+    }
     const mstEdges = primMST(locsRaw);
     for (const [ia, ib] of mstEdges) {
       const locA = locsRaw[ia], locB = locsRaw[ib];
@@ -133707,6 +133787,16 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
       if (seedRand(edgeKey, "air") < 0.22) {
         buildChain(locA.id, locB.id, 1, "air-only", [locA.id, locB.id]);
       }
+    }
+    for (const edge of getLandKingdomEdges()) {
+      if (edge.a.continent === continentKey) addBoundaryChain(edge.a, edge.b, "land");
+      else if (edge.b.continent === continentKey) addBoundaryChain(edge.b, edge.a, "land");
+    }
+    for (const [ka, kb] of getSeaKingdomEdges()) {
+      if (ka !== continentKey && kb !== continentKey) continue;
+      const other = ka === continentKey ? kb : ka;
+      const myPort = getKingdomPort(continentKey), otherPort = getKingdomPort(other);
+      if (myPort && otherPort) addBoundaryChain(myPort, otherPort, "water");
     }
     const startLoc = locsRaw.find((l) => l.type === "capital") || locsRaw.find((l) => SETTLEMENT_TYPES.has(l.type)) || locsRaw[0];
     const graph = { continentKey, nodes, locsById, startNodeId: startLoc.id };
@@ -135131,6 +135221,16 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
       if (stillChasing.length) {
         screen._pursuerLeftAt = Date.now();
         screen._pursuerNames = stillChasing.map((p) => p.name);
+      }
+      if (ex.crossContinent) {
+        const nextGraph = buildKingdomGraph(ex.crossContinent);
+        if (!nextGraph) {
+          showFieldToast("\uADF8 \uC655\uAD6D\uC740 \uC544\uC9C1 \uC2E4\uC2DC\uAC04 \uD544\uB4DC \uB370\uC774\uD130\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4");
+          return;
+        }
+        RT.graph = nextGraph;
+        enterScreen(ex.to, null);
+        return;
       }
       enterScreen(ex.to, screen.nodeId);
       return;

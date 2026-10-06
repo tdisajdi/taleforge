@@ -3837,9 +3837,14 @@ function renderWorldMapPanel(){
   // 주려면 줌 단계마다 실제 렌더 크기 자체를 큼직하게 키워야 한다 —
   // 세계지도는 4개 대륙을 다 보려면 화면보다 훨씬 커야 하고, 대륙
   // 전체 뷰도 왕국 여러 개를 오가려면 넉넉해야 한다.
-  const _dispW = _curMode==='world' ? 2600
-    : (S._landMapSelectedGroup && !S._landMapSelectedContinent) ? 1700
-    : 1150;
+  // [48번 섹션] 사용자가 "지도 캔버스를 다 크게 만들자... 캔버스 크기
+  // 제한한 적 없다"고 재차 확인 — 8-13번 공식(화면 픽셀 크기 =
+  // design_size × iconTargetMult × (780/380), dispW와 무관하게 상쇄됨)이
+  // 그대로 성립하므로, _dispW만 더 키우면 아이콘/글자 크기는 그대로인 채
+  // 캔버스·마커 간 실제 간격만 넓어진다 — 세 단계 전부 약 1.5배로 확대.
+  const _dispW = _curMode==='world' ? 4000
+    : (S._landMapSelectedGroup && !S._landMapSelectedContinent) ? 2600
+    : 1700;
   const _dispH = Math.round(_dispW * (_vb.h / _vb.w));
   // [8-13] renderLandMapSVG() 안의 아이콘/글자 크기(k = vb.scale)는
   // "svg 좌표 1단위 = dispW/vb.w 픽셀"로 그려지는데, vb.w(줌 범위)가

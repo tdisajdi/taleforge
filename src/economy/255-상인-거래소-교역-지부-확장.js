@@ -1733,6 +1733,23 @@ window.resolveTravelEncounter = resolveTravelEncounter;
 
 window.resolveTravelEncounter = resolveTravelEncounter;
 
+// [b) 턴제 이동 폐지, 48~51번 섹션] 사용자 확정 지시("턴제 이동기능은
+// 텍스트기반 rpg(AI 있을 때) 시절 기능이고 지금은 안 쓰려는 게 맞다 —
+// 지금은 실시간 필드 이동으로만 작동하게 하려 한다")에 따라, 이 함수를
+// 실제로 호출하는 유일한 4곳(economy/255 지도 팝업·misc/054 탈것
+// 흐름·quest/229 beginJourneyTo/confirmTravel)을 모두 실시간 필드
+// 이동(world/320의 redirectToFieldTravel/startFieldTravelTo)으로
+// 리다이렉트했다 — 이 함수와 아래 tickLandTravel()을 호출하는 경로가
+// 더 이상 코드베이스 어디에도 없다(전수 grep 확인). TRAVEL_ENCOUNTER_POOL
+// (data/255)을 소비하던 로직까지 포함해 이 함수들은 사실상 "은퇴"
+// 상태 — 데이터(findRoadRoute/길잡이·TRAVEL_ENCOUNTER_POOL)는 여전히
+// 다른 곳(🧭 길잡이 경로 보기, e) 도로 랜덤 이벤트 필드 포팅)에서
+// 재사용되므로 함수 자체는 지우지 않고 그대로 둔다 — 삭제하면
+// `tickLandTravel()`의 아래 주기 호출부(매 턴)가 참조를 잃어 별도
+// 수정이 또 필요해지는데, 실제로는 travel 상태가 다시는 생성되지
+// 않아(saveTravelState를 부르는 유일한 지점이 이 함수 안뿐임) 이미
+// 영구적으로 no-op가 됐다 — 호출 없이 죽어있는 게 아니라 "다시는
+// 시작될 수 없는" 상태로 은퇴한 것.
 export function startLandTravel(destName, transportType){
   const dest = getAllLandLocations().find(l=>l.name===destName);
   if(!dest){ toast('알 수 없는 목적지입니다.'); return; }
@@ -2424,10 +2441,15 @@ export function renderLandMapPopupSVG(popup, curLoc, travel, k, vb){
   } else if(isCurLoc){
     rows.push({ label:'현재 위치', action:null, color:'#c0a030' });
   } else {
-    const days = getTravelDays(loc, 'walk');
-    const route = (typeof findRoadRoute==='function' && curLoc) ? findRoadRoute(curLoc, loc) : null;
-    const roadTag = route ? '🛣️' : '🌿';
-    rows.push({ label:`🚶${roadTag} 도보로 이동 (약 ${days}일)`, action:`startLandTravel('${esc(loc.name).replace(/'/g,"\\'")}','walk')`, color:'#6a9a5a' });
+    // [b) 턴제 이동 폐지, 48~51번 섹션] 예전엔 여기서 getTravelDays로
+    // 날짜를 계산해 그 날짜만큼 즉시 이동시키는(startLandTravel) 턴제
+    // 여행을 시작했다 — 사용자 확정 지시대로 실시간 필드 이동(world/320)
+    // 만 쓰도록 리다이렉트한다(startFieldTravelTo, c)/d)로 왕국 간 경계·
+    // 항구 게이팅이 끝난 뒤라 어디든 실제로 걸어서 갈 수 있다). 날짜
+    // 추정치는 실시간 이동에서는 의미가 없어 라벨에서 뺐다(바로 아래
+    // "🧭 길잡이로 경로 보기"는 순수 정보 제공이라 안 건드림 — 그쪽은
+    // 여전히 날짜 추정을 보여준다).
+    rows.push({ label:`🚶 실시간 필드로 직접 이동`, action:`startFieldTravelTo('${esc(loc.name).replace(/'/g,"\\'")}')`, color:'#6a9a5a' });
     // [22-4, 월드맵 길잡이] "한번이라도 가본 곳만 경로 안내에 노출" —
     // 실제로 가본 곳만 findRoadRoute 결과를 사람이 읽는 경유지 목록으로
     // 펼쳐 보여준다(showRouteGuide). 안 가본 곳은 정확한 길을 모른다는

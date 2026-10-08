@@ -182,22 +182,22 @@ export function travelByTransport(locName, transportType){
     }
   }
 
-  // [11차 수정] 예전엔 탑승 수단 종류와 무관하게 여기서 바로 순간이동시켰다
-  // — TRANSPORT_CONFIG에 정의된 speedMult(말 등급별 속도)·encounterMult
-  // (탑승 수단별 안전도)가 실제로는 단 한 줄도 쓰이지 않는 죽은 수치였던
-  // 것. 배(requiresCoastal/requiresSeaAccess)·마법진(isTeleport)만 그
-  // 자체가 "즉시 도착"이 본질이라 순간이동을 유지하고, 그 외(도보~명마,
-  // 그리핀~와이번)는 실제 여행 시스템(startLandTravel → 매 턴
-  // tickLandTravel)에 태운다 — 이제 명마를 타면 진짜 더 빨리 도착하고,
-  // 그리핀을 타면 도로 유무와 무관하게 최고속으로 날아가며 지상 조우도
-  // 건너뛴다(둘 다 getTravelDays/tickLandTravel에서 처리).
+  // [11차 수정, b) 턴제 이동 폐지로 48~51번 섹션에서 재정정] 예전엔
+  // 탑승 수단 종류와 무관하게 여기서 바로 순간이동시켰다가, 11차에서
+  // 턴제 여행(startLandTravel/tickLandTravel)에 태우도록 고쳤었다 —
+  // 그 턴제 시스템 자체가 이제 폐지 대상이라, 같은 자리를 실시간 필드
+  // 이동(world/320)으로 다시 리다이렉트한다. 배(requiresCoastal/
+  // requiresSeaAccess)·마법진(isTeleport)은 여전히 그 자체가 "즉시
+  // 도착"이 본질이라 순간이동을 유지하고, 그 외(도보~명마, 그리핀~
+  // 와이번)는 필드에 진입한 뒤 그 탑승수단 속도(FIELD_MOUNT_SPEED_CAP
+  // 등, 12번 섹션에서 실측 튜닝됨)로 실제로 이동한다 — 날짜 계산이
+  // 아니라 실제 화면을 걸어서(또는 타고) 지나가는 것으로 대체됐다.
   S._activeTransport = transportType;
   if(typeof recordTransportTimeCost==='function') recordTransportTimeCost(transportType);
   if(t.isAir && typeof tryAirEncounter==='function') setTimeout(()=>tryAirEncounter(transportType), 100);
 
-  if(!t.isTeleport && !t.requiresCoastal && !t.requiresSeaAccess && typeof window.startLandTravel==='function'){
-    toast(`${t.name}을(를) 타고 ${loc.icon} ${loc.name}을(를) 향해 출발합니다.`, 2800, t);
-    window.startLandTravel(loc.name, transportType);
+  if(!t.isTeleport && !t.requiresCoastal && !t.requiresSeaAccess && typeof window.redirectToFieldTravel==='function'){
+    window.redirectToFieldTravel(loc, transportType);
     if(typeof closeP==='function') closeP('location');
     return;
   }

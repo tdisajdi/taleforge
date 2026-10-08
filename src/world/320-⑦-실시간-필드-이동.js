@@ -1448,6 +1448,41 @@ export function enterFieldMode(continentKey){
 }
 window.enterFieldMode = enterFieldMode;
 
+// [b) 턴제 이동 폐지, 48~51번 섹션] startLandTravel/tickLandTravel
+// (economy/255, 날짜-카운트다운 턴제 여행)을 대체하는 공용 리다이렉트
+// 진입점 — economy/255 지도 팝업의 "도보로 이동" 행, misc/054의 탈것
+// 선택 흐름, quest/229의 beginJourneyTo/confirmTravel(NPC 대화 중
+// 이동) 총 4곳이 전부 이 함수 하나로 모인다. "이동한다"를 직접 고른
+// 것 자체가 19번 섹션이 요구한 "서사적 선택으로만 필드 진입"과 같은
+// 성격의 결정이라고 보고, 그 결정이 곧 필드 진입 자격을 연다
+// (quest/086의 기존 move 판정 성공 시 3분 창과 동일한 길이를 그대로
+// 재사용 — 새 상수 안 만듦). c)/d)로 왕국 간 경계가 전부 연결되고
+// 항구 게이팅까지 끝난 뒤라, 어느 목적지든 그 자리에서 실제로 걸어서
+// (또는 탄 탈것으로) 갈 수 있다 — 더 이상 "날짜만 세는" 가짜 이동이
+// 아니다.
+export function redirectToFieldTravel(loc, transportType){
+  if(!loc) return false;
+  S._fieldEntryWindowUntil = Date.now() + 3*60*1000;
+  // 도착 확인용 1회성 마커 — 퀘스트 목표(RT.currentQuestTargetHere)와
+  // 완전히 별개 채널. enterScreen()의 정착지 도착 분기에서 소비하고
+  // 바로 지운다(아래 참고).
+  S._manualTravelTarget = { locationId: loc.id, name: loc.name, icon: loc.icon||'' };
+  if(transportType) S._activeTransport = transportType;
+  toast(`🚶 ${loc.icon||''} ${loc.name} 방면으로 실시간 필드에 나선다 — 직접 걸어서(또는 탄 탈것으로) 가야 한다.`, 2800);
+  if(typeof window.openP==='function') window.openP('fieldmove');
+  return true;
+}
+window.redirectToFieldTravel = redirectToFieldTravel;
+// 이름만으로 호출하는 자리(economy/255 팝업처럼 location 객체를 들고
+// 있지 않고 문자열만 쥔 onclick)를 위한 얇은 래퍼 — getAllLandLocations
+// (AI 생성 장소 포함, 이미 이 파일에서 import됨)에서 직접 조회한다.
+export function startFieldTravelTo(destName, transportType){
+  const loc = getAllLandLocations().find(l=>l.name===destName);
+  if(!loc){ toast('장소를 찾을 수 없습니다', 1500); return false; }
+  return redirectToFieldTravel(loc, transportType);
+}
+window.startFieldTravelTo = startFieldTravelTo;
+
 // [16번 라운드, #10 착수] 필드에서 대화로 돌아올 때 아무 신호도 안
 // 남기던 문제 — S._pendingTravelHint(economy/255, 8~11번 섹션)와 같은
 // 패턴을 재사용해 "방금 필드에서 뭘 했는지"를 다음 턴 서사에 흘려보낸다.
@@ -1906,6 +1941,15 @@ function enterScreen(nodeId, fromNodeId){
       RT.currentQuestTargetHere = hit || null;
       if(hit) setTimeout(()=>showFieldToast(`❗ 의뢰 목표 지점: ${hit.questTitle}`), 3200);
     }catch(e){ RT.currentQuestTargetHere = null; }
+    // [b) 턴제 이동 폐지] 지도 팝업/대화에서 "이동한다"를 직접 골라
+    // redirectToFieldTravel()이 남겨둔 수동 이동 목표 — 퀘스트 목표와는
+    // 별개 채널, 도착하면 1회성으로 확인만 하고 바로 지운다(다시
+    // 그 장소를 지나가도 또 뜨지 않음).
+    if(S._manualTravelTarget && S._manualTravelTarget.locationId===screen.node.loc.id){
+      const arrivedAt = S._manualTravelTarget.name;
+      setTimeout(()=>showFieldToast(`🏁 ${arrivedAt}에 도착했다`), 3200);
+      S._manualTravelTarget = null;
+    }
   } else {
     RT.currentQuestTargetHere = null; // 정착지 화면을 벗어났으니 HUD 표시도 같이 지운다
     const forkNote = screen.exits.length>=3 ? ' — 여러 갈래로 길이 나뉩니다' : '';

@@ -1653,22 +1653,24 @@ export function getAllTravelableLocations(){
 }
 window.getAllTravelableLocations = getAllTravelableLocations;
 
-// [10차] "이미 가본 곳"으로 되돌아가는 빠른 이동(게시판/정치지도 버튼,
-// misc/053의 moveToLocation)도 순간이동이 아니라 실제 여행으로 통일한다.
-// 목적지만 고르면 최단 경로(도로망 다익스트라, findRoadRoute)로 자동
-// 이동하고, 지금 타고 있는 탑승 수단(S._activeTransport)이 있으면 그
-// 속도를 그대로 이어받는다 — 이미 가본 길이니 "자동 이동"이라 부를 만하다.
-// 현재 위치가 아예 감지 안 된 극초반이거나 해안/초자연 realm처럼 도보
-// 여정이 성립하지 않는 목적지일 때만 기존 즉시 이동으로 안전하게 대체한다.
+// [10차, b) 턴제 이동 폐지로 48~51번 섹션에서 재정정] "이미 가본 곳"으로
+// 되돌아가는 빠른 이동(게시판/정치지도 버튼, misc/053의 moveToLocation)도
+// 예전엔 턴제 여행(startLandTravel)으로 통일했었는데, 그 시스템 자체가
+// 이제 폐지 대상이라 실시간 필드 이동(world/320)으로 다시 리다이렉트한다
+// — 지금 타고 있는 탑승 수단(S._activeTransport)이 있으면 필드 진입
+// 시점에 그대로 이어받아 속도에 반영된다(redirectToFieldTravel 참고).
+// 현재 위치가 아예 감지 안 된 극초반이거나 해안/초자연 realm처럼 실시간
+// 필드 그래프에 아예 없는 목적지일 때만 기존 즉시 이동으로 안전하게
+// 대체한다.
 export function beginJourneyTo(destName){
   const cur  = window.currentLocation || loadCurrentLocation();
   const dest = getAllTravelableLocations().find(l=>l.name===destName);
   if(!dest){ toast('장소를 찾을 수 없습니다', 1500); return; }
-  const canRealJourney = !!cur && !dest.coastal
+  const canFieldJourney = !!cur && !dest.coastal
     && !NON_PHYSICAL_TRAVEL_CONTINENTS.has(dest.continent)
-    && typeof window.startLandTravel==='function';
-  if(canRealJourney){
-    window.startLandTravel(dest.name, S._activeTransport || 'walk');
+    && typeof window.redirectToFieldTravel==='function';
+  if(canFieldJourney){
+    window.redirectToFieldTravel(dest, S._activeTransport || 'walk');
   } else if(typeof window.moveToLocation==='function'){
     window.moveToLocation(destName);
   }
@@ -1900,15 +1902,15 @@ window.owFilter = function(type, btn){
   });
 };
 
-// [10차 수정] "여행 지도"는 예전엔 클릭 즉시 그 자리에서 순간이동시키는
-// 목록이었다 — 실제로 존재하는 여행 시뮬레이션(startLandTravel이 도로망
-// 경로를 계산해 여행을 시작하면, 매 턴 자동으로 실행되는 tickLandTravel이
-// 날짜를 줄이고 도중에 진짜 조우 이벤트도 일으키는 시스템, 이미 코드에
-// 있었지만 이 순간이동 목록에 가려 실제로는 아무도 안 타던 경로였다)를
-// 타는 게 자연스럽다. 순간이동은 두 가지 예외만 남긴다: ① 해안 지역(배가
-// 있어야 갈 수 있음 — 항해 시스템으로 안내), ② 천상/지옥처럼 도로 자체가
-// 없는 초자연적 realm(그런 곳에 "며칠 걸어서 간다"는 성립하지 않으므로
-// 기존처럼 즉시 이동시킨다).
+// [10차 수정, b) 턴제 이동 폐지로 48~51번 섹션에서 재정정] "여행 지도"는
+// 예전엔 클릭 즉시 그 자리에서 순간이동시키는 목록이었다가, 10차에서
+// 턴제 여행 시뮬레이션(startLandTravel/tickLandTravel)을 타도록
+// 고쳤었다 — 그 턴제 시스템 자체가 폐지 대상이라, 이번엔 실시간 필드
+// 이동(world/320)으로 리다이렉트한다(redirectToFieldTravel). 순간이동은
+// 두 가지 예외만 남긴다: ① 해안 지역(배가 있어야 갈 수 있음 — 항해
+// 시스템으로 안내), ② 천상/지옥처럼 도로 자체가 없는 초자연적 realm
+// (실시간 필드 그래프 자체에 존재하지 않는 대륙이라 "걸어서 간다"가
+// 성립하지 않으므로 기존처럼 즉시 이동시킨다).
 const NON_PHYSICAL_TRAVEL_CONTINENTS = new Set(['celestial','infernal']);
 
 window.confirmTravel = function(locId){
@@ -1932,8 +1934,8 @@ window.confirmTravel = function(locId){
   }
 
   closeOverworldMap();
-  if(typeof window.startLandTravel==='function'){
-    window.startLandTravel(toLoc.name, 'walk');
+  if(typeof window.redirectToFieldTravel==='function'){
+    window.redirectToFieldTravel(toLoc, S._activeTransport || 'walk');
   } else {
     toast('이동 시스템을 불러오지 못했습니다', 2000);
   }

@@ -48447,10 +48447,7 @@ ${lines.join("\n")}
     } else if (isCurLoc) {
       rows.push({ label: "\uD604\uC7AC \uC704\uCE58", action: null, color: "#c0a030" });
     } else {
-      const days = getTravelDays(loc, "walk");
-      const route = typeof findRoadRoute === "function" && curLoc ? findRoadRoute(curLoc, loc) : null;
-      const roadTag = route ? "\u{1F6E3}\uFE0F" : "\u{1F33F}";
-      rows.push({ label: `\u{1F6B6}${roadTag} \uB3C4\uBCF4\uB85C \uC774\uB3D9 (\uC57D ${days}\uC77C)`, action: `startLandTravel('${esc2(loc.name).replace(/'/g, "\\'")}','walk')`, color: "#6a9a5a" });
+      rows.push({ label: `\u{1F6B6} \uC2E4\uC2DC\uAC04 \uD544\uB4DC\uB85C \uC9C1\uC811 \uC774\uB3D9`, action: `startFieldTravelTo('${esc2(loc.name).replace(/'/g, "\\'")}')`, color: "#6a9a5a" });
       if (isExplored) {
         rows.push({ label: `\u{1F9ED} \uAE38\uC7A1\uC774\uB85C \uACBD\uB85C \uBCF4\uAE30`, action: `showRouteGuide('${esc2(loc.name).replace(/'/g, "\\'")}')`, color: "#8aa0d0" });
       } else {
@@ -58593,9 +58590,9 @@ export default TALEFORGE_HARDCODE_RULES;
       toast("\uC7A5\uC18C\uB97C \uCC3E\uC744 \uC218 \uC5C6\uC2B5\uB2C8\uB2E4", 1500);
       return;
     }
-    const canRealJourney = !!cur && !dest.coastal && !NON_PHYSICAL_TRAVEL_CONTINENTS.has(dest.continent) && typeof window.startLandTravel === "function";
-    if (canRealJourney) {
-      window.startLandTravel(dest.name, S._activeTransport || "walk");
+    const canFieldJourney = !!cur && !dest.coastal && !NON_PHYSICAL_TRAVEL_CONTINENTS.has(dest.continent) && typeof window.redirectToFieldTravel === "function";
+    if (canFieldJourney) {
+      window.redirectToFieldTravel(dest, S._activeTransport || "walk");
     } else if (typeof window.moveToLocation === "function") {
       window.moveToLocation(destName);
     }
@@ -58805,8 +58802,8 @@ export default TALEFORGE_HARDCODE_RULES;
       return;
     }
     closeOverworldMap();
-    if (typeof window.startLandTravel === "function") {
-      window.startLandTravel(toLoc.name, "walk");
+    if (typeof window.redirectToFieldTravel === "function") {
+      window.redirectToFieldTravel(toLoc, S._activeTransport || "walk");
     } else {
       toast("\uC774\uB3D9 \uC2DC\uC2A4\uD15C\uC744 \uBD88\uB7EC\uC624\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4", 2e3);
     }
@@ -96716,9 +96713,8 @@ GS: {"soul_evolve_candidates":{"soulId":"${soul.id}","candidates":[{"name":"\uC9
     S._activeTransport = transportType;
     if (typeof recordTransportTimeCost === "function") recordTransportTimeCost(transportType);
     if (t.isAir && typeof tryAirEncounter === "function") setTimeout(() => tryAirEncounter(transportType), 100);
-    if (!t.isTeleport && !t.requiresCoastal && !t.requiresSeaAccess && typeof window.startLandTravel === "function") {
-      toast(`${t.name}\uC744(\uB97C) \uD0C0\uACE0 ${loc.icon} ${loc.name}\uC744(\uB97C) \uD5A5\uD574 \uCD9C\uBC1C\uD569\uB2C8\uB2E4.`, 2800, t);
-      window.startLandTravel(loc.name, transportType);
+    if (!t.isTeleport && !t.requiresCoastal && !t.requiresSeaAccess && typeof window.redirectToFieldTravel === "function") {
+      window.redirectToFieldTravel(loc, transportType);
       if (typeof closeP === "function") closeP("location");
       return;
     }
@@ -134734,6 +134730,25 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
     RT.raf = requestAnimationFrame(fieldLoop);
   }
   window.enterFieldMode = enterFieldMode;
+  function redirectToFieldTravel(loc, transportType) {
+    if (!loc) return false;
+    S._fieldEntryWindowUntil = Date.now() + 3 * 60 * 1e3;
+    S._manualTravelTarget = { locationId: loc.id, name: loc.name, icon: loc.icon || "" };
+    if (transportType) S._activeTransport = transportType;
+    toast(`\u{1F6B6} ${loc.icon || ""} ${loc.name} \uBC29\uBA74\uC73C\uB85C \uC2E4\uC2DC\uAC04 \uD544\uB4DC\uC5D0 \uB098\uC120\uB2E4 \u2014 \uC9C1\uC811 \uAC78\uC5B4\uC11C(\uB610\uB294 \uD0C4 \uD0C8\uAC83\uC73C\uB85C) \uAC00\uC57C \uD55C\uB2E4.`, 2800);
+    if (typeof window.openP === "function") window.openP("fieldmove");
+    return true;
+  }
+  window.redirectToFieldTravel = redirectToFieldTravel;
+  function startFieldTravelTo(destName, transportType) {
+    const loc = getAllLandLocations().find((l) => l.name === destName);
+    if (!loc) {
+      toast("\uC7A5\uC18C\uB97C \uCC3E\uC744 \uC218 \uC5C6\uC2B5\uB2C8\uB2E4", 1500);
+      return false;
+    }
+    return redirectToFieldTravel(loc, transportType);
+  }
+  window.startFieldTravelTo = startFieldTravelTo;
   function buildFieldReturnHint() {
     if (!RT) return null;
     const loc = typeof loadCurrentLocation === "function" ? loadCurrentLocation() : null;
@@ -135174,6 +135189,11 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
         if (hit) setTimeout(() => showFieldToast(`\u2757 \uC758\uB8B0 \uBAA9\uD45C \uC9C0\uC810: ${hit.questTitle}`), 3200);
       } catch (e) {
         RT.currentQuestTargetHere = null;
+      }
+      if (S._manualTravelTarget && S._manualTravelTarget.locationId === screen.node.loc.id) {
+        const arrivedAt = S._manualTravelTarget.name;
+        setTimeout(() => showFieldToast(`\u{1F3C1} ${arrivedAt}\uC5D0 \uB3C4\uCC29\uD588\uB2E4`), 3200);
+        S._manualTravelTarget = null;
       }
     } else {
       RT.currentQuestTargetHere = null;

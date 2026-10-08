@@ -134151,7 +134151,7 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
     }
     const packs = buildPacksForNode(graph, node, isWaterScreen, exits, markerPos);
     const fog = new Uint8Array(COLS * ROWS);
-    const screen = { nodeId, node, COLS, ROWS, grid, idx, inB, exits, markerPos, packs, biome, isWaterScreen, signposts, fog, crossingTrail };
+    const screen = { nodeId, node, COLS, ROWS, grid, idx, inB, exits, markerPos, packs, biome, isWaterScreen, signposts, fog, crossingTrail, isSettlementRoute };
     if (node.kind === "location") syncRaidPacksForScreen(screen, node.loc);
     _screenCache.set(cacheKey, screen);
     return screen;
@@ -134714,6 +134714,7 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
       joyOriginY: 0,
       currentZone: null,
       encounterActive: false,
+      roadEvent: null,
       raf: null,
       lastTs: performance.now(),
       listeners: [],
@@ -135124,6 +135125,140 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
       }
     }
   }
+  var ROAD_EVENT_CHANCE_PAVED = 0.12;
+  var ROAD_EVENT_CHANCE_WILD = 0.22;
+  function maybeTriggerRoadEvent(screen) {
+    if (screen.node.kind !== "connector") return false;
+    if (screen.isWaterScreen) return false;
+    if (screen.exits.some((e) => e.crossing === "air-only")) return false;
+    const tc = currentTransportConfig();
+    if (tc.encounterMult === 0) return false;
+    const chance = (screen.isSettlementRoute ? ROAD_EVENT_CHANCE_PAVED : ROAD_EVENT_CHANCE_WILD) * (tc.encounterMult != null ? tc.encounterMult : 1);
+    if (Math.random() >= chance) return false;
+    const pool = screen.isSettlementRoute ? TRAVEL_ENCOUNTER_POOL.map((e) => e.id === "bandit_ambush" ? { ...e, weight: Math.max(1, Math.round(e.weight * 0.4)) } : e) : TRAVEL_ENCOUNTER_POOL;
+    const totalWeight = pool.reduce((s, e) => s + e.weight, 0);
+    let roll = Math.random() * totalWeight, picked = pool[0];
+    for (const e of pool) {
+      if (roll < e.weight) {
+        picked = e;
+        break;
+      }
+      roll -= e.weight;
+    }
+    showRoadEventModal(picked);
+    return true;
+  }
+  function showRoadEventModal(ev) {
+    RT.encounterActive = true;
+    RT.roadEvent = { id: ev.id, icon: ev.icon, name: ev.name, desc: ev.desc };
+    const wrap = document.getElementById("tf-field-encounter");
+    if (!wrap) return;
+    wrap.style.display = "flex";
+    const btn = (choice, label, bg, border, color) => `<button onclick="resolveFieldRoadEvent('${choice}')" style="flex:1;padding:8px 6px;background:${bg};border:1px solid ${border};color:${color};font-size:10px;cursor:pointer;border-radius:2px">${label}</button>`;
+    let buttons;
+    if (ev.id === "camp_travelers") buttons = btn("join", "\u{1F3D5}\uFE0F \uC5B4\uC6B8\uB9AC\uAE30", "#0a0a05", "#4a4a1a", "#c0c060") + btn("ignore", "\uC9C0\uB098\uCE58\uAE30", "#0a0a0a", "#3a3a3a", "#888");
+    else if (ev.id === "caravan") buttons = btn("escort", "\u{1F42B} \uD638\uC704 \uB3D9\uD589", "#0a0805", "#4a3a1a", "#c0a060") + btn("trade", "\uAC70\uB798", "#050a0a", "#1a4a4a", "#60c0c0") + btn("ignore", "\uC9C0\uB098\uCE58\uAE30", "#0a0a0a", "#3a3a3a", "#888");
+    else if (ev.id === "patrol") buttons = btn("greet", "\u{1F6E1}\uFE0F \uC778\uC0AC\uD558\uAE30", "#05050a", "#1a1a4a", "#6060c0") + btn("avoid", "\uD53C\uD574\uAC00\uAE30", "#0a0a0a", "#3a3a3a", "#888");
+    else if (ev.id === "bandit_ambush") buttons = btn("fight", "\u2694\uFE0F \uB9DE\uC11C\uAE30", "#150505", "#6a2a2a", "#e08080") + btn("flee", "\u{1F4A8} \uB3C4\uC8FC", "#0a1505", "#2a6a2a", "#80e080") + btn("pay", "\u{1F4B0} \uD1B5\uD589\uB8CC", "#150f05", "#6a5a2a", "#e0c080");
+    else if (ev.id === "wounded_traveler") buttons = btn("help", "\u{1FA79} \uB3C4\uC640\uC8FC\uAE30", "#05100a", "#2a5a3a", "#80c0a0") + btn("ignore", "\uC9C0\uB098\uCE58\uAE30", "#0a0a0a", "#3a3a3a", "#888");
+    else buttons = btn("trade", "\u{1F6D2} \uAC70\uB798", "#0a0a05", "#4a4a1a", "#c0c060") + btn("ignore", "\uC9C0\uB098\uCE58\uAE30", "#0a0a0a", "#3a3a3a", "#888");
+    wrap.innerHTML = `<div style="width:min(420px,88vw);border:1px solid #4a3a1a;background:#14100a;padding:18px 20px;box-shadow:0 20px 50px rgba(0,0,0,.6)">
+    <div style="font-family:Cinzel,serif;font-size:12px;color:#e0b060;margin-bottom:8px">${ev.icon} ${esc2(ev.name)}</div>
+    <div style="font-size:11px;color:#d8ceb0;line-height:1.6;margin-bottom:14px">${esc2(ev.desc)}</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">${buttons}</div>
+  </div>`;
+  }
+  window.resolveFieldRoadEvent = function(choice) {
+    if (!RT || !RT.roadEvent) return;
+    const ev = RT.roadEvent;
+    const str = S.stats && S.stats.str || 50;
+    if (ev.id === "camp_travelers") {
+      if (choice === "join") {
+        S.stats.cha = Math.min(999, (S.stats.cha || 50) + 3);
+        if (Math.random() < 0.4) {
+          updateReputation(5);
+          showFieldToast("\u{1F3D5}\uFE0F \uC5EC\uD589\uAC1D\uB4E4\uACFC \uC815\uBCF4\uB97C \uB098\uB234\uB2E4. \uD3C9\uD310+5, CHA+3");
+        } else showFieldToast("\u{1F3D5}\uFE0F \uC5EC\uD589\uAC1D\uB4E4\uACFC \uC7A0\uC2DC \uC5B4\uC6B8\uB838\uB2E4. CHA+3");
+      } else {
+        showFieldToast("\uC9C0\uB098\uCCE4\uB2E4.");
+      }
+    } else if (ev.id === "caravan") {
+      if (choice === "escort") {
+        const reward = 30 + Math.floor(Math.random() * 50);
+        S.gold = (S.gold || 0) + reward;
+        saveGold(S.gold);
+        if (typeof window.updateHeader === "function") window.updateHeader();
+        showFieldToast(`\u{1F42B} \uCE90\uB7EC\uBC34 \uD638\uC704\uC5D0 \uB3D9\uD589\uD574 \uC0AC\uB840\uAE08\uC744 \uBC1B\uC558\uB2E4! +${reward}G`);
+      } else if (choice === "trade") {
+        showFieldToast("\u{1F42B} \uCE90\uB7EC\uBC34\uACFC \uAC04\uB2E8\uD788 \uBB3C\uBB3C\uAD50\uD658\uC744 \uD588\uB2E4.");
+      } else {
+        showFieldToast("\uC9C0\uB098\uCCE4\uB2E4.");
+      }
+    } else if (ev.id === "patrol") {
+      if (choice === "greet") {
+        updateReputation(3);
+        showFieldToast("\u{1F6E1}\uFE0F \uC21C\uCC30\uB300\uC640 \uC778\uC0AC\uB97C \uB098\uB234\uB2E4. \uD3C9\uD310+3");
+      } else if (choice === "avoid") {
+        const karma = S.character && S.character.karmaScore || 50;
+        if (karma >= 60 && Math.random() < 0.3) showFieldToast("\u{1F6E1}\uFE0F \uC21C\uCC30\uB300\uAC00 \uC218\uC0C1\uD568\uC744 \uB290\uB07C\uACE0 \uAC80\uBB38\uC744 \uC2DC\uB3C4\uD55C\uB2E4!");
+        else showFieldToast("\u{1F6E1}\uFE0F \uB208\uC5D0 \uB744\uC9C0 \uC54A\uAC8C \uC6B0\uD68C\uD588\uB2E4.");
+      }
+    } else if (ev.id === "bandit_ambush") {
+      if (choice === "fight") {
+        const win = Math.random() < Math.min(0.85, 0.4 + (str - 50) / 200);
+        if (win) {
+          const loot = 40 + Math.floor(Math.random() * 80);
+          S.gold = (S.gold || 0) + loot;
+          saveGold(S.gold);
+          if (typeof window.updateHeader === "function") window.updateHeader();
+          showFieldToast(`\u2694\uFE0F \uC0B0\uC801\uC744 \uBB3C\uB9AC\uCE58\uACE0 \uB178\uD68D\uBB3C\uC744 \uCC59\uACBC\uB2E4! +${loot}G`);
+          if (typeof window.updateStats === "function") window.updateStats("travel_bandits_defeated", 1);
+        } else {
+          const lost = Math.min(S.gold || 0, 20 + Math.floor(Math.random() * 40));
+          S.gold -= lost;
+          saveGold(S.gold);
+          if (typeof window.updateHeader === "function") window.updateHeader();
+          showFieldToast(`\u{1F480} \uC0B0\uC801\uC5D0\uAC8C \uB2F9\uD574 \uAE08\uD488\uC744 \uBE7C\uC557\uACBC\uB2E4... -${lost}G`);
+        }
+      } else if (choice === "flee") {
+        const success = Math.random() < 0.6;
+        showFieldToast(success ? "\u{1F4A8} \uC0B0\uC801\uC758 \uB9E4\uBCF5\uC744 \uD53C\uD574 \uB2EC\uC544\uB0AC\uB2E4." : "\u{1F4A8} \uB3C4\uC8FC\uC5D0 \uC2E4\uD328\uD574 \uC57D\uAC04\uC758 \uD53C\uD574\uB97C \uC785\uC5C8\uB2E4.");
+        if (!success) {
+          S.stats.hp = Math.max(1, (S.stats.hp || 100) - 10);
+          if (typeof window.updateHeader === "function") window.updateHeader();
+        }
+      } else if (choice === "pay") {
+        const tribute = Math.min(S.gold || 0, 15 + Math.floor(Math.random() * 30));
+        S.gold -= tribute;
+        saveGold(S.gold);
+        if (typeof window.updateHeader === "function") window.updateHeader();
+        showFieldToast(`\u{1F4B0} \uD1B5\uD589\uB8CC ${tribute}G\uB97C \uB0B4\uACE0 \uBB34\uC0AC\uD788 \uC9C0\uB098\uAC14\uB2E4.`);
+      }
+    } else if (ev.id === "wounded_traveler") {
+      if (choice === "help") {
+        updateReputation(8);
+        if (Math.random() < 0.3) {
+          const reward = 20 + Math.floor(Math.random() * 40);
+          S.gold = (S.gold || 0) + reward;
+          saveGold(S.gold);
+          if (typeof window.updateHeader === "function") window.updateHeader();
+          showFieldToast(`\u{1FA79} \uBD80\uC0C1\uC790\uB97C \uCE58\uB8CC\uD574\uC92C\uB2E4. \uD3C9\uD310+8, \uAC10\uC0AC\uC758 \uD45C\uC2DC\uB85C +${reward}G`);
+        } else showFieldToast("\u{1FA79} \uBD80\uC0C1\uC790\uB97C \uCE58\uB8CC\uD574\uC92C\uB2E4. \uD3C9\uD310+8");
+      } else {
+        showFieldToast("\uC9C0\uB098\uCCE4\uB2E4.");
+      }
+    } else if (ev.id === "wandering_merchant") {
+      if (choice === "trade") showFieldToast("\u{1F6D2} \uB5A0\uB3CC\uC774 \uC0C1\uC778\uACFC \uAC70\uB798\uD588\uB2E4. (\uC778\uBCA4\uD1A0\uB9AC\uC5D0\uC11C \uD655\uC778)");
+      else showFieldToast("\uC9C0\uB098\uCCE4\uB2E4.");
+    }
+    const wrap = document.getElementById("tf-field-encounter");
+    if (wrap) {
+      wrap.style.display = "none";
+      wrap.innerHTML = "";
+    }
+    RT.roadEvent = null;
+    RT.encounterActive = false;
+  };
   function exitLabel(screen, ex) {
     const targetNode = RT.graph.nodes.get(ex.to);
     if (targetNode?.kind === "location") return targetNode.loc.name;
@@ -135199,6 +135334,7 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
       RT.currentQuestTargetHere = null;
       const forkNote = screen.exits.length >= 3 ? " \u2014 \uC5EC\uB7EC \uAC08\uB798\uB85C \uAE38\uC774 \uB098\uB269\uB2C8\uB2E4" : "";
       showFieldToast((screen.biome === "mountain" ? "\u26F0\uFE0F \uC0B0\uAE38" : screen.biome === "forest" ? "\u{1F332} \uC232\uAE38" : screen.isWaterScreen ? "\u{1F30A} \uBB3C\uAE38" : "\u{1F33E} \uB4E4\uAE38") + forkNote);
+      if (!RT.encounterActive) maybeTriggerRoadEvent(screen);
     }
     renderZonePanel();
     renderTransportStrip();
@@ -135526,6 +135662,11 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
       packCount: RT.screen.packs.length,
       transportType: RT.transportType,
       encounterActive: RT.encounterActive,
+      // [e) 도로 랜덤 이벤트 필드 포팅, 검증용 추가] 판정 로직 자체는 안
+      // 건드리고, maybeTriggerRoadEvent()가 참조하는 값과 그 결과(roadEvent)를
+      // 그대로 노출만 한다 — 우회 없음.
+      isSettlementRoute: !!RT.screen.isSettlementRoute,
+      roadEvent: RT.roadEvent ? { id: RT.roadEvent.id, name: RT.roadEvent.name } : null,
       totalNodesInGraph: RT.graph.nodes.size,
       // [2026-09-23, 25-3] fog of war 검증용 — 판정 로직(revealFogAround)을
       // 그대로 조회만 한다, 우회 없음.

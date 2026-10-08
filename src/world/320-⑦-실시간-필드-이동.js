@@ -33,11 +33,11 @@
 // 아래 "1.5) 정착지 습격 시스템" 섹션과 작업메모장.md 10번 섹션 참고.
 import { S } from '../data/084-TaleForge-순수-JS-엔진.js';
 import { getAllLandLocations, getLocationCoord } from '../economy/255-상인-거래소-교역-지부-확장.js';
-import { CONTINENT_TERRAIN, CONTINENT_PROPER_NAME_ICON, ROAD_EDGES, WORLD_MAP_ZONES } from '../data/255-상인-거래소-교역-지부-확장.js';
+import { CONTINENT_TERRAIN, CONTINENT_PROPER_NAME_ICON, ROAD_EDGES, WORLD_MAP_ZONES, TRAVEL_ENCOUNTER_POOL } from '../data/255-상인-거래소-교역-지부-확장.js';
 import { loadCurrentLocation, saveCurrentLocation, getLocationLevelBand } from './052-동대륙-추가-장소-4.js';
-import { getPlayerMaxHp, calcMonsterAttackDamage, loadParty, saveParty } from '../misc/054-이동수단-시스템.js';
+import { getPlayerMaxHp, calcMonsterAttackDamage, loadParty, saveParty, updateReputation } from '../misc/054-이동수단-시스템.js';
 import { TRANSPORT_CONFIG } from '../data/054-이동수단-시스템.js';
-import { rollLoot, saveInventory } from '../items/007-동적-아이템-생성-시스템-무제한-영구-캐시.js';
+import { rollLoot, saveInventory, saveGold } from '../items/007-동적-아이템-생성-시스템-무제한-영구-캐시.js';
 import { triggerLoopIfDead } from '../progression/220-18-회차루프-시스템.js';
 import { changeLocationReputation, changeProsperity, getLocationEconomySummary, setTradeRouteStatus } from '../economy/332-정착지-경제-평판-시스템.js';
 import { esc, toast, toastHTML, getEntityIconHTML, lsGet, lsSet } from '../utils.js';
@@ -749,7 +749,10 @@ export function buildScreen(graph, nodeId){
   // 구역이 다시 어두워지지 않는다(새로고침하면 _screenCache 자체가 메모리
   // 상태라 초기화됨 — packs 등 이 화면의 다른 런타임 상태와 동일한 범위).
   const fog = new Uint8Array(COLS*ROWS);
-  const screen = { nodeId, node, COLS, ROWS, grid, idx, inB, exits, markerPos, packs, biome, isWaterScreen, signposts, fog, crossingTrail };
+  // [e) 도로 랜덤 이벤트 필드 포팅] isSettlementRoute(포장 도로 구간인지)를
+  // 화면에 그대로 저장해둔다 — maybeTriggerRoadEvent()가 이 값으로 발생
+  // 확률/산적 가중치를 턴제 시절의 roadRatio>0.5 분기와 같은 기준으로 가른다.
+  const screen = { nodeId, node, COLS, ROWS, grid, idx, inB, exits, markerPos, packs, biome, isWaterScreen, signposts, fog, crossingTrail, isSettlementRoute };
   if(node.kind==='location') syncRaidPacksForScreen(screen, node.loc);
   _screenCache.set(cacheKey, screen);
   return screen;
@@ -1433,7 +1436,7 @@ export function enterFieldMode(continentKey){
     graph, screen:null, ctx, canvas, transportType: startTransport,
     player: { x:0, y:0, r:6, facing:'down' },
     keys: new Set(), touchDir:{x:0,y:0}, joyPointerId:null, joyOriginX:0, joyOriginY:0,
-    currentZone: null, encounterActive:false, raf:null, lastTs: performance.now(),
+    currentZone: null, encounterActive:false, roadEvent:null, raf:null, lastTs: performance.now(),
     listeners: [], _prevNodeId: null,
     // [16번 라운드, [대기] #13 착수] 플레이어 이동 궤적을 짧게 기록해서
     // 파티원이 몇 프레임 뒤처져 "따라오는" 것처럼 보이게 한다(고전
@@ -1848,6 +1851,132 @@ function checkPackEncounter(){
   }
 }
 
+// [e) 도로 랜덤 이벤트 필드 포팅, 52번 섹션 후속] 턴제 시절
+// tickLandTravel()이 매 "하루"마다 굴리던 TRAVEL_ENCOUNTER_POOL 6종
+// (camp_travelers/caravan/patrol/bandit_ambush/wounded_traveler/
+// wandering_merchant)을, 실시간 필드에서는 "길(connector) 화면에 들어설
+// 때마다" 굴리는 것으로 대체한다 — 하루라는 단위가 없는 실시간 구조에서
+// 가장 자연스럽게 대응되는 단위가 "화면 하나"였다. 턴제의 roadRatio(여정
+// 전체 중 도로 비중)는 실시간에서는 "지금 서 있는 이 화면이 포장
+// 도로인가"(screen.isSettlementRoute, 12번 섹션에서 이미 판정해두는 값)로
+// 1:1 대응시켰다 — 포장 도로면 더 안전(낮은 확률+산적 가중치 감소), 던전/
+// 황야행 거친 길이면 더 위험, 이라는 원래 설계 의도를 그대로 유지.
+const ROAD_EVENT_CHANCE_PAVED = 0.12;
+const ROAD_EVENT_CHANCE_WILD = 0.22;
+function maybeTriggerRoadEvent(screen){
+  if(screen.node.kind!=='connector') return false;
+  if(screen.isWaterScreen) return false; // 물길은 "길 위 조우"가 아니라 건너기 자체가 별도 게이팅 대상
+  if(screen.exits.some(e=>e.crossing==='air-only')) return false; // 비행 전용 지름길도 동일
+  const tc = currentTransportConfig();
+  if(tc.encounterMult===0) return false; // 비행 탑승물 — 몬스터 조우(checkPackEncounter)와 동일하게 지상 이벤트도 스킵
+  const chance = (screen.isSettlementRoute ? ROAD_EVENT_CHANCE_PAVED : ROAD_EVENT_CHANCE_WILD) * (tc.encounterMult!=null ? tc.encounterMult : 1);
+  if(Math.random() >= chance) return false;
+  // 포장 도로 위에선 턴제 시절과 동일하게 산적 매복 가중치를 줄인다(roadRatio>0.5 분기 재현).
+  const pool = screen.isSettlementRoute
+    ? TRAVEL_ENCOUNTER_POOL.map(e=>e.id==='bandit_ambush' ? {...e, weight: Math.max(1, Math.round(e.weight*0.4))} : e)
+    : TRAVEL_ENCOUNTER_POOL;
+  const totalWeight = pool.reduce((s,e)=>s+e.weight,0);
+  let roll = Math.random()*totalWeight, picked = pool[0];
+  for(const e of pool){ if(roll<e.weight){ picked=e; break; } roll-=e.weight; }
+  showRoadEventModal(picked);
+  return true;
+}
+// [e) 도로 랜덤 이벤트 필드 포팅] economy/255의 턴제 팝업(renderLandMapPopupSVG
+// 근처, resolveTravelEncounter 버튼 마크업)과 완전히 같은 선택지 구성·문구·
+// 색상을 그대로 재현한다 — showEncounterBattle()이 쓰는 같은 오버레이
+// (#tf-field-encounter)를 재사용해 새 DOM을 안 만든다.
+function showRoadEventModal(ev){
+  RT.encounterActive = true;
+  RT.roadEvent = { id:ev.id, icon:ev.icon, name:ev.name, desc:ev.desc };
+  const wrap = document.getElementById('tf-field-encounter');
+  if(!wrap) return;
+  wrap.style.display='flex';
+  const btn = (choice,label,bg,border,color) => `<button onclick="resolveFieldRoadEvent('${choice}')" style="flex:1;padding:8px 6px;background:${bg};border:1px solid ${border};color:${color};font-size:10px;cursor:pointer;border-radius:2px">${label}</button>`;
+  let buttons;
+  if(ev.id==='camp_travelers') buttons = btn('join','🏕️ 어울리기','#0a0a05','#4a4a1a','#c0c060')+btn('ignore','지나치기','#0a0a0a','#3a3a3a','#888');
+  else if(ev.id==='caravan') buttons = btn('escort','🐫 호위 동행','#0a0805','#4a3a1a','#c0a060')+btn('trade','거래','#050a0a','#1a4a4a','#60c0c0')+btn('ignore','지나치기','#0a0a0a','#3a3a3a','#888');
+  else if(ev.id==='patrol') buttons = btn('greet','🛡️ 인사하기','#05050a','#1a1a4a','#6060c0')+btn('avoid','피해가기','#0a0a0a','#3a3a3a','#888');
+  else if(ev.id==='bandit_ambush') buttons = btn('fight','⚔️ 맞서기','#150505','#6a2a2a','#e08080')+btn('flee','💨 도주','#0a1505','#2a6a2a','#80e080')+btn('pay','💰 통행료','#150f05','#6a5a2a','#e0c080');
+  else if(ev.id==='wounded_traveler') buttons = btn('help','🩹 도와주기','#05100a','#2a5a3a','#80c0a0')+btn('ignore','지나치기','#0a0a0a','#3a3a3a','#888');
+  else buttons = btn('trade','🛒 거래','#0a0a05','#4a4a1a','#c0c060')+btn('ignore','지나치기','#0a0a0a','#3a3a3a','#888');
+  wrap.innerHTML = `<div style="width:min(420px,88vw);border:1px solid #4a3a1a;background:#14100a;padding:18px 20px;box-shadow:0 20px 50px rgba(0,0,0,.6)">
+    <div style="font-family:Cinzel,serif;font-size:12px;color:#e0b060;margin-bottom:8px">${ev.icon} ${esc(ev.name)}</div>
+    <div style="font-size:11px;color:#d8ceb0;line-height:1.6;margin-bottom:14px">${esc(ev.desc)}</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">${buttons}</div>
+  </div>`;
+}
+// [e) 도로 랜덤 이벤트 필드 포팅] economy/255의 resolveTravelEncounter()와
+// 동일한 효과 계산식을 그대로 옮겨왔다(여행 상태(travel/saveTravelState)가
+// 없는 실시간 구조라 함수 자체는 새로 만들었지만, 각 분기의 수치·확률·
+// 조건은 전부 원본 그대로 — 새 밸런스를 지어내지 않았다). 토스트는
+// 턴제 시절의 AI 전용 _pendingTravelHint 채널에는 안 얹는다 — 다른 필드
+// 이벤트(습격·방랑자 명부 발견 등)도 전부 showFieldToast만 쓰는 관례와
+// 동일하게 맞췄다.
+window.resolveFieldRoadEvent = function(choice){
+  if(!RT || !RT.roadEvent) return;
+  const ev = RT.roadEvent;
+  const str = (S.stats&&S.stats.str)||50;
+  if(ev.id==='camp_travelers'){
+    if(choice==='join'){
+      S.stats.cha = Math.min(999,(S.stats.cha||50)+3);
+      if(Math.random()<0.4){ updateReputation(5); showFieldToast('🏕️ 여행객들과 정보를 나눴다. 평판+5, CHA+3'); }
+      else showFieldToast('🏕️ 여행객들과 잠시 어울렸다. CHA+3');
+    } else { showFieldToast('지나쳤다.'); }
+  } else if(ev.id==='caravan'){
+    if(choice==='escort'){
+      const reward = 30+Math.floor(Math.random()*50);
+      S.gold = (S.gold||0)+reward; saveGold(S.gold); if(typeof window.updateHeader==='function') window.updateHeader();
+      showFieldToast(`🐫 캐러밴 호위에 동행해 사례금을 받았다! +${reward}G`);
+    } else if(choice==='trade'){ showFieldToast('🐫 캐러밴과 간단히 물물교환을 했다.'); }
+    else { showFieldToast('지나쳤다.'); }
+  } else if(ev.id==='patrol'){
+    if(choice==='greet'){ updateReputation(3); showFieldToast('🛡️ 순찰대와 인사를 나눴다. 평판+3'); }
+    else if(choice==='avoid'){
+      const karma = (S.character&&S.character.karmaScore)||50;
+      if(karma>=60 && Math.random()<0.3) showFieldToast('🛡️ 순찰대가 수상함을 느끼고 검문을 시도한다!');
+      else showFieldToast('🛡️ 눈에 띄지 않게 우회했다.');
+    }
+  } else if(ev.id==='bandit_ambush'){
+    if(choice==='fight'){
+      const win = Math.random() < Math.min(0.85, 0.4+(str-50)/200);
+      if(win){
+        const loot = 40+Math.floor(Math.random()*80);
+        S.gold = (S.gold||0)+loot; saveGold(S.gold); if(typeof window.updateHeader==='function') window.updateHeader();
+        showFieldToast(`⚔️ 산적을 물리치고 노획물을 챙겼다! +${loot}G`);
+        if(typeof window.updateStats==='function') window.updateStats('travel_bandits_defeated', 1);
+      } else {
+        const lost = Math.min(S.gold||0, 20+Math.floor(Math.random()*40));
+        S.gold -= lost; saveGold(S.gold); if(typeof window.updateHeader==='function') window.updateHeader();
+        showFieldToast(`💀 산적에게 당해 금품을 빼앗겼다... -${lost}G`);
+      }
+    } else if(choice==='flee'){
+      const success = Math.random()<0.6;
+      showFieldToast(success?'💨 산적의 매복을 피해 달아났다.':'💨 도주에 실패해 약간의 피해를 입었다.');
+      if(!success){ S.stats.hp = Math.max(1,(S.stats.hp||100)-10); if(typeof window.updateHeader==='function') window.updateHeader(); }
+    } else if(choice==='pay'){
+      const tribute = Math.min(S.gold||0, 15+Math.floor(Math.random()*30));
+      S.gold -= tribute; saveGold(S.gold); if(typeof window.updateHeader==='function') window.updateHeader();
+      showFieldToast(`💰 통행료 ${tribute}G를 내고 무사히 지나갔다.`);
+    }
+  } else if(ev.id==='wounded_traveler'){
+    if(choice==='help'){
+      updateReputation(8);
+      if(Math.random()<0.3){
+        const reward = 20+Math.floor(Math.random()*40);
+        S.gold = (S.gold||0)+reward; saveGold(S.gold); if(typeof window.updateHeader==='function') window.updateHeader();
+        showFieldToast(`🩹 부상자를 치료해줬다. 평판+8, 감사의 표시로 +${reward}G`);
+      } else showFieldToast('🩹 부상자를 치료해줬다. 평판+8');
+    } else { showFieldToast('지나쳤다.'); }
+  } else if(ev.id==='wandering_merchant'){
+    if(choice==='trade') showFieldToast('🛒 떠돌이 상인과 거래했다. (인벤토리에서 확인)');
+    else showFieldToast('지나쳤다.');
+  }
+  const wrap = document.getElementById('tf-field-encounter');
+  if(wrap){ wrap.style.display='none'; wrap.innerHTML=''; }
+  RT.roadEvent = null;
+  RT.encounterActive = false;
+};
+
 // ── 화면 전환(메이플스토리/DFO 식 포탈) ──
 function exitLabel(screen, ex){
   const targetNode = RT.graph.nodes.get(ex.to);
@@ -1954,6 +2083,12 @@ function enterScreen(nodeId, fromNodeId){
     RT.currentQuestTargetHere = null; // 정착지 화면을 벗어났으니 HUD 표시도 같이 지운다
     const forkNote = screen.exits.length>=3 ? ' — 여러 갈래로 길이 나뉩니다' : '';
     showFieldToast((screen.biome==='mountain'?'⛰️ 산길':screen.biome==='forest'?'🌲 숲길':screen.isWaterScreen?'🌊 물길':'🌾 들길')+forkNote);
+    // [e) 도로 랜덤 이벤트 필드 포팅] 길(connector) 화면에 들어설 때마다
+    // 턴제 시절 TRAVEL_ENCOUNTER_POOL과 같은 6종 이벤트를 낮은 확률로
+    // 재현한다 — 습격/추격 등 이미 encounterActive로 게이팅되는 다른
+    // 필드 이벤트와 같은 관례로, 지금 전투/다른 조우가 진행 중이면 겹쳐
+    // 뜨지 않게 막는다.
+    if(!RT.encounterActive) maybeTriggerRoadEvent(screen);
   }
   renderZonePanel();
   renderTransportStrip();
@@ -2284,6 +2419,11 @@ window.__tfFieldDebug = function(){
     packCount: RT.screen.packs.length,
     transportType: RT.transportType,
     encounterActive: RT.encounterActive,
+    // [e) 도로 랜덤 이벤트 필드 포팅, 검증용 추가] 판정 로직 자체는 안
+    // 건드리고, maybeTriggerRoadEvent()가 참조하는 값과 그 결과(roadEvent)를
+    // 그대로 노출만 한다 — 우회 없음.
+    isSettlementRoute: !!RT.screen.isSettlementRoute,
+    roadEvent: RT.roadEvent ? { id: RT.roadEvent.id, name: RT.roadEvent.name } : null,
     totalNodesInGraph: RT.graph.nodes.size,
     // [2026-09-23, 25-3] fog of war 검증용 — 판정 로직(revealFogAround)을
     // 그대로 조회만 한다, 우회 없음.

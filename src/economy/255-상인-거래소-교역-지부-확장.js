@@ -6,7 +6,7 @@ import { S } from '../data/084-TaleForge-순수-JS-엔진.js';
 import { CROP_DEFS } from '../data/252-상단Caravan-UI-용병단-UI와-대칭-구조.js';
 import { NETWORK_TYPES, TOMB_RELIC_DEFS } from '../data/253-SVG-타일-렌더링-작물-단계별-애니메이션.js';
 import { SONG_GENRES } from '../data/254-음유시인-공연-후원자-전설곡.js';
-import { CONTINENT_HUB_NAMES, CONTINENT_PROPER_NAME, CONTINENT_PROPER_NAME_ICON, CONTINENT_TERRAIN, CREW_NAMES, CREW_ROLES, DEAL_LORE_SHOP, DUNGEON_TIER_COLORS, ENEMY_SHIP_DEFS, HUNTING_GROUNDS, INTEL_MATERIALS, INTEL_SITES, ISLAND_DEFS, ISLAND_LOOT, MERCHANT_RANKS, NPC_SHIP_KINDS, RECOMPOSE_YIELD_BY_RARITY, ROAD_EDGES, SEA_EVENT_POOL, SHIP_TIERS, SHIP_UPGRADE_BASE_COST, SHIP_UPGRADE_DEFS, SONG_LORE_SHOP, TALE_MATERIALS, TALE_SITES, TRAVEL_ENCOUNTER_POOL, WORLD_MAP_ZONES } from '../data/255-상인-거래소-교역-지부-확장.js';
+import { CONTINENT_HUB_NAMES, CONTINENT_PROPER_NAME, CONTINENT_PROPER_NAME_ICON, CONTINENT_TERRAIN, CREW_NAMES, CREW_PERSONALITIES, CREW_ROLES, DEAL_LORE_SHOP, DUNGEON_TIER_COLORS, ENEMY_SHIP_DEFS, HUNTING_GROUNDS, INTEL_MATERIALS, INTEL_SITES, ISLAND_DEFS, ISLAND_LOOT, MERCHANT_RANKS, NAMED_NPC_SHIPS, NAMED_NPC_SHIP_CHANCE, NPC_SHIP_KINDS, RECOMPOSE_YIELD_BY_RARITY, ROAD_EDGES, SEA_EVENT_POOL, SHIP_BRANCH_LABELS, SHIP_TIERS, SHIP_UPGRADE_BASE_COST, SHIP_UPGRADE_DEFS, SHIP_UPGRADE_SYNERGIES, SONG_LORE_SHOP, TALE_MATERIALS, TALE_SITES, TRAVEL_ENCOUNTER_POOL, WORLD_MAP_ZONES } from '../data/255-상인-거래소-교역-지부-확장.js';
 import { getLocationMonsterPool, getOrCreateEnemyMaterials, registerLocationMonster, saveGold } from '../items/007-동적-아이템-생성-시스템-무제한-영구-캐시.js';
 import { isLocationExplored } from '../misc/015-시스템-1120.js';
 import { moveToLocation } from '../misc/053-게시판-시스템.js';
@@ -2870,6 +2870,17 @@ export function getShipEffectiveStats(ship){
     if(def.stat==='combat') combat = Math.round(tier.combat*mult);
     if(def.stat==='cargo') cargo = Math.round(tier.cargo*mult);
   });
+  // [56번 섹션, 업그레이드 시너지] 두 슬롯을 함께 minLevel 이상 올리면
+  // 개별 업그레이드 보너스가 다 적용된 값 위에 추가 보너스를 곱한다.
+  (SHIP_UPGRADE_SYNERGIES||[]).forEach(syn=>{
+    const active = syn.parts.every(p=>(upg[p]||0) >= syn.minLevel);
+    if(!active) return;
+    const mult = 1 + syn.effect.bonus;
+    if(syn.effect.stat==='durability') durability = Math.round(durability*mult);
+    if(syn.effect.stat==='speed') speed = +(speed*mult).toFixed(2);
+    if(syn.effect.stat==='combat') combat = Math.round(combat*mult);
+    if(syn.effect.stat==='cargo') cargo = Math.round(cargo*mult);
+  });
   // 선원 역할 보너스 (포수=전투, 항해사=속도, 갑판장=충성도 — 충성도는 별도 처리)
   const gunners = (ship.crew||[]).filter(c=>c.role==='gunner').length;
   const navigators = (ship.crew||[]).filter(c=>c.role==='navigator').length;
@@ -2920,9 +2931,13 @@ export function hireCrew(role){
   if((S.gold||0) < cost){ toast(`골드 부족 (${cost}G 필요)`); return; }
   if(ship.crew.length >= 10){ toast('이 선박에 더 태울 자리가 없습니다.'); return; }
   S.gold -= cost; if(typeof saveGold==='function') saveGold(S.gold); window.updateHeader&&window.updateHeader();
-  ship.crew.push({ id:'crew_'+Date.now(), name:CREW_NAMES[Math.floor(Math.random()*CREW_NAMES.length)]+' '+roleDef.name, icon:roleDef.icon, role:role||'sailor', loyalty:65, upkeep:Math.round((5+Math.floor(Math.random()*4))*roleDef.upkeepMod), joinedAt:S.msgCount||0 });
+  // [56번 섹션, 선원 개성 확충] 고용 시점에 개성 하나를 뽑아 초기 충성도에
+  // 소소한 가·감(loyaltyBonus)을 적용 — 10~100 사이로 clamp.
+  const personality = CREW_PERSONALITIES[Math.floor(Math.random()*CREW_PERSONALITIES.length)];
+  const loyalty = Math.max(10, Math.min(100, 65+personality.loyaltyBonus));
+  ship.crew.push({ id:'crew_'+Date.now(), name:CREW_NAMES[Math.floor(Math.random()*CREW_NAMES.length)]+' '+roleDef.name, icon:roleDef.icon, role:role||'sailor', personality:personality.id, loyalty, upkeep:Math.round((5+Math.floor(Math.random()*4))*roleDef.upkeepMod), joinedAt:S.msgCount||0 });
   saveShip(ship);
-  toastHTML(`🤝 ${typeof getEntityIconHTML==='function'?getEntityIconHTML(roleDef,{size:14}):(roleDef.icon)} ${esc(roleDef.name)}이(가) 합류했습니다! (현재 ${esc(ship.crew.length)}명)`, 3000);
+  toastHTML(`🤝 ${typeof getEntityIconHTML==='function'?getEntityIconHTML(roleDef,{size:14}):(roleDef.icon)} ${esc(roleDef.name)}이(가) 합류했습니다! (${esc(personality.name)} 성격, 현재 ${esc(ship.crew.length)}명)`, 3000);
   renderVoyagePanel();
 }
 window.hireCrew = hireCrew;
@@ -3235,15 +3250,50 @@ export function resolveSeaEvent(choice){
       toast(`💰 통행세 ${tribute}G를 지불하고 무사히 지나갔습니다.`, 3000);
     }
   } else if(ev.id==='sea_storm'){
-    const dmg = 10+Math.floor(Math.random()*25);
-    ship.durability = Math.max(0, ship.durability-dmg);
-    toast(`⛈️ 폭풍을 뚫고 나아갔습니다. 선체 손상 -${dmg}`, 3500);
-    S._pendingVoyageHint = '거센 폭풍 속에서 선원들과 함께 사투를 벌이며 항해를 이어갔다.';
+    // [56번 섹션, 해상 이벤트 다단계화] 예전엔 선택지 없이 자동으로
+    // 피해만 입었다 — "전속 항진(고위험·지연 없음)" vs "버티기(저위험·
+    // 1턴 지연)" 두 선택지로 전환.
+    if(choice==='push'){
+      const navigators = (ship.crew||[]).filter(c=>c.role==='navigator').length;
+      const dmg = Math.max(0, (15+Math.floor(Math.random()*30)) - navigators*6);
+      ship.durability = Math.max(0, ship.durability-dmg);
+      toast(`⛈️ 전속 항진으로 폭풍을 정면으로 뚫었습니다! 선체 손상 -${dmg}`, 3500);
+      S._pendingVoyageHint = '거센 폭풍 속에서도 속도를 줄이지 않고 정면으로 뚫고 나아갔다.';
+    } else {
+      const dmg = 5+Math.floor(Math.random()*10);
+      ship.durability = Math.max(0, ship.durability-dmg);
+      ship.voyageTurnsLeft += 1;
+      toast(`⛈️ 돛을 내리고 폭풍이 지나가길 기다렸습니다. 선체 손상 -${dmg} (항해 1턴 지연)`, 3500);
+      S._pendingVoyageHint = '돛을 내리고 선체를 보존하며 폭풍이 지나가기를 기다렸다. 그만큼 시간이 더 걸렸다.';
+    }
   } else if(ev.id==='sea_calm'){
-    if(Math.random()<0.3){
+    // [56번 섹션] 예전엔 선택지 없이 자동으로(30% 습득/70% 지연) 처리됐다
+    // — "노 저어 수색(선원 필요·선체 소모·더 큰 보상)" vs "가만히 기다리기
+    // (기존 자동 로직 그대로)" 두 선택지로 전환.
+    if(choice==='row'){
+      if(ship.crew.length===0){
+        toast('🌊 선원이 없어 노를 저을 수 없습니다. 가만히 기다립니다.', 2500);
+        if(Math.random()<0.3){
+          const found = 20+Math.floor(Math.random()*40);
+          if(typeof addGoldWithExchange==='function') addGoldWithExchange(found, '표류물 습득'); else { S.gold += found; if(typeof saveGold==='function') saveGold(S.gold); } window.updateHeader&&window.updateHeader();
+        } else {
+          ship.voyageTurnsLeft += 1;
+        }
+      } else if(Math.random()<0.55){
+        const found = 40+Math.floor(Math.random()*30);
+        if(typeof addGoldWithExchange==='function') addGoldWithExchange(found, '표류물 습득'); else { S.gold += found; if(typeof saveGold==='function') saveGold(S.gold); } window.updateHeader&&window.updateHeader();
+        const strain = 3+Math.floor(Math.random()*5);
+        ship.durability = Math.max(0, ship.durability-strain);
+        toast(`🌊 선원들이 힘껏 노를 저어 표류물을 건져올렸습니다! +${found}G (무리한 탓에 선체 -${strain})`, 3500);
+      } else {
+        const strain = 3+Math.floor(Math.random()*5);
+        ship.durability = Math.max(0, ship.durability-strain);
+        toast(`🌊 힘껏 노를 저었지만 별다른 소득이 없었습니다. (무리한 탓에 선체 -${strain})`, 3000);
+      }
+    } else if(Math.random()<0.3){
       const found = 20+Math.floor(Math.random()*40);
       if(typeof addGoldWithExchange==='function') addGoldWithExchange(found, '표류물 습득'); else { S.gold += found; if(typeof saveGold==='function') saveGold(S.gold); } window.updateHeader&&window.updateHeader();
-      toast(`🌊 표류 중 바다에서 무언가를 건져올렸습니다! +${found}G`, 3000);
+      toast(`🌊 가만히 기다리며 표류 중 바다에서 무언가를 건져올렸습니다! +${found}G`, 3000);
     } else {
       toast('🌊 표류로 항해가 하루 더 지연됩니다.', 2500);
       ship.voyageTurnsLeft += 1;
@@ -3259,16 +3309,35 @@ export function resolveSeaEvent(choice){
       toast('⛴️ 우호적으로 인사를 나누고 각자의 길을 갔습니다.', 2500);
     }
   } else if(ev.id==='sea_monster'){
-    const win = Math.random() < Math.min(0.7, 0.25 + combatStat/120);
-    if(win){
-      toast('🐙 해양 괴물을 물리쳤습니다! 전설로 남을 무용담입니다.', 4000);
-      if(typeof updateReputation==='function') updateReputation(15);
-      S._pendingVoyageHint = '심해에서 솟아오른 거대한 괴물과의 사투 끝에 승리했다. 이 이야기는 항구마다 퍼질 것이다.';
+    // [56번 섹션] 예전엔 선택지 없이 '계속 항해' 버튼 하나로 바로 승패가
+    // 갈렸다 — "맞서 싸우기(기존 로직)" / "도주(속도 기반)" / "화물을
+    // 공물로 던지기(화물 있을 때만, 무피해로 확정 통과)" 3갈래로 전환.
+    if(choice==='flee'){
+      const success = Math.random() < Math.min(0.75, 0.3+(stats.speed-1.0)*0.3);
+      if(success){
+        toast('💨 거대한 괴물로부터 거리를 벌려 달아났습니다.', 3500);
+        S._pendingVoyageHint = '심해에서 솟아오른 괴물의 그림자를 피해 전속력으로 달아났다.';
+      } else {
+        const dmg = 20+Math.floor(Math.random()*20);
+        ship.durability = Math.max(0, ship.durability-dmg);
+        toast(`💥 도주 실패! 괴물의 공격에 선체 손상 -${dmg}`, 3500);
+      }
+    } else if(choice==='sacrifice' && ship.cargo.length>0){
+      const dumped = ship.cargo.splice(0, Math.min(2, ship.cargo.length));
+      toastHTML(`🌊 화물 ${dumped.map(c=>CROP_DEFS[c.cropId]?.name||c.cropId).join(', ')}을(를) 바다에 던져 괴물의 시선을 돌렸습니다. 무사히 지나쳤습니다.`, 4000);
+      S._pendingVoyageHint = '괴물 앞에 화물을 던져 공물로 바치고 무사히 바다를 빠져나갔다.';
     } else {
-      const dmg = 30+Math.floor(Math.random()*30);
-      ship.durability = Math.max(0, ship.durability-dmg);
-      toast(`🐙 해양 괴물의 공격으로 선체가 크게 파손되었습니다! -${dmg}`, 4000);
-      S._pendingVoyageHint = '거대한 해양 괴물에게 일방적으로 당하며 간신히 도주했다.';
+      const win = Math.random() < Math.min(0.7, 0.25 + combatStat/120);
+      if(win){
+        toast('🐙 해양 괴물을 물리쳤습니다! 전설로 남을 무용담입니다.', 4000);
+        if(typeof updateReputation==='function') updateReputation(15);
+        S._pendingVoyageHint = '심해에서 솟아오른 거대한 괴물과의 사투 끝에 승리했다. 이 이야기는 항구마다 퍼질 것이다.';
+      } else {
+        const dmg = 30+Math.floor(Math.random()*30);
+        ship.durability = Math.max(0, ship.durability-dmg);
+        toast(`🐙 해양 괴물의 공격으로 선체가 크게 파손되었습니다! -${dmg}`, 4000);
+        S._pendingVoyageHint = '거대한 해양 괴물에게 일방적으로 당하며 간신히 도주했다.';
+      }
     }
   }
   ship.activeSeaEvent = null;
@@ -3401,10 +3470,27 @@ export function spawnNpcShip(){
   const a = ports[Math.floor(Math.random()*ports.length)];
   let b = ports[Math.floor(Math.random()*ports.length)];
   let guard=0; while(b.name===a.name && guard++<10){ b = ports[Math.floor(Math.random()*ports.length)]; }
+  const from = getPortCoord(a), to = getPortCoord(b);
+
+  // [56번 섹션, NPC 선박 다양화] 낮은 확률로 일반 종류 대신 네임드 선박을
+  // 스폰 — 희귀 조우 추가(기존엔 4종뿐, 전부 익명이었음).
+  if(Math.random() < NAMED_NPC_SHIP_CHANCE){
+    const named = NAMED_NPC_SHIPS[Math.floor(Math.random()*NAMED_NPC_SHIPS.length)];
+    const hp = named.hp[0]+Math.floor(Math.random()*(named.hp[1]-named.hp[0]+1));
+    return {
+      id:'npc_'+Date.now()+'_'+Math.floor(Math.random()*1000),
+      kind: named.kind, icon: named.icon, name: named.name, desc: named.desc, isNamed: true, namedId: named.id,
+      fromCoord: from, toCoord: to, progress: Math.random()*0.6,
+      speed: 0.04+Math.random()*0.03,
+      combat: named.combat[0]+Math.floor(Math.random()*(named.combat[1]-named.combat[0]+1)),
+      cargoValue: named.cargoValue[0]+Math.floor(Math.random()*(named.cargoValue[1]-named.cargoValue[0]+1)),
+      hp: hp, maxHp: hp,
+    };
+  }
+
   const totalWeight = NPC_SHIP_KINDS.reduce((s,k)=>s+k.weight,0);
   let roll = Math.random()*totalWeight, picked = NPC_SHIP_KINDS[0];
   for(const k of NPC_SHIP_KINDS){ if(roll<k.weight){ picked=k; break; } roll-=k.weight; }
-  const from = getPortCoord(a), to = getPortCoord(b);
   const hp = 30+Math.floor(Math.random()*40);
   return {
     id:'npc_'+Date.now()+'_'+Math.floor(Math.random()*1000),
@@ -3463,18 +3549,27 @@ export function pursueNpcShip(npcId){
     toastHTML(`💨 ${typeof getEntityIconHTML==='function'?getEntityIconHTML(npc,{size:14}):(npc.icon)} ${esc(npc.name)}이(가) 더 빨라 따라잡지 못했습니다.`, 3500);
     return;
   }
+  // [56번 섹션] 네임드 선박(kind:'ghost' 포함)도 여기서 defId를 받아야
+  // 전투가 성립한다 — 기존엔 pirate/navy/그 외(smuggler)만 다뤘고
+  // 'ghost'는 매핑이 없어 네임드 유령선을 추격하면 defId가 undefined로
+  // 떨어질 뻔했다.
+  const defId = npc.kind==='navy' ? 'navy_frigate' : npc.kind==='ghost' ? 'ghost_ship' : npc.kind==='pirate' ? 'corsair' : 'smuggler';
   ship.activeBattle = {
     round:1, phase:'ongoing',
-    enemy: { defId: npc.kind==='navy'?'navy_frigate':(npc.kind==='pirate'?'corsair':'smuggler'),
-             name: npc.name, icon: npc.icon, isNavy: npc.kind==='navy',
+    enemy: { defId, name: npc.name, icon: npc.icon, isNavy: npc.kind==='navy',
              hp: npc.hp, maxHp: npc.maxHp, combat: npc.combat,
              lootGold: [Math.round(npc.cargoValue*0.6), npc.cargoValue] },
     log:[],
   };
   saveNpcShips(npcs.filter(n=>n.id!==npcId));
   saveShip(ship);
-  toastHTML(`⚔️ ${typeof getEntityIconHTML==='function'?getEntityIconHTML(npc,{size:14}):(npc.icon)} ${esc(npc.name)}을(를) 따라잡아 전투를 시작합니다!`, 4000);
-  S._pendingVoyageHint = `바다 위에서 ${npc.name}을(를) 발견하고 직접 추격해 따라잡았다. 곧 전투가 벌어진다.`;
+  if(npc.isNamed){
+    toastHTML(`🌟 네임드 조우! ${typeof getEntityIconHTML==='function'?getEntityIconHTML(npc,{size:14}):(npc.icon)} ${esc(npc.name)}을(를) 따라잡았습니다! ${esc(npc.desc||'')}`, 5000);
+    S._pendingVoyageHint = `바다 위에서 전설로 떠돌던 ${npc.name}을(를) 직접 목격하고 추격해 따라잡았다. ${npc.desc||''} 곧 전투가 벌어진다.`;
+  } else {
+    toastHTML(`⚔️ ${typeof getEntityIconHTML==='function'?getEntityIconHTML(npc,{size:14}):(npc.icon)} ${esc(npc.name)}을(를) 따라잡아 전투를 시작합니다!`, 4000);
+    S._pendingVoyageHint = `바다 위에서 ${npc.name}을(를) 발견하고 직접 추격해 따라잡았다. 곧 전투가 벌어진다.`;
+  }
   renderVoyagePanel();
 }
 window.pursueNpcShip = pursueNpcShip;
@@ -3549,10 +3644,11 @@ export function renderVoyagePanel(){
     } else {
       html += `<div style="padding:10px 12px"><div style="font-family:Cinzel,serif;font-size:10px;color:#5a9aba;margin-bottom:8px">⚓ ${loc.name}에서 선박 구매</div>`;
       SHIP_TIERS.forEach(t=>{
+        const branchTag = SHIP_BRANCH_LABELS[t.branch]||'';
         html += `<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-top:1px solid #051520">
           <span style="color:#5a9aba;display:inline-flex;flex-shrink:0">${typeof getEntityIconHTML==='function'?getEntityIconHTML(t,{size:16}):(t.svgIcon||t.icon)}</span>
-          <div style="flex:1"><div style="font-size:10px;color:var(--text)">${t.name}</div>
-          <div style="font-size:8px;color:var(--dim)">${esc(t.desc)} · 내구${t.durability} 화물${t.cargo} 전투${t.combat}</div></div>
+          <div style="flex:1"><div style="font-size:10px;color:var(--text)">${t.name} ${branchTag?`<span style="color:#c0a030;font-size:8px">[${branchTag}]</span>`:''}</div>
+          <div style="font-size:8px;color:var(--dim)">${esc(t.desc)} · 내구${t.durability} 화물${t.cargo} 전투${t.combat} 속도${t.speed}</div></div>
           <button onclick="buyShip('${t.id}')" style="padding:4px 10px;background:#020a14;border:1px solid #0a4a6a;color:#5a9aba;font-size:8px;cursor:pointer">${t.price}G</button>
         </div>`;
       });
@@ -3573,7 +3669,7 @@ export function renderVoyagePanel(){
         <div style="margin-top:6px">
         ${SHIP_TIERS.map(t=>`<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-top:1px solid #051520">
           <span style="font-size:14px">${typeof getEntityIconHTML==='function'?getEntityIconHTML(t,{size:14}):(t.icon)}</span>
-          <div style="flex:1;font-size:8px;color:var(--text)">${t.name}</div>
+          <div style="flex:1;font-size:8px;color:var(--text)">${t.name} ${SHIP_BRANCH_LABELS[t.branch]?`<span style="color:#c0a030">[${SHIP_BRANCH_LABELS[t.branch]}]</span>`:''}</div>
           <button onclick="buyShip('${t.id}')" style="padding:3px 8px;background:#020a14;border:1px solid #0a4a6a;color:#5a9aba;font-size:7px;cursor:pointer">${t.price}G</button>
         </div>`).join('')}
         </div>
@@ -3630,6 +3726,16 @@ export function renderVoyagePanel(){
         :ev.id==='sea_merchant'?`
           <button onclick="resolveSeaEvent('trade')" style="flex:1;padding:6px;background:#051015;border:1px solid #2a5a6a;color:#80c0e0;font-size:8px;cursor:pointer">⛴️ 즉석 거래</button>
           <button onclick="resolveSeaEvent('ignore')" style="flex:1;padding:6px;background:#0a0a0a;border:1px solid #3a3a3a;color:#888;font-size:8px;cursor:pointer">지나치기</button>`
+        :ev.id==='sea_storm'?`
+          <button onclick="resolveSeaEvent('push')" style="flex:1;padding:6px;background:#150a05;border:1px solid #6a4a1a;color:#e0a040;font-size:8px;cursor:pointer" title="고위험·지연 없음">⛵ 전속 항진</button>
+          <button onclick="resolveSeaEvent('brace')" style="flex:1;padding:6px;background:#020a14;border:1px solid #0a4a6a;color:#5a9aba;font-size:8px;cursor:pointer" title="저위험·1턴 지연">⚓ 돛 내리고 버티기</button>`
+        :ev.id==='sea_calm'?`
+          <button onclick="resolveSeaEvent('row')" style="flex:1;padding:6px;background:#150a05;border:1px solid #6a4a1a;color:#e0a040;font-size:8px;cursor:pointer" title="선원 필요·선체 소모·더 큰 보상">🚣 노 저어 수색</button>
+          <button onclick="resolveSeaEvent('wait')" style="flex:1;padding:6px;background:#020a14;border:1px solid #0a4a6a;color:#5a9aba;font-size:8px;cursor:pointer">⏳ 가만히 기다리기</button>`
+        :ev.id==='sea_monster'?`
+          <button onclick="resolveSeaEvent('fight')" style="flex:1;padding:6px;background:#150505;border:1px solid #6a2a2a;color:#e08080;font-size:8px;cursor:pointer">⚔️ 맞서 싸우기</button>
+          <button onclick="resolveSeaEvent('flee')" style="flex:1;padding:6px;background:#0a1505;border:1px solid #2a6a2a;color:#80e080;font-size:8px;cursor:pointer">💨 도주</button>
+          ${ship.cargo.length>0?`<button onclick="resolveSeaEvent('sacrifice')" style="flex:1;padding:6px;background:#150f05;border:1px solid #6a5a2a;color:#e0c080;font-size:8px;cursor:pointer">📦 화물 공물로 던지기</button>`:''}`
         :`<button onclick="resolveSeaEvent('accept')" style="flex:1;padding:6px;background:#020a14;border:1px solid #0a4a6a;color:#5a9aba;font-size:8px;cursor:pointer">계속 항해</button>`}
       </div>
     </div>`;
@@ -3665,6 +3771,13 @@ export function renderVoyagePanel(){
           </div>`;
         }).join('')}
         </div>
+        <div style="margin-top:8px;padding-top:6px;border-top:1px dashed #0a2a3a">
+          <div style="font-size:8px;color:var(--dim);margin-bottom:4px">⚡ 시너지 — 두 슬롯을 함께 2단계 이상 올리면 발동</div>
+          ${SHIP_UPGRADE_SYNERGIES.map(syn=>{
+            const active = syn.parts.every(p=>((ship.upgrades&&ship.upgrades[p])||0) >= syn.minLevel);
+            return `<div style="font-size:7px;padding:2px 0;color:${active?'#6aca6a':'#555'}">${active?'✅':'▫️'} ${syn.icon} ${syn.name} — ${esc(syn.desc)}</div>`;
+          }).join('')}
+        </div>
       </details>
     </div>`;
   }
@@ -3691,7 +3804,10 @@ export function renderVoyagePanel(){
   // 선원 (역할 선택 가능)
   html += `<div style="padding:10px 12px;border-bottom:1px solid #0a1a2a">
     <div style="font-family:Cinzel,serif;font-size:10px;color:#5a9aba;margin-bottom:6px">🧑‍✈️ 선원 (${ship.crew.length}/10)</div>
-    ${ship.crew.map(c=>`<div style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:9px"><span>${typeof getEntityIconHTML==='function'?getEntityIconHTML(c,{size:16}):(c.icon)}</span><span style="flex:1;color:var(--text)">${esc(c.name)}</span><span style="color:${c.loyalty>=50?'#6aca6a':'#e08030'}">충성${c.loyalty}</span><span style="color:#5a9aba">${c.upkeep}G/턴</span></div>`).join('')}
+    ${ship.crew.map(c=>{
+      const pers = CREW_PERSONALITIES.find(p=>p.id===c.personality);
+      return `<div style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:9px" title="${pers?esc(pers.desc):''}"><span>${typeof getEntityIconHTML==='function'?getEntityIconHTML(c,{size:16}):(c.icon)}</span><span style="flex:1;color:var(--text)">${esc(c.name)} ${pers?`<span style="color:#9a7a5a;font-size:7px">[${pers.icon}${pers.name}]</span>`:''}</span><span style="color:${c.loyalty>=50?'#6aca6a':'#e08030'}">충성${c.loyalty}</span><span style="color:#5a9aba">${c.upkeep}G/턴</span></div>`;
+    }).join('')}
     ${!ship.atSea?`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
       ${Object.entries(CREW_ROLES).map(([role,def])=>`<button onclick="hireCrew('${role}')" style="flex:1;min-width:70px;padding:5px;background:#020a14;border:1px solid #0a4a6a;color:#5a9aba;font-size:7px;cursor:pointer" title="${esc(def.desc)}">${def.icon} ${def.name}</button>`).join('')}
     </div>`:''}

@@ -14960,11 +14960,21 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
     }
   ];
   var SHIP_TIERS = [
-    { id: "skiff", name: "\uC18C\uD615 \uC5B4\uC120", icon: "\u26F5", svgIcon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 L12 15" /><path d="M12 4 L17 12 L12 12 Z" stroke-linejoin="round"/><path d="M5 15 L19 15 L16.5 19 L7.5 19 Z" stroke-linejoin="round"/></svg>', price: 150, durability: 60, cargo: 20, combat: 5, speed: 1, desc: "\uADFC\uD574\uC6A9 \uC18C\uD615 \uC120\uBC15. \uC2F8\uACE0 \uAC00\uBCCD\uC9C0\uB9CC \uC6D0\uC591 \uD56D\uD574\uC5D4 \uC704\uD5D8\uD558\uB2E4." },
-    { id: "caravel", name: "\uBC94\uC120", icon: "\u26F5", svgIcon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L12 15" /><path d="M12 3 L18 11 L12 11 Z" stroke-linejoin="round"/><path d="M12 5 L7 12 L12 12 Z" stroke-linejoin="round"/><path d="M4 15 L20 15 L17 20 L7 20 Z" stroke-linejoin="round"/></svg>', price: 500, durability: 120, cargo: 60, combat: 15, speed: 1.4, desc: "\uAD50\uC5ED\uACFC \uD0D0\uD5D8\uC5D0 \uB450\uB8E8 \uC4F0\uC774\uB294 \uD45C\uC900 \uC120\uBC15." },
-    { id: "galleon", name: "\uAC24\uB9AC\uC628", icon: "\u{1F6A2}", svgIcon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12 L19 12 L19 17 L5 17 Z" stroke-linejoin="round"/><path d="M8 12 L8 5 L14 5 L14 12" stroke-linejoin="round"/><path d="M3 17 L21 17 L18 21 L6 21 Z" stroke-linejoin="round"/></svg>', price: 1500, durability: 250, cargo: 150, combat: 40, speed: 1.2, desc: "\uB300\uD615 \uD654\uBB3C\uCE78\uACFC \uD3EC\uB300\uB97C \uAC16\uCD98 \uC6D0\uC591 \uC120\uBC15. \uD574\uC801\uB4E4\uC774 \uAC00\uC7A5 \uD0D0\uB0B8\uB2E4." },
-    { id: "magic_ship", name: "\uB9C8\uBC95 \uBC94\uC120", icon: "\u{1F6E5}\uFE0F", svgIcon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L12 14" /><path d="M12 3 L17 10 L12 10 Z" stroke-linejoin="round"/><path d="M4 14 L20 14 L17 19 L7 19 Z" stroke-linejoin="round"/><circle cx="12" cy="16" r="1.3" fill="currentColor" stroke="none"/></svg>', price: 4e3, durability: 300, cargo: 100, combat: 60, speed: 2.2, desc: "\uBC14\uB78C \uC815\uB839\uC774 \uAE43\uB4E0 \uC804\uC124\uC801\uC778 \uC120\uBC15. \uD56D\uD574 \uC18D\uB3C4\uC640 \uC0DD\uC874\uB825\uC774 \uC555\uB3C4\uC801\uC774\uB2E4." }
+    { id: "skiff", name: "\uC18C\uD615 \uC5B4\uC120", icon: "\u26F5", svgIcon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 L12 15" /><path d="M12 4 L17 12 L12 12 Z" stroke-linejoin="round"/><path d="M5 15 L19 15 L16.5 19 L7.5 19 Z" stroke-linejoin="round"/></svg>', price: 150, durability: 60, cargo: 20, combat: 5, speed: 1, branch: "balanced", desc: "\uADFC\uD574\uC6A9 \uC18C\uD615 \uC120\uBC15. \uC2F8\uACE0 \uAC00\uBCCD\uC9C0\uB9CC \uC6D0\uC591 \uD56D\uD574\uC5D4 \uC704\uD5D8\uD558\uB2E4." },
+    { id: "caravel", name: "\uBC94\uC120", icon: "\u26F5", svgIcon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L12 15" /><path d="M12 3 L18 11 L12 11 Z" stroke-linejoin="round"/><path d="M12 5 L7 12 L12 12 Z" stroke-linejoin="round"/><path d="M4 15 L20 15 L17 20 L7 20 Z" stroke-linejoin="round"/></svg>', price: 500, durability: 120, cargo: 60, combat: 15, speed: 1.4, branch: "balanced", branchGroup: "caravel", desc: "\uAD50\uC5ED\uACFC \uD0D0\uD5D8\uC5D0 \uB450\uB8E8 \uC4F0\uC774\uB294 \uD45C\uC900 \uBC94\uC120." },
+    // [56번 섹션, 선박 티어 가로 분기] caravel/galleon 가격대에 "균형형" 외에
+    // 속도·전투·화물 중 하나를 극단적으로 민 선택지를 추가 — 같은 가격에
+    // 플레이스타일이 다른 배를 고를 수 있게 함(수직 티어만 있던 공백 보완).
+    // svgIcon은 같은 선체 실루엣을 그대로 재사용(새 그림 없이도 분기가
+    // 성립하도록 수치/이름으로만 차별화).
+    { id: "caravel_swift", name: "\uCF8C\uC18D \uBC94\uC120", icon: "\u26F5", svgIcon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L12 15" /><path d="M12 3 L18 11 L12 11 Z" stroke-linejoin="round"/><path d="M12 5 L7 12 L12 12 Z" stroke-linejoin="round"/><path d="M4 15 L20 15 L17 20 L7 20 Z" stroke-linejoin="round"/></svg>', price: 500, durability: 100, cargo: 40, combat: 12, speed: 1.75, branch: "speed", branchGroup: "caravel", desc: "\uD654\uBB3C\uCE78\uACFC \uBC29\uC5B4\uB825\uC744 \uC904\uC774\uACE0 \uC18D\uB3C4\uB9CC \uADF9\uB2E8\uC801\uC73C\uB85C \uCD94\uAD6C\uD55C \uBC94\uC120. \uB3C4\uC8FC\uC640 \uCD94\uACA9\uC5D0 \uC720\uB9AC\uD558\uB2E4." },
+    { id: "caravel_warship", name: "\uBB34\uC7A5 \uBC94\uC120", icon: "\u26F5", svgIcon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L12 15" /><path d="M12 3 L18 11 L12 11 Z" stroke-linejoin="round"/><path d="M12 5 L7 12 L12 12 Z" stroke-linejoin="round"/><path d="M4 15 L20 15 L17 20 L7 20 Z" stroke-linejoin="round"/></svg>', price: 500, durability: 140, cargo: 40, combat: 26, speed: 1.15, branch: "combat", branchGroup: "caravel", desc: "\uD3EC\uB300\uB97C \uB298\uB9AC\uACE0 \uD654\uBB3C\uCE78\uC744 \uC904\uC778 \uC804\uD22C\uD615 \uBC94\uC120. \uD574\uC801 \uC0AC\uB0E5\uC774\uB098 \uD638\uC704 \uC784\uBB34\uC5D0 \uC801\uD569\uD558\uB2E4." },
+    { id: "galleon", name: "\uAC24\uB9AC\uC628", icon: "\u{1F6A2}", svgIcon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12 L19 12 L19 17 L5 17 Z" stroke-linejoin="round"/><path d="M8 12 L8 5 L14 5 L14 12" stroke-linejoin="round"/><path d="M3 17 L21 17 L18 21 L6 21 Z" stroke-linejoin="round"/></svg>', price: 1500, durability: 250, cargo: 150, combat: 40, speed: 1.2, branch: "balanced", branchGroup: "galleon", desc: "\uB300\uD615 \uD654\uBB3C\uCE78\uACFC \uD3EC\uB300\uB97C \uAC16\uCD98 \uADE0\uD615\uD615 \uC6D0\uC591 \uC120\uBC15. \uD574\uC801\uB4E4\uC774 \uAC00\uC7A5 \uD0D0\uB0B8\uB2E4." },
+    { id: "galleon_privateer", name: "\uC0AC\uB7B5 \uAC24\uB9AC\uC628", icon: "\u{1F6A2}", svgIcon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12 L19 12 L19 17 L5 17 Z" stroke-linejoin="round"/><path d="M8 12 L8 5 L14 5 L14 12" stroke-linejoin="round"/><path d="M3 17 L21 17 L18 21 L6 21 Z" stroke-linejoin="round"/></svg>', price: 1500, durability: 220, cargo: 100, combat: 62, speed: 1.35, branch: "combat", branchGroup: "galleon", desc: "\uAD6D\uAC00\uC758 \uC0AC\uB7B5 \uD5C8\uAC00\uB97C \uBC1B\uC740 \uC804\uD22C\uD615 \uAC24\uB9AC\uC628. \uD654\uBB3C\uCE78\uC744 \uC904\uC774\uACE0 \uD3EC\uACA9\uB825\uACFC \uC18D\uB3C4\uB97C \uB04C\uC5B4\uC62C\uB838\uB2E4." },
+    { id: "galleon_trader", name: "\uB300\uD615 \uC0C1\uC120", icon: "\u{1F6A2}", svgIcon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12 L19 12 L19 17 L5 17 Z" stroke-linejoin="round"/><path d="M8 12 L8 5 L14 5 L14 12" stroke-linejoin="round"/><path d="M3 17 L21 17 L18 21 L6 21 Z" stroke-linejoin="round"/></svg>', price: 1500, durability: 260, cargo: 220, combat: 24, speed: 1.05, branch: "cargo", branchGroup: "galleon", desc: "\uD654\uBB3C\uCE78\uC744 \uADF9\uD55C\uAE4C\uC9C0 \uB298\uB9B0 \uAD50\uC5ED \uC804\uC6A9 \uAC24\uB9AC\uC628. \uB290\uB9AC\uACE0 \uC57D\uD558\uC9C0\uB9CC \uD55C \uBC88\uC5D0 \uB098\uB974\uB294 \uC591\uC774 \uC555\uB3C4\uC801\uC774\uB2E4." },
+    { id: "magic_ship", name: "\uB9C8\uBC95 \uBC94\uC120", icon: "\u{1F6E5}\uFE0F", svgIcon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L12 14" /><path d="M12 3 L17 10 L12 10 Z" stroke-linejoin="round"/><path d="M4 14 L20 14 L17 19 L7 19 Z" stroke-linejoin="round"/><circle cx="12" cy="16" r="1.3" fill="currentColor" stroke="none"/></svg>', price: 4e3, durability: 300, cargo: 100, combat: 60, speed: 2.2, branch: "balanced", desc: "\uBC14\uB78C \uC815\uB839\uC774 \uAE43\uB4E0 \uC804\uC124\uC801\uC778 \uC120\uBC15. \uD56D\uD574 \uC18D\uB3C4\uC640 \uC0DD\uC874\uB825\uC774 \uC555\uB3C4\uC801\uC774\uB2E4." }
   ];
+  var SHIP_BRANCH_LABELS = { balanced: "\uADE0\uD615\uD615", speed: "\uC18D\uB3C4\uD615", combat: "\uC804\uD22C\uD615", cargo: "\uD654\uBB3C\uD615" };
   var WORLD_MAP_ZONES = {
     central: { cx: 3991.6, cy: 4013.6, rx: 1050, ry: 862 },
     north: { cx: 3991.6, cy: 2100, rx: 1800, ry: 712 },
@@ -15133,7 +15143,54 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
     hold: { name: "\uD654\uBB3C\uCE78 \uD655\uC7A5", icon: "\u{1F4E6}", stat: "cargo", perLevel: [0, 0.25, 0.5, 0.9], desc: "\uC801\uC7AC\uB7C9\uC774 \uB298\uC5B4\uB098 \uB354 \uB9CE\uC740 \uD654\uBB3C\uC744 \uC2E4\uC744 \uC218 \uC788\uB2E4." }
   };
   var SHIP_UPGRADE_BASE_COST = { hull: 120, sail: 150, cannon: 200, hold: 130 };
-  var CREW_NAMES = ["\uD574\uBA3C\uB4DC", "\uCF54\uB974\uC0AC", "\uBE48\uC13C\uD2B8", "\uB9C8\uB97C\uB9B0", "\uB450\uAC78", "\uC140\uB77C", "\uC624\uC2A4\uCE74", "\uB9AC\uBE0C\uCE74"];
+  var SHIP_UPGRADE_SYNERGIES = [
+    { id: "ironclad", parts: ["hull", "cannon"], minLevel: 2, icon: "\u{1F6E1}\uFE0F\u{1F4A3}", name: "\uCCA0\uAC11 \uD3EC\uB300", desc: "\uC120\uCCB4\uC640 \uD3EC\uB300\uB97C \uD568\uAED8 2\uB2E8\uACC4 \uC774\uC0C1 \uBCF4\uAC15\uD558\uBA74 \uC804\uD22C\uB825\uC774 \uCD94\uAC00\uB85C \uC624\uB978\uB2E4.", effect: { stat: "combat", bonus: 0.15 } },
+    { id: "swift_trader", parts: ["sail", "hold"], minLevel: 2, icon: "\u26F5\u{1F4E6}", name: "\uCF8C\uC18D \uC0C1\uC120", desc: "\uB3DB\uACFC \uD654\uBB3C\uCE78\uC744 \uD568\uAED8 2\uB2E8\uACC4 \uC774\uC0C1 \uAC1C\uB7C9\uD558\uBA74 \uC801\uC7AC\uD55C \uCC44\uB85C\uB3C4 \uC18D\uB3C4\uAC00 \uCD94\uAC00\uB85C \uC624\uB978\uB2E4.", effect: { stat: "speed", bonus: 0.12 } },
+    { id: "privateer_rig", parts: ["sail", "cannon"], minLevel: 2, icon: "\u26F5\u{1F4A3}", name: "\uC0AC\uB7B5\uC120 \uC804\uC7A5", desc: "\uB3DB\uACFC \uD3EC\uB300\uB97C \uD568\uAED8 2\uB2E8\uACC4 \uC774\uC0C1 \uB04C\uC5B4\uC62C\uB9AC\uBA74 \uC804\uD22C\uB825\uC774 \uCD94\uAC00\uB85C \uC624\uB978\uB2E4.", effect: { stat: "combat", bonus: 0.12 } },
+    { id: "expedition_hull", parts: ["hull", "hold"], minLevel: 2, icon: "\u{1F6E1}\uFE0F\u{1F4E6}", name: "\uC6D0\uC815\uC120 \uC120\uCCB4", desc: "\uC120\uCCB4\uC640 \uD654\uBB3C\uCE78\uC744 \uD568\uAED8 2\uB2E8\uACC4 \uC774\uC0C1 \uBCF4\uAC15\uD558\uBA74 \uD654\uBB3C\uCE78\uC774 \uCD94\uAC00\uB85C \uB298\uC5B4\uB09C\uB2E4.", effect: { stat: "cargo", bonus: 0.15 } }
+  ];
+  var CREW_NAMES = [
+    "\uD574\uBA3C\uB4DC",
+    "\uCF54\uB974\uC0AC",
+    "\uBE48\uC13C\uD2B8",
+    "\uB9C8\uB97C\uB9B0",
+    "\uB450\uAC78",
+    "\uC140\uB77C",
+    "\uC624\uC2A4\uCE74",
+    "\uB9AC\uBE0C\uCE74",
+    "\uAC00\uC2A4\uD1B5",
+    "\uB85C\uB80C\uC870",
+    "\uBBF8\uCE74\uC5D8\uB77C",
+    "\uBE0C\uB860\uC6EC",
+    "\uCE7C\uB9AD\uC2A4",
+    "\uD0C0\uB370\uC6B0\uC2A4",
+    "\uC774\uC878\uB370",
+    "\uAD70\uB098\uB974",
+    "\uD398\uB974\uB09C\uB3C4",
+    "\uC544\uC2A4\uD2B8\uB9AC\uB4DC",
+    "\uBC1C\uB370\uB9C8\uB974",
+    "\uD074\uB85C\uD2F8\uB4DC",
+    "\uC9C0\uC624\uBC14\uB2C8",
+    "\uB808\uC624\uD3F4\uB4DC",
+    "\uC544\uBA5C\uB9AC\uC544",
+    "\uCF54\uB108",
+    "\uC0AC\uBE44\uB098",
+    "\uB358\uCE78",
+    "\uB85C\uC0B4\uB9B0\uB4DC",
+    "\uC5D0\uB4DC\uBB38\uB4DC",
+    "\uD504\uB808\uC57C",
+    "\uBC14\uB974\uD1A8\uB85C\uBBA4",
+    "\uB9D0\uCF64",
+    "\uC624\uB4DC\uB9AC"
+  ];
+  var CREW_PERSONALITIES = [
+    { id: "diligent", name: "\uC131\uC2E4\uD55C", icon: "\u{1F4CB}", desc: "\uBB35\uBB35\uD788 \uC81C \uBAAB\uC744 \uD558\uB294 \uC131\uC2E4\uD55C \uC131\uACA9. \uC784\uAE08\uC774 \uBC00\uB824\uB3C4 \uC27D\uAC8C \uD754\uB4E4\uB9AC\uC9C0 \uC54A\uB294\uB2E4.", loyaltyBonus: 10 },
+    { id: "reckless", name: "\uAC70\uCE5C", icon: "\u{1F525}", desc: "\uC2F8\uC6C0\uC744 \uB450\uB824\uC6CC\uD558\uC9C0 \uC54A\uB294 \uAC70\uCE5C \uC131\uACA9. \uC804\uD22C\uC5D4 \uC758\uC9C0\uAC00 \uB418\uC9C0\uB9CC \uC0AC\uC18C\uD55C \uC77C\uB85C\uB3C4 \uAE08\uBC29 \uD2C0\uC5B4\uC9C4\uB2E4.", loyaltyBonus: -8 },
+    { id: "sociable", name: "\uC0AC\uAD50\uC801\uC778", icon: "\u{1F604}", desc: "\uC120\uC0C1\uC758 \uBD84\uC704\uAE30\uB97C \uBC1D\uAC8C \uB9CC\uB4DC\uB294 \uC0AC\uAD50\uC801\uC778 \uC131\uACA9.", loyaltyBonus: 3 },
+    { id: "superstitious", name: "\uBBF8\uC2E0\uC744 \uBBFF\uB294", icon: "\u{1F52E}", desc: "\uBC14\uB2E4\uC758 \uC9D5\uC870\uB97C \uBBFF\uB294 \uBBF8\uC2E0\uC801\uC778 \uC131\uACA9. \uD3ED\uD48D\uC774\uB098 \uAD34\uBB3C\uC744 \uACAA\uC744 \uB54C\uB9C8\uB2E4 \uBD88\uC548\uD574\uD55C\uB2E4.", loyaltyBonus: -3 },
+    { id: "greedy", name: "\uC695\uC2EC \uB9CE\uC740", icon: "\u{1F4B0}", desc: "\uD55C\uBAAB \uC7A1\uB294 \uB370 \uAD00\uC2EC\uC774 \uB9CE\uC740 \uC131\uACA9. \uBC8C\uC774\uAC00 \uC88B\uC744 \uB550 \uB354\uC5C6\uC774 \uCDA9\uC131\uC2A4\uB7FD\uB2E4.", loyaltyBonus: 0 },
+    { id: "stoic", name: "\uBB34\uB69D\uB69D\uD55C", icon: "\u{1F5FF}", desc: "\uC880\uCC98\uB7FC \uC18D\uB0B4\uB97C \uB4DC\uB7EC\uB0B4\uC9C0 \uC54A\uB294 \uACFC\uBB35\uD55C \uC131\uACA9. \uC88B\uC744 \uB54C\uB098 \uB098\uC060 \uB54C\uB098 \uD55C\uACB0\uAC19\uB2E4.", loyaltyBonus: 5 }
+  ];
   var CREW_ROLES = {
     sailor: { name: "\uC77C\uBC18 \uC120\uC6D0", icon: "\u{1F9D1}\u200D\u2708\uFE0F", desc: "\uAE30\uBCF8 \uC120\uC6D0. \uD2B9\uBCC4\uD55C \uBCF4\uB108\uC2A4\uB294 \uC5C6\uC9C0\uB9CC \uC720\uC9C0\uBE44\uAC00 \uC2F8\uB2E4.", upkeepMod: 1 },
     gunner: { name: "\uD3EC\uC218", icon: "\u{1F4A5}", desc: "\uC804\uD22C\uB825 +4 (\uD3EC\uB300 \uC6B4\uC6A9 \uC219\uB828).", upkeepMod: 1.3 },
@@ -15181,7 +15238,8 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
     { id: "smuggler", name: "\uBC00\uC218\uC120", icon: "\u{1F6A4}", tierLike: "skiff", hpMult: 0.7, combatMult: 0.7, lootGold: [40, 90], desc: "\uBB34\uC7A5\uC774 \uBE48\uC57D\uD55C \uBC00\uC218\uC120. \uC190\uC26C\uC6B4 \uC0C1\uB300\uB2E4." },
     { id: "corsair", name: "\uCF54\uB974\uC138\uC5B4", icon: "\u{1F3F4}\u200D\u2620\uFE0F", tierLike: "caravel", hpMult: 1, combatMult: 1, lootGold: [80, 160], desc: "\uD45C\uC900\uC801\uC778 \uD574\uC801\uC120. \uB9CC\uB9CC\uCE58 \uC54A\uC740 \uC0C1\uB300\uB2E4." },
     { id: "warship", name: "\uD574\uC801 \uC804\uD568", icon: "\u{1F6A2}", tierLike: "galleon", hpMult: 1.6, combatMult: 1.5, lootGold: [150, 300], desc: "\uC911\uBB34\uC7A5\uD55C \uD574\uC801 \uC804\uD568. \uD070 \uC704\uD5D8\uC744 \uAC10\uC218\uD574\uC57C \uD55C\uB2E4." },
-    { id: "navy_frigate", name: "\uD574\uAD70 \uD638\uC704\uD568", icon: "\u2693", tierLike: "galleon", hpMult: 1.4, combatMult: 1.6, lootGold: [0, 0], isNavy: true, desc: "\uD574\uC0C1 \uC545\uBA85\uC744 \uCAD3\uC544\uC628 \uC655\uAD6D \uD574\uAD70. \uACA9\uD1F4 \uB610\uB294 \uB098\uD3EC\uD574\uB3C4 \uD604\uC0C1\uAE08\uC740 \uC5C6\uC9C0\uB9CC \uC545\uBA85\uC774 \uC904\uC5B4\uB4E0\uB2E4." }
+    { id: "navy_frigate", name: "\uD574\uAD70 \uD638\uC704\uD568", icon: "\u2693", tierLike: "galleon", hpMult: 1.4, combatMult: 1.6, lootGold: [0, 0], isNavy: true, desc: "\uD574\uC0C1 \uC545\uBA85\uC744 \uCAD3\uC544\uC628 \uC655\uAD6D \uD574\uAD70. \uACA9\uD1F4 \uB610\uB294 \uB098\uD3EC\uD574\uB3C4 \uD604\uC0C1\uAE08\uC740 \uC5C6\uC9C0\uB9CC \uC545\uBA85\uC774 \uC904\uC5B4\uB4E0\uB2E4." },
+    { id: "ghost_ship", name: "\uC720\uB839\uC120", icon: "\u{1F47B}", tierLike: "galleon", hpMult: 1.3, combatMult: 1.3, lootGold: [100, 250], desc: "\uC800\uC8FC\uBC1B\uC740 \uC720\uB839\uC120. \uACA9\uD30C\uD558\uBA74 \uC624\uC2F9\uD558\uC9C0\uB9CC \uC804\uB9AC\uD488\uC740 \uD655\uC2E4\uD558\uB2E4." }
   ];
   var NPC_SHIP_KINDS = [
     { kind: "merchant", icon: "\u26F4\uFE0F", name: "\uC0C1\uC120", weight: 5, cargoValue: [40, 120], combat: [10, 20] },
@@ -15189,6 +15247,12 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
     { kind: "fisher", icon: "\u{1F6A4}", name: "\uC5B4\uC120", weight: 3, cargoValue: [10, 30], combat: [3, 8] },
     { kind: "navy", icon: "\u2693", name: "\uC21C\uCC30\uD568", weight: 2, cargoValue: [0, 0], combat: [35, 60] }
   ];
+  var NAMED_NPC_SHIPS = [
+    { id: "flying_dutchman", kind: "ghost", name: "\uBC29\uB791\uD558\uB294 \uC720\uB839\uC120", icon: "\u{1F47B}", combat: [70, 90], cargoValue: [150, 300], hp: [90, 120], desc: "\uC800\uC8FC\uC5D0 \uAC78\uB824 \uC601\uC6D0\uD788 \uBC14\uB2E4\uB97C \uB5A0\uB3C8\uB2E4\uB294 \uC720\uB839\uC120. \uB9C8\uC8FC\uCE5C \uC790\uB294 \uC880\uCC98\uB7FC \uC0B4\uC544 \uB3CC\uC544\uC624\uC9C0 \uBABB\uD55C\uB2E4\uACE0 \uD55C\uB2E4." },
+    { id: "balthazar_flagship", kind: "pirate", name: "\uD54F\uBE5B \uBC1C\uD0C0\uC790\uB974\uD638", icon: "\u{1F3F4}\u200D\u2620\uFE0F", combat: [55, 75], cargoValue: [200, 400], hp: [100, 140], desc: "\uD574\uC801\uC655 \uBC1C\uD0C0\uC790\uB974\uAC00 \uC9C1\uC811 \uD0C0\uACE0 \uB2E4\uB2CC\uB2E4\uB294 \uC804\uC124\uC758 \uAE30\uD568. \uACA9\uD30C\uD558\uBA74 \uD574\uC801 \uC5F0\uD569 \uC804\uC5ED\uC5D0 \uC774\uB984\uC774 \uD37C\uC9C8 \uAC83\uC774\uB2E4." },
+    { id: "golden_lion", kind: "navy", name: "\uD669\uAE08 \uC0AC\uC790\uD638", icon: "\u2693", combat: [45, 60], cargoValue: [300, 500], hp: [80, 100], desc: "\uC655\uC2E4 \uBCF4\uBB3C\uC744 \uC6B4\uBC18\uD558\uB294 \uD638\uC704 \uC120\uB2E8\uC758 \uAE30\uD568. \uD638\uC704\uAC00 \uB450\uD141\uC9C0\uB9CC \uADF8\uB9CC\uD07C \uC804\uB9AC\uD488\uB3C4 \uB9C9\uB300\uD558\uB2E4." }
+  ];
+  var NAMED_NPC_SHIP_CHANCE = 0.08;
 
   // src/job/029-숨겨진-직업-시스템.js
   var HIDDEN_JOB_KEY = "taleforge-hidden-jobs";
@@ -48840,6 +48904,15 @@ ${lines.join("\n")}
       if (def.stat === "combat") combat = Math.round(tier.combat * mult);
       if (def.stat === "cargo") cargo = Math.round(tier.cargo * mult);
     });
+    (SHIP_UPGRADE_SYNERGIES || []).forEach((syn) => {
+      const active = syn.parts.every((p) => (upg[p] || 0) >= syn.minLevel);
+      if (!active) return;
+      const mult = 1 + syn.effect.bonus;
+      if (syn.effect.stat === "durability") durability = Math.round(durability * mult);
+      if (syn.effect.stat === "speed") speed = +(speed * mult).toFixed(2);
+      if (syn.effect.stat === "combat") combat = Math.round(combat * mult);
+      if (syn.effect.stat === "cargo") cargo = Math.round(cargo * mult);
+    });
     const gunners = (ship.crew || []).filter((c) => c.role === "gunner").length;
     const navigators = (ship.crew || []).filter((c) => c.role === "navigator").length;
     combat += gunners * 4;
@@ -48912,9 +48985,11 @@ ${lines.join("\n")}
     S.gold -= cost;
     if (typeof saveGold === "function") saveGold(S.gold);
     window.updateHeader && window.updateHeader();
-    ship.crew.push({ id: "crew_" + Date.now(), name: CREW_NAMES[Math.floor(Math.random() * CREW_NAMES.length)] + " " + roleDef.name, icon: roleDef.icon, role: role || "sailor", loyalty: 65, upkeep: Math.round((5 + Math.floor(Math.random() * 4)) * roleDef.upkeepMod), joinedAt: S.msgCount || 0 });
+    const personality = CREW_PERSONALITIES[Math.floor(Math.random() * CREW_PERSONALITIES.length)];
+    const loyalty = Math.max(10, Math.min(100, 65 + personality.loyaltyBonus));
+    ship.crew.push({ id: "crew_" + Date.now(), name: CREW_NAMES[Math.floor(Math.random() * CREW_NAMES.length)] + " " + roleDef.name, icon: roleDef.icon, role: role || "sailor", personality: personality.id, loyalty, upkeep: Math.round((5 + Math.floor(Math.random() * 4)) * roleDef.upkeepMod), joinedAt: S.msgCount || 0 });
     saveShip(ship);
-    toastHTML(`\u{1F91D} ${typeof getEntityIconHTML === "function" ? getEntityIconHTML(roleDef, { size: 14 }) : roleDef.icon} ${esc2(roleDef.name)}\uC774(\uAC00) \uD569\uB958\uD588\uC2B5\uB2C8\uB2E4! (\uD604\uC7AC ${esc2(ship.crew.length)}\uBA85)`, 3e3);
+    toastHTML(`\u{1F91D} ${typeof getEntityIconHTML === "function" ? getEntityIconHTML(roleDef, { size: 14 }) : roleDef.icon} ${esc2(roleDef.name)}\uC774(\uAC00) \uD569\uB958\uD588\uC2B5\uB2C8\uB2E4! (${esc2(personality.name)} \uC131\uACA9, \uD604\uC7AC ${esc2(ship.crew.length)}\uBA85)`, 3e3);
     renderVoyagePanel();
   }
   window.hireCrew = hireCrew;
@@ -49290,12 +49365,51 @@ ${lines.join("\n")}
         toast(`\u{1F4B0} \uD1B5\uD589\uC138 ${tribute}G\uB97C \uC9C0\uBD88\uD558\uACE0 \uBB34\uC0AC\uD788 \uC9C0\uB098\uAC14\uC2B5\uB2C8\uB2E4.`, 3e3);
       }
     } else if (ev.id === "sea_storm") {
-      const dmg = 10 + Math.floor(Math.random() * 25);
-      ship.durability = Math.max(0, ship.durability - dmg);
-      toast(`\u26C8\uFE0F \uD3ED\uD48D\uC744 \uB6AB\uACE0 \uB098\uC544\uAC14\uC2B5\uB2C8\uB2E4. \uC120\uCCB4 \uC190\uC0C1 -${dmg}`, 3500);
-      S._pendingVoyageHint = "\uAC70\uC13C \uD3ED\uD48D \uC18D\uC5D0\uC11C \uC120\uC6D0\uB4E4\uACFC \uD568\uAED8 \uC0AC\uD22C\uB97C \uBC8C\uC774\uBA70 \uD56D\uD574\uB97C \uC774\uC5B4\uAC14\uB2E4.";
+      if (choice === "push") {
+        const navigators = (ship.crew || []).filter((c) => c.role === "navigator").length;
+        const dmg = Math.max(0, 15 + Math.floor(Math.random() * 30) - navigators * 6);
+        ship.durability = Math.max(0, ship.durability - dmg);
+        toast(`\u26C8\uFE0F \uC804\uC18D \uD56D\uC9C4\uC73C\uB85C \uD3ED\uD48D\uC744 \uC815\uBA74\uC73C\uB85C \uB6AB\uC5C8\uC2B5\uB2C8\uB2E4! \uC120\uCCB4 \uC190\uC0C1 -${dmg}`, 3500);
+        S._pendingVoyageHint = "\uAC70\uC13C \uD3ED\uD48D \uC18D\uC5D0\uC11C\uB3C4 \uC18D\uB3C4\uB97C \uC904\uC774\uC9C0 \uC54A\uACE0 \uC815\uBA74\uC73C\uB85C \uB6AB\uACE0 \uB098\uC544\uAC14\uB2E4.";
+      } else {
+        const dmg = 5 + Math.floor(Math.random() * 10);
+        ship.durability = Math.max(0, ship.durability - dmg);
+        ship.voyageTurnsLeft += 1;
+        toast(`\u26C8\uFE0F \uB3DB\uC744 \uB0B4\uB9AC\uACE0 \uD3ED\uD48D\uC774 \uC9C0\uB098\uAC00\uAE38 \uAE30\uB2E4\uB838\uC2B5\uB2C8\uB2E4. \uC120\uCCB4 \uC190\uC0C1 -${dmg} (\uD56D\uD574 1\uD134 \uC9C0\uC5F0)`, 3500);
+        S._pendingVoyageHint = "\uB3DB\uC744 \uB0B4\uB9AC\uACE0 \uC120\uCCB4\uB97C \uBCF4\uC874\uD558\uBA70 \uD3ED\uD48D\uC774 \uC9C0\uB098\uAC00\uAE30\uB97C \uAE30\uB2E4\uB838\uB2E4. \uADF8\uB9CC\uD07C \uC2DC\uAC04\uC774 \uB354 \uAC78\uB838\uB2E4.";
+      }
     } else if (ev.id === "sea_calm") {
-      if (Math.random() < 0.3) {
+      if (choice === "row") {
+        if (ship.crew.length === 0) {
+          toast("\u{1F30A} \uC120\uC6D0\uC774 \uC5C6\uC5B4 \uB178\uB97C \uC800\uC744 \uC218 \uC5C6\uC2B5\uB2C8\uB2E4. \uAC00\uB9CC\uD788 \uAE30\uB2E4\uB9BD\uB2C8\uB2E4.", 2500);
+          if (Math.random() < 0.3) {
+            const found = 20 + Math.floor(Math.random() * 40);
+            if (typeof addGoldWithExchange === "function") addGoldWithExchange(found, "\uD45C\uB958\uBB3C \uC2B5\uB4DD");
+            else {
+              S.gold += found;
+              if (typeof saveGold === "function") saveGold(S.gold);
+            }
+            window.updateHeader && window.updateHeader();
+          } else {
+            ship.voyageTurnsLeft += 1;
+          }
+        } else if (Math.random() < 0.55) {
+          const found = 40 + Math.floor(Math.random() * 30);
+          if (typeof addGoldWithExchange === "function") addGoldWithExchange(found, "\uD45C\uB958\uBB3C \uC2B5\uB4DD");
+          else {
+            S.gold += found;
+            if (typeof saveGold === "function") saveGold(S.gold);
+          }
+          window.updateHeader && window.updateHeader();
+          const strain = 3 + Math.floor(Math.random() * 5);
+          ship.durability = Math.max(0, ship.durability - strain);
+          toast(`\u{1F30A} \uC120\uC6D0\uB4E4\uC774 \uD798\uAECF \uB178\uB97C \uC800\uC5B4 \uD45C\uB958\uBB3C\uC744 \uAC74\uC838\uC62C\uB838\uC2B5\uB2C8\uB2E4! +${found}G (\uBB34\uB9AC\uD55C \uD0D3\uC5D0 \uC120\uCCB4 -${strain})`, 3500);
+        } else {
+          const strain = 3 + Math.floor(Math.random() * 5);
+          ship.durability = Math.max(0, ship.durability - strain);
+          toast(`\u{1F30A} \uD798\uAECF \uB178\uB97C \uC800\uC5C8\uC9C0\uB9CC \uBCC4\uB2E4\uB978 \uC18C\uB4DD\uC774 \uC5C6\uC5C8\uC2B5\uB2C8\uB2E4. (\uBB34\uB9AC\uD55C \uD0D3\uC5D0 \uC120\uCCB4 -${strain})`, 3e3);
+        }
+      } else if (Math.random() < 0.3) {
         const found = 20 + Math.floor(Math.random() * 40);
         if (typeof addGoldWithExchange === "function") addGoldWithExchange(found, "\uD45C\uB958\uBB3C \uC2B5\uB4DD");
         else {
@@ -49303,7 +49417,7 @@ ${lines.join("\n")}
           if (typeof saveGold === "function") saveGold(S.gold);
         }
         window.updateHeader && window.updateHeader();
-        toast(`\u{1F30A} \uD45C\uB958 \uC911 \uBC14\uB2E4\uC5D0\uC11C \uBB34\uC5B8\uAC00\uB97C \uAC74\uC838\uC62C\uB838\uC2B5\uB2C8\uB2E4! +${found}G`, 3e3);
+        toast(`\u{1F30A} \uAC00\uB9CC\uD788 \uAE30\uB2E4\uB9AC\uBA70 \uD45C\uB958 \uC911 \uBC14\uB2E4\uC5D0\uC11C \uBB34\uC5B8\uAC00\uB97C \uAC74\uC838\uC62C\uB838\uC2B5\uB2C8\uB2E4! +${found}G`, 3e3);
       } else {
         toast("\u{1F30A} \uD45C\uB958\uB85C \uD56D\uD574\uAC00 \uD558\uB8E8 \uB354 \uC9C0\uC5F0\uB429\uB2C8\uB2E4.", 2500);
         ship.voyageTurnsLeft += 1;
@@ -49324,16 +49438,32 @@ ${lines.join("\n")}
         toast("\u26F4\uFE0F \uC6B0\uD638\uC801\uC73C\uB85C \uC778\uC0AC\uB97C \uB098\uB204\uACE0 \uAC01\uC790\uC758 \uAE38\uC744 \uAC14\uC2B5\uB2C8\uB2E4.", 2500);
       }
     } else if (ev.id === "sea_monster") {
-      const win = Math.random() < Math.min(0.7, 0.25 + combatStat / 120);
-      if (win) {
-        toast("\u{1F419} \uD574\uC591 \uAD34\uBB3C\uC744 \uBB3C\uB9AC\uCCE4\uC2B5\uB2C8\uB2E4! \uC804\uC124\uB85C \uB0A8\uC744 \uBB34\uC6A9\uB2F4\uC785\uB2C8\uB2E4.", 4e3);
-        if (typeof updateReputation === "function") updateReputation(15);
-        S._pendingVoyageHint = "\uC2EC\uD574\uC5D0\uC11C \uC19F\uC544\uC624\uB978 \uAC70\uB300\uD55C \uAD34\uBB3C\uACFC\uC758 \uC0AC\uD22C \uB05D\uC5D0 \uC2B9\uB9AC\uD588\uB2E4. \uC774 \uC774\uC57C\uAE30\uB294 \uD56D\uAD6C\uB9C8\uB2E4 \uD37C\uC9C8 \uAC83\uC774\uB2E4.";
+      if (choice === "flee") {
+        const success = Math.random() < Math.min(0.75, 0.3 + (stats.speed - 1) * 0.3);
+        if (success) {
+          toast("\u{1F4A8} \uAC70\uB300\uD55C \uAD34\uBB3C\uB85C\uBD80\uD130 \uAC70\uB9AC\uB97C \uBC8C\uB824 \uB2EC\uC544\uB0AC\uC2B5\uB2C8\uB2E4.", 3500);
+          S._pendingVoyageHint = "\uC2EC\uD574\uC5D0\uC11C \uC19F\uC544\uC624\uB978 \uAD34\uBB3C\uC758 \uADF8\uB9BC\uC790\uB97C \uD53C\uD574 \uC804\uC18D\uB825\uC73C\uB85C \uB2EC\uC544\uB0AC\uB2E4.";
+        } else {
+          const dmg = 20 + Math.floor(Math.random() * 20);
+          ship.durability = Math.max(0, ship.durability - dmg);
+          toast(`\u{1F4A5} \uB3C4\uC8FC \uC2E4\uD328! \uAD34\uBB3C\uC758 \uACF5\uACA9\uC5D0 \uC120\uCCB4 \uC190\uC0C1 -${dmg}`, 3500);
+        }
+      } else if (choice === "sacrifice" && ship.cargo.length > 0) {
+        const dumped = ship.cargo.splice(0, Math.min(2, ship.cargo.length));
+        toastHTML(`\u{1F30A} \uD654\uBB3C ${dumped.map((c) => CROP_DEFS[c.cropId]?.name || c.cropId).join(", ")}\uC744(\uB97C) \uBC14\uB2E4\uC5D0 \uB358\uC838 \uAD34\uBB3C\uC758 \uC2DC\uC120\uC744 \uB3CC\uB838\uC2B5\uB2C8\uB2E4. \uBB34\uC0AC\uD788 \uC9C0\uB098\uCCE4\uC2B5\uB2C8\uB2E4.`, 4e3);
+        S._pendingVoyageHint = "\uAD34\uBB3C \uC55E\uC5D0 \uD654\uBB3C\uC744 \uB358\uC838 \uACF5\uBB3C\uB85C \uBC14\uCE58\uACE0 \uBB34\uC0AC\uD788 \uBC14\uB2E4\uB97C \uBE60\uC838\uB098\uAC14\uB2E4.";
       } else {
-        const dmg = 30 + Math.floor(Math.random() * 30);
-        ship.durability = Math.max(0, ship.durability - dmg);
-        toast(`\u{1F419} \uD574\uC591 \uAD34\uBB3C\uC758 \uACF5\uACA9\uC73C\uB85C \uC120\uCCB4\uAC00 \uD06C\uAC8C \uD30C\uC190\uB418\uC5C8\uC2B5\uB2C8\uB2E4! -${dmg}`, 4e3);
-        S._pendingVoyageHint = "\uAC70\uB300\uD55C \uD574\uC591 \uAD34\uBB3C\uC5D0\uAC8C \uC77C\uBC29\uC801\uC73C\uB85C \uB2F9\uD558\uBA70 \uAC04\uC2E0\uD788 \uB3C4\uC8FC\uD588\uB2E4.";
+        const win = Math.random() < Math.min(0.7, 0.25 + combatStat / 120);
+        if (win) {
+          toast("\u{1F419} \uD574\uC591 \uAD34\uBB3C\uC744 \uBB3C\uB9AC\uCCE4\uC2B5\uB2C8\uB2E4! \uC804\uC124\uB85C \uB0A8\uC744 \uBB34\uC6A9\uB2F4\uC785\uB2C8\uB2E4.", 4e3);
+          if (typeof updateReputation === "function") updateReputation(15);
+          S._pendingVoyageHint = "\uC2EC\uD574\uC5D0\uC11C \uC19F\uC544\uC624\uB978 \uAC70\uB300\uD55C \uAD34\uBB3C\uACFC\uC758 \uC0AC\uD22C \uB05D\uC5D0 \uC2B9\uB9AC\uD588\uB2E4. \uC774 \uC774\uC57C\uAE30\uB294 \uD56D\uAD6C\uB9C8\uB2E4 \uD37C\uC9C8 \uAC83\uC774\uB2E4.";
+        } else {
+          const dmg = 30 + Math.floor(Math.random() * 30);
+          ship.durability = Math.max(0, ship.durability - dmg);
+          toast(`\u{1F419} \uD574\uC591 \uAD34\uBB3C\uC758 \uACF5\uACA9\uC73C\uB85C \uC120\uCCB4\uAC00 \uD06C\uAC8C \uD30C\uC190\uB418\uC5C8\uC2B5\uB2C8\uB2E4! -${dmg}`, 4e3);
+          S._pendingVoyageHint = "\uAC70\uB300\uD55C \uD574\uC591 \uAD34\uBB3C\uC5D0\uAC8C \uC77C\uBC29\uC801\uC73C\uB85C \uB2F9\uD558\uBA70 \uAC04\uC2E0\uD788 \uB3C4\uC8FC\uD588\uB2E4.";
+        }
       }
     }
     ship.activeSeaEvent = null;
@@ -49477,6 +49607,28 @@ ${lines.join("\n")}
     while (b.name === a.name && guard++ < 10) {
       b = ports[Math.floor(Math.random() * ports.length)];
     }
+    const from = getPortCoord(a), to = getPortCoord(b);
+    if (Math.random() < NAMED_NPC_SHIP_CHANCE) {
+      const named = NAMED_NPC_SHIPS[Math.floor(Math.random() * NAMED_NPC_SHIPS.length)];
+      const hp2 = named.hp[0] + Math.floor(Math.random() * (named.hp[1] - named.hp[0] + 1));
+      return {
+        id: "npc_" + Date.now() + "_" + Math.floor(Math.random() * 1e3),
+        kind: named.kind,
+        icon: named.icon,
+        name: named.name,
+        desc: named.desc,
+        isNamed: true,
+        namedId: named.id,
+        fromCoord: from,
+        toCoord: to,
+        progress: Math.random() * 0.6,
+        speed: 0.04 + Math.random() * 0.03,
+        combat: named.combat[0] + Math.floor(Math.random() * (named.combat[1] - named.combat[0] + 1)),
+        cargoValue: named.cargoValue[0] + Math.floor(Math.random() * (named.cargoValue[1] - named.cargoValue[0] + 1)),
+        hp: hp2,
+        maxHp: hp2
+      };
+    }
     const totalWeight = NPC_SHIP_KINDS.reduce((s, k) => s + k.weight, 0);
     let roll = Math.random() * totalWeight, picked = NPC_SHIP_KINDS[0];
     for (const k of NPC_SHIP_KINDS) {
@@ -49486,7 +49638,6 @@ ${lines.join("\n")}
       }
       roll -= k.weight;
     }
-    const from = getPortCoord(a), to = getPortCoord(b);
     const hp = 30 + Math.floor(Math.random() * 40);
     return {
       id: "npc_" + Date.now() + "_" + Math.floor(Math.random() * 1e3),
@@ -49552,11 +49703,12 @@ ${lines.join("\n")}
       toastHTML(`\u{1F4A8} ${typeof getEntityIconHTML === "function" ? getEntityIconHTML(npc, { size: 14 }) : npc.icon} ${esc2(npc.name)}\uC774(\uAC00) \uB354 \uBE68\uB77C \uB530\uB77C\uC7A1\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4.`, 3500);
       return;
     }
+    const defId = npc.kind === "navy" ? "navy_frigate" : npc.kind === "ghost" ? "ghost_ship" : npc.kind === "pirate" ? "corsair" : "smuggler";
     ship.activeBattle = {
       round: 1,
       phase: "ongoing",
       enemy: {
-        defId: npc.kind === "navy" ? "navy_frigate" : npc.kind === "pirate" ? "corsair" : "smuggler",
+        defId,
         name: npc.name,
         icon: npc.icon,
         isNavy: npc.kind === "navy",
@@ -49569,8 +49721,13 @@ ${lines.join("\n")}
     };
     saveNpcShips(npcs.filter((n) => n.id !== npcId));
     saveShip(ship);
-    toastHTML(`\u2694\uFE0F ${typeof getEntityIconHTML === "function" ? getEntityIconHTML(npc, { size: 14 }) : npc.icon} ${esc2(npc.name)}\uC744(\uB97C) \uB530\uB77C\uC7A1\uC544 \uC804\uD22C\uB97C \uC2DC\uC791\uD569\uB2C8\uB2E4!`, 4e3);
-    S._pendingVoyageHint = `\uBC14\uB2E4 \uC704\uC5D0\uC11C ${npc.name}\uC744(\uB97C) \uBC1C\uACAC\uD558\uACE0 \uC9C1\uC811 \uCD94\uACA9\uD574 \uB530\uB77C\uC7A1\uC558\uB2E4. \uACE7 \uC804\uD22C\uAC00 \uBC8C\uC5B4\uC9C4\uB2E4.`;
+    if (npc.isNamed) {
+      toastHTML(`\u{1F31F} \uB124\uC784\uB4DC \uC870\uC6B0! ${typeof getEntityIconHTML === "function" ? getEntityIconHTML(npc, { size: 14 }) : npc.icon} ${esc2(npc.name)}\uC744(\uB97C) \uB530\uB77C\uC7A1\uC558\uC2B5\uB2C8\uB2E4! ${esc2(npc.desc || "")}`, 5e3);
+      S._pendingVoyageHint = `\uBC14\uB2E4 \uC704\uC5D0\uC11C \uC804\uC124\uB85C \uB5A0\uB3CC\uB358 ${npc.name}\uC744(\uB97C) \uC9C1\uC811 \uBAA9\uACA9\uD558\uACE0 \uCD94\uACA9\uD574 \uB530\uB77C\uC7A1\uC558\uB2E4. ${npc.desc || ""} \uACE7 \uC804\uD22C\uAC00 \uBC8C\uC5B4\uC9C4\uB2E4.`;
+    } else {
+      toastHTML(`\u2694\uFE0F ${typeof getEntityIconHTML === "function" ? getEntityIconHTML(npc, { size: 14 }) : npc.icon} ${esc2(npc.name)}\uC744(\uB97C) \uB530\uB77C\uC7A1\uC544 \uC804\uD22C\uB97C \uC2DC\uC791\uD569\uB2C8\uB2E4!`, 4e3);
+      S._pendingVoyageHint = `\uBC14\uB2E4 \uC704\uC5D0\uC11C ${npc.name}\uC744(\uB97C) \uBC1C\uACAC\uD558\uACE0 \uC9C1\uC811 \uCD94\uACA9\uD574 \uB530\uB77C\uC7A1\uC558\uB2E4. \uACE7 \uC804\uD22C\uAC00 \uBC8C\uC5B4\uC9C4\uB2E4.`;
+    }
     renderVoyagePanel();
   }
   window.pursueNpcShip = pursueNpcShip;
@@ -49641,10 +49798,11 @@ ${lines.join("\n")}
       } else {
         html += `<div style="padding:10px 12px"><div style="font-family:Cinzel,serif;font-size:10px;color:#5a9aba;margin-bottom:8px">\u2693 ${loc.name}\uC5D0\uC11C \uC120\uBC15 \uAD6C\uB9E4</div>`;
         SHIP_TIERS.forEach((t) => {
+          const branchTag = SHIP_BRANCH_LABELS[t.branch] || "";
           html += `<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-top:1px solid #051520">
           <span style="color:#5a9aba;display:inline-flex;flex-shrink:0">${typeof getEntityIconHTML === "function" ? getEntityIconHTML(t, { size: 16 }) : t.svgIcon || t.icon}</span>
-          <div style="flex:1"><div style="font-size:10px;color:var(--text)">${t.name}</div>
-          <div style="font-size:8px;color:var(--dim)">${esc2(t.desc)} \xB7 \uB0B4\uAD6C${t.durability} \uD654\uBB3C${t.cargo} \uC804\uD22C${t.combat}</div></div>
+          <div style="flex:1"><div style="font-size:10px;color:var(--text)">${t.name} ${branchTag ? `<span style="color:#c0a030;font-size:8px">[${branchTag}]</span>` : ""}</div>
+          <div style="font-size:8px;color:var(--dim)">${esc2(t.desc)} \xB7 \uB0B4\uAD6C${t.durability} \uD654\uBB3C${t.cargo} \uC804\uD22C${t.combat} \uC18D\uB3C4${t.speed}</div></div>
           <button onclick="buyShip('${t.id}')" style="padding:4px 10px;background:#020a14;border:1px solid #0a4a6a;color:#5a9aba;font-size:8px;cursor:pointer">${t.price}G</button>
         </div>`;
         });
@@ -49662,7 +49820,7 @@ ${lines.join("\n")}
         <div style="margin-top:6px">
         ${SHIP_TIERS.map((t) => `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-top:1px solid #051520">
           <span style="font-size:14px">${typeof getEntityIconHTML === "function" ? getEntityIconHTML(t, { size: 14 }) : t.icon}</span>
-          <div style="flex:1;font-size:8px;color:var(--text)">${t.name}</div>
+          <div style="flex:1;font-size:8px;color:var(--text)">${t.name} ${SHIP_BRANCH_LABELS[t.branch] ? `<span style="color:#c0a030">[${SHIP_BRANCH_LABELS[t.branch]}]</span>` : ""}</div>
           <button onclick="buyShip('${t.id}')" style="padding:3px 8px;background:#020a14;border:1px solid #0a4a6a;color:#5a9aba;font-size:7px;cursor:pointer">${t.price}G</button>
         </div>`).join("")}
         </div>
@@ -49713,7 +49871,14 @@ ${lines.join("\n")}
           <button onclick="resolveSeaEvent('flee')" style="flex:1;padding:6px;background:#0a1505;border:1px solid #2a6a2a;color:#80e080;font-size:8px;cursor:pointer">\u{1F4A8} \uB3C4\uC8FC</button>
           ${ev.id === "sea_pirate" ? `<button onclick="resolveSeaEvent('pay')" style="flex:1;padding:6px;background:#150f05;border:1px solid #6a5a2a;color:#e0c080;font-size:8px;cursor:pointer">\u{1F4B0} \uD1B5\uD589\uC138</button>` : ""}` : ev.id === "sea_merchant" ? `
           <button onclick="resolveSeaEvent('trade')" style="flex:1;padding:6px;background:#051015;border:1px solid #2a5a6a;color:#80c0e0;font-size:8px;cursor:pointer">\u26F4\uFE0F \uC989\uC11D \uAC70\uB798</button>
-          <button onclick="resolveSeaEvent('ignore')" style="flex:1;padding:6px;background:#0a0a0a;border:1px solid #3a3a3a;color:#888;font-size:8px;cursor:pointer">\uC9C0\uB098\uCE58\uAE30</button>` : `<button onclick="resolveSeaEvent('accept')" style="flex:1;padding:6px;background:#020a14;border:1px solid #0a4a6a;color:#5a9aba;font-size:8px;cursor:pointer">\uACC4\uC18D \uD56D\uD574</button>`}
+          <button onclick="resolveSeaEvent('ignore')" style="flex:1;padding:6px;background:#0a0a0a;border:1px solid #3a3a3a;color:#888;font-size:8px;cursor:pointer">\uC9C0\uB098\uCE58\uAE30</button>` : ev.id === "sea_storm" ? `
+          <button onclick="resolveSeaEvent('push')" style="flex:1;padding:6px;background:#150a05;border:1px solid #6a4a1a;color:#e0a040;font-size:8px;cursor:pointer" title="\uACE0\uC704\uD5D8\xB7\uC9C0\uC5F0 \uC5C6\uC74C">\u26F5 \uC804\uC18D \uD56D\uC9C4</button>
+          <button onclick="resolveSeaEvent('brace')" style="flex:1;padding:6px;background:#020a14;border:1px solid #0a4a6a;color:#5a9aba;font-size:8px;cursor:pointer" title="\uC800\uC704\uD5D8\xB71\uD134 \uC9C0\uC5F0">\u2693 \uB3DB \uB0B4\uB9AC\uACE0 \uBC84\uD2F0\uAE30</button>` : ev.id === "sea_calm" ? `
+          <button onclick="resolveSeaEvent('row')" style="flex:1;padding:6px;background:#150a05;border:1px solid #6a4a1a;color:#e0a040;font-size:8px;cursor:pointer" title="\uC120\uC6D0 \uD544\uC694\xB7\uC120\uCCB4 \uC18C\uBAA8\xB7\uB354 \uD070 \uBCF4\uC0C1">\u{1F6A3} \uB178 \uC800\uC5B4 \uC218\uC0C9</button>
+          <button onclick="resolveSeaEvent('wait')" style="flex:1;padding:6px;background:#020a14;border:1px solid #0a4a6a;color:#5a9aba;font-size:8px;cursor:pointer">\u23F3 \uAC00\uB9CC\uD788 \uAE30\uB2E4\uB9AC\uAE30</button>` : ev.id === "sea_monster" ? `
+          <button onclick="resolveSeaEvent('fight')" style="flex:1;padding:6px;background:#150505;border:1px solid #6a2a2a;color:#e08080;font-size:8px;cursor:pointer">\u2694\uFE0F \uB9DE\uC11C \uC2F8\uC6B0\uAE30</button>
+          <button onclick="resolveSeaEvent('flee')" style="flex:1;padding:6px;background:#0a1505;border:1px solid #2a6a2a;color:#80e080;font-size:8px;cursor:pointer">\u{1F4A8} \uB3C4\uC8FC</button>
+          ${ship.cargo.length > 0 ? `<button onclick="resolveSeaEvent('sacrifice')" style="flex:1;padding:6px;background:#150f05;border:1px solid #6a5a2a;color:#e0c080;font-size:8px;cursor:pointer">\u{1F4E6} \uD654\uBB3C \uACF5\uBB3C\uB85C \uB358\uC9C0\uAE30</button>` : ""}` : `<button onclick="resolveSeaEvent('accept')" style="flex:1;padding:6px;background:#020a14;border:1px solid #0a4a6a;color:#5a9aba;font-size:8px;cursor:pointer">\uACC4\uC18D \uD56D\uD574</button>`}
       </div>
     </div>`;
     }
@@ -49744,6 +49909,13 @@ ${lines.join("\n")}
           </div>`;
       }).join("")}
         </div>
+        <div style="margin-top:8px;padding-top:6px;border-top:1px dashed #0a2a3a">
+          <div style="font-size:8px;color:var(--dim);margin-bottom:4px">\u26A1 \uC2DC\uB108\uC9C0 \u2014 \uB450 \uC2AC\uB86F\uC744 \uD568\uAED8 2\uB2E8\uACC4 \uC774\uC0C1 \uC62C\uB9AC\uBA74 \uBC1C\uB3D9</div>
+          ${SHIP_UPGRADE_SYNERGIES.map((syn) => {
+        const active = syn.parts.every((p) => (ship.upgrades && ship.upgrades[p] || 0) >= syn.minLevel);
+        return `<div style="font-size:7px;padding:2px 0;color:${active ? "#6aca6a" : "#555"}">${active ? "\u2705" : "\u25AB\uFE0F"} ${syn.icon} ${syn.name} \u2014 ${esc2(syn.desc)}</div>`;
+      }).join("")}
+        </div>
       </details>
     </div>`;
     }
@@ -49765,7 +49937,10 @@ ${lines.join("\n")}
     }
     html += `<div style="padding:10px 12px;border-bottom:1px solid #0a1a2a">
     <div style="font-family:Cinzel,serif;font-size:10px;color:#5a9aba;margin-bottom:6px">\u{1F9D1}\u200D\u2708\uFE0F \uC120\uC6D0 (${ship.crew.length}/10)</div>
-    ${ship.crew.map((c) => `<div style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:9px"><span>${typeof getEntityIconHTML === "function" ? getEntityIconHTML(c, { size: 16 }) : c.icon}</span><span style="flex:1;color:var(--text)">${esc2(c.name)}</span><span style="color:${c.loyalty >= 50 ? "#6aca6a" : "#e08030"}">\uCDA9\uC131${c.loyalty}</span><span style="color:#5a9aba">${c.upkeep}G/\uD134</span></div>`).join("")}
+    ${ship.crew.map((c) => {
+      const pers = CREW_PERSONALITIES.find((p) => p.id === c.personality);
+      return `<div style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:9px" title="${pers ? esc2(pers.desc) : ""}"><span>${typeof getEntityIconHTML === "function" ? getEntityIconHTML(c, { size: 16 }) : c.icon}</span><span style="flex:1;color:var(--text)">${esc2(c.name)} ${pers ? `<span style="color:#9a7a5a;font-size:7px">[${pers.icon}${pers.name}]</span>` : ""}</span><span style="color:${c.loyalty >= 50 ? "#6aca6a" : "#e08030"}">\uCDA9\uC131${c.loyalty}</span><span style="color:#5a9aba">${c.upkeep}G/\uD134</span></div>`;
+    }).join("")}
     ${!ship.atSea ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
       ${Object.entries(CREW_ROLES).map(([role, def]) => `<button onclick="hireCrew('${role}')" style="flex:1;min-width:70px;padding:5px;background:#020a14;border:1px solid #0a4a6a;color:#5a9aba;font-size:7px;cursor:pointer" title="${esc2(def.desc)}">${def.icon} ${def.name}</button>`).join("")}
     </div>` : ""}

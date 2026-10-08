@@ -115,11 +115,22 @@ export const HUNTING_GROUNDS = [
 ];
 
 export const SHIP_TIERS = [
-  { id:'skiff',    name:'소형 어선',   icon:'⛵', svgIcon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 L12 15" /><path d="M12 4 L17 12 L12 12 Z" stroke-linejoin="round"/><path d="M5 15 L19 15 L16.5 19 L7.5 19 Z" stroke-linejoin="round"/></svg>', price:150,  durability:60,  cargo:20,  combat:5,  speed:1.0, desc:'근해용 소형 선박. 싸고 가볍지만 원양 항해엔 위험하다.' },
-  { id:'caravel',  name:'범선',        icon:'⛵', svgIcon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L12 15" /><path d="M12 3 L18 11 L12 11 Z" stroke-linejoin="round"/><path d="M12 5 L7 12 L12 12 Z" stroke-linejoin="round"/><path d="M4 15 L20 15 L17 20 L7 20 Z" stroke-linejoin="round"/></svg>', price:500,  durability:120, cargo:60,  combat:15, speed:1.4, desc:'교역과 탐험에 두루 쓰이는 표준 선박.' },
-  { id:'galleon',  name:'갤리온',      icon:'🚢', svgIcon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12 L19 12 L19 17 L5 17 Z" stroke-linejoin="round"/><path d="M8 12 L8 5 L14 5 L14 12" stroke-linejoin="round"/><path d="M3 17 L21 17 L18 21 L6 21 Z" stroke-linejoin="round"/></svg>', price:1500, durability:250, cargo:150, combat:40, speed:1.2, desc:'대형 화물칸과 포대를 갖춘 원양 선박. 해적들이 가장 탐낸다.' },
-  { id:'magic_ship', name:'마법 범선', icon:'🛥️', svgIcon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L12 14" /><path d="M12 3 L17 10 L12 10 Z" stroke-linejoin="round"/><path d="M4 14 L20 14 L17 19 L7 19 Z" stroke-linejoin="round"/><circle cx="12" cy="16" r="1.3" fill="currentColor" stroke="none"/></svg>', price:4000, durability:300, cargo:100, combat:60, speed:2.2, desc:'바람 정령이 깃든 전설적인 선박. 항해 속도와 생존력이 압도적이다.' },
+  { id:'skiff',    name:'소형 어선',   icon:'⛵', svgIcon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 L12 15" /><path d="M12 4 L17 12 L12 12 Z" stroke-linejoin="round"/><path d="M5 15 L19 15 L16.5 19 L7.5 19 Z" stroke-linejoin="round"/></svg>', price:150,  durability:60,  cargo:20,  combat:5,  speed:1.0, branch:'balanced', desc:'근해용 소형 선박. 싸고 가볍지만 원양 항해엔 위험하다.' },
+  { id:'caravel',  name:'범선',        icon:'⛵', svgIcon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L12 15" /><path d="M12 3 L18 11 L12 11 Z" stroke-linejoin="round"/><path d="M12 5 L7 12 L12 12 Z" stroke-linejoin="round"/><path d="M4 15 L20 15 L17 20 L7 20 Z" stroke-linejoin="round"/></svg>', price:500,  durability:120, cargo:60,  combat:15, speed:1.4, branch:'balanced', branchGroup:'caravel', desc:'교역과 탐험에 두루 쓰이는 표준 범선.' },
+  // [56번 섹션, 선박 티어 가로 분기] caravel/galleon 가격대에 "균형형" 외에
+  // 속도·전투·화물 중 하나를 극단적으로 민 선택지를 추가 — 같은 가격에
+  // 플레이스타일이 다른 배를 고를 수 있게 함(수직 티어만 있던 공백 보완).
+  // svgIcon은 같은 선체 실루엣을 그대로 재사용(새 그림 없이도 분기가
+  // 성립하도록 수치/이름으로만 차별화).
+  { id:'caravel_swift',   name:'쾌속 범선', icon:'⛵', svgIcon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L12 15" /><path d="M12 3 L18 11 L12 11 Z" stroke-linejoin="round"/><path d="M12 5 L7 12 L12 12 Z" stroke-linejoin="round"/><path d="M4 15 L20 15 L17 20 L7 20 Z" stroke-linejoin="round"/></svg>', price:500,  durability:100, cargo:40,  combat:12, speed:1.75, branch:'speed', branchGroup:'caravel', desc:'화물칸과 방어력을 줄이고 속도만 극단적으로 추구한 범선. 도주와 추격에 유리하다.' },
+  { id:'caravel_warship', name:'무장 범선', icon:'⛵', svgIcon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L12 15" /><path d="M12 3 L18 11 L12 11 Z" stroke-linejoin="round"/><path d="M12 5 L7 12 L12 12 Z" stroke-linejoin="round"/><path d="M4 15 L20 15 L17 20 L7 20 Z" stroke-linejoin="round"/></svg>', price:500,  durability:140, cargo:40,  combat:26, speed:1.15, branch:'combat', branchGroup:'caravel', desc:'포대를 늘리고 화물칸을 줄인 전투형 범선. 해적 사냥이나 호위 임무에 적합하다.' },
+  { id:'galleon',  name:'갤리온',      icon:'🚢', svgIcon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12 L19 12 L19 17 L5 17 Z" stroke-linejoin="round"/><path d="M8 12 L8 5 L14 5 L14 12" stroke-linejoin="round"/><path d="M3 17 L21 17 L18 21 L6 21 Z" stroke-linejoin="round"/></svg>', price:1500, durability:250, cargo:150, combat:40, speed:1.2, branch:'balanced', branchGroup:'galleon', desc:'대형 화물칸과 포대를 갖춘 균형형 원양 선박. 해적들이 가장 탐낸다.' },
+  { id:'galleon_privateer', name:'사략 갤리온', icon:'🚢', svgIcon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12 L19 12 L19 17 L5 17 Z" stroke-linejoin="round"/><path d="M8 12 L8 5 L14 5 L14 12" stroke-linejoin="round"/><path d="M3 17 L21 17 L18 21 L6 21 Z" stroke-linejoin="round"/></svg>', price:1500, durability:220, cargo:100, combat:62, speed:1.35, branch:'combat', branchGroup:'galleon', desc:'국가의 사략 허가를 받은 전투형 갤리온. 화물칸을 줄이고 포격력과 속도를 끌어올렸다.' },
+  { id:'galleon_trader',    name:'대형 상선',   icon:'🚢', svgIcon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12 L19 12 L19 17 L5 17 Z" stroke-linejoin="round"/><path d="M8 12 L8 5 L14 5 L14 12" stroke-linejoin="round"/><path d="M3 17 L21 17 L18 21 L6 21 Z" stroke-linejoin="round"/></svg>', price:1500, durability:260, cargo:220, combat:24, speed:1.05, branch:'cargo', branchGroup:'galleon', desc:'화물칸을 극한까지 늘린 교역 전용 갤리온. 느리고 약하지만 한 번에 나르는 양이 압도적이다.' },
+  { id:'magic_ship', name:'마법 범선', icon:'🛥️', svgIcon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L12 14" /><path d="M12 3 L17 10 L12 10 Z" stroke-linejoin="round"/><path d="M4 14 L20 14 L17 19 L7 19 Z" stroke-linejoin="round"/><circle cx="12" cy="16" r="1.3" fill="currentColor" stroke="none"/></svg>', price:4000, durability:300, cargo:100, combat:60, speed:2.2, branch:'balanced', desc:'바람 정령이 깃든 전설적인 선박. 항해 속도와 생존력이 압도적이다.' },
 ];
+
+export const SHIP_BRANCH_LABELS = { balanced:'균형형', speed:'속도형', combat:'전투형', cargo:'화물형' };
 
 // 대륙별 실제 장소 개수에 비례해 크기를 재조정했다(장소가 많은
 // north/central이 가장 크고, 장소가 적은 northeast/northwest/southeast가
@@ -281,7 +292,40 @@ export const SHIP_UPGRADE_DEFS = {
 
 export const SHIP_UPGRADE_BASE_COST = { hull:120, sail:150, cannon:200, hold:130 };
 
-export const CREW_NAMES = ['해먼드','코르사','빈센트','마를린','두걸','셀라','오스카','리브카'];
+// [56번 섹션, 업그레이드 시너지] 4개 슬롯이 전부 독립적이라 "어느 조합을
+// 고를지"의 재미가 없었다 — 두 슬롯을 함께 minLevel 이상 올리면 발동하는
+// 보너스를 추가. 4개 조합만 다뤄 6쌍 전체를 다 덮진 않음(의도적으로
+// 범위 밖에 둔 2쌍 — hull+sail, cannon+hold — 은 각자 다른 스탯을 올려
+// "교차 보너스"로 묶기 애매해서 자연스러운 4쌍만 선정).
+export const SHIP_UPGRADE_SYNERGIES = [
+  { id:'ironclad',      parts:['hull','cannon'], minLevel:2, icon:'🛡️💣', name:'철갑 포대',   desc:'선체와 포대를 함께 2단계 이상 보강하면 전투력이 추가로 오른다.', effect:{ stat:'combat', bonus:0.15 } },
+  { id:'swift_trader',  parts:['sail','hold'],   minLevel:2, icon:'⛵📦', name:'쾌속 상선',   desc:'돛과 화물칸을 함께 2단계 이상 개량하면 적재한 채로도 속도가 추가로 오른다.', effect:{ stat:'speed', bonus:0.12 } },
+  { id:'privateer_rig', parts:['sail','cannon'], minLevel:2, icon:'⛵💣', name:'사략선 전장', desc:'돛과 포대를 함께 2단계 이상 끌어올리면 전투력이 추가로 오른다.', effect:{ stat:'combat', bonus:0.12 } },
+  { id:'expedition_hull', parts:['hull','hold'], minLevel:2, icon:'🛡️📦', name:'원정선 선체', desc:'선체와 화물칸을 함께 2단계 이상 보강하면 화물칸이 추가로 늘어난다.', effect:{ stat:'cargo', bonus:0.15 } },
+];
+
+// [56번 섹션, 선원 이름 확충] 기존 8개는 최대 선원 규모 대비 금방
+// 반복됐다 — 같은 서양풍 판타지 어투를 유지하며 32개로 확충.
+export const CREW_NAMES = [
+  '해먼드','코르사','빈센트','마를린','두걸','셀라','오스카','리브카',
+  '가스통','로렌조','미카엘라','브론웬','칼릭스','타데우스','이졸데','군나르',
+  '페르난도','아스트리드','발데마르','클로틸드','지오바니','레오폴드','아멜리아','코너',
+  '사비나','던칸','로살린드','에드문드','프레야','바르톨로뮤','말콤','오드리',
+];
+
+// [56번 섹션, 선원 개성 확충] 이름만 있고 전부 똑같던 선원에게 성격을
+// 부여 — 전투/속도/시너지 같은 새 수치 시스템을 또 만들진 않고, 고용
+// 시점의 초기 충성도에 소소한 가·감(loyaltyBonus)만 주는 선에서 안전하게
+// 구현(tickVoyage의 충성도 하락 로직은 선박 단위로만 동작해 선원별 하락률
+// 분기는 이번 범위를 넘는 재설계라 범위 밖에 둠 — 범위 밖 항목 참고).
+export const CREW_PERSONALITIES = [
+  { id:'diligent',      name:'성실한',      icon:'📋', desc:'묵묵히 제 몫을 하는 성실한 성격. 임금이 밀려도 쉽게 흔들리지 않는다.', loyaltyBonus:10 },
+  { id:'reckless',      name:'거친',        icon:'🔥', desc:'싸움을 두려워하지 않는 거친 성격. 전투엔 의지가 되지만 사소한 일로도 금방 틀어진다.', loyaltyBonus:-8 },
+  { id:'sociable',      name:'사교적인',    icon:'😄', desc:'선상의 분위기를 밝게 만드는 사교적인 성격.', loyaltyBonus:3 },
+  { id:'superstitious', name:'미신을 믿는', icon:'🔮', desc:'바다의 징조를 믿는 미신적인 성격. 폭풍이나 괴물을 겪을 때마다 불안해한다.', loyaltyBonus:-3 },
+  { id:'greedy',        name:'욕심 많은',   icon:'💰', desc:'한몫 잡는 데 관심이 많은 성격. 벌이가 좋을 땐 더없이 충성스럽다.', loyaltyBonus:0 },
+  { id:'stoic',         name:'무뚝뚝한',    icon:'🗿', desc:'좀처럼 속내를 드러내지 않는 과묵한 성격. 좋을 때나 나쁠 때나 한결같다.', loyaltyBonus:5 },
+];
 
 export const CREW_ROLES = {
   sailor:    { name:'일반 선원', icon:'🧑‍✈️', desc:'기본 선원. 특별한 보너스는 없지만 유지비가 싸다.', upkeepMod:1.0 },
@@ -308,6 +352,7 @@ export const ENEMY_SHIP_DEFS = [
   { id:'corsair',   name:'코르세어',   icon:'🏴‍☠️', tierLike:'caravel', hpMult:1.0, combatMult:1.0, lootGold:[80,160],  desc:'표준적인 해적선. 만만치 않은 상대다.' },
   { id:'warship',   name:'해적 전함',  icon:'🚢', tierLike:'galleon', hpMult:1.6, combatMult:1.5, lootGold:[150,300], desc:'중무장한 해적 전함. 큰 위험을 감수해야 한다.' },
   { id:'navy_frigate', name:'해군 호위함', icon:'⚓', tierLike:'galleon', hpMult:1.4, combatMult:1.6, lootGold:[0,0], isNavy:true, desc:'해상 악명을 쫓아온 왕국 해군. 격퇴 또는 나포해도 현상금은 없지만 악명이 줄어든다.' },
+  { id:'ghost_ship', name:'유령선',    icon:'👻', tierLike:'galleon', hpMult:1.3, combatMult:1.3, lootGold:[100,250], desc:'저주받은 유령선. 격파하면 오싹하지만 전리품은 확실하다.' },
 ];
 
 export const NPC_SHIP_KINDS = [
@@ -316,3 +361,16 @@ export const NPC_SHIP_KINDS = [
   { kind:'fisher',    icon:'🚤', name:'어선',  weight:3, cargoValue:[10,30],  combat:[3,8] },
   { kind:'navy',      icon:'⚓', name:'순찰함', weight:2, cargoValue:[0,0],   combat:[35,60] },
 ];
+
+// [56번 섹션, NPC 선박 다양화] 4종뿐이던 NPC 선박에 네임드/희귀 조우를
+// 추가 — 전체 NPC 스폰 중 NAMED_NPC_SHIP_CHANCE 확률로 일반 종류 대신
+// 이 목록에서 뽑힌다. 기존 세계관 인물(southeast 해적 연합의 해적왕
+// 발타자르 — data/055-5대륙-왕국-시스템.js CONTINENT_RULER_NPCS 참고)과
+// 연결해 로어를 살렸다.
+export const NAMED_NPC_SHIPS = [
+  { id:'flying_dutchman',  kind:'ghost',    name:'방랑하는 유령선',   icon:'👻', combat:[70,90], cargoValue:[150,300], hp:[90,120], desc:'저주에 걸려 영원히 바다를 떠돈다는 유령선. 마주친 자는 좀처럼 살아 돌아오지 못한다고 한다.' },
+  { id:'balthazar_flagship', kind:'pirate', name:'핏빛 발타자르호',   icon:'🏴‍☠️', combat:[55,75], cargoValue:[200,400], hp:[100,140], desc:'해적왕 발타자르가 직접 타고 다닌다는 전설의 기함. 격파하면 해적 연합 전역에 이름이 퍼질 것이다.' },
+  { id:'golden_lion',      kind:'navy',     name:'황금 사자호',       icon:'⚓', combat:[45,60], cargoValue:[300,500], hp:[80,100], desc:'왕실 보물을 운반하는 호위 선단의 기함. 호위가 두텁지만 그만큼 전리품도 막대하다.' },
+];
+
+export const NAMED_NPC_SHIP_CHANCE = 0.08;

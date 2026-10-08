@@ -1185,10 +1185,14 @@ export const SHIP_KEY = 'tf-ship';
 
 export const MAX_FLEET_SIZE = 5;
 
+// [56번 섹션] type:'port'(대륙별 5곳 — 왕실 조선소 항 등)는 coastal:true가
+// 안 붙어 있어 전엔 이 목록에 전혀 안 보였다(배 시스템에서 아예 접근
+// 불가) — 사용자 확인 후 ||조건으로 추가. coastal:true가 이미 붙은
+// 다른 모든 해상 전용 장소(순수 sea-map 전용 항구 등)는 그대로 포함.
 export function getPortLocations(){
   try{
     const all = (typeof window.getAllLocations==='function') ? window.getAllLocations() : [];
-    return all.filter(l=>l.coastal);
+    return all.filter(l=>l.coastal || l.type==='port');
   }catch(e){ return []; }
 }
 window.getPortLocations = getPortLocations;
@@ -1359,7 +1363,50 @@ window.getLocationDistanceDays = getLocationDistanceDays;
 
 window.LAND_TRAVEL_DAY_SCALE = LAND_TRAVEL_DAY_SCALE;
 
-export function getPortCoord(port){ return getLocationCoord(port) || { x:WORLD_MAP_SIZE/2, y:WORLD_MAP_SIZE/2 }; }
+// [56번 섹션, 2026-10-08 — 항구 좌표 버그 수정] getLocationCoord는
+// computeContinentLayout(=getAllLandLocations() 기반, coastal:true
+// 장소를 구조적으로 걸러냄 — 8-12번 섹션 설계: 항구는 육지 지도에
+// 안 보여야 함)만 보므로, 순수 해상 전용 장소(coastal:true)는 항상
+// null을 반환했다. 그 결과 getPortCoord가 모든 그런 항구에서 지도
+// 정중앙 fallback으로 떨어져 — 항해가 거리 무관 항상 1턴, 해상지도의
+// 모든 항구가 한 점에 겹쳐 찍히고, NPC 선박 이동/거리 판정도 사실상
+// 무의미해지는 버그로 이어졌다(56번 섹션 Playwright 실측). 땅
+// 레이아웃은 전혀 안 건드리고(8-12번 섹션 설계 유지), coastal:true
+// 장소 전용의 독립된 좌표 레이어를 추가한다 — 땅 장소와 같은 배치
+// 공식(pickMapSpot)을 재사용하지만 별도의 placed 배열이라 서로
+// 충돌 검사는 안 한다(화면에 같이 안 그려지므로 안전).
+const _coastalLayoutCache = new Map(); // continentKey -> { sig, layout }
+function computeCoastalLayout(continentKey){
+  const zone = WORLD_MAP_ZONES[continentKey] || WORLD_MAP_ZONES.central;
+  const fixed = (typeof window.getAllLocations==='function') ? window.getAllLocations() : [];
+  const ai = (typeof loadAILocations==='function') ? loadAILocations() : [];
+  const coastal = [...fixed, ...ai].filter(l=>l.coastal && l.continent===continentKey);
+  const sig = coastal.map(l=>l.name).sort().join('|');
+  const cached = _coastalLayoutCache.get(continentKey);
+  if(cached && cached.sig===sig) return cached.layout;
+  const placed = [];
+  const layout = new Map();
+  coastal
+    .slice()
+    .sort((a,b)=>hashStr(a.name)-hashStr(b.name)) // 같은 그룹 안에서는 항상 같은 순서(결정론적)
+    .forEach((loc,i)=>{
+      const p = pickMapSpot(loc.name||loc.id, i, coastal.length, zone, placed, MAP_MIN_LOC_DIST);
+      layout.set(loc.name, p);
+      placed.push(p);
+    });
+  _coastalLayoutCache.set(continentKey, { sig, layout });
+  return layout;
+}
+export function getPortCoord(port){
+  if(!port) return { x:WORLD_MAP_SIZE/2, y:WORLD_MAP_SIZE/2 };
+  const landC = getLocationCoord(port); // type:'port'인데 coastal:true가 없는 5곳은 이미 땅 레이아웃에 있음
+  if(landC) return landC;
+  if(port.continent && !WORLD_MAP_NON_PHYSICAL.has(port.continent)){
+    const c = computeCoastalLayout(port.continent).get(port.name);
+    if(c) return c;
+  }
+  return { x:WORLD_MAP_SIZE/2, y:WORLD_MAP_SIZE/2 };
+}
 window.getPortCoord = getPortCoord;
 
 export function getNearbyIsland(x, y, radius){
@@ -2577,7 +2624,10 @@ window.closeLandMapPopup = closeLandMapPopup;
 export function renderSeaMapSVG(ship, selectedDest){
   const ports = getPortLocations();
   const coords = {};
-  ports.forEach(p=>{ coords[p.name] = getLocationCoord(p) || {x:WORLD_MAP_SIZE/2,y:WORLD_MAP_SIZE/2}; });
+  // [56번 섹션] getLocationCoord는 coastal:true 항구에서 항상 null을
+  // 반환해(위 getPortCoord 주석 참고) 예전엔 모든 항구가 지도 중앙
+  // 한 점에 겹쳐 찍혔다 — getPortCoord(coastal 전용 좌표 레이어 포함)로 교체.
+  ports.forEach(p=>{ coords[p.name] = getPortCoord(p); });
   const popup = S._mapPopup; // { kind:'port'|'island'|'npc', id:string, x:number, y:number }
   const vb = getMapViewBox(ship);
   const mode = S._mapViewMode || 'near';

@@ -47456,7 +47456,7 @@ ${lines.join("\n")}
   function getPortLocations() {
     try {
       const all = typeof window.getAllLocations === "function" ? window.getAllLocations() : [];
-      return all.filter((l) => l.coastal);
+      return all.filter((l) => l.coastal || l.type === "port");
     } catch (e) {
       return [];
     }
@@ -47581,8 +47581,34 @@ ${lines.join("\n")}
   window.getLocationDistanceDays = getLocationDistanceDays;
   window.getLocationDistanceDays = getLocationDistanceDays;
   window.LAND_TRAVEL_DAY_SCALE = LAND_TRAVEL_DAY_SCALE;
+  var _coastalLayoutCache = /* @__PURE__ */ new Map();
+  function computeCoastalLayout(continentKey) {
+    const zone = WORLD_MAP_ZONES[continentKey] || WORLD_MAP_ZONES.central;
+    const fixed = typeof window.getAllLocations === "function" ? window.getAllLocations() : [];
+    const ai = typeof loadAILocations === "function" ? loadAILocations() : [];
+    const coastal = [...fixed, ...ai].filter((l) => l.coastal && l.continent === continentKey);
+    const sig = coastal.map((l) => l.name).sort().join("|");
+    const cached = _coastalLayoutCache.get(continentKey);
+    if (cached && cached.sig === sig) return cached.layout;
+    const placed = [];
+    const layout = /* @__PURE__ */ new Map();
+    coastal.slice().sort((a, b) => hashStr(a.name) - hashStr(b.name)).forEach((loc, i) => {
+      const p = pickMapSpot(loc.name || loc.id, i, coastal.length, zone, placed, MAP_MIN_LOC_DIST);
+      layout.set(loc.name, p);
+      placed.push(p);
+    });
+    _coastalLayoutCache.set(continentKey, { sig, layout });
+    return layout;
+  }
   function getPortCoord(port) {
-    return getLocationCoord(port) || { x: WORLD_MAP_SIZE / 2, y: WORLD_MAP_SIZE / 2 };
+    if (!port) return { x: WORLD_MAP_SIZE / 2, y: WORLD_MAP_SIZE / 2 };
+    const landC = getLocationCoord(port);
+    if (landC) return landC;
+    if (port.continent && !WORLD_MAP_NON_PHYSICAL.has(port.continent)) {
+      const c = computeCoastalLayout(port.continent).get(port.name);
+      if (c) return c;
+    }
+    return { x: WORLD_MAP_SIZE / 2, y: WORLD_MAP_SIZE / 2 };
   }
   window.getPortCoord = getPortCoord;
   function getNearbyIsland(x, y, radius) {
@@ -48551,7 +48577,7 @@ ${lines.join("\n")}
     const ports = getPortLocations();
     const coords = {};
     ports.forEach((p) => {
-      coords[p.name] = getLocationCoord(p) || { x: WORLD_MAP_SIZE / 2, y: WORLD_MAP_SIZE / 2 };
+      coords[p.name] = getPortCoord(p);
     });
     const popup = S._mapPopup;
     const vb = getMapViewBox(ship);

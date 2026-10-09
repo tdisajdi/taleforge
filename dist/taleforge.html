@@ -15054,7 +15054,17 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
     { id: "isl_fog", name: "\uC548\uAC1C\uC758 \uC12C", icon: "\u{1F32B}\uFE0F", x: 2684, y: 3422, danger: "high", desc: "\uC9D9\uC740 \uC548\uAC1C\uC5D0 \uD56D\uC0C1 \uD729\uC2F8\uC5EC \uC788\uB2E4. \uC774\uC0C1\uD55C \uAE30\uC6B4\uC774 \uAC10\uB3C8\uB2E4." },
     { id: "isl_coral", name: "\uC0B0\uD638 \uD658\uCD08", icon: "\u{1FAB8}", x: 3842, y: 3422, danger: "low", desc: "\uC544\uB984\uB2E4\uC6B4 \uC0B0\uD638\uCD08\uB85C \uB458\uB7EC\uC2F8\uC778 \uC791\uC740 \uD658\uCD08." },
     { id: "isl_volcano", name: "\uD654\uC0B0\uC12C", icon: "\u{1F30B}", x: 2052, y: 3736, danger: "extreme", desc: "\uD65C\uD654\uC0B0\uC774 \uC19F\uC740 \uC704\uD5D8\uD55C \uC12C. \uD76C\uADC0\uD55C \uB9C8\uBC95 \uAD11\uBB3C\uC774 \uBC1C\uACAC\uB41C\uB2E4\uACE0 \uD55C\uB2E4." },
-    { id: "isl_wreck", name: "\uB09C\uD30C\uC120 \uBAA8\uB798\uD1B1", icon: "\u2693", x: 3106, y: 3e3, danger: "medium", desc: "\uC218\uB9CE\uC740 \uBC30\uAC00 \uC88C\uCD08\uB41C \uBAA8\uB798\uD1B1. \uB09C\uD30C\uC120\uC758 \uC794\uD574\uC5D0\uC11C \uD654\uBB3C\uC744 \uAC74\uC9C8 \uC218 \uC788\uB2E4." }
+    { id: "isl_wreck", name: "\uB09C\uD30C\uC120 \uBAA8\uB798\uD1B1", icon: "\u2693", x: 3106, y: 3e3, danger: "medium", desc: "\uC218\uB9CE\uC740 \uBC30\uAC00 \uC88C\uCD08\uB41C \uBAA8\uB798\uD1B1. \uB09C\uD30C\uC120\uC758 \uC794\uD574\uC5D0\uC11C \uD654\uBB3C\uC744 \uAC74\uC9C8 \uC218 \uC788\uB2E4." },
+    // [57번 섹션, 섬 숫자·분포 확대] 기존 6개가 전부 central/west 사이
+    // 본향 바다에만 몰려있었다 — east/south/northeast/northwest/southeast
+    // 근해에 하나씩 추가해 전 해역에 분산. 각 대륙의 기존 로어(CONTINENT_
+    // PROPER_NAME)와 연결된 플레이버를 붙였다.
+    { id: "isl_dragonreef", name: "\uC6A9\uB9B0 \uC554\uCD08", icon: "\u{1F409}", x: 5100, y: 3600, danger: "high", desc: "\uC6A9\uC5FC \uC81C\uAD6D \uADFC\uD574\uC5D0 \uC19F\uC740 \uC554\uCD08. \uC6A9\uC758 \uBE44\uB298\uC744 \uB2EE\uC740 \uAE30\uC554\uC774 \uB298\uC5B4\uC11C \uC788\uB2E4." },
+    { id: "isl_piratecove", name: "\uD574\uC801\uC758 \uC740\uC2E0\uCC98", icon: "\u{1F3F4}\u200D\u2620\uFE0F", x: 5400, y: 6600, danger: "medium", desc: "\uD574\uC801 \uC5F0\uD569 \uC120\uB2E8\uC774 \uC228\uC5B4 \uC9C0\uB0B8\uB2E4\uB294 \uC740\uC2E0\uCC98. \uBC1C\uD0C0\uC790\uB974\uC758 \uBD80\uD558\uB4E4\uC774 \uC544\uC9C1\uB3C4 \uB4DC\uB098\uB4E0\uB2E4\uB294 \uC18C\uBB38\uC774 \uC788\uB2E4." },
+    { id: "isl_moonshrine", name: "\uB2EC\uBE5B \uC131\uC18C", icon: "\u{1F319}", x: 6500, y: 1900, danger: "low", desc: "\uB2EC\uBE5B \uC232 \uADFC\uD574\uC5D0 \uB5A0 \uC788\uB294 \uC791\uC740 \uC131\uC18C. \uC5D8\uD504\uB4E4\uC774 \uAC00\uB054 \uCC38\uBC30\uB97C \uC704\uD574 \uCC3E\uB294\uB2E4." },
+    { id: "isl_dwarfvault", name: "\uB4DC\uC6CC\uD504\uC758 \uC228\uACA8\uC9C4 \uCC3D\uACE0", icon: "\u26CF\uFE0F", x: 1150, y: 850, danger: "medium", desc: "\uB4DC\uC6CC\uD504 \uC655\uAD6D \uADFC\uD574\uC758 \uC678\uB534 \uC12C. \uC624\uB798\uC804 \uBD09\uC778\uB41C \uBE44\uBC00 \uCC3D\uACE0\uAC00 \uC788\uB2E4\uACE0 \uC804\uD574\uC9C4\uB2E4." },
+    { id: "isl_sunruins", name: "\uD0DC\uC591 \uC2E0\uC804 \uC794\uD574", icon: "\u2600\uFE0F", x: 4300, y: 5300, danger: "high", desc: "\uCF00\uBA54\uD2B8 \uC655\uAD6D \uADFC\uD574\uC5D0 \uAC00\uB77C\uC549\uC740 \uACE0\uB300 \uD0DC\uC591 \uC2E0\uC804\uC758 \uC794\uD574." },
+    { id: "isl_maelstrom", name: "\uC2EC\uD574 \uC18C\uC6A9\uB3CC\uC774", icon: "\u{1F300}", x: 3e3, y: 6900, danger: "extreme", desc: "\uBA3C \uB0A8\uCABD \uBC14\uB2E4\uC5D0\uC11C \uC601\uC6D0\uD788 \uD68C\uC804\uD55C\uB2E4\uB294 \uAC70\uB300\uD55C \uC18C\uC6A9\uB3CC\uC774. \uB3CC\uC544\uC628 \uC790\uAC00 \uB4DC\uBB3C\uB2E4." }
   ];
   var ISLAND_LOOT = {
     low: { gold: [20, 60], relicChance: 0.1, dangerChance: 0.05 },
@@ -15062,6 +15072,22 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
     high: { gold: [100, 250], relicChance: 0.4, dangerChance: 0.3 },
     extreme: { gold: [200, 500], relicChance: 0.6, dangerChance: 0.5 }
   };
+  var ISLAND_REVISIT_COOLDOWN = 8;
+  var ISLAND_REVISIT_RADIUS = 150;
+  var SEA_REGION_PROFILES = {
+    north: { label: "\uBE59\uD574", desc: "\uD639\uD55C\uC758 \uBD81\uBC29 \uBC14\uB2E4. \uD3ED\uD48D\uC774 \uC720\uB3C5 \uC7A6\uB2E4.", eventWeightMult: { sea_storm: 1.8 } },
+    south: { label: "\uC0AC\uB9C9 \uC5F0\uC548", desc: "\uB728\uAC70\uC6B4 \uB0A8\uBC29 \uC5F0\uC548. \uBC14\uB78C\uC774 \uC57D\uD574 \uD45C\uB958\uAC00 \uC7A6\uB2E4.", eventWeightMult: { sea_calm: 1.5 } },
+    east: { label: "\uC6A9\uC758 \uBC14\uB2E4", desc: "\uC6A9\uC5FC \uC81C\uAD6D \uADFC\uD574. \uC2EC\uD574 \uAD34\uBB3C\uC758 \uC804\uC124\uC774 \uB04A\uC774\uC9C0 \uC54A\uB294\uB2E4.", eventWeightMult: { sea_monster: 2.2 } },
+    west: { label: "\uC99D\uAE30 \uD56D\uB85C", desc: "\uC99D\uAE30 \uC5F0\uBC29\uC758 \uBD84\uC8FC\uD55C \uAD50\uC5ED\uB85C. \uC0C1\uC120 \uC655\uB798\uAC00 \uC7A6\uB2E4.", eventWeightMult: { sea_merchant: 1.6 } },
+    southeast: { label: "\uD574\uC801\uC758 \uBC14\uB2E4", desc: "\uD574\uC801 \uC5F0\uD569\uC758 \uC2EC\uC7A5\uBD80. \uD574\uC801\uC120 \uCD9C\uBAB0\uC774 \uAC00\uC7A5 \uC7A6\uB2E4.", eventWeightMult: { sea_pirate: 2 } },
+    southeast2: { label: "\uD574\uC801\uC758 \uBC14\uB2E4", desc: "\uD54F\uBE5B \uAE43\uBC1C\uB2E8\uC758 \uC601\uD574. \uD574\uC801\uC120 \uCD9C\uBAB0\uC774 \uAC00\uC7A5 \uC7A6\uB2E4.", eventWeightMult: { sea_pirate: 2 } },
+    northeast: { label: "\uB2EC\uBE5B \uD574\uD611", desc: "\uB2EC\uBE5B \uC232 \uADFC\uD574. \uC2E0\uBE44\uB86D\uB3C4\uB85D \uACE0\uC694\uD558\uB2E4.", eventWeightMult: { sea_calm: 1.3 } },
+    northeast2: { label: "\uC740\uC6D4 \uD574\uD611", desc: "\uC740\uC6D4 \uC655\uC815 \uADFC\uD574. \uC2E0\uBE44\uB86D\uB3C4\uB85D \uACE0\uC694\uD558\uB2E4.", eventWeightMult: { sea_calm: 1.3 } },
+    northwest: { label: "\uAD11\uB9E5 \uD56D\uB85C", desc: "\uB4DC\uC6CC\uD504 \uC655\uAD6D \uADFC\uD574. \uC624\uB798\uB41C \uB09C\uD30C\uC120\uC774 \uB9CE\uB2E4.", eventWeightMult: { sea_wreck: 1.8 } },
+    northwest2: { label: "\uAC15\uCCA0 \uD56D\uB85C", desc: "\uAC15\uCCA0\uD131 \uBD80\uC871 \uADFC\uD574. \uC624\uB798\uB41C \uB09C\uD30C\uC120\uC774 \uB9CE\uB2E4.", eventWeightMult: { sea_wreck: 1.8 } },
+    central: { label: "\uBCF8\uD5A5 \uBC14\uB2E4", desc: "\uC54C\uD14C\uB77C \uC655\uAD6D\uC758 \uC55E\uBC14\uB2E4. \uBE44\uAD50\uC801 \uD3C9\uC628\uD55C \uD56D\uB85C\uB2E4.", eventWeightMult: {} }
+  };
+  var TREASURE_MAP_FIND_CHANCE = 0.35;
   var ROAD_EDGES = [
     // central 내부 — 왕도를 중심으로 방사형
     ["\uC655\uB3C4 \uC544\uC774\uB7F0\uD640", "\uAD50\uC5ED \uB3C4\uC2DC \uACE8\uB4E0\uD06C\uB85C\uC2A4"],
@@ -15232,6 +15258,14 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       name: "\uD574\uB8E1/\uD06C\uB77C\uCF04",
       weight: 1,
       desc: "\uC2EC\uD574\uC5D0\uC11C \uAC70\uB300\uD55C \uBB34\uC5B8\uAC00\uAC00 \uB5A0\uC624\uB978\uB2E4. \uC120\uCCB4\uB97C \uC704\uD611\uD558\uB294 \uAC15\uB825\uD55C \uD574\uC591 \uAD34\uBB3C\uC774\uB2E4."
+    },
+    // [57번 섹션, 보물지도·난파선 탐사 콘텐츠 신설]
+    {
+      id: "sea_wreck",
+      icon: "\u{1FAA6}",
+      name: "\uB09C\uD30C\uC120 \uBC1C\uACAC",
+      weight: 2,
+      desc: "\uD30C\uB3C4\uC5D0 \uB5A0\uB2E4\uB2C8\uB294 \uB0A1\uC740 \uB09C\uD30C\uC120\uC758 \uC794\uD574\uAC00 \uBCF4\uC778\uB2E4. \uAC00\uAE4C\uC774 \uB2E4\uAC00\uAC00 \uC218\uC0C9\uD560 \uC218 \uC788\uB2E4."
     }
   ];
   var ENEMY_SHIP_DEFS = [
@@ -47687,23 +47721,39 @@ ${lines.join("\n")}
     if (!isl) return;
     const loot = ISLAND_LOOT[isl.danger];
     ship.visitedIslands = ship.visitedIslands || [];
-    if (!ship.visitedIslands.includes(islandId)) ship.visitedIslands.push(islandId);
-    const dangerRoll = Math.random() < loot.dangerChance;
+    const firstVisit = !ship.visitedIslands.includes(islandId);
+    if (firstVisit) ship.visitedIslands.push(islandId);
+    ship.islandCooldowns = ship.islandCooldowns || {};
+    if (!firstVisit) {
+      const last = ship.islandCooldowns[islandId] || 0;
+      const now = S.msgCount || 0;
+      if (now - last < ISLAND_REVISIT_COOLDOWN) {
+        toast(`\u{1F3DD}\uFE0F ${isl.name}\uC740(\uB294) \uC544\uC9C1 \uD68C\uBCF5 \uC911\uC785\uB2C8\uB2E4. (${ISLAND_REVISIT_COOLDOWN - (now - last)}\uD134 \uD6C4 \uC7AC\uD0D0\uC0AC \uAC00\uB2A5)`, 3e3);
+        return;
+      }
+    }
+    ship.islandCooldowns[islandId] = S.msgCount || 0;
+    ship.treasureMaps = ship.treasureMaps || [];
+    const mapIdx = ship.treasureMaps.findIndex((m) => m.targetIslandId === islandId);
+    const hasMap = mapIdx !== -1;
+    const dangerRoll = Math.random() < loot.dangerChance * (firstVisit ? 1 : 0.6);
     if (dangerRoll) {
       const dmg = 10 + Math.floor(Math.random() * 30);
       ship.durability = Math.max(0, ship.durability - dmg);
       toast(`\u26A0\uFE0F ${isl.name} \uD0D0\uD5D8 \uC911 \uC704\uD5D8\uC5D0 \uCC98\uD588\uC2B5\uB2C8\uB2E4! \uC120\uCCB4 \uC190\uC0C1 -${dmg}`, 4e3);
       S._pendingVoyageHint = `${isl.name}\uC744(\uB97C) \uD0D0\uD5D8\uD558\uB358 \uC911 \uC608\uC0C1\uCE58 \uBABB\uD55C \uC704\uD5D8\uC5D0 \uD718\uB9D0\uB838\uB2E4.`;
     } else {
-      const gold = loot.gold[0] + Math.floor(Math.random() * (loot.gold[1] - loot.gold[0] + 1));
+      const goldMult = (firstVisit ? 1 : 0.4) * (hasMap ? 2 : 1);
+      const gold = Math.round((loot.gold[0] + Math.floor(Math.random() * (loot.gold[1] - loot.gold[0] + 1))) * goldMult);
       if (typeof addGoldWithExchange === "function") addGoldWithExchange(gold, "\uC12C \uD0D0\uD5D8");
       else {
         S.gold += gold;
         if (typeof saveGold === "function") saveGold(S.gold);
       }
       window.updateHeader && window.updateHeader();
-      let msg = `\u{1F3DD}\uFE0F ${isl.name} \uD0D0\uD5D8 \uC644\uB8CC! +${gold}G`;
-      if (Math.random() < loot.relicChance) {
+      let msg = `\u{1F3DD}\uFE0F ${isl.name} ${firstVisit ? "\uD0D0\uD5D8" : "\uC7AC\uD0D0\uC0AC"} \uC644\uB8CC! +${gold}G`;
+      const relicChance = loot.relicChance * (firstVisit ? 1 : 0.3) + (hasMap ? 0.4 : 0);
+      if (Math.random() < relicChance) {
         const g = loadGraveyard ? loadGraveyard() : null;
         if (g) {
           g.relicInventory = g.relicInventory || [];
@@ -47714,8 +47764,12 @@ ${lines.join("\n")}
           msg += ` \u300C${relic.icon}${relic.name}\u300D\uB3C4 \uBC1C\uACAC\uD588\uC2B5\uB2C8\uB2E4!`;
         }
       }
+      if (hasMap) {
+        msg += " \u{1F5FA}\uFE0F \uBCF4\uBB3C\uC9C0\uB3C4\uAC00 \uAC00\uB9AC\uD0A8 \uACF3\uC774\uC5C8\uB2E4!";
+        ship.treasureMaps.splice(mapIdx, 1);
+      }
       toast(msg, 4e3);
-      S._pendingVoyageHint = `${isl.name}\uC744(\uB97C) \uD0D0\uD5D8\uD574 \uC804\uB9AC\uD488\uC744 \uCC3E\uC544\uB0C8\uB2E4.`;
+      S._pendingVoyageHint = `${isl.name}\uC744(\uB97C) ${firstVisit ? "\uD0D0\uD5D8\uD574" : "\uB2E4\uC2DC \uCC3E\uC544 \uC218\uC0C9\uD574"} \uC804\uB9AC\uD488\uC744 \uCC3E\uC544\uB0C8\uB2E4.`;
       if (typeof window.updateStats === "function") window.updateStats("islands_explored", 1);
     }
     ship.activeIslandEvent = null;
@@ -48724,11 +48778,23 @@ ${lines.join("\n")}
       if (!isl) return "";
       title = `${isl.icon} ${isl.name}`;
       const isActive = ship.activeIslandEvent === isl.id;
+      const visited = (ship.visitedIslands || []).includes(isl.id);
       if (isActive) {
         rows.push({ label: "\u{1F3DD}\uFE0F \uD0D0\uD5D8\uD558\uAE30", action: `exploreIsland('${isl.id}')`, color: "#6aca8a" });
         rows.push({ label: "\uC9C0\uB098\uCE58\uAE30", action: `ignoreIsland()`, color: "#888" });
+      } else if (visited) {
+        const near = ship.atSea && ship.curX !== void 0 && Math.hypot(isl.x - ship.curX, isl.y - ship.curY) <= ISLAND_REVISIT_RADIUS;
+        const last = (ship.islandCooldowns || {})[isl.id] || 0;
+        const turnsLeft = Math.max(0, ISLAND_REVISIT_COOLDOWN - ((S.msgCount || 0) - last));
+        if (near && turnsLeft <= 0) {
+          rows.push({ label: "\u{1F501} \uB2E4\uC2DC \uD0D0\uC0AC\uD558\uAE30", action: `exploreIsland('${isl.id}')`, color: "#6aca8a" });
+        } else if (!near) {
+          rows.push({ label: "\uC774\uBBF8 \uD0D0\uD5D8\uD55C \uC12C (\uB354 \uAC00\uAE4C\uC774 \uC811\uADFC\uD558\uBA74 \uC7AC\uD0D0\uC0AC \uAC00\uB2A5)", action: null, color: "#666" });
+        } else {
+          rows.push({ label: `\uD68C\uBCF5 \uC911 (${turnsLeft}\uD134 \uD6C4 \uC7AC\uD0D0\uC0AC \uAC00\uB2A5)`, action: null, color: "#666" });
+        }
       } else {
-        rows.push({ label: (ship.visitedIslands || []).includes(isl.id) ? "\uC774\uBBF8 \uD0D0\uD5D8\uD55C \uC12C" : "\uD56D\uB85C\uAC00 \uAC00\uAE4C\uC6CC\uC9C0\uBA74 \uBC1C\uACAC \uAC00\uB2A5", action: null, color: "#666" });
+        rows.push({ label: "\uD56D\uB85C\uAC00 \uAC00\uAE4C\uC6CC\uC9C0\uBA74 \uBC1C\uACAC \uAC00\uB2A5", action: null, color: "#666" });
       }
     } else if (popup.kind === "npc") {
       const npc = loadNpcShips().find((n) => n.id === popup.id);
@@ -48805,7 +48871,10 @@ ${lines.join("\n")}
       atSea: false,
       voyageTarget: null,
       voyageTurnsLeft: 0,
-      totalVoyages: 0
+      totalVoyages: 0,
+      visitedIslands: [],
+      islandCooldowns: {},
+      treasureMaps: []
     };
     saveShip(newShip);
     toast(`${newShip.name}\uC744(\uB97C) \uAD6C\uB9E4\uD588\uC2B5\uB2C8\uB2E4! ${loc.name}\uC5D0 \uC815\uBC15 \uC911\uC785\uB2C8\uB2E4. (\uD568\uB300 ${fleet.length + 1}/${MAX_FLEET_SIZE}\uCC99)`, 4e3, tier);
@@ -49465,12 +49534,74 @@ ${lines.join("\n")}
           S._pendingVoyageHint = "\uAC70\uB300\uD55C \uD574\uC591 \uAD34\uBB3C\uC5D0\uAC8C \uC77C\uBC29\uC801\uC73C\uB85C \uB2F9\uD558\uBA70 \uAC04\uC2E0\uD788 \uB3C4\uC8FC\uD588\uB2E4.";
         }
       }
+    } else if (ev.id === "sea_wreck") {
+      if (choice === "salvage") {
+        const dangerRoll = Math.random() < 0.25;
+        if (dangerRoll) {
+          const dmg = 10 + Math.floor(Math.random() * 20);
+          ship.durability = Math.max(0, ship.durability - dmg);
+          toast(`\u{1F480} \uB09C\uD30C\uC120 \uC18D\uC5D0 \uC228\uC5B4\uC788\uB358 \uBB34\uC5B8\uAC00\uC5D0 \uB2F9\uD588\uC2B5\uB2C8\uB2E4! \uC120\uCCB4 \uC190\uC0C1 -${dmg}`, 3500);
+          S._pendingVoyageHint = "\uB09C\uD30C\uC120\uC744 \uC218\uC0C9\uD558\uB358 \uC911 \uC228\uC5B4\uC788\uB358 \uC704\uD5D8\uC5D0 \uD718\uB9D0\uB838\uB2E4.";
+        } else {
+          const gold = 20 + Math.floor(Math.random() * 50);
+          if (typeof addGoldWithExchange === "function") addGoldWithExchange(gold, "\uB09C\uD30C\uC120 \uD0D0\uC0AC");
+          else {
+            S.gold += gold;
+            if (typeof saveGold === "function") saveGold(S.gold);
+          }
+          window.updateHeader && window.updateHeader();
+          let msg = `\u{1FAA6} \uB09C\uD30C\uC120\uC744 \uC218\uC0C9\uD574 +${gold}G\uB97C \uAC74\uC84C\uC2B5\uB2C8\uB2E4.`;
+          ship.treasureMaps = ship.treasureMaps || [];
+          if (Math.random() < TREASURE_MAP_FIND_CHANCE) {
+            const undiscovered = ISLAND_DEFS.filter((i) => !(ship.visitedIslands || []).includes(i.id));
+            const pool = undiscovered.length ? undiscovered : ISLAND_DEFS;
+            const target = pool[Math.floor(Math.random() * pool.length)];
+            if (!ship.treasureMaps.some((m) => m.targetIslandId === target.id)) {
+              ship.treasureMaps.push({ id: "map_" + Date.now(), targetIslandId: target.id });
+              msg += ` \u{1F5FA}\uFE0F ${target.name}\uC744(\uB97C) \uAC00\uB9AC\uD0A4\uB294 \uBCF4\uBB3C\uC9C0\uB3C4\uB3C4 \uBC1C\uACAC\uD588\uC2B5\uB2C8\uB2E4!`;
+            }
+          }
+          toast(msg, 4e3);
+          S._pendingVoyageHint = "\uB09C\uD30C\uC120\uC744 \uC218\uC0C9\uD574 \uC804\uB9AC\uD488\uC744 \uAC74\uC838\uC62C\uB838\uB2E4.";
+        }
+      }
     }
     ship.activeSeaEvent = null;
     saveShip(ship);
     renderVoyagePanel();
   }
   window.resolveSeaEvent = resolveSeaEvent;
+  function getNearestSeaRegion(x, y) {
+    if (x === void 0 || y === void 0) return "central";
+    let best = "central", bestDist = Infinity;
+    Object.entries(WORLD_MAP_ZONES).forEach(([key, z]) => {
+      const dx = (x - z.cx) / z.rx, dy = (y - z.cy) / z.ry;
+      const d = dx * dx + dy * dy;
+      if (d < bestDist) {
+        bestDist = d;
+        best = key;
+      }
+    });
+    return best;
+  }
+  window.getNearestSeaRegion = getNearestSeaRegion;
+  function pickWeightedSeaEvent(region) {
+    const profile = SEA_REGION_PROFILES[region] || {};
+    const mult = profile.eventWeightMult || {};
+    const totalWeight = SEA_EVENT_POOL.reduce((s, e) => s + e.weight * (mult[e.id] || 1), 0);
+    let roll = Math.random() * totalWeight;
+    let picked = SEA_EVENT_POOL[0];
+    for (const e of SEA_EVENT_POOL) {
+      const w = e.weight * (mult[e.id] || 1);
+      if (roll < w) {
+        picked = e;
+        break;
+      }
+      roll -= w;
+    }
+    return picked;
+  }
+  window.pickWeightedSeaEvent = pickWeightedSeaEvent;
   function tickVoyage() {
     const fleet = loadFleet();
     if (!fleet.length) return;
@@ -49541,16 +49672,8 @@ ${lines.join("\n")}
             }
             fleetChanged = true;
           } else if (Math.random() < 0.25) {
-            const totalWeight = SEA_EVENT_POOL.reduce((s, e) => s + e.weight, 0);
-            let roll = Math.random() * totalWeight;
-            let picked = SEA_EVENT_POOL[0];
-            for (const e of SEA_EVENT_POOL) {
-              if (roll < e.weight) {
-                picked = e;
-                break;
-              }
-              roll -= e.weight;
-            }
+            const region = getNearestSeaRegion(ship.curX, ship.curY);
+            const picked = pickWeightedSeaEvent(region);
             ship.activeSeaEvent = { id: picked.id, icon: picked.icon, name: picked.name, desc: picked.desc };
             if (ship.id === activeId) {
               toast(`${picked.name} \uBC1C\uC0DD! \uD56D\uD574 \uD328\uB110\uC5D0\uC11C \uB300\uC751\uC744 \uC120\uD0DD\uD558\uC138\uC694.`, 4e3, picked);
@@ -49878,7 +50001,9 @@ ${lines.join("\n")}
           <button onclick="resolveSeaEvent('wait')" style="flex:1;padding:6px;background:#020a14;border:1px solid #0a4a6a;color:#5a9aba;font-size:8px;cursor:pointer">\u23F3 \uAC00\uB9CC\uD788 \uAE30\uB2E4\uB9AC\uAE30</button>` : ev.id === "sea_monster" ? `
           <button onclick="resolveSeaEvent('fight')" style="flex:1;padding:6px;background:#150505;border:1px solid #6a2a2a;color:#e08080;font-size:8px;cursor:pointer">\u2694\uFE0F \uB9DE\uC11C \uC2F8\uC6B0\uAE30</button>
           <button onclick="resolveSeaEvent('flee')" style="flex:1;padding:6px;background:#0a1505;border:1px solid #2a6a2a;color:#80e080;font-size:8px;cursor:pointer">\u{1F4A8} \uB3C4\uC8FC</button>
-          ${ship.cargo.length > 0 ? `<button onclick="resolveSeaEvent('sacrifice')" style="flex:1;padding:6px;background:#150f05;border:1px solid #6a5a2a;color:#e0c080;font-size:8px;cursor:pointer">\u{1F4E6} \uD654\uBB3C \uACF5\uBB3C\uB85C \uB358\uC9C0\uAE30</button>` : ""}` : `<button onclick="resolveSeaEvent('accept')" style="flex:1;padding:6px;background:#020a14;border:1px solid #0a4a6a;color:#5a9aba;font-size:8px;cursor:pointer">\uACC4\uC18D \uD56D\uD574</button>`}
+          ${ship.cargo.length > 0 ? `<button onclick="resolveSeaEvent('sacrifice')" style="flex:1;padding:6px;background:#150f05;border:1px solid #6a5a2a;color:#e0c080;font-size:8px;cursor:pointer">\u{1F4E6} \uD654\uBB3C \uACF5\uBB3C\uB85C \uB358\uC9C0\uAE30</button>` : ""}` : ev.id === "sea_wreck" ? `
+          <button onclick="resolveSeaEvent('salvage')" style="flex:1;padding:6px;background:#150a05;border:1px solid #6a4a1a;color:#e0a040;font-size:8px;cursor:pointer">\u{1FAA6} \uC218\uC0C9\uD558\uAE30</button>
+          <button onclick="resolveSeaEvent('ignore')" style="flex:1;padding:6px;background:#0a0a0a;border:1px solid #3a3a3a;color:#888;font-size:8px;cursor:pointer">\uC9C0\uB098\uCE58\uAE30</button>` : `<button onclick="resolveSeaEvent('accept')" style="flex:1;padding:6px;background:#020a14;border:1px solid #0a4a6a;color:#5a9aba;font-size:8px;cursor:pointer">\uACC4\uC18D \uD56D\uD574</button>`}
       </div>
     </div>`;
     }
@@ -49927,12 +50052,24 @@ ${lines.join("\n")}
     <div style="font-size:7px;color:#557;margin-top:4px;text-align:center">\u2693\uD56D\uAD6C \xB7 \u{1F3DD}\uFE0F\uC12C \xB7 \u{1F6A4}\u26F4\uFE0F\u{1F3F4}\u200D\u2620\uFE0F\u2693\uB2E4\uB978 \uC120\uBC15 \u2014 \uC9C0\uB3C4 \uC704 \uC810\uC744 \uD130\uCE58\uD558\uBA74 \uD589\uB3D9\uC744 \uACE0\uB97C \uC218 \uC788\uC2B5\uB2C8\uB2E4</div>
   </div>`;
     if (ship.atSea) {
+      const region = getNearestSeaRegion(ship.curX, ship.curY);
+      const profile = SEA_REGION_PROFILES[region];
       html += `<div style="padding:10px 12px;border-bottom:1px solid #0a1a2a;background:#020810">
       <div style="font-size:10px;color:#e0a040">\u{1F30A} ${ship.voyageTarget}\uC744(\uB97C) \uD5A5\uD574 \uD56D\uD574 \uC911 \u2014 \uC794\uC5EC ${ship.voyageTurnsLeft}\uD134</div>
+      ${profile ? `<div style="font-size:8px;color:#5a9aba;margin-top:3px">\uD604\uC7AC \uD574\uC5ED: ${esc2(profile.label)} \u2014 ${esc2(profile.desc)}</div>` : ""}
     </div>`;
     } else {
       html += `<div style="padding:10px 12px;border-bottom:1px solid #0a1a2a">
       <div style="font-size:10px;color:#5a9aba">\u2693 \uD604\uC7AC \uC815\uBC15: ${ship.currentPort}</div>
+    </div>`;
+    }
+    if ((ship.treasureMaps || []).length) {
+      html += `<div style="padding:10px 12px;border-bottom:1px solid #0a1a2a">
+      <div style="font-family:Cinzel,serif;font-size:10px;color:#c0a030;margin-bottom:6px">\u{1F5FA}\uFE0F \uBCF4\uC720 \uC911\uC778 \uBCF4\uBB3C\uC9C0\uB3C4 (${ship.treasureMaps.length})</div>
+      ${ship.treasureMaps.map((m) => {
+        const target = ISLAND_DEFS.find((i) => i.id === m.targetIslandId);
+        return `<div style="font-size:9px;color:var(--dim);padding:2px 0">${target ? target.icon + " " + esc2(target.name) : "\uC54C \uC218 \uC5C6\uB294 \uC12C"}\uC744(\uB97C) \uAC00\uB9AC\uD0A4\uACE0 \uC788\uB2E4</div>`;
+      }).join("")}
     </div>`;
     }
     html += `<div style="padding:10px 12px;border-bottom:1px solid #0a1a2a">

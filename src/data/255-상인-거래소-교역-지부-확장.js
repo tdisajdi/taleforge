@@ -228,6 +228,16 @@ export const ISLAND_DEFS = [
   { id:'isl_coral', name:'산호 환초',     icon:'🪸', x:3842, y:3422, danger:'low',    desc:'아름다운 산호초로 둘러싸인 작은 환초.' },
   { id:'isl_volcano', name:'화산섬',      icon:'🌋', x:2052, y:3736, danger:'extreme',desc:'활화산이 솟은 위험한 섬. 희귀한 마법 광물이 발견된다고 한다.' },
   { id:'isl_wreck', name:'난파선 모래톱', icon:'⚓', x:3106, y:3000, danger:'medium', desc:'수많은 배가 좌초된 모래톱. 난파선의 잔해에서 화물을 건질 수 있다.' },
+  // [57번 섹션, 섬 숫자·분포 확대] 기존 6개가 전부 central/west 사이
+  // 본향 바다에만 몰려있었다 — east/south/northeast/northwest/southeast
+  // 근해에 하나씩 추가해 전 해역에 분산. 각 대륙의 기존 로어(CONTINENT_
+  // PROPER_NAME)와 연결된 플레이버를 붙였다.
+  { id:'isl_dragonreef', name:'용린 암초',     icon:'🐉', x:5100, y:3600, danger:'high',    desc:'용염 제국 근해에 솟은 암초. 용의 비늘을 닮은 기암이 늘어서 있다.' },
+  { id:'isl_piratecove', name:'해적의 은신처', icon:'🏴‍☠️', x:5400, y:6600, danger:'medium',  desc:'해적 연합 선단이 숨어 지낸다는 은신처. 발타자르의 부하들이 아직도 드나든다는 소문이 있다.' },
+  { id:'isl_moonshrine', name:'달빛 성소',     icon:'🌙', x:6500, y:1900, danger:'low',     desc:'달빛 숲 근해에 떠 있는 작은 성소. 엘프들이 가끔 참배를 위해 찾는다.' },
+  { id:'isl_dwarfvault', name:'드워프의 숨겨진 창고', icon:'⛏️', x:1150, y:850, danger:'medium', desc:'드워프 왕국 근해의 외딴 섬. 오래전 봉인된 비밀 창고가 있다고 전해진다.' },
+  { id:'isl_sunruins',   name:'태양 신전 잔해', icon:'☀️', x:4300, y:5300, danger:'high',    desc:'케메트 왕국 근해에 가라앉은 고대 태양 신전의 잔해.' },
+  { id:'isl_maelstrom',  name:'심해 소용돌이', icon:'🌀', x:3000, y:6900, danger:'extreme',  desc:'먼 남쪽 바다에서 영원히 회전한다는 거대한 소용돌이. 돌아온 자가 드물다.' },
 ];
 
 export const ISLAND_LOOT = {
@@ -236,6 +246,30 @@ export const ISLAND_LOOT = {
   high:   { gold:[100,250],relicChance:0.4, dangerChance:0.3 },
   extreme:{ gold:[200,500],relicChance:0.6, dangerChance:0.5 },
 };
+
+// [57번 섹션, 섬 탐험 반복화] 재방문 시 쿨다운(턴 단위)·근접 판정 반경.
+export const ISLAND_REVISIT_COOLDOWN = 8;
+export const ISLAND_REVISIT_RADIUS = 150;
+
+// [57번 섹션, 해역별 특색 부여] WORLD_MAP_ZONES 키별로 해상 이벤트 가중치를
+// 바꿔 "이 해역은 유독 ~하다"는 지역차를 준다. 프로필이 없는 키(central
+// 등)는 기존과 동일한 균등 확률로 처리됨.
+export const SEA_REGION_PROFILES = {
+  north:      { label:'빙해',       desc:'혹한의 북방 바다. 폭풍이 유독 잦다.',                 eventWeightMult:{ sea_storm:1.8 } },
+  south:      { label:'사막 연안',   desc:'뜨거운 남방 연안. 바람이 약해 표류가 잦다.',           eventWeightMult:{ sea_calm:1.5 } },
+  east:       { label:'용의 바다',   desc:'용염 제국 근해. 심해 괴물의 전설이 끊이지 않는다.',     eventWeightMult:{ sea_monster:2.2 } },
+  west:       { label:'증기 항로',   desc:'증기 연방의 분주한 교역로. 상선 왕래가 잦다.',          eventWeightMult:{ sea_merchant:1.6 } },
+  southeast:  { label:'해적의 바다', desc:'해적 연합의 심장부. 해적선 출몰이 가장 잦다.',          eventWeightMult:{ sea_pirate:2.0 } },
+  southeast2: { label:'해적의 바다', desc:'핏빛 깃발단의 영해. 해적선 출몰이 가장 잦다.',          eventWeightMult:{ sea_pirate:2.0 } },
+  northeast:  { label:'달빛 해협',   desc:'달빛 숲 근해. 신비롭도록 고요하다.',                   eventWeightMult:{ sea_calm:1.3 } },
+  northeast2: { label:'은월 해협',   desc:'은월 왕정 근해. 신비롭도록 고요하다.',                 eventWeightMult:{ sea_calm:1.3 } },
+  northwest:  { label:'광맥 항로',   desc:'드워프 왕국 근해. 오래된 난파선이 많다.',               eventWeightMult:{ sea_wreck:1.8 } },
+  northwest2: { label:'강철 항로',   desc:'강철턱 부족 근해. 오래된 난파선이 많다.',               eventWeightMult:{ sea_wreck:1.8 } },
+  central:    { label:'본향 바다',   desc:'알테라 왕국의 앞바다. 비교적 평온한 항로다.',           eventWeightMult:{} },
+};
+
+// [57번 섹션, 난파선 탐사 → 보물지도] 수색 성공 시 보물지도를 얻을 확률.
+export const TREASURE_MAP_FIND_CHANCE = 0.35;
 
 export const ROAD_EDGES = [
   // central 내부 — 왕도를 중심으로 방사형
@@ -345,6 +379,9 @@ export const SEA_EVENT_POOL = [
     desc:'다른 상선이 신호를 보내며 다가온다. 해상에서 즉석 교역을 제안한다.' },
   { id:'sea_monster', icon:'🐙', name:'해룡/크라켄', weight:1,
     desc:'심해에서 거대한 무언가가 떠오른다. 선체를 위협하는 강력한 해양 괴물이다.' },
+  // [57번 섹션, 보물지도·난파선 탐사 콘텐츠 신설]
+  { id:'sea_wreck', icon:'🪦', name:'난파선 발견', weight:2,
+    desc:'파도에 떠다니는 낡은 난파선의 잔해가 보인다. 가까이 다가가 수색할 수 있다.' },
 ];
 
 export const ENEMY_SHIP_DEFS = [

@@ -6,7 +6,7 @@ import { S } from '../data/084-TaleForge-순수-JS-엔진.js';
 import { CROP_DEFS } from '../data/252-상단Caravan-UI-용병단-UI와-대칭-구조.js';
 import { NETWORK_TYPES, TOMB_RELIC_DEFS } from '../data/253-SVG-타일-렌더링-작물-단계별-애니메이션.js';
 import { SONG_GENRES } from '../data/254-음유시인-공연-후원자-전설곡.js';
-import { CONTINENT_HUB_NAMES, CONTINENT_PROPER_NAME, CONTINENT_PROPER_NAME_ICON, CONTINENT_TERRAIN, CREW_NAMES, CREW_PERSONALITIES, CREW_ROLES, DEAL_LORE_SHOP, DUNGEON_TIER_COLORS, ENEMY_SHIP_DEFS, HUNTING_GROUNDS, INTEL_MATERIALS, INTEL_SITES, ISLAND_DEFS, ISLAND_LOOT, MERCHANT_RANKS, NAMED_NPC_SHIPS, NAMED_NPC_SHIP_CHANCE, NPC_SHIP_KINDS, RECOMPOSE_YIELD_BY_RARITY, ROAD_EDGES, SEA_EVENT_POOL, SHIP_BRANCH_LABELS, SHIP_TIERS, SHIP_UPGRADE_BASE_COST, SHIP_UPGRADE_DEFS, SHIP_UPGRADE_SYNERGIES, SONG_LORE_SHOP, TALE_MATERIALS, TALE_SITES, TRAVEL_ENCOUNTER_POOL, WORLD_MAP_ZONES } from '../data/255-상인-거래소-교역-지부-확장.js';
+import { CONTINENT_HUB_NAMES, CONTINENT_PROPER_NAME, CONTINENT_PROPER_NAME_ICON, CONTINENT_TERRAIN, CREW_NAMES, CREW_PERSONALITIES, CREW_ROLES, DEAL_LORE_SHOP, DUNGEON_TIER_COLORS, ENEMY_SHIP_DEFS, HUNTING_GROUNDS, INTEL_MATERIALS, INTEL_SITES, ISLAND_DEFS, ISLAND_LOOT, ISLAND_REVISIT_COOLDOWN, ISLAND_REVISIT_RADIUS, MERCHANT_RANKS, NAMED_NPC_SHIPS, NAMED_NPC_SHIP_CHANCE, NPC_SHIP_KINDS, RECOMPOSE_YIELD_BY_RARITY, ROAD_EDGES, SEA_EVENT_POOL, SEA_REGION_PROFILES, SHIP_BRANCH_LABELS, SHIP_TIERS, SHIP_UPGRADE_BASE_COST, SHIP_UPGRADE_DEFS, SHIP_UPGRADE_SYNERGIES, SONG_LORE_SHOP, TALE_MATERIALS, TALE_SITES, TRAVEL_ENCOUNTER_POOL, TREASURE_MAP_FIND_CHANCE, WORLD_MAP_ZONES } from '../data/255-상인-거래소-교역-지부-확장.js';
 import { getLocationMonsterPool, getOrCreateEnemyMaterials, registerLocationMonster, saveGold } from '../items/007-동적-아이템-생성-시스템-무제한-영구-캐시.js';
 import { isLocationExplored } from '../misc/015-시스템-1120.js';
 import { moveToLocation } from '../misc/053-게시판-시스템.js';
@@ -1421,19 +1421,44 @@ export function exploreIsland(islandId){
   const isl = ISLAND_DEFS.find(i=>i.id===islandId); if(!isl) return;
   const loot = ISLAND_LOOT[isl.danger];
   ship.visitedIslands = ship.visitedIslands||[];
-  if(!ship.visitedIslands.includes(islandId)) ship.visitedIslands.push(islandId);
+  const firstVisit = !ship.visitedIslands.includes(islandId);
+  if(firstVisit) ship.visitedIslands.push(islandId);
 
-  const dangerRoll = Math.random() < loot.dangerChance;
+  // [57번 섹션, 섬 탐험 반복화] 재방문은 쿨다운(ISLAND_REVISIT_COOLDOWN
+  // 턴) 검사 — 최초 방문은 발견 트리거 자체가 이미 근접+확률 게이트를
+  // 거쳤으므로 쿨다운 없이 항상 가능.
+  ship.islandCooldowns = ship.islandCooldowns || {};
+  if(!firstVisit){
+    const last = ship.islandCooldowns[islandId]||0;
+    const now = S.msgCount||0;
+    if(now - last < ISLAND_REVISIT_COOLDOWN){
+      toast(`🏝️ ${isl.name}은(는) 아직 회복 중입니다. (${ISLAND_REVISIT_COOLDOWN-(now-last)}턴 후 재탐사 가능)`, 3000);
+      return;
+    }
+  }
+  ship.islandCooldowns[islandId] = S.msgCount||0;
+
+  // 보물지도 보너스 — 이 섬을 가리키는 지도를 갖고 있으면 성공 시 소비하고
+  // 보상을 2배로 올린다(관련 사항: 57번 섹션, 보물지도·난파선 탐사).
+  ship.treasureMaps = ship.treasureMaps||[];
+  const mapIdx = ship.treasureMaps.findIndex(m=>m.targetIslandId===islandId);
+  const hasMap = mapIdx!==-1;
+
+  // 재방문은 위험도·보상 모두 축소된 "자원 채집" 성격(최초 탐험의 큰
+  // 1회성 보상과 차별화).
+  const dangerRoll = Math.random() < loot.dangerChance * (firstVisit?1:0.6);
   if(dangerRoll){
     const dmg = 10+Math.floor(Math.random()*30);
     ship.durability = Math.max(0, ship.durability-dmg);
     toast(`⚠️ ${isl.name} 탐험 중 위험에 처했습니다! 선체 손상 -${dmg}`, 4000);
     S._pendingVoyageHint = `${isl.name}을(를) 탐험하던 중 예상치 못한 위험에 휘말렸다.`;
   } else {
-    const gold = loot.gold[0]+Math.floor(Math.random()*(loot.gold[1]-loot.gold[0]+1));
+    const goldMult = (firstVisit?1:0.4) * (hasMap?2:1);
+    const gold = Math.round((loot.gold[0]+Math.floor(Math.random()*(loot.gold[1]-loot.gold[0]+1))) * goldMult);
     if(typeof addGoldWithExchange==='function') addGoldWithExchange(gold, '섬 탐험'); else { S.gold += gold; if(typeof saveGold==='function') saveGold(S.gold); } window.updateHeader&&window.updateHeader();
-    let msg = `🏝️ ${isl.name} 탐험 완료! +${gold}G`;
-    if(Math.random() < loot.relicChance){
+    let msg = `🏝️ ${isl.name} ${firstVisit?'탐험':'재탐사'} 완료! +${gold}G`;
+    const relicChance = loot.relicChance * (firstVisit?1:0.3) + (hasMap?0.4:0);
+    if(Math.random() < relicChance){
       const g = loadGraveyard ? loadGraveyard() : null;
       if(g){
         g.relicInventory = g.relicInventory||[];
@@ -1444,8 +1469,9 @@ export function exploreIsland(islandId){
         msg += ` 「${relic.icon}${relic.name}」도 발견했습니다!`;
       }
     }
+    if(hasMap){ msg += ' 🗺️ 보물지도가 가리킨 곳이었다!'; ship.treasureMaps.splice(mapIdx,1); }
     toast(msg, 4000);
-    S._pendingVoyageHint = `${isl.name}을(를) 탐험해 전리품을 찾아냈다.`;
+    S._pendingVoyageHint = `${isl.name}을(를) ${firstVisit?'탐험해':'다시 찾아 수색해'} 전리품을 찾아냈다.`;
     if(typeof window.updateStats==='function') window.updateStats('islands_explored', 1);
   }
   ship.activeIslandEvent = null;
@@ -2727,11 +2753,25 @@ export function renderMapPopupSVG(popup, ship, k, vb){
     if(!isl) return '';
     title = `${isl.icon} ${isl.name}`;
     const isActive = ship.activeIslandEvent===isl.id;
+    const visited = (ship.visitedIslands||[]).includes(isl.id);
     if(isActive){
       rows.push({ label:'🏝️ 탐험하기', action:`exploreIsland('${isl.id}')`, color:'#6aca8a' });
       rows.push({ label:'지나치기', action:`ignoreIsland()`, color:'#888' });
+    } else if(visited){
+      // [57번 섹션, 섬 탐험 반복화] 예전엔 한 번 탐험하면 영구히 "이미
+      // 탐험한 섬"으로 막혔다 — 근접 + 쿨다운이 풀려있으면 재탐사 허용.
+      const near = ship.atSea && ship.curX!==undefined && Math.hypot(isl.x-ship.curX, isl.y-ship.curY) <= ISLAND_REVISIT_RADIUS;
+      const last = (ship.islandCooldowns||{})[isl.id]||0;
+      const turnsLeft = Math.max(0, ISLAND_REVISIT_COOLDOWN - ((S.msgCount||0)-last));
+      if(near && turnsLeft<=0){
+        rows.push({ label:'🔁 다시 탐사하기', action:`exploreIsland('${isl.id}')`, color:'#6aca8a' });
+      } else if(!near){
+        rows.push({ label:'이미 탐험한 섬 (더 가까이 접근하면 재탐사 가능)', action:null, color:'#666' });
+      } else {
+        rows.push({ label:`회복 중 (${turnsLeft}턴 후 재탐사 가능)`, action:null, color:'#666' });
+      }
     } else {
-      rows.push({ label:(ship.visitedIslands||[]).includes(isl.id)?'이미 탐험한 섬':'항로가 가까워지면 발견 가능', action:null, color:'#666' });
+      rows.push({ label:'항로가 가까워지면 발견 가능', action:null, color:'#666' });
     }
   } else if(popup.kind==='npc'){
     const npc = loadNpcShips().find(n=>n.id===popup.id);
@@ -2795,6 +2835,7 @@ export function buyShip(tierId){
     durability: tier.durability, maxDurability: tier.durability,
     cargo: [], crew: [], homePort: loc.name, currentPort: loc.name,
     atSea: false, voyageTarget: null, voyageTurnsLeft: 0, totalVoyages: 0,
+    visitedIslands: [], islandCooldowns: {}, treasureMaps: [],
   };
   saveShip(newShip); // saveShip이 신규 id면 함대에 추가하고 자동 탑승 처리
   toast(`${newShip.name}을(를) 구매했습니다! ${loc.name}에 정박 중입니다. (함대 ${fleet.length+1}/${MAX_FLEET_SIZE}척)`, 4000, tier);
@@ -3339,12 +3380,72 @@ export function resolveSeaEvent(choice){
         S._pendingVoyageHint = '거대한 해양 괴물에게 일방적으로 당하며 간신히 도주했다.';
       }
     }
+  } else if(ev.id==='sea_wreck'){
+    // [57번 섹션, 보물지도·난파선 탐사 콘텐츠 신설] 수색하면 소소한 금을
+    // 얻거나(가끔 보물지도도 발견) 위험에 처하고, 지나치면 아무 효과 없음.
+    if(choice==='salvage'){
+      const dangerRoll = Math.random() < 0.25;
+      if(dangerRoll){
+        const dmg = 10+Math.floor(Math.random()*20);
+        ship.durability = Math.max(0, ship.durability-dmg);
+        toast(`💀 난파선 속에 숨어있던 무언가에 당했습니다! 선체 손상 -${dmg}`, 3500);
+        S._pendingVoyageHint = '난파선을 수색하던 중 숨어있던 위험에 휘말렸다.';
+      } else {
+        const gold = 20+Math.floor(Math.random()*50);
+        if(typeof addGoldWithExchange==='function') addGoldWithExchange(gold, '난파선 탐사'); else { S.gold += gold; if(typeof saveGold==='function') saveGold(S.gold); } window.updateHeader&&window.updateHeader();
+        let msg = `🪦 난파선을 수색해 +${gold}G를 건졌습니다.`;
+        ship.treasureMaps = ship.treasureMaps||[];
+        if(Math.random() < TREASURE_MAP_FIND_CHANCE){
+          const undiscovered = ISLAND_DEFS.filter(i=>!(ship.visitedIslands||[]).includes(i.id));
+          const pool = undiscovered.length ? undiscovered : ISLAND_DEFS;
+          const target = pool[Math.floor(Math.random()*pool.length)];
+          if(!ship.treasureMaps.some(m=>m.targetIslandId===target.id)){
+            ship.treasureMaps.push({ id:'map_'+Date.now(), targetIslandId:target.id });
+            msg += ` 🗺️ ${target.name}을(를) 가리키는 보물지도도 발견했습니다!`;
+          }
+        }
+        toast(msg, 4000);
+        S._pendingVoyageHint = '난파선을 수색해 전리품을 건져올렸다.';
+      }
+    }
+    // 'ignore'면 아무 효과 없이 지나침
   }
   ship.activeSeaEvent = null;
   saveShip(ship);
   renderVoyagePanel();
 }
 window.resolveSeaEvent = resolveSeaEvent;
+
+// [57번 섹션, 해역별 특색 부여] 좌표가 어느 대륙 해역에 가장 가까운지
+// 판정 — WORLD_MAP_ZONES의 타원 중심까지 정규화 거리(rx/ry로 나눈 값)가
+// 가장 작은 쪽을 고른다. 땅 레이아웃(computeContinentLayout)과는 무관한
+// 순수 해상용 판정이라 별도 함수로 둔다.
+export function getNearestSeaRegion(x, y){
+  if(x===undefined || y===undefined) return 'central';
+  let best = 'central', bestDist = Infinity;
+  Object.entries(WORLD_MAP_ZONES).forEach(([key, z])=>{
+    const dx = (x-z.cx)/z.rx, dy = (y-z.cy)/z.ry;
+    const d = dx*dx + dy*dy;
+    if(d < bestDist){ bestDist = d; best = key; }
+  });
+  return best;
+}
+window.getNearestSeaRegion = getNearestSeaRegion;
+
+export function pickWeightedSeaEvent(region){
+  const profile = SEA_REGION_PROFILES[region] || {};
+  const mult = profile.eventWeightMult || {};
+  const totalWeight = SEA_EVENT_POOL.reduce((s,e)=>s+e.weight*(mult[e.id]||1), 0);
+  let roll = Math.random()*totalWeight;
+  let picked = SEA_EVENT_POOL[0];
+  for(const e of SEA_EVENT_POOL){
+    const w = e.weight*(mult[e.id]||1);
+    if(roll<w){ picked=e; break; }
+    roll -= w;
+  }
+  return picked;
+}
+window.pickWeightedSeaEvent = pickWeightedSeaEvent;
 
 export function tickVoyage(){
   const fleet = loadFleet();
@@ -3416,10 +3517,10 @@ export function tickVoyage(){
           }
           fleetChanged = true;
         } else if(Math.random() < 0.25){
-          const totalWeight = SEA_EVENT_POOL.reduce((s,e)=>s+e.weight,0);
-          let roll = Math.random()*totalWeight;
-          let picked = SEA_EVENT_POOL[0];
-          for(const e of SEA_EVENT_POOL){ if(roll<e.weight){ picked=e; break; } roll-=e.weight; }
+          // [57번 섹션, 해역별 특색 부여] 균등 가중치 대신 현재 좌표의
+          // 해역 프로필로 보정된 가중치를 쓴다.
+          const region = getNearestSeaRegion(ship.curX, ship.curY);
+          const picked = pickWeightedSeaEvent(region);
           ship.activeSeaEvent = { id:picked.id, icon:picked.icon, name:picked.name, desc:picked.desc };
           if(ship.id===activeId){
             toast(`${picked.name} 발생! 항해 패널에서 대응을 선택하세요.`, 4000, picked);
@@ -3736,6 +3837,9 @@ export function renderVoyagePanel(){
           <button onclick="resolveSeaEvent('fight')" style="flex:1;padding:6px;background:#150505;border:1px solid #6a2a2a;color:#e08080;font-size:8px;cursor:pointer">⚔️ 맞서 싸우기</button>
           <button onclick="resolveSeaEvent('flee')" style="flex:1;padding:6px;background:#0a1505;border:1px solid #2a6a2a;color:#80e080;font-size:8px;cursor:pointer">💨 도주</button>
           ${ship.cargo.length>0?`<button onclick="resolveSeaEvent('sacrifice')" style="flex:1;padding:6px;background:#150f05;border:1px solid #6a5a2a;color:#e0c080;font-size:8px;cursor:pointer">📦 화물 공물로 던지기</button>`:''}`
+        :ev.id==='sea_wreck'?`
+          <button onclick="resolveSeaEvent('salvage')" style="flex:1;padding:6px;background:#150a05;border:1px solid #6a4a1a;color:#e0a040;font-size:8px;cursor:pointer">🪦 수색하기</button>
+          <button onclick="resolveSeaEvent('ignore')" style="flex:1;padding:6px;background:#0a0a0a;border:1px solid #3a3a3a;color:#888;font-size:8px;cursor:pointer">지나치기</button>`
         :`<button onclick="resolveSeaEvent('accept')" style="flex:1;padding:6px;background:#020a14;border:1px solid #0a4a6a;color:#5a9aba;font-size:8px;cursor:pointer">계속 항해</button>`}
       </div>
     </div>`;
@@ -3792,12 +3896,29 @@ export function renderVoyagePanel(){
   </div>`;
 
   if(ship.atSea){
+    // [57번 섹션, 해역별 특색 부여] 현재 좌표가 속한 해역 플레이버를
+    // 항해 중 패널에 노출 — 수치는 뒤에서 조용히 적용되지만, 플레이어도
+    // "여기 해역은 다르다"는 걸 알 수 있게 한다.
+    const region = getNearestSeaRegion(ship.curX, ship.curY);
+    const profile = SEA_REGION_PROFILES[region];
     html += `<div style="padding:10px 12px;border-bottom:1px solid #0a1a2a;background:#020810">
       <div style="font-size:10px;color:#e0a040">🌊 ${ship.voyageTarget}을(를) 향해 항해 중 — 잔여 ${ship.voyageTurnsLeft}턴</div>
+      ${profile?`<div style="font-size:8px;color:#5a9aba;margin-top:3px">현재 해역: ${esc(profile.label)} — ${esc(profile.desc)}</div>`:''}
     </div>`;
   } else {
     html += `<div style="padding:10px 12px;border-bottom:1px solid #0a1a2a">
       <div style="font-size:10px;color:#5a9aba">⚓ 현재 정박: ${ship.currentPort}</div>
+    </div>`;
+  }
+
+  // 보유 중인 보물지도 (57번 섹션)
+  if((ship.treasureMaps||[]).length){
+    html += `<div style="padding:10px 12px;border-bottom:1px solid #0a1a2a">
+      <div style="font-family:Cinzel,serif;font-size:10px;color:#c0a030;margin-bottom:6px">🗺️ 보유 중인 보물지도 (${ship.treasureMaps.length})</div>
+      ${ship.treasureMaps.map(m=>{
+        const target = ISLAND_DEFS.find(i=>i.id===m.targetIslandId);
+        return `<div style="font-size:9px;color:var(--dim);padding:2px 0">${target?target.icon+' '+esc(target.name):'알 수 없는 섬'}을(를) 가리키고 있다</div>`;
+      }).join('')}
     </div>`;
   }
 

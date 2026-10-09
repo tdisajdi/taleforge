@@ -6,7 +6,7 @@ import { S } from '../data/084-TaleForge-순수-JS-엔진.js';
 import { CROP_DEFS } from '../data/252-상단Caravan-UI-용병단-UI와-대칭-구조.js';
 import { NETWORK_TYPES, TOMB_RELIC_DEFS } from '../data/253-SVG-타일-렌더링-작물-단계별-애니메이션.js';
 import { SONG_GENRES } from '../data/254-음유시인-공연-후원자-전설곡.js';
-import { CONTINENT_HUB_NAMES, CONTINENT_PROPER_NAME, CONTINENT_PROPER_NAME_ICON, CONTINENT_TERRAIN, CREW_NAMES, CREW_PERSONALITIES, CREW_ROLES, DEAL_LORE_SHOP, DUNGEON_TIER_COLORS, ENEMY_SHIP_DEFS, HUNTING_GROUNDS, INTEL_MATERIALS, INTEL_SITES, ISLAND_DEFS, ISLAND_LOOT, ISLAND_REVISIT_COOLDOWN, ISLAND_REVISIT_RADIUS, MERCHANT_RANKS, NAMED_NPC_SHIPS, NAMED_NPC_SHIP_CHANCE, NPC_SHIP_KINDS, RECOMPOSE_YIELD_BY_RARITY, ROAD_EDGES, SEA_EVENT_POOL, SEA_REGION_PROFILES, SHIP_BRANCH_LABELS, SHIP_TIERS, SHIP_UPGRADE_BASE_COST, SHIP_UPGRADE_DEFS, SHIP_UPGRADE_SYNERGIES, SONG_LORE_SHOP, TALE_MATERIALS, TALE_SITES, TRAVEL_ENCOUNTER_POOL, TREASURE_MAP_FIND_CHANCE, WORLD_MAP_ZONES } from '../data/255-상인-거래소-교역-지부-확장.js';
+import { CONTINENT_HUB_NAMES, CONTINENT_PROPER_NAME, CONTINENT_PROPER_NAME_ICON, CONTINENT_TERRAIN, CREW_NAMES, CREW_PERSONALITIES, CREW_ROLES, DEAL_LORE_SHOP, DUNGEON_TIER_COLORS, ENEMY_SHIP_DEFS, HUNTING_GROUNDS, INTEL_MATERIALS, INTEL_SITES, ISLAND_DEFS, ISLAND_LOOT, ISLAND_REVISIT_COOLDOWN, ISLAND_REVISIT_RADIUS, MERCHANT_RANKS, NAMED_NPC_SHIPS, NAMED_NPC_SHIP_CHANCE, NPC_SHIP_KINDS, PORT_CONTROL_DISCOUNT, PORT_CONTROL_PASSIVE_INCOME, PORT_CONTROL_UNREST_PER_PLUNDER, PORT_CONTROL_UNREST_THRESHOLD, RECOMPOSE_YIELD_BY_RARITY, ROAD_EDGES, SEA_EVENT_POOL, SEA_REGION_PROFILES, SHIP_BRANCH_LABELS, SHIP_TIERS, SHIP_UPGRADE_BASE_COST, SHIP_UPGRADE_DEFS, SHIP_UPGRADE_SYNERGIES, SONG_LORE_SHOP, TALE_MATERIALS, TALE_SITES, TRAVEL_ENCOUNTER_POOL, TREASURE_MAP_FIND_CHANCE, WORLD_MAP_ZONES } from '../data/255-상인-거래소-교역-지부-확장.js';
 import { getLocationMonsterPool, getOrCreateEnemyMaterials, registerLocationMonster, saveGold } from '../items/007-동적-아이템-생성-시스템-무제한-영구-캐시.js';
 import { isLocationExplored } from '../misc/015-시스템-1120.js';
 import { moveToLocation } from '../misc/053-게시판-시스템.js';
@@ -2714,10 +2714,13 @@ export function renderSeaMapSVG(ship, selectedDest){
     const c = coords[p.name];
     const isCurrent = !ship.atSea && p.name===ship.currentPort;
     const isOpen = popup && popup.kind==='port' && popup.id===p.name;
-    const color = isCurrent ? '#c0a030' : isOpen ? '#6aca6a' : '#5a9aba';
+    // [58번 섹션, 해상 세력권 다툼] 영해는 왕관 아이콘 + 전용 색으로 구분.
+    const controlled = getPortControlState(p.name).controller==='player';
+    const color = isCurrent ? '#c0a030' : isOpen ? '#6aca6a' : controlled ? '#c060e0' : '#5a9aba';
     svg += `<g style="cursor:pointer" onclick="event.stopPropagation();openMapPopup('port','${esc(p.name).replace(/'/g,"\\'")}',${c.x},${c.y})">
       <circle cx="${c.x}" cy="${c.y}" r="${(isCurrent||isOpen?6:4)*k}" fill="${color}" opacity="0.9"/>
       ${isCurrent?`<circle cx="${c.x}" cy="${c.y}" r="${9*k}" fill="none" stroke="${color}" stroke-width="${1*k}"/>`:''}
+      ${controlled?`<text x="${c.x}" y="${c.y+(isCurrent||isOpen?15:12)*k}" font-size="${7*k}" text-anchor="middle">👑</text>`:''}
       <text x="${c.x}" y="${c.y-9*k}" font-size="${8*k}" fill="${color}" text-anchor="middle">${p.icon}</text>
     </g>`;
   });
@@ -2740,13 +2743,18 @@ export function renderMapPopupSVG(popup, ship, k, vb){
   if(popup.kind==='port'){
     const port = getPortLocations().find(p=>p.name===popup.id);
     if(!port) return '';
-    title = `${port.icon} ${port.name}`;
+    const controlState = getPortControlState(port.name);
+    const isMine = controlState.controller==='player';
+    title = `${port.icon} ${port.name}${isMine?' 👑':''}`;
     if(ship.atSea){
       rows.push({ label:'항해 중에는 조작할 수 없음', action:null, color:'#888' });
     } else if(port.name===ship.currentPort){
-      rows.push({ label:'🏴‍☠️ 이 항구 약탈', action:`attemptPlunderPort()`, color:'#e08080' });
+      // [58번 섹션, 해상 세력권 다툼] 내 영해는 약탈 버튼 대신 안내만.
+      if(isMine) rows.push({ label:'👑 당신의 영해 (할인·조공)', action:null, color:'#c060e0' });
+      else rows.push({ label:'🏴‍☠️ 이 항구 약탈', action:`attemptPlunderPort()`, color:'#e08080' });
     } else {
       rows.push({ label:'⛵ 이곳으로 출항', action:`startVoyage('${esc(port.name).replace(/'/g,"\\'")}')`, color:'#5a9aba' });
+      if(isMine) rows.push({ label:'👑 당신의 영해', action:null, color:'#c060e0' });
     }
   } else if(popup.kind==='island'){
     const isl = ISLAND_DEFS.find(i=>i.id===popup.id);
@@ -2883,7 +2891,8 @@ export function repairShip(){
   const maxDur = getShipMaxDurability(ship);
   const missing = maxDur - ship.durability;
   if(missing<=0){ toast('이미 선체가 온전합니다.'); return; }
-  const cost = Math.ceil(missing * 2);
+  // [58번 섹션, 해상 세력권 다툼] 영해(내 깃발 아래의 항구)에서는 할인.
+  const cost = Math.ceil(missing * 2 * getPortCostMult(ship.currentPort));
   if((S.gold||0) < cost){ toast(`골드 부족 (${cost}G 필요, 손상 ${missing})`); return; }
   S.gold -= cost; if(typeof saveGold==='function') saveGold(S.gold); window.updateHeader&&window.updateHeader();
   ship.durability = maxDur;
@@ -2893,9 +2902,11 @@ export function repairShip(){
 }
 window.repairShip = repairShip;
 
-export function getUpgradeCost(part, currentLevel){
+export function getUpgradeCost(part, currentLevel, portName){
   const base = SHIP_UPGRADE_BASE_COST[part];
-  return Math.round(base * Math.pow(1.8, currentLevel));
+  const raw = Math.round(base * Math.pow(1.8, currentLevel));
+  // [58번 섹션, 해상 세력권 다툼] 영해에서는 할인.
+  return Math.round(raw * (portName ? getPortCostMult(portName) : 1));
 }
 window.getUpgradeCost = getUpgradeCost;
 
@@ -2947,7 +2958,7 @@ export function upgradeShipPart(part){
   if(!ship.upgrades) ship.upgrades = {};
   const curLevel = ship.upgrades[part]||0;
   if(curLevel >= 3){ toast('이미 최대 단계입니다.'); return; }
-  const cost = getUpgradeCost(part, curLevel);
+  const cost = getUpgradeCost(part, curLevel, ship.currentPort);
   if((S.gold||0) < cost){ toast(`골드 부족 (${cost}G 필요)`); return; }
   S.gold -= cost; if(typeof saveGold==='function') saveGold(S.gold); window.updateHeader&&window.updateHeader();
   ship.upgrades[part] = curLevel+1;
@@ -2968,7 +2979,8 @@ window.upgradeShipPart = upgradeShipPart;
 export function hireCrew(role){
   const ship = loadShip(); if(!ship){ toast('먼저 선박을 구매해야 합니다.'); return; }
   const roleDef = CREW_ROLES[role||'sailor']; if(!roleDef) return;
-  const cost = Math.round((60 + ship.crew.length*25) * roleDef.upkeepMod);
+  // [58번 섹션, 해상 세력권 다툼] 영해에서는 할인.
+  const cost = Math.round((60 + ship.crew.length*25) * roleDef.upkeepMod * getPortCostMult(ship.currentPort));
   if((S.gold||0) < cost){ toast(`골드 부족 (${cost}G 필요)`); return; }
   if(ship.crew.length >= 10){ toast('이 선박에 더 태울 자리가 없습니다.'); return; }
   S.gold -= cost; if(typeof saveGold==='function') saveGold(S.gold); window.updateHeader&&window.updateHeader();
@@ -3072,6 +3084,29 @@ window.getSeaWantedLevel = getSeaWantedLevel;
 
 window.getSeaWantedLevel = getSeaWantedLevel;
 
+// [58번 섹션, 해상 세력권 다툼] 항구별 지배권 상태 — 함대/선박과
+// 무관한 세계 상태라 `loadNpcShips`/`saveNpcShips`와 같은 패턴으로
+// 별도 저장키를 둔다.
+export const PORT_CONTROL_KEY = 'tf-port-control';
+
+export function loadPortControl(){ try{ const r=JSON.parse(lsGet(PORT_CONTROL_KEY)||'{}'); return (r && typeof r==='object' && !Array.isArray(r)) ? r : {}; }catch(e){ return {}; } }
+window.loadPortControl = loadPortControl;
+
+export function savePortControl(d){ try{ lsSet(PORT_CONTROL_KEY, JSON.stringify(d)); }catch(e){} }
+window.savePortControl = savePortControl;
+
+export function getPortControlState(portName){
+  const all = loadPortControl();
+  return all[portName] || { controller:'crown', unrest:0 };
+}
+window.getPortControlState = getPortControlState;
+
+// 영해(controller==='player')에서는 수리/개조/선원 고용 비용이 할인된다.
+export function getPortCostMult(portName){
+  return getPortControlState(portName).controller==='player' ? PORT_CONTROL_DISCOUNT : 1;
+}
+window.getPortCostMult = getPortCostMult;
+
 export function attemptPlunderPort(){
   const ship = loadShip(); if(!ship){ toast('먼저 선박을 구매해야 합니다.'); return; }
   if(ship.atSea){ toast('항해 중에는 항구를 약탈할 수 없습니다.'); return; }
@@ -3083,6 +3118,7 @@ export function attemptPlunderPort(){
   const stats = getShipEffectiveStats(ship);
   const isPirateHaven = (loc.name||'').includes('블러드워터') || (loc.triggerKeywords||[]).some(k=>k.includes('해적'));
   if(isPirateHaven){ toast('⚓ 같은 해적의 항구는 약탈할 수 없습니다.'); return; }
+  if(getPortControlState(loc.name).controller==='player'){ toast('👑 이미 당신의 영해입니다.'); return; }
 
   const defenseRoll = 30 + Math.random()*40; // 항구 자체 방위력(추상치)
   const win = stats.combat > defenseRoll*0.6;
@@ -3091,8 +3127,24 @@ export function attemptPlunderPort(){
     if(typeof addGoldWithExchange==='function') addGoldWithExchange(loot, '항구 약탈'); else { S.gold += loot; if(typeof saveGold==='function') saveGold(S.gold); } window.updateHeader&&window.updateHeader();
     if(typeof window.updateStats==='function') window.updateStats('sea_plunder_count', 1);
     if(typeof updateReputation==='function') updateReputation(-12);
-    toast(`🏴‍☠️ ${loc.name} 약탈 성공! +${loot}G (해상 악명 상승)`, 4000);
-    S._pendingVoyageHint = `주인공의 선단이 ${loc.name}을(를) 습격해 약탈했다. 이 소문은 빠르게 퍼져나갈 것이고, 왕국 해군이 주목할 수 있다.`;
+    // [58번 섹션, 해상 세력권 다툼] 같은 항구를 반복 약탈하면 불안도가
+    // 쌓이고, 기준치를 넘으면 그 항구가 플레이어의 영해로 전환된다.
+    const pc = loadPortControl();
+    const state = pc[loc.name] || { controller:'crown', unrest:0 };
+    let seized = false;
+    state.unrest = (state.unrest||0) + PORT_CONTROL_UNREST_PER_PLUNDER;
+    if(state.unrest >= PORT_CONTROL_UNREST_THRESHOLD){
+      state.controller = 'player'; state.unrest = 0; seized = true;
+    }
+    pc[loc.name] = state;
+    savePortControl(pc);
+    if(seized){
+      toastHTML(`👑 ${esc(loc.name)}이(가) 당신의 깃발 아래 들어왔습니다! 이제 이 항구는 당신의 영해입니다.`, 5500);
+      S._pendingVoyageHint = `반복된 습격 끝에 ${loc.name}의 수비대가 결국 항복했다. 이 항구는 이제 당신의 깃발 아래 놓인 자유항이 되어, 수리와 거래가 더 저렴해지고 매 턴 작은 조공이 들어올 것이다.`;
+    } else {
+      toast(`🏴‍☠️ ${loc.name} 약탈 성공! +${loot}G (해상 악명 상승)`, 4000);
+      S._pendingVoyageHint = `주인공의 선단이 ${loc.name}을(를) 습격해 약탈했다. 이 소문은 빠르게 퍼져나갈 것이고, 왕국 해군이 주목할 수 있다.`;
+    }
   } else {
     const dmg = 20+Math.floor(Math.random()*25);
     ship.durability = Math.max(0, ship.durability-dmg);
@@ -3453,6 +3505,17 @@ export function tickVoyage(){
   const activeId = getActiveShipId();
   let fleetChanged = false;
   let sunkAny = false;
+
+  // [58번 섹션, 해상 세력권 다툼] 영해(플레이어가 쟁취한 항구)에서는
+  // 함대 상태와 무관하게 매 턴 소액의 조공이 들어온다 — 세계 상태
+  // (항구 지배권) 자체의 틱이라 함대 루프 전에 한 번만 처리.
+  const portControl = loadPortControl();
+  const controlledPortCount = Object.values(portControl).filter(s=>s.controller==='player').length;
+  if(controlledPortCount>0){
+    const tribute = controlledPortCount * PORT_CONTROL_PASSIVE_INCOME;
+    if(typeof addGoldWithExchange==='function') addGoldWithExchange(tribute, '영해 조공'); else { S.gold += tribute; if(typeof saveGold==='function') saveGold(S.gold); }
+    window.updateHeader&&window.updateHeader();
+  }
 
   // 함대의 모든 배를 순회 — 탑승 중인 배뿐 아니라 다른 배가 항해 중이면 그것도 진행시킨다.
   const survivors = [];
@@ -3864,7 +3927,7 @@ export function renderVoyagePanel(){
         ${Object.entries(SHIP_UPGRADE_DEFS).map(([part,def])=>{
           const lvl = (ship.upgrades&&ship.upgrades[part])||0;
           const maxed = lvl>=3;
-          const cost = maxed?0:getUpgradeCost(part, lvl);
+          const cost = maxed?0:getUpgradeCost(part, lvl, ship.currentPort);
           return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid #051520">
             <span style="font-size:14px">${typeof getEntityIconHTML==='function'?getEntityIconHTML(def,{size:14}):(def.icon)}</span>
             <div style="flex:1">
@@ -3906,8 +3969,11 @@ export function renderVoyagePanel(){
       ${profile?`<div style="font-size:8px;color:#5a9aba;margin-top:3px">현재 해역: ${esc(profile.label)} — ${esc(profile.desc)}</div>`:''}
     </div>`;
   } else {
+    // [58번 섹션, 해상 세력권 다툼] 영해에 정박 중이면 할인 안내 표시.
+    const dockedControl = getPortControlState(ship.currentPort);
     html += `<div style="padding:10px 12px;border-bottom:1px solid #0a1a2a">
       <div style="font-size:10px;color:#5a9aba">⚓ 현재 정박: ${ship.currentPort}</div>
+      ${dockedControl.controller==='player'?`<div style="font-size:8px;color:#c060e0;margin-top:3px">👑 당신의 영해 — 수리·개조·선원 고용 비용 ${Math.round((1-PORT_CONTROL_DISCOUNT)*100)}% 할인</div>`:''}
     </div>`;
   }
 
@@ -3920,6 +3986,18 @@ export function renderVoyagePanel(){
         return `<div style="font-size:9px;color:var(--dim);padding:2px 0">${target?target.icon+' '+esc(target.name):'알 수 없는 섬'}을(를) 가리키고 있다</div>`;
       }).join('')}
     </div>`;
+  }
+
+  // 내 영해 목록 (58번 섹션, 해상 세력권 다툼)
+  {
+    const pc = loadPortControl();
+    const myPorts = Object.keys(pc).filter(name=>pc[name].controller==='player');
+    if(myPorts.length){
+      html += `<div style="padding:10px 12px;border-bottom:1px solid #0a1a2a">
+        <div style="font-family:Cinzel,serif;font-size:10px;color:#c060e0;margin-bottom:6px">👑 내 영해 (${myPorts.length}곳) — 매 턴 ${myPorts.length*PORT_CONTROL_PASSIVE_INCOME}G 조공</div>
+        ${myPorts.map(name=>`<div style="font-size:9px;color:var(--dim);padding:2px 0">⚓ ${esc(name)}</div>`).join('')}
+      </div>`;
+    }
   }
 
   // 선원 (역할 선택 가능)

@@ -271,6 +271,17 @@ export const SEA_REGION_PROFILES = {
 // [57번 섹션, 난파선 탐사 → 보물지도] 수색 성공 시 보물지도를 얻을 확률.
 export const TREASURE_MAP_FIND_CHANCE = 0.35;
 
+// [58번 섹션, 해상 세력권 다툼] 같은 항구를 반복 약탈하면 "불안도"가
+// 쌓이고(성공 1회당 +PORT_CONTROL_UNREST_PER_PLUNDER), 기준치를 넘으면
+// 그 항구가 왕실(crown) 소속에서 플레이어(player) 소속 "영해"로
+// 전환된다. 영해는 할인(PORT_CONTROL_DISCOUNT)과 매 턴 조공
+// (PORT_CONTROL_PASSIVE_INCOME)을 준다 — "유저 마음대로 뭐든 해볼 수
+// 있는 자유도" 목표에 맞춰 반복 플레이로 실제 영토를 쟁취하는 콘텐츠.
+export const PORT_CONTROL_UNREST_THRESHOLD = 100;
+export const PORT_CONTROL_UNREST_PER_PLUNDER = 35;
+export const PORT_CONTROL_DISCOUNT = 0.8;
+export const PORT_CONTROL_PASSIVE_INCOME = 8;
+
 export const ROAD_EDGES = [
   // central 내부 — 왕도를 중심으로 방사형
   ['왕도 아이런홀','교역 도시 골든크로스'],

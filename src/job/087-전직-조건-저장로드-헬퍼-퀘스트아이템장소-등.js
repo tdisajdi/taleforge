@@ -33,7 +33,7 @@ import { enqueueAITask } from '../world/085-대륙-스타팅-시스템.js';
 import { saveSkillSP, saveSkills } from './002-스킬-시스템.js';
 import { loadPlayerLevel } from './008-클리어-보상-시스템-시나리오-클리어-시-영구-아이템스킬.js';
 import { enhanceSkill, loadHighlights, loadMemory, loadTitles, saveMemory } from './010-스킬-강화-시스템.js';
-import { getJobUnlockDiscount, loadJobActions, loadJobHistory, loadJobMemory } from './042-직업-시스템-무한-파생-도감.js';
+import { getJobUnlockDiscount, loadJobActions, loadJobCodex, loadJobHistory, loadJobMemory } from './042-직업-시스템-무한-파생-도감.js';
 import { getDissonanceStage, getJobAlignment, loadItemDissonance, onEquipmentAlignmentChanged } from './208-5-직업-시스템.js';
 
 export const JOB_UNLOCK_COND_KEY = 'tf-job-unlock-cond';
@@ -1598,6 +1598,17 @@ function checkJobCondition(job){
   // ── 📅 생존 턴수 조건 ── (NEW)
   if(cond.minTurns){
     if((S?.msgCount||0) < cond.minTurns) failed.push(`${cond.minTurns}턴 이상 생존`);
+  }
+
+  // ── 🌍 특정 단계 이상 직업 각성 수 조건 ── (NEW, 59-3번 섹션 — 4단계
+  // 초월 직업이 "서로 다른 대륙 전용 3단계 직업 2개 이상"을 요구하기
+  // 위해 신설. `discoverJob`이 codex에 이미 `tier`를 기록해두므로
+  // 그 값을 그대로 센다.)
+  if(cond.minTierJobsDiscovered){
+    const req = cond.minTierJobsDiscovered;
+    const codex = loadJobCodex();
+    const count = Object.values(codex).filter(c=>(c.tier||1) >= (req.tier||3)).length;
+    if(count < (req.count||1)) failed.push(`${req.tier||3}단계 이상 직업 ${req.count||1}개 이상 각성`);
   }
 
   if(failed.length===0) return { met:true, bypass:false, failed:[] };

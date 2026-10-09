@@ -81,6 +81,17 @@ export const CONTINENT_EXCLUSIVE_JOBS = {
         { id:'skill_rune_awaken', name:'고대 룬 각성', icon:'✨', type:'active', mpCost:34, desc:'[룬 폭발 선행] 전신의 룬이 동시 발동. 물리+마법 복합 대피해.', prereq:'skill_rune_burst' },
         { id:'skill_rune_inscribe', name:'룬 각인술', icon:'📜', type:'passive', mpCost:0, desc:'[룬 결계 선행] STR+10·WIL+8. 무기에 룬 효과를 영구 각인 가능.', prereq:'skill_rune_ward' },
       ]},
+    { id:'frost_monarch_heir', name:'빙제 후계자', icon:'👑', tier:3, parentId:'ice_knight',
+      desc:'북방 빙하 밑에 잠든 빙제의 혈통을 이어받은 자. 북대륙 전체를 얼릴 힘을 품었다.',
+      lore:'수백 년 전 북대륙을 통일했던 빙제가 남긴 왕관은 아직도 가장 깊은 빙하 속에 있다고 전해진다. 그 왕관을 알아보는 자만이 후계자가 된다.',
+      howToGet:'북대륙 출신 + 빙제의 왕관 발굴 + 북방 기사단장 빙설공 레이그란과 관계 80 이상 + 체력 85 이상',
+      requiredContinent:'north', unlockCondition:{ minEnd:85, requiredContinent:'north' },
+      statFocus:['str','end'], skills:[
+        { id:'skill_eternal_winter', name:'영원한 겨울', icon:'❄️', type:'active', mpCost:40, desc:'전장 전체를 극한의 겨울로 뒤덮는다. 적 전체 빙결 + 지속 피해.' },
+        { id:'skill_frost_crown', name:'빙제의 왕관', icon:'👑', type:'passive', mpCost:0, desc:'END+16·STR+10. 냉기 속성 피해 완전 면역.' },
+        { id:'skill_glacial_throne', name:'빙좌강림', icon:'🧊', type:'active', mpCost:50, desc:'[영원한 겨울 선행] 빙제의 권좌가 강림. 적 전체 빙결+대피해, 자신은 3턴간 무적.', prereq:'skill_eternal_winter' },
+        { id:'skill_monarch_legacy', name:'빙제의 유산', icon:'✨', type:'passive', mpCost:0, desc:'[빙제의 왕관 선행] 모든 스탯+8. 북대륙 전역에서 모든 판정+15%.', prereq:'skill_frost_crown' },
+      ]},
   ],
   east: [
     { id:'sword_emperor_heir', name:'검황 후계자', icon:'⚔️', tier:3, parentId:'warrior',
@@ -129,6 +140,17 @@ export const CONTINENT_EXCLUSIVE_JOBS = {
         { id:'skill_automaton_swarm', name:'인형 군단', icon:'🎭', type:'active', mpCost:38, desc:'[자동인형 배치 선행] 동시에 3기의 자동인형 배치.', prereq:'skill_deploy_automaton' },
         { id:'skill_master_blueprint', name:'명장의 설계도', icon:'📐', type:'passive', mpCost:0, desc:'[정밀 톱니 선행] INT+12. 자동인형 능력치 영구+30%.', prereq:'skill_precision_gear' },
       ]},
+    { id:'grand_artificer', name:'대공창 수석기사', icon:'🔧', tier:3, parentId:'automaton_master',
+      desc:'서대륙 대공창 전체를 설계·관장하는 최고 기술자. 철왕국이 공인한 유일무이한 직위.',
+      lore:'대공창 설립 이래 단 7명만이 이 칭호를 받았다. 모든 자동인형 설계도의 원본이 이 직위를 가진 자의 손끝에서 나온다.',
+      howToGet:'서대륙 출신 + 대공창 수석기사 시험 통과 + 대공창장 벨모어 관계 80 이상 + 지성 80 이상',
+      requiredContinent:'west', unlockCondition:{ minInt:80, requiredContinent:'west' },
+      statFocus:['int','rng'], skills:[
+        { id:'skill_grand_blueprint', name:'대공창 설계', icon:'📐', type:'active', mpCost:35, desc:'대공창의 모든 설계도를 즉시 구현. 전투용 자동인형 2기 동시 배치.' },
+        { id:'skill_master_forge', name:'명장의 용광로', icon:'🔥', type:'passive', mpCost:0, desc:'INT+16. 제작 판정 항상 성공.' },
+        { id:'skill_titan_automaton', name:'거신 자동인형', icon:'🗿', type:'active', mpCost:48, desc:'[대공창 설계 선행] 대공창 최고 걸작 거신 소환. 압도적 공격·방어력.', prereq:'skill_grand_blueprint' },
+        { id:'skill_artificer_legacy', name:'기술자의 유산', icon:'✨', type:'passive', mpCost:0, desc:'[명장의 용광로 선행] 모든 스탯+8. 서대륙 전역에서 모든 판정+15%.', prereq:'skill_master_forge' },
+      ]},
   ],
   south: [
     { id:'sun_priest',      name:'태양 신관',      icon:'☀️', tier:2, parentId:'clergy',
@@ -152,6 +174,17 @@ export const CONTINENT_EXCLUSIVE_JOBS = {
         { id:'skill_lost_spell',   name:'잊혀진 주문', icon:'🌀', type:'active', mpCost:35, desc:'고대 문명의 봉인된 주문 해방. 강력하지만 불안정하다.' },
         { id:'skill_forbidden_archive', name:'금단의 서고', icon:'📚', type:'passive', mpCost:0, desc:'[유적 해독 선행] INT+12. 습득한 고대 지식이 영구 스탯으로 전환.', prereq:'skill_ruin_reading' },
         { id:'skill_reconstruction', name:'고대 마법 재현', icon:'🗿', mpCost:42, type:'active', desc:'[잊혀진 주문 선행] 대마법 제국의 봉인 마법 완전 재현. 광역 대피해.', prereq:'skill_lost_spell' },
+      ]},
+    { id:'sun_god_avatar', name:'태양신의 화신', icon:'☀️', tier:3, parentId:'sun_priest',
+      desc:'태양 신전의 정점에서 태양신의 권능을 직접 몸에 내리는 자. 일식 때마다 신의 힘이 육신에 머문다.',
+      lore:'대마법 제국 붕괴 이후에도 끊이지 않은 태양 신전의 최고위 혈통. 일식의 날 태어난 자만이 이 자리를 이어받을 자격을 얻는다고 전해진다.',
+      howToGet:'남대륙 출신 + 태양 신전 대제사장 의식 통과 + 대제사장 아마라 관계 80 이상 + 신앙심 85 이상',
+      requiredContinent:'south', unlockCondition:{ minFaith:85, requiredContinent:'south' },
+      statFocus:['fath','mgc'], skills:[
+        { id:'skill_solar_descent', name:'태양신 강림', icon:'☀️', type:'active', mpCost:45, desc:'태양신의 권능이 육신에 강림. 적 전체에게 신성 대피해.' },
+        { id:'skill_divine_radiance', name:'신의 광휘', icon:'🌞', type:'passive', mpCost:0, desc:'FATH+16. 신성 속성 피해 완전 면역.' },
+        { id:'skill_eternal_noon', name:'영원한 정오', icon:'🌅', type:'active', mpCost:55, desc:'[태양신 강림 선행] 시간을 정오에 고정. 5턴간 모든 신성 스킬 위력 2배 + 아군 전체 지속 회복.', prereq:'skill_solar_descent' },
+        { id:'skill_avatar_blessing', name:'화신의 축복', icon:'✨', type:'passive', mpCost:0, desc:'[신의 광휘 선행] 모든 스탯+8. 남대륙 전역에서 모든 판정+15%.', prereq:'skill_divine_radiance' },
       ]},
   ],
   northeast: [
@@ -201,6 +234,17 @@ export const CONTINENT_EXCLUSIVE_JOBS = {
         { id:'skill_maelstrom',    name:'대소용돌이',   icon:'🌀', type:'active', mpCost:40, desc:'[폭풍 소환 선행] 거대 소용돌이 생성. 적 전체를 끌어들여 지속 피해.', prereq:'skill_storm_call' },
         { id:'skill_ocean_heart',  name:'대양의 심장',  icon:'💙', type:'passive', mpCost:0, desc:'[조류 조종 선행] MGC+12. 해상·강가에서 MP 회복 속도 2배.', prereq:'skill_tide_control' },
       ]},
+    { id:'pirate_king_heir', name:'해적왕 후계자', icon:'☠️', tier:3, parentId:'storm_pirate',
+      desc:'해적왕 발타자르의 뒤를 이을 자격을 인정받은 유일한 후계자. 군도 전체의 해적선이 그 앞에 모인다.',
+      lore:'해적왕 발타자르조차 수십 년에 한 번 인정하는 혈통이 아닌 자격 승계. 모든 해적단을 복종시킨 자만이 이 칭호를 얻는다.',
+      howToGet:'남동 군도 출신 + 해적왕 발타자르와 결투 승리 + 해적 연합 명성 90 이상 + 행운 85 이상',
+      requiredContinent:'southeast', unlockCondition:{ minLuk:85, requiredContinent:'southeast' },
+      statFocus:['luk','agi'], skills:[
+        { id:'skill_fleet_command', name:'함대 지휘', icon:'🏴‍☠️', type:'active', mpCost:38, desc:'군도의 모든 해적선을 소환해 집중 포격. 광역 대피해.' },
+        { id:'skill_kings_authority', name:'해적왕의 권위', icon:'☠️', type:'passive', mpCost:0, desc:'LUK+16. 모든 해상 전투에서 선제공격 확정.' },
+        { id:'skill_black_flag_terror', name:'흑기의 공포', icon:'🏴', type:'active', mpCost:48, desc:'[함대 지휘 선행] 흑기를 올려 적 전체를 공포에 빠뜨린다. 3턴간 적 행동 봉인.', prereq:'skill_fleet_command' },
+        { id:'skill_balthazar_legacy', name:'발타자르의 유산', icon:'✨', type:'passive', mpCost:0, desc:'[해적왕의 권위 선행] 모든 스탯+8. 바다 위에서 모든 판정+15%.', prereq:'skill_kings_authority' },
+      ]},
   ],
   northwest: [
     { id:'runesmith',        name:'룬 대장장이',     icon:'⚒️', tier:3, parentId:'warrior',
@@ -227,6 +271,24 @@ export const CONTINENT_EXCLUSIVE_JOBS = {
       ]},
   ],
 };
+
+// 4단계 초월 직업 — 특정 대륙에 묶이지 않고, 서로 다른 대륙의 3단계
+// 전용 직업을 2개 이상 각성한 자만 도달할 수 있는 초월 경지.
+// `job/087`의 `checkJobCondition`에 추가된 `minTierJobsDiscovered`
+// 조건(코덱스에 기록된 tier 값을 셈)으로 검증한다.
+export const TRANSCENDENT_JOBS = [
+  { id:'legendary_wanderer', name:'전설의 방랑자', icon:'🌌', tier:4, parentId:null,
+    desc:'하나의 대륙에 얽매이지 않고 세계 각지의 극의를 모두 거친 끝에 도달한 초월적 존재.',
+    lore:'빙제의 후계자든, 검황의 후계자든, 세계수의 수호자든 — 각 대륙 최고의 경지에 오른 자들 중에서도, 둘 이상의 서로 다른 극의를 몸에 새긴 자는 극히 드물다. 그런 자는 결국 어느 대륙에도 속하지 않는 존재가 된다.',
+    howToGet:'서로 다른 대륙 전용 3단계 직업 2개 이상 각성 + 레벨 50 이상',
+    unlockCondition:{ minLevel:50, minTierJobsDiscovered:{ tier:3, count:2 } },
+    statFocus:['str','agi','int','mgc'], skills:[
+      { id:'skill_world_walker', name:'세계 보행', icon:'🌌', type:'passive', mpCost:0, desc:'모든 스탯+10. 대륙 간 이동 시 문화 충격 페널티 완전 면역.' },
+      { id:'skill_convergence', name:'극의의 수렴', icon:'✨', type:'active', mpCost:45, desc:'지금까지 각성한 모든 극의의 힘을 한 번에 방출. 전 속성 복합 대피해.' },
+      { id:'skill_boundless_form', name:'경계 없는 형상', icon:'🔮', type:'active', mpCost:60, desc:'[극의의 수렴 선행] 일시적으로 모든 대륙 전용 직업의 극의를 동시에 체현. 3턴간 모든 판정 자동 성공.', prereq:'skill_convergence' },
+      { id:'skill_eternal_legend', name:'영원한 전설', icon:'👑', type:'passive', mpCost:0, desc:'[세계 보행 선행] 모든 스탯+15. 세계 어디서든 모든 판정+20%.', prereq:'skill_world_walker' },
+    ]},
+];
 
 export const CULTURE_SHOCK_HINTS = {
   // [출신대륙][현재대륙] = 힌트

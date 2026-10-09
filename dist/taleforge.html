@@ -103970,6 +103970,12 @@ ${job.icon} ${job.name}\uC73C\uB85C \uC804\uC9C1\uD558\uACA0\uC2B5\uB2C8\uAE4C?
       if (cond.minTurns) {
         if ((S?.msgCount || 0) < cond.minTurns) failed.push(`${cond.minTurns}\uD134 \uC774\uC0C1 \uC0DD\uC874`);
       }
+      if (cond.minTierJobsDiscovered) {
+        const req = cond.minTierJobsDiscovered;
+        const codex = loadJobCodex();
+        const count = Object.values(codex).filter((c) => (c.tier || 1) >= (req.tier || 3)).length;
+        if (count < (req.count || 1)) failed.push(`${req.tier || 3}\uB2E8\uACC4 \uC774\uC0C1 \uC9C1\uC5C5 ${req.count || 1}\uAC1C \uC774\uC0C1 \uAC01\uC131`);
+      }
       if (failed.length === 0) return { met: true, bypass: false, failed: [] };
       if (hasBypass) return { met: false, bypass: true, failed };
       return { met: false, bypass: false, failed };
@@ -126920,6 +126926,25 @@ summon_add/summon_damage/summon_evolve \u2014 \uC18C\uD658\uC218 \uAD00\uB828`;
           { id: "skill_rune_awaken", name: "\uACE0\uB300 \uB8EC \uAC01\uC131", icon: "\u2728", type: "active", mpCost: 34, desc: "[\uB8EC \uD3ED\uBC1C \uC120\uD589] \uC804\uC2E0\uC758 \uB8EC\uC774 \uB3D9\uC2DC \uBC1C\uB3D9. \uBB3C\uB9AC+\uB9C8\uBC95 \uBCF5\uD569 \uB300\uD53C\uD574.", prereq: "skill_rune_burst" },
           { id: "skill_rune_inscribe", name: "\uB8EC \uAC01\uC778\uC220", icon: "\u{1F4DC}", type: "passive", mpCost: 0, desc: "[\uB8EC \uACB0\uACC4 \uC120\uD589] STR+10\xB7WIL+8. \uBB34\uAE30\uC5D0 \uB8EC \uD6A8\uACFC\uB97C \uC601\uAD6C \uAC01\uC778 \uAC00\uB2A5.", prereq: "skill_rune_ward" }
         ]
+      },
+      {
+        id: "frost_monarch_heir",
+        name: "\uBE59\uC81C \uD6C4\uACC4\uC790",
+        icon: "\u{1F451}",
+        tier: 3,
+        parentId: "ice_knight",
+        desc: "\uBD81\uBC29 \uBE59\uD558 \uBC11\uC5D0 \uC7A0\uB4E0 \uBE59\uC81C\uC758 \uD608\uD1B5\uC744 \uC774\uC5B4\uBC1B\uC740 \uC790. \uBD81\uB300\uB959 \uC804\uCCB4\uB97C \uC5BC\uB9B4 \uD798\uC744 \uD488\uC5C8\uB2E4.",
+        lore: "\uC218\uBC31 \uB144 \uC804 \uBD81\uB300\uB959\uC744 \uD1B5\uC77C\uD588\uB358 \uBE59\uC81C\uAC00 \uB0A8\uAE34 \uC655\uAD00\uC740 \uC544\uC9C1\uB3C4 \uAC00\uC7A5 \uAE4A\uC740 \uBE59\uD558 \uC18D\uC5D0 \uC788\uB2E4\uACE0 \uC804\uD574\uC9C4\uB2E4. \uADF8 \uC655\uAD00\uC744 \uC54C\uC544\uBCF4\uB294 \uC790\uB9CC\uC774 \uD6C4\uACC4\uC790\uAC00 \uB41C\uB2E4.",
+        howToGet: "\uBD81\uB300\uB959 \uCD9C\uC2E0 + \uBE59\uC81C\uC758 \uC655\uAD00 \uBC1C\uAD74 + \uBD81\uBC29 \uAE30\uC0AC\uB2E8\uC7A5 \uBE59\uC124\uACF5 \uB808\uC774\uADF8\uB780\uACFC \uAD00\uACC4 80 \uC774\uC0C1 + \uCCB4\uB825 85 \uC774\uC0C1",
+        requiredContinent: "north",
+        unlockCondition: { minEnd: 85, requiredContinent: "north" },
+        statFocus: ["str", "end"],
+        skills: [
+          { id: "skill_eternal_winter", name: "\uC601\uC6D0\uD55C \uACA8\uC6B8", icon: "\u2744\uFE0F", type: "active", mpCost: 40, desc: "\uC804\uC7A5 \uC804\uCCB4\uB97C \uADF9\uD55C\uC758 \uACA8\uC6B8\uB85C \uB4A4\uB36E\uB294\uB2E4. \uC801 \uC804\uCCB4 \uBE59\uACB0 + \uC9C0\uC18D \uD53C\uD574." },
+          { id: "skill_frost_crown", name: "\uBE59\uC81C\uC758 \uC655\uAD00", icon: "\u{1F451}", type: "passive", mpCost: 0, desc: "END+16\xB7STR+10. \uB0C9\uAE30 \uC18D\uC131 \uD53C\uD574 \uC644\uC804 \uBA74\uC5ED." },
+          { id: "skill_glacial_throne", name: "\uBE59\uC88C\uAC15\uB9BC", icon: "\u{1F9CA}", type: "active", mpCost: 50, desc: "[\uC601\uC6D0\uD55C \uACA8\uC6B8 \uC120\uD589] \uBE59\uC81C\uC758 \uAD8C\uC88C\uAC00 \uAC15\uB9BC. \uC801 \uC804\uCCB4 \uBE59\uACB0+\uB300\uD53C\uD574, \uC790\uC2E0\uC740 3\uD134\uAC04 \uBB34\uC801.", prereq: "skill_eternal_winter" },
+          { id: "skill_monarch_legacy", name: "\uBE59\uC81C\uC758 \uC720\uC0B0", icon: "\u2728", type: "passive", mpCost: 0, desc: "[\uBE59\uC81C\uC758 \uC655\uAD00 \uC120\uD589] \uBAA8\uB4E0 \uC2A4\uD0EF+8. \uBD81\uB300\uB959 \uC804\uC5ED\uC5D0\uC11C \uBAA8\uB4E0 \uD310\uC815+15%.", prereq: "skill_frost_crown" }
+        ]
       }
     ],
     east: [
@@ -127000,6 +127025,25 @@ summon_add/summon_damage/summon_evolve \u2014 \uC18C\uD658\uC218 \uAD00\uB828`;
           { id: "skill_automaton_swarm", name: "\uC778\uD615 \uAD70\uB2E8", icon: "\u{1F3AD}", type: "active", mpCost: 38, desc: "[\uC790\uB3D9\uC778\uD615 \uBC30\uCE58 \uC120\uD589] \uB3D9\uC2DC\uC5D0 3\uAE30\uC758 \uC790\uB3D9\uC778\uD615 \uBC30\uCE58.", prereq: "skill_deploy_automaton" },
           { id: "skill_master_blueprint", name: "\uBA85\uC7A5\uC758 \uC124\uACC4\uB3C4", icon: "\u{1F4D0}", type: "passive", mpCost: 0, desc: "[\uC815\uBC00 \uD1B1\uB2C8 \uC120\uD589] INT+12. \uC790\uB3D9\uC778\uD615 \uB2A5\uB825\uCE58 \uC601\uAD6C+30%.", prereq: "skill_precision_gear" }
         ]
+      },
+      {
+        id: "grand_artificer",
+        name: "\uB300\uACF5\uCC3D \uC218\uC11D\uAE30\uC0AC",
+        icon: "\u{1F527}",
+        tier: 3,
+        parentId: "automaton_master",
+        desc: "\uC11C\uB300\uB959 \uB300\uACF5\uCC3D \uC804\uCCB4\uB97C \uC124\uACC4\xB7\uAD00\uC7A5\uD558\uB294 \uCD5C\uACE0 \uAE30\uC220\uC790. \uCCA0\uC655\uAD6D\uC774 \uACF5\uC778\uD55C \uC720\uC77C\uBB34\uC774\uD55C \uC9C1\uC704.",
+        lore: "\uB300\uACF5\uCC3D \uC124\uB9BD \uC774\uB798 \uB2E8 7\uBA85\uB9CC\uC774 \uC774 \uCE6D\uD638\uB97C \uBC1B\uC558\uB2E4. \uBAA8\uB4E0 \uC790\uB3D9\uC778\uD615 \uC124\uACC4\uB3C4\uC758 \uC6D0\uBCF8\uC774 \uC774 \uC9C1\uC704\uB97C \uAC00\uC9C4 \uC790\uC758 \uC190\uB05D\uC5D0\uC11C \uB098\uC628\uB2E4.",
+        howToGet: "\uC11C\uB300\uB959 \uCD9C\uC2E0 + \uB300\uACF5\uCC3D \uC218\uC11D\uAE30\uC0AC \uC2DC\uD5D8 \uD1B5\uACFC + \uB300\uACF5\uCC3D\uC7A5 \uBCA8\uBAA8\uC5B4 \uAD00\uACC4 80 \uC774\uC0C1 + \uC9C0\uC131 80 \uC774\uC0C1",
+        requiredContinent: "west",
+        unlockCondition: { minInt: 80, requiredContinent: "west" },
+        statFocus: ["int", "rng"],
+        skills: [
+          { id: "skill_grand_blueprint", name: "\uB300\uACF5\uCC3D \uC124\uACC4", icon: "\u{1F4D0}", type: "active", mpCost: 35, desc: "\uB300\uACF5\uCC3D\uC758 \uBAA8\uB4E0 \uC124\uACC4\uB3C4\uB97C \uC989\uC2DC \uAD6C\uD604. \uC804\uD22C\uC6A9 \uC790\uB3D9\uC778\uD615 2\uAE30 \uB3D9\uC2DC \uBC30\uCE58." },
+          { id: "skill_master_forge", name: "\uBA85\uC7A5\uC758 \uC6A9\uAD11\uB85C", icon: "\u{1F525}", type: "passive", mpCost: 0, desc: "INT+16. \uC81C\uC791 \uD310\uC815 \uD56D\uC0C1 \uC131\uACF5." },
+          { id: "skill_titan_automaton", name: "\uAC70\uC2E0 \uC790\uB3D9\uC778\uD615", icon: "\u{1F5FF}", type: "active", mpCost: 48, desc: "[\uB300\uACF5\uCC3D \uC124\uACC4 \uC120\uD589] \uB300\uACF5\uCC3D \uCD5C\uACE0 \uAC78\uC791 \uAC70\uC2E0 \uC18C\uD658. \uC555\uB3C4\uC801 \uACF5\uACA9\xB7\uBC29\uC5B4\uB825.", prereq: "skill_grand_blueprint" },
+          { id: "skill_artificer_legacy", name: "\uAE30\uC220\uC790\uC758 \uC720\uC0B0", icon: "\u2728", type: "passive", mpCost: 0, desc: "[\uBA85\uC7A5\uC758 \uC6A9\uAD11\uB85C \uC120\uD589] \uBAA8\uB4E0 \uC2A4\uD0EF+8. \uC11C\uB300\uB959 \uC804\uC5ED\uC5D0\uC11C \uBAA8\uB4E0 \uD310\uC815+15%.", prereq: "skill_master_forge" }
+        ]
       }
     ],
     south: [
@@ -127039,6 +127083,25 @@ summon_add/summon_damage/summon_evolve \u2014 \uC18C\uD658\uC218 \uAD00\uB828`;
           { id: "skill_lost_spell", name: "\uC78A\uD600\uC9C4 \uC8FC\uBB38", icon: "\u{1F300}", type: "active", mpCost: 35, desc: "\uACE0\uB300 \uBB38\uBA85\uC758 \uBD09\uC778\uB41C \uC8FC\uBB38 \uD574\uBC29. \uAC15\uB825\uD558\uC9C0\uB9CC \uBD88\uC548\uC815\uD558\uB2E4." },
           { id: "skill_forbidden_archive", name: "\uAE08\uB2E8\uC758 \uC11C\uACE0", icon: "\u{1F4DA}", type: "passive", mpCost: 0, desc: "[\uC720\uC801 \uD574\uB3C5 \uC120\uD589] INT+12. \uC2B5\uB4DD\uD55C \uACE0\uB300 \uC9C0\uC2DD\uC774 \uC601\uAD6C \uC2A4\uD0EF\uC73C\uB85C \uC804\uD658.", prereq: "skill_ruin_reading" },
           { id: "skill_reconstruction", name: "\uACE0\uB300 \uB9C8\uBC95 \uC7AC\uD604", icon: "\u{1F5FF}", mpCost: 42, type: "active", desc: "[\uC78A\uD600\uC9C4 \uC8FC\uBB38 \uC120\uD589] \uB300\uB9C8\uBC95 \uC81C\uAD6D\uC758 \uBD09\uC778 \uB9C8\uBC95 \uC644\uC804 \uC7AC\uD604. \uAD11\uC5ED \uB300\uD53C\uD574.", prereq: "skill_lost_spell" }
+        ]
+      },
+      {
+        id: "sun_god_avatar",
+        name: "\uD0DC\uC591\uC2E0\uC758 \uD654\uC2E0",
+        icon: "\u2600\uFE0F",
+        tier: 3,
+        parentId: "sun_priest",
+        desc: "\uD0DC\uC591 \uC2E0\uC804\uC758 \uC815\uC810\uC5D0\uC11C \uD0DC\uC591\uC2E0\uC758 \uAD8C\uB2A5\uC744 \uC9C1\uC811 \uBAB8\uC5D0 \uB0B4\uB9AC\uB294 \uC790. \uC77C\uC2DD \uB54C\uB9C8\uB2E4 \uC2E0\uC758 \uD798\uC774 \uC721\uC2E0\uC5D0 \uBA38\uBB38\uB2E4.",
+        lore: "\uB300\uB9C8\uBC95 \uC81C\uAD6D \uBD95\uAD34 \uC774\uD6C4\uC5D0\uB3C4 \uB04A\uC774\uC9C0 \uC54A\uC740 \uD0DC\uC591 \uC2E0\uC804\uC758 \uCD5C\uACE0\uC704 \uD608\uD1B5. \uC77C\uC2DD\uC758 \uB0A0 \uD0DC\uC5B4\uB09C \uC790\uB9CC\uC774 \uC774 \uC790\uB9AC\uB97C \uC774\uC5B4\uBC1B\uC744 \uC790\uACA9\uC744 \uC5BB\uB294\uB2E4\uACE0 \uC804\uD574\uC9C4\uB2E4.",
+        howToGet: "\uB0A8\uB300\uB959 \uCD9C\uC2E0 + \uD0DC\uC591 \uC2E0\uC804 \uB300\uC81C\uC0AC\uC7A5 \uC758\uC2DD \uD1B5\uACFC + \uB300\uC81C\uC0AC\uC7A5 \uC544\uB9C8\uB77C \uAD00\uACC4 80 \uC774\uC0C1 + \uC2E0\uC559\uC2EC 85 \uC774\uC0C1",
+        requiredContinent: "south",
+        unlockCondition: { minFaith: 85, requiredContinent: "south" },
+        statFocus: ["fath", "mgc"],
+        skills: [
+          { id: "skill_solar_descent", name: "\uD0DC\uC591\uC2E0 \uAC15\uB9BC", icon: "\u2600\uFE0F", type: "active", mpCost: 45, desc: "\uD0DC\uC591\uC2E0\uC758 \uAD8C\uB2A5\uC774 \uC721\uC2E0\uC5D0 \uAC15\uB9BC. \uC801 \uC804\uCCB4\uC5D0\uAC8C \uC2E0\uC131 \uB300\uD53C\uD574." },
+          { id: "skill_divine_radiance", name: "\uC2E0\uC758 \uAD11\uD718", icon: "\u{1F31E}", type: "passive", mpCost: 0, desc: "FATH+16. \uC2E0\uC131 \uC18D\uC131 \uD53C\uD574 \uC644\uC804 \uBA74\uC5ED." },
+          { id: "skill_eternal_noon", name: "\uC601\uC6D0\uD55C \uC815\uC624", icon: "\u{1F305}", type: "active", mpCost: 55, desc: "[\uD0DC\uC591\uC2E0 \uAC15\uB9BC \uC120\uD589] \uC2DC\uAC04\uC744 \uC815\uC624\uC5D0 \uACE0\uC815. 5\uD134\uAC04 \uBAA8\uB4E0 \uC2E0\uC131 \uC2A4\uD0AC \uC704\uB825 2\uBC30 + \uC544\uAD70 \uC804\uCCB4 \uC9C0\uC18D \uD68C\uBCF5.", prereq: "skill_solar_descent" },
+          { id: "skill_avatar_blessing", name: "\uD654\uC2E0\uC758 \uCD95\uBCF5", icon: "\u2728", type: "passive", mpCost: 0, desc: "[\uC2E0\uC758 \uAD11\uD718 \uC120\uD589] \uBAA8\uB4E0 \uC2A4\uD0EF+8. \uB0A8\uB300\uB959 \uC804\uC5ED\uC5D0\uC11C \uBAA8\uB4E0 \uD310\uC815+15%.", prereq: "skill_divine_radiance" }
         ]
       }
     ],
@@ -127120,6 +127183,25 @@ summon_add/summon_damage/summon_evolve \u2014 \uC18C\uD658\uC218 \uAD00\uB828`;
           { id: "skill_maelstrom", name: "\uB300\uC18C\uC6A9\uB3CC\uC774", icon: "\u{1F300}", type: "active", mpCost: 40, desc: "[\uD3ED\uD48D \uC18C\uD658 \uC120\uD589] \uAC70\uB300 \uC18C\uC6A9\uB3CC\uC774 \uC0DD\uC131. \uC801 \uC804\uCCB4\uB97C \uB04C\uC5B4\uB4E4\uC5EC \uC9C0\uC18D \uD53C\uD574.", prereq: "skill_storm_call" },
           { id: "skill_ocean_heart", name: "\uB300\uC591\uC758 \uC2EC\uC7A5", icon: "\u{1F499}", type: "passive", mpCost: 0, desc: "[\uC870\uB958 \uC870\uC885 \uC120\uD589] MGC+12. \uD574\uC0C1\xB7\uAC15\uAC00\uC5D0\uC11C MP \uD68C\uBCF5 \uC18D\uB3C4 2\uBC30.", prereq: "skill_tide_control" }
         ]
+      },
+      {
+        id: "pirate_king_heir",
+        name: "\uD574\uC801\uC655 \uD6C4\uACC4\uC790",
+        icon: "\u2620\uFE0F",
+        tier: 3,
+        parentId: "storm_pirate",
+        desc: "\uD574\uC801\uC655 \uBC1C\uD0C0\uC790\uB974\uC758 \uB4A4\uB97C \uC774\uC744 \uC790\uACA9\uC744 \uC778\uC815\uBC1B\uC740 \uC720\uC77C\uD55C \uD6C4\uACC4\uC790. \uAD70\uB3C4 \uC804\uCCB4\uC758 \uD574\uC801\uC120\uC774 \uADF8 \uC55E\uC5D0 \uBAA8\uC778\uB2E4.",
+        lore: "\uD574\uC801\uC655 \uBC1C\uD0C0\uC790\uB974\uC870\uCC28 \uC218\uC2ED \uB144\uC5D0 \uD55C \uBC88 \uC778\uC815\uD558\uB294 \uD608\uD1B5\uC774 \uC544\uB2CC \uC790\uACA9 \uC2B9\uACC4. \uBAA8\uB4E0 \uD574\uC801\uB2E8\uC744 \uBCF5\uC885\uC2DC\uD0A8 \uC790\uB9CC\uC774 \uC774 \uCE6D\uD638\uB97C \uC5BB\uB294\uB2E4.",
+        howToGet: "\uB0A8\uB3D9 \uAD70\uB3C4 \uCD9C\uC2E0 + \uD574\uC801\uC655 \uBC1C\uD0C0\uC790\uB974\uC640 \uACB0\uD22C \uC2B9\uB9AC + \uD574\uC801 \uC5F0\uD569 \uBA85\uC131 90 \uC774\uC0C1 + \uD589\uC6B4 85 \uC774\uC0C1",
+        requiredContinent: "southeast",
+        unlockCondition: { minLuk: 85, requiredContinent: "southeast" },
+        statFocus: ["luk", "agi"],
+        skills: [
+          { id: "skill_fleet_command", name: "\uD568\uB300 \uC9C0\uD718", icon: "\u{1F3F4}\u200D\u2620\uFE0F", type: "active", mpCost: 38, desc: "\uAD70\uB3C4\uC758 \uBAA8\uB4E0 \uD574\uC801\uC120\uC744 \uC18C\uD658\uD574 \uC9D1\uC911 \uD3EC\uACA9. \uAD11\uC5ED \uB300\uD53C\uD574." },
+          { id: "skill_kings_authority", name: "\uD574\uC801\uC655\uC758 \uAD8C\uC704", icon: "\u2620\uFE0F", type: "passive", mpCost: 0, desc: "LUK+16. \uBAA8\uB4E0 \uD574\uC0C1 \uC804\uD22C\uC5D0\uC11C \uC120\uC81C\uACF5\uACA9 \uD655\uC815." },
+          { id: "skill_black_flag_terror", name: "\uD751\uAE30\uC758 \uACF5\uD3EC", icon: "\u{1F3F4}", type: "active", mpCost: 48, desc: "[\uD568\uB300 \uC9C0\uD718 \uC120\uD589] \uD751\uAE30\uB97C \uC62C\uB824 \uC801 \uC804\uCCB4\uB97C \uACF5\uD3EC\uC5D0 \uBE60\uB728\uB9B0\uB2E4. 3\uD134\uAC04 \uC801 \uD589\uB3D9 \uBD09\uC778.", prereq: "skill_fleet_command" },
+          { id: "skill_balthazar_legacy", name: "\uBC1C\uD0C0\uC790\uB974\uC758 \uC720\uC0B0", icon: "\u2728", type: "passive", mpCost: 0, desc: "[\uD574\uC801\uC655\uC758 \uAD8C\uC704 \uC120\uD589] \uBAA8\uB4E0 \uC2A4\uD0EF+8. \uBC14\uB2E4 \uC704\uC5D0\uC11C \uBAA8\uB4E0 \uD310\uC815+15%.", prereq: "skill_kings_authority" }
+        ]
       }
     ],
     northwest: [
@@ -127163,6 +127245,26 @@ summon_add/summon_damage/summon_evolve \u2014 \uC18C\uD658\uC218 \uAD00\uB828`;
       }
     ]
   };
+  var TRANSCENDENT_JOBS = [
+    {
+      id: "legendary_wanderer",
+      name: "\uC804\uC124\uC758 \uBC29\uB791\uC790",
+      icon: "\u{1F30C}",
+      tier: 4,
+      parentId: null,
+      desc: "\uD558\uB098\uC758 \uB300\uB959\uC5D0 \uC5BD\uB9E4\uC774\uC9C0 \uC54A\uACE0 \uC138\uACC4 \uAC01\uC9C0\uC758 \uADF9\uC758\uB97C \uBAA8\uB450 \uAC70\uCE5C \uB05D\uC5D0 \uB3C4\uB2EC\uD55C \uCD08\uC6D4\uC801 \uC874\uC7AC.",
+      lore: "\uBE59\uC81C\uC758 \uD6C4\uACC4\uC790\uB4E0, \uAC80\uD669\uC758 \uD6C4\uACC4\uC790\uB4E0, \uC138\uACC4\uC218\uC758 \uC218\uD638\uC790\uB4E0 \u2014 \uAC01 \uB300\uB959 \uCD5C\uACE0\uC758 \uACBD\uC9C0\uC5D0 \uC624\uB978 \uC790\uB4E4 \uC911\uC5D0\uC11C\uB3C4, \uB458 \uC774\uC0C1\uC758 \uC11C\uB85C \uB2E4\uB978 \uADF9\uC758\uB97C \uBAB8\uC5D0 \uC0C8\uAE34 \uC790\uB294 \uADF9\uD788 \uB4DC\uBB3C\uB2E4. \uADF8\uB7F0 \uC790\uB294 \uACB0\uAD6D \uC5B4\uB290 \uB300\uB959\uC5D0\uB3C4 \uC18D\uD558\uC9C0 \uC54A\uB294 \uC874\uC7AC\uAC00 \uB41C\uB2E4.",
+      howToGet: "\uC11C\uB85C \uB2E4\uB978 \uB300\uB959 \uC804\uC6A9 3\uB2E8\uACC4 \uC9C1\uC5C5 2\uAC1C \uC774\uC0C1 \uAC01\uC131 + \uB808\uBCA8 50 \uC774\uC0C1",
+      unlockCondition: { minLevel: 50, minTierJobsDiscovered: { tier: 3, count: 2 } },
+      statFocus: ["str", "agi", "int", "mgc"],
+      skills: [
+        { id: "skill_world_walker", name: "\uC138\uACC4 \uBCF4\uD589", icon: "\u{1F30C}", type: "passive", mpCost: 0, desc: "\uBAA8\uB4E0 \uC2A4\uD0EF+10. \uB300\uB959 \uAC04 \uC774\uB3D9 \uC2DC \uBB38\uD654 \uCDA9\uACA9 \uD398\uB110\uD2F0 \uC644\uC804 \uBA74\uC5ED." },
+        { id: "skill_convergence", name: "\uADF9\uC758\uC758 \uC218\uB834", icon: "\u2728", type: "active", mpCost: 45, desc: "\uC9C0\uAE08\uAE4C\uC9C0 \uAC01\uC131\uD55C \uBAA8\uB4E0 \uADF9\uC758\uC758 \uD798\uC744 \uD55C \uBC88\uC5D0 \uBC29\uCD9C. \uC804 \uC18D\uC131 \uBCF5\uD569 \uB300\uD53C\uD574." },
+        { id: "skill_boundless_form", name: "\uACBD\uACC4 \uC5C6\uB294 \uD615\uC0C1", icon: "\u{1F52E}", type: "active", mpCost: 60, desc: "[\uADF9\uC758\uC758 \uC218\uB834 \uC120\uD589] \uC77C\uC2DC\uC801\uC73C\uB85C \uBAA8\uB4E0 \uB300\uB959 \uC804\uC6A9 \uC9C1\uC5C5\uC758 \uADF9\uC758\uB97C \uB3D9\uC2DC\uC5D0 \uCCB4\uD604. 3\uD134\uAC04 \uBAA8\uB4E0 \uD310\uC815 \uC790\uB3D9 \uC131\uACF5.", prereq: "skill_convergence" },
+        { id: "skill_eternal_legend", name: "\uC601\uC6D0\uD55C \uC804\uC124", icon: "\u{1F451}", type: "passive", mpCost: 0, desc: "[\uC138\uACC4 \uBCF4\uD589 \uC120\uD589] \uBAA8\uB4E0 \uC2A4\uD0EF+15. \uC138\uACC4 \uC5B4\uB514\uC11C\uB4E0 \uBAA8\uB4E0 \uD310\uC815+20%.", prereq: "skill_world_walker" }
+      ]
+    }
+  ];
   var CULTURE_SHOCK_HINTS = {
     // [출신대륙][현재대륙] = 힌트
     north: {
@@ -127670,6 +127772,9 @@ summon_add/summon_damage/summon_evolve \u2014 \uC18C\uD658\uC218 \uAD00\uB828`;
                 discoverJob(job.id, "\uCD9C\uC2E0 \uB300\uB959 \uC804\uC6A9 \uC9C1\uC5C5");
               }
             });
+          });
+          TRANSCENDENT_JOBS.forEach((job) => {
+            if (typeof addAIJob === "function") addAIJob(job);
           });
         } catch (e) {
         }

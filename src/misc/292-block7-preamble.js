@@ -1,7 +1,7 @@
 // block7-preamble
 // Auto-extracted from taleforge.html (original section banner preserved above).
 import { S } from '../data/084-TaleForge-순수-JS-엔진.js';
-import { CONTINENT_CURRENCY, CONTINENT_DEFAULT_WEATHER, CONTINENT_EXCLUSIVE_JOBS, CONTINENT_SPEECH_HINTS, CONTINENT_TABOOS, CULTURE_SHOCK_HINTS } from '../data/292-block7-preamble.js';
+import { CONTINENT_CURRENCY, CONTINENT_DEFAULT_WEATHER, CONTINENT_EXCLUSIVE_JOBS, CONTINENT_SPEECH_HINTS, CONTINENT_TABOOS, CULTURE_SHOCK_HINTS, TRANSCENDENT_JOBS } from '../data/292-block7-preamble.js';
 import { saveGold } from '../items/007-동적-아이템-생성-시스템-무제한-영구-캐시.js';
 import { addAIJob, discoverJob } from '../job/042-직업-시스템-무한-파생-도감.js';
 import { FIVE_CONTINENTS, loadContinentRep, updateContinentRep } from '../race/064-아에테른-종족간-전쟁-역사-종족-선택-시-배경.js';
@@ -396,6 +396,12 @@ export function __tfDeferred_263(){
             discoverJob(job.id, '출신 대륙 전용 직업');
           }
         });
+      });
+      // 4단계 초월 직업 — 특정 대륙에 묶이지 않으므로 풀에만 등록하고
+      // 출신 대륙 자동 discoverJob은 적용하지 않는다(checkJobCondition의
+      // minTierJobsDiscovered 조건으로 각성 여부를 가린다).
+      TRANSCENDENT_JOBS.forEach(job=>{
+        if(typeof addAIJob==='function') addAIJob(job);
       });
     }catch(e){}
   }, 3000);

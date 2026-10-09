@@ -929,9 +929,28 @@ export function joinGuildV2(guildId){
   if((S.gold||0) < cost){ toast(`골드 부족 (${cost}G 필요)`); return; }
   if(cost>0){ S.gold -= cost; if(typeof saveGold==='function') saveGold(S.gold); window.updateHeader&&window.updateHeader(); }
   guilds.push({ id:guildId, rankIdx:0, joinedAt:S.msgCount||0, lastRankupAt:0, statGranted:[] });
+
+  // [59-2번 섹션, 길드 시스템 확장] 상충 관계(도적 길드 ↔ 수배/추적 쪽)인
+  // 길드를 이미 가입한 상태에서 반대쪽에 가입하면, 그 반대쪽 길드가
+  // 눈치채고 등급을 1단계 강등한다 — "자유롭게 뭐든 해볼 수 있게" 하되
+  // 가입 자체를 막지는 않고 실질적 대가만 치르게 한다.
+  const rivalries = (typeof window!=='undefined' && window.GUILD_RIVALRIES) || [];
+  const rivalPair = rivalries.find(pair=>pair.includes(guildId));
+  let rivalHint = '';
+  if(rivalPair){
+    const rivalId = rivalPair[0]===guildId ? rivalPair[1] : rivalPair[0];
+    const rivalMember = guilds.find(g=>g.id===rivalId && g.id!==guildId);
+    if(rivalMember && rivalMember.rankIdx>0){
+      rivalMember.rankIdx -= 1;
+      const rivalDef = GUILD_DEFS[rivalId];
+      toastHTML(`⚔️ ${esc(rivalDef.icon)} ${esc(rivalDef.name)}이(가) 이 가입을 알아챘다 — 등급이 ${esc(rivalDef.ranks[rivalMember.rankIdx])}로 강등됐다.`, 4500);
+      rivalHint = ' '+rivalDef.name+'은 주인공이 경쟁 관계인 '+def.name+'에 발을 들인 걸 알아챘다. 신뢰가 깨졌다.';
+    }
+  }
+
   saveGuilds(guilds);
   toast(def.icon+' '+def.events.join, 4000);
-  S._pendingGuildHint = '주인공이 '+def.name+'에 가입했다. 이 소속이 NPC와의 대화에서 자연스럽게 드러날 수 있다.';
+  S._pendingGuildHint = '주인공이 '+def.name+'에 가입했다. 이 소속이 NPC와의 대화에서 자연스럽게 드러날 수 있다.'+rivalHint;
   renderGuildPanelV2();
 }
 window.joinGuildV2 = joinGuildV2;
@@ -975,6 +994,28 @@ export function checkGuildRankups(){
       const titleId = def.titlePerRank&&def.titlePerRank[nextRankIdx];
       if(titleId && typeof grantTitle==='function') try{ grantTitle(titleId); }catch(e){}
       S._pendingGuildHint = def.name+'에서 '+def.ranks[nextRankIdx]+' 등급으로 승급했다. '+def.events.rank_up;
+
+      // [59-2번 섹션, 길드 시스템 확장] 최고 등급(마지막 랭크) 도달 시,
+      // 그 길드의 고유 길드마스터가 직접 1회성 "마스터의 선물"을 건넨다
+      // — statGranted 배열(기존 등급별 보너스 중복 방지 패턴)을 그대로
+      // 재사용해 중복 지급을 막는다.
+      const isMaxRank = (nextRankIdx === def.ranks.length-1);
+      const masterGiftKey = m.id+'_mastergift';
+      const masterDef = (typeof window!=='undefined' && window.GUILD_MASTER_DEFS) ? window.GUILD_MASTER_DEFS[m.id] : null;
+      if(isMaxRank && masterDef && !m.statGranted.includes(masterGiftKey)){
+        m.statGranted.push(masterGiftKey);
+        Object.entries(masterDef.giftStat||{}).forEach(function(entry){
+          const k=entry[0],v=entry[1];
+          if(S.stats && S.stats[k]!==undefined){ S.stats[k] = Math.max(0,Math.min(999,(S.stats[k]||0)+v)); }
+        });
+        if(masterDef.giftGold>0){
+          if(typeof addGoldWithExchange==='function') addGoldWithExchange(masterDef.giftGold, '길드 마스터의 선물');
+          else { S.gold = (S.gold||0)+masterDef.giftGold; if(typeof saveGold==='function') saveGold(S.gold); }
+        }
+        try{ window.updateHeader&&window.updateHeader(); }catch(e){}
+        toastHTML('👑 '+esc(masterDef.icon)+' <strong>'+esc(masterDef.name)+'</strong>('+esc(masterDef.title)+')이(가) 마스터의 선물을 건넸다! +'+masterDef.giftGold+'G', 5500);
+        S._pendingGuildHint = def.name+'의 수장 '+masterDef.name+'이(가) 직접 찾아와 마스터의 선물을 건넸다. '+masterDef.greeting;
+      }
     }
   });
   if(changed) saveGuilds(guilds);

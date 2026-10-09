@@ -150,6 +150,36 @@ const GUILD_DEFS = {
 
 window.GUILD_DEFS = GUILD_DEFS;
 
+// [59-2번 섹션, 길드 시스템 확장] 전엔 5개 길드가 고유 길드마스터 NPC도,
+// 서로 간의 긴장 관계도 전혀 없었다(승급 임계값도 5개 중 4개가 완전히
+// 동일한 숫자를 복붙). 고유 길드장 1명씩 + 최고 등급 도달 시 그 길드장이
+// 직접 건네는 "마스터의 선물"(1회성 스탯+골드 보너스), 그리고 상충되는
+// 길드 쌍(도적 길드는 수배 대상/추적자 양쪽과 본질적으로 대립)의 경쟁
+// 관계를 추가한다.
+const GUILD_MASTER_DEFS = {
+  adventurer: { name:'강철의 로가일', icon:'🛡️', title:'백전노장의 길드장',
+    greeting:'"여기까지 올라온 자는 몇 안 된다. 이제부터는 내가 직접 의뢰를 맡기지."',
+    giftGold:200, giftStat:{str:10,end:8} },
+  bounty: { name:'그림자 추적자 베라', icon:'🎯', title:'조합 최고 추적자',
+    greeting:'"표적을 놓친 적이 없다는 내 기록, 이제 당신도 공유하게 됐어."',
+    giftGold:150, giftStat:{per:10,agi:8} },
+  merchant: { name:'황금손 테오도르', icon:'💰', title:'대상회의 숨은 주인',
+    greeting:'"신용은 돈으로 안 사져. 당신은 그걸 증명했다 — 이제 내 장부에 이름을 올리지."',
+    giftGold:300, giftStat:{cha:10,luk:6} },
+  mage: { name:'현자 미리암', icon:'📖', title:'협회의 산증인',
+    greeting:'"지식의 끝에 도달한 자는 없다. 다만 당신은 그 끝을 향해 가장 멀리 간 사람이다."',
+    giftGold:150, giftStat:{int:10,mgc:8} },
+  thieves: { name:'검은 장막의 카심', icon:'🗡️', title:'보이지 않는 그림자 군주',
+    greeting:'"이 자리까지 온 자에게 더는 숨길 게 없다. 어둠 속에서는 이제 당신도 나와 같다."',
+    giftGold:250, giftStat:{agi:10,cal:8} },
+};
+window.GUILD_MASTER_DEFS = GUILD_MASTER_DEFS;
+
+// 도적 길드는 본질적으로 수배자를 추적하는 현상금 사냥꾼 조합과,
+// 법 체계 안에서 일하는 모험가 길드 양쪽과 대립한다.
+const GUILD_RIVALRIES = [ ['thieves','bounty'], ['thieves','adventurer'] ];
+window.GUILD_RIVALRIES = GUILD_RIVALRIES;
+
 // ── 시나리오/지역의 다양한 길드 이름 → 표준 길드 ID 매핑 ──
 // (왕도 모험가 길드, 북방 모험가 길드 등은 전부 같은 '모험가 길드' 시스템의
 //  지부일 뿐이다. 무협/포스트아포칼립스의 특수 명칭은 매핑하지 않고 기존

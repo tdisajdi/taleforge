@@ -4134,7 +4134,11 @@ export function renderGuildPanelV2(){
         ? '<div style="font-size:8px;color:var(--dim);margin-bottom:3px">다음: '+def.ranks[nextRankIdx]+' ('+cur+'/'+needed+')'+(bonusStr?' → '+bonusStr:'')+'</div>'
           +'<div style="background:#0a0a0a;border-radius:3px;height:5px;overflow:hidden;margin-bottom:3px"><div style="width:'+pct+'%;height:100%;background:'+def.color+';border-radius:3px"></div></div>'
           +'<div style="font-size:7px;color:#555">숙련도 기준: '+def.statKey+'</div>'
-        : '<div style="font-size:8px;color:#c0a030">✨ 최고 등급!</div>')
+        // [59-2번 섹션, 길드 시스템 확장] 최고 등급엔 "✨ 최고 등급!" 한
+        // 줄뿐이었다 — 그 길드의 고유 길드마스터 소개로 교체.
+        : (function(){ var md=(typeof window!=='undefined'&&window.GUILD_MASTER_DEFS)?window.GUILD_MASTER_DEFS[m.id]:null;
+            return md ? '<div style="font-size:8px;color:#c0a030">✨ 최고 등급! '+md.icon+' <strong>'+md.name+'</strong>('+md.title+')</div>'
+              : '<div style="font-size:8px;color:#c0a030">✨ 최고 등급!</div>'; })())
       +'<div style="font-size:8px;color:var(--dim);margin-top:4px">'+def.domain+' · '+def.questTypes.join(' · ')+'</div>'
       +'</div>';
   });
@@ -4146,6 +4150,13 @@ export function renderGuildPanelV2(){
       var canJoin = guilds.length < MAX_GUILD_MEMBERSHIPS;
       var cost = (def.joinReq&&def.joinReq.goldCost)||0;
       var cur = st[def.statKey]||0;
+      // [59-2번 섹션, 길드 시스템 확장] 이미 가입한 길드와 경쟁 관계면
+      // 가입 자체는 막지 않되(자유도 유지) 미리 경고 — 가입하면 그 길드가
+      // 강등당할 수 있다.
+      var rivalries = (typeof window!=='undefined' && window.GUILD_RIVALRIES) || [];
+      var rivalPair = rivalries.find(function(pair){ return pair.includes(def.id); });
+      var rivalMember = rivalPair ? guilds.find(function(g){ return rivalPair.includes(g.id) && g.id!==def.id; }) : null;
+      var rivalWarning = (rivalMember && GUILD_DEFS[rivalMember.id]) ? '<div style="font-size:7px;color:#e08080">⚔️ '+GUILD_DEFS[rivalMember.id].name+'과(와) 경쟁 관계 — 가입 시 그 길드 등급이 강등됨</div>' : '';
       html += '<div style="padding:8px 12px;border-bottom:1px solid #1a0a1a;'+(canJoin?'':'opacity:0.45')+'">'
         +'<div style="display:flex;align-items:center;gap:6px">'
         +'<span style="font-size:16px">'+(typeof getEntityIconHTML==='function'?getEntityIconHTML(def,{size:14}):(def?.icon))+'</span>'
@@ -4153,6 +4164,7 @@ export function renderGuildPanelV2(){
         +'<div style="font-size:8px;color:var(--dim)">'+def.domain+'</div>'
         +'<div style="font-size:7px;color:#888">'+(def.joinReq&&def.joinReq.note||'')+'</div>'
         +(cur>0 ? '<div style="font-size:7px;color:'+def.color+'">기존 숙련도 '+cur+' — 재가입 시 이어서 계산</div>' : '')
+        +rivalWarning
         +'</div>'
         +'<button onclick="joinGuildV2(\''+def.id+'\')" style="padding:4px 10px;background:#0a080a;border:1px solid '+def.color+'88;color:'+def.color+';font-size:8px;cursor:pointer;flex-shrink:0" '+(canJoin?'':'disabled')+'>'+(cost>0?cost+'G ':'')+'가입</button>'
         +'</div></div>';

@@ -45016,9 +45016,22 @@ ${lines.join("\n")}
       window.updateHeader && window.updateHeader();
     }
     guilds.push({ id: guildId, rankIdx: 0, joinedAt: S.msgCount || 0, lastRankupAt: 0, statGranted: [] });
+    const rivalries = typeof window !== "undefined" && window.GUILD_RIVALRIES || [];
+    const rivalPair = rivalries.find((pair) => pair.includes(guildId));
+    let rivalHint = "";
+    if (rivalPair) {
+      const rivalId = rivalPair[0] === guildId ? rivalPair[1] : rivalPair[0];
+      const rivalMember = guilds.find((g) => g.id === rivalId && g.id !== guildId);
+      if (rivalMember && rivalMember.rankIdx > 0) {
+        rivalMember.rankIdx -= 1;
+        const rivalDef = GUILD_DEFS[rivalId];
+        toastHTML(`\u2694\uFE0F ${esc2(rivalDef.icon)} ${esc2(rivalDef.name)}\uC774(\uAC00) \uC774 \uAC00\uC785\uC744 \uC54C\uC544\uCC58\uB2E4 \u2014 \uB4F1\uAE09\uC774 ${esc2(rivalDef.ranks[rivalMember.rankIdx])}\uB85C \uAC15\uB4F1\uB410\uB2E4.`, 4500);
+        rivalHint = " " + rivalDef.name + "\uC740 \uC8FC\uC778\uACF5\uC774 \uACBD\uC7C1 \uAD00\uACC4\uC778 " + def.name + "\uC5D0 \uBC1C\uC744 \uB4E4\uC778 \uAC78 \uC54C\uC544\uCC58\uB2E4. \uC2E0\uB8B0\uAC00 \uAE68\uC84C\uB2E4.";
+      }
+    }
     saveGuilds(guilds);
     toast(def.icon + " " + def.events.join, 4e3);
-    S._pendingGuildHint = "\uC8FC\uC778\uACF5\uC774 " + def.name + "\uC5D0 \uAC00\uC785\uD588\uB2E4. \uC774 \uC18C\uC18D\uC774 NPC\uC640\uC758 \uB300\uD654\uC5D0\uC11C \uC790\uC5F0\uC2A4\uB7FD\uAC8C \uB4DC\uB7EC\uB0A0 \uC218 \uC788\uB2E4.";
+    S._pendingGuildHint = "\uC8FC\uC778\uACF5\uC774 " + def.name + "\uC5D0 \uAC00\uC785\uD588\uB2E4. \uC774 \uC18C\uC18D\uC774 NPC\uC640\uC758 \uB300\uD654\uC5D0\uC11C \uC790\uC5F0\uC2A4\uB7FD\uAC8C \uB4DC\uB7EC\uB0A0 \uC218 \uC788\uB2E4." + rivalHint;
     renderGuildPanelV2();
   }
   window.joinGuildV2 = joinGuildV2;
@@ -45075,6 +45088,31 @@ ${lines.join("\n")}
         } catch (e) {
         }
         S._pendingGuildHint = def.name + "\uC5D0\uC11C " + def.ranks[nextRankIdx] + " \uB4F1\uAE09\uC73C\uB85C \uC2B9\uAE09\uD588\uB2E4. " + def.events.rank_up;
+        const isMaxRank = nextRankIdx === def.ranks.length - 1;
+        const masterGiftKey = m.id + "_mastergift";
+        const masterDef = typeof window !== "undefined" && window.GUILD_MASTER_DEFS ? window.GUILD_MASTER_DEFS[m.id] : null;
+        if (isMaxRank && masterDef && !m.statGranted.includes(masterGiftKey)) {
+          m.statGranted.push(masterGiftKey);
+          Object.entries(masterDef.giftStat || {}).forEach(function(entry) {
+            const k = entry[0], v = entry[1];
+            if (S.stats && S.stats[k] !== void 0) {
+              S.stats[k] = Math.max(0, Math.min(999, (S.stats[k] || 0) + v));
+            }
+          });
+          if (masterDef.giftGold > 0) {
+            if (typeof addGoldWithExchange === "function") addGoldWithExchange(masterDef.giftGold, "\uAE38\uB4DC \uB9C8\uC2A4\uD130\uC758 \uC120\uBB3C");
+            else {
+              S.gold = (S.gold || 0) + masterDef.giftGold;
+              if (typeof saveGold === "function") saveGold(S.gold);
+            }
+          }
+          try {
+            window.updateHeader && window.updateHeader();
+          } catch (e) {
+          }
+          toastHTML("\u{1F451} " + esc2(masterDef.icon) + " <strong>" + esc2(masterDef.name) + "</strong>(" + esc2(masterDef.title) + ")\uC774(\uAC00) \uB9C8\uC2A4\uD130\uC758 \uC120\uBB3C\uC744 \uAC74\uB138\uB2E4! +" + masterDef.giftGold + "G", 5500);
+          S._pendingGuildHint = def.name + "\uC758 \uC218\uC7A5 " + masterDef.name + "\uC774(\uAC00) \uC9C1\uC811 \uCC3E\uC544\uC640 \uB9C8\uC2A4\uD130\uC758 \uC120\uBB3C\uC744 \uAC74\uB138\uB2E4. " + masterDef.greeting;
+        }
       }
     });
     if (changed) saveGuilds(guilds);
@@ -50317,7 +50355,10 @@ ${lines.join("\n")}
       var bonusStr = Object.entries(nextBonus).map(function(e) {
         return e[0].toUpperCase() + "+" + e[1];
       }).join(" ");
-      html += '<div style="padding:10px 12px;border-bottom:2px solid ' + def.color + '44;background:#0f080f"><div style="display:flex;align-items:center;gap:6px;margin-bottom:6px"><span style="font-size:20px">' + (typeof getEntityIconHTML === "function" ? getEntityIconHTML(def, { size: 14 }) : def?.icon) + '</span><div style="flex:1"><div style="font-family:Cinzel,serif;font-size:11px;color:' + def.color + '">' + def.name + '</div><div style="font-size:9px;color:var(--text)">\uB4F1\uAE09: <strong style="color:' + def.color + '">' + rank + `</strong></div></div><button onclick="leaveGuildV2('` + m.id + `')" style="padding:3px 8px;background:#150010;border:1px solid #5a1050;color:#c060a0;font-size:7px;cursor:pointer">\uD0C8\uD1F4</button></div>` + (hasNext ? '<div style="font-size:8px;color:var(--dim);margin-bottom:3px">\uB2E4\uC74C: ' + def.ranks[nextRankIdx] + " (" + cur + "/" + needed + ")" + (bonusStr ? " \u2192 " + bonusStr : "") + '</div><div style="background:#0a0a0a;border-radius:3px;height:5px;overflow:hidden;margin-bottom:3px"><div style="width:' + pct + "%;height:100%;background:" + def.color + ';border-radius:3px"></div></div><div style="font-size:7px;color:#555">\uC219\uB828\uB3C4 \uAE30\uC900: ' + def.statKey + "</div>" : '<div style="font-size:8px;color:#c0a030">\u2728 \uCD5C\uACE0 \uB4F1\uAE09!</div>') + '<div style="font-size:8px;color:var(--dim);margin-top:4px">' + def.domain + " \xB7 " + def.questTypes.join(" \xB7 ") + "</div></div>";
+      html += '<div style="padding:10px 12px;border-bottom:2px solid ' + def.color + '44;background:#0f080f"><div style="display:flex;align-items:center;gap:6px;margin-bottom:6px"><span style="font-size:20px">' + (typeof getEntityIconHTML === "function" ? getEntityIconHTML(def, { size: 14 }) : def?.icon) + '</span><div style="flex:1"><div style="font-family:Cinzel,serif;font-size:11px;color:' + def.color + '">' + def.name + '</div><div style="font-size:9px;color:var(--text)">\uB4F1\uAE09: <strong style="color:' + def.color + '">' + rank + `</strong></div></div><button onclick="leaveGuildV2('` + m.id + `')" style="padding:3px 8px;background:#150010;border:1px solid #5a1050;color:#c060a0;font-size:7px;cursor:pointer">\uD0C8\uD1F4</button></div>` + (hasNext ? '<div style="font-size:8px;color:var(--dim);margin-bottom:3px">\uB2E4\uC74C: ' + def.ranks[nextRankIdx] + " (" + cur + "/" + needed + ")" + (bonusStr ? " \u2192 " + bonusStr : "") + '</div><div style="background:#0a0a0a;border-radius:3px;height:5px;overflow:hidden;margin-bottom:3px"><div style="width:' + pct + "%;height:100%;background:" + def.color + ';border-radius:3px"></div></div><div style="font-size:7px;color:#555">\uC219\uB828\uB3C4 \uAE30\uC900: ' + def.statKey + "</div>" : (function() {
+        var md = typeof window !== "undefined" && window.GUILD_MASTER_DEFS ? window.GUILD_MASTER_DEFS[m.id] : null;
+        return md ? '<div style="font-size:8px;color:#c0a030">\u2728 \uCD5C\uACE0 \uB4F1\uAE09! ' + md.icon + " <strong>" + md.name + "</strong>(" + md.title + ")</div>" : '<div style="font-size:8px;color:#c0a030">\u2728 \uCD5C\uACE0 \uB4F1\uAE09!</div>';
+      })()) + '<div style="font-size:8px;color:var(--dim);margin-top:4px">' + def.domain + " \xB7 " + def.questTypes.join(" \xB7 ") + "</div></div>";
     });
     var available = Object.values(GUILD_DEFS).filter(function(def) {
       return !guilds.find(function(g) {
@@ -50330,7 +50371,15 @@ ${lines.join("\n")}
         var canJoin = guilds.length < MAX_GUILD_MEMBERSHIPS;
         var cost = def.joinReq && def.joinReq.goldCost || 0;
         var cur = st[def.statKey] || 0;
-        html += '<div style="padding:8px 12px;border-bottom:1px solid #1a0a1a;' + (canJoin ? "" : "opacity:0.45") + '"><div style="display:flex;align-items:center;gap:6px"><span style="font-size:16px">' + (typeof getEntityIconHTML === "function" ? getEntityIconHTML(def, { size: 14 }) : def?.icon) + '</span><div style="flex:1"><div style="font-size:10px;color:' + def.color + '">' + def.name + '</div><div style="font-size:8px;color:var(--dim)">' + def.domain + '</div><div style="font-size:7px;color:#888">' + (def.joinReq && def.joinReq.note || "") + "</div>" + (cur > 0 ? '<div style="font-size:7px;color:' + def.color + '">\uAE30\uC874 \uC219\uB828\uB3C4 ' + cur + " \u2014 \uC7AC\uAC00\uC785 \uC2DC \uC774\uC5B4\uC11C \uACC4\uC0B0</div>" : "") + `</div><button onclick="joinGuildV2('` + def.id + `')" style="padding:4px 10px;background:#0a080a;border:1px solid ` + def.color + "88;color:" + def.color + ';font-size:8px;cursor:pointer;flex-shrink:0" ' + (canJoin ? "" : "disabled") + ">" + (cost > 0 ? cost + "G " : "") + "\uAC00\uC785</button></div></div>";
+        var rivalries = typeof window !== "undefined" && window.GUILD_RIVALRIES || [];
+        var rivalPair = rivalries.find(function(pair) {
+          return pair.includes(def.id);
+        });
+        var rivalMember = rivalPair ? guilds.find(function(g) {
+          return rivalPair.includes(g.id) && g.id !== def.id;
+        }) : null;
+        var rivalWarning = rivalMember && GUILD_DEFS[rivalMember.id] ? '<div style="font-size:7px;color:#e08080">\u2694\uFE0F ' + GUILD_DEFS[rivalMember.id].name + "\uACFC(\uC640) \uACBD\uC7C1 \uAD00\uACC4 \u2014 \uAC00\uC785 \uC2DC \uADF8 \uAE38\uB4DC \uB4F1\uAE09\uC774 \uAC15\uB4F1\uB428</div>" : "";
+        html += '<div style="padding:8px 12px;border-bottom:1px solid #1a0a1a;' + (canJoin ? "" : "opacity:0.45") + '"><div style="display:flex;align-items:center;gap:6px"><span style="font-size:16px">' + (typeof getEntityIconHTML === "function" ? getEntityIconHTML(def, { size: 14 }) : def?.icon) + '</span><div style="flex:1"><div style="font-size:10px;color:' + def.color + '">' + def.name + '</div><div style="font-size:8px;color:var(--dim)">' + def.domain + '</div><div style="font-size:7px;color:#888">' + (def.joinReq && def.joinReq.note || "") + "</div>" + (cur > 0 ? '<div style="font-size:7px;color:' + def.color + '">\uAE30\uC874 \uC219\uB828\uB3C4 ' + cur + " \u2014 \uC7AC\uAC00\uC785 \uC2DC \uC774\uC5B4\uC11C \uACC4\uC0B0</div>" : "") + rivalWarning + `</div><button onclick="joinGuildV2('` + def.id + `')" style="padding:4px 10px;background:#0a080a;border:1px solid ` + def.color + "88;color:" + def.color + ';font-size:8px;cursor:pointer;flex-shrink:0" ' + (canJoin ? "" : "disabled") + ">" + (cost > 0 ? cost + "G " : "") + "\uAC00\uC785</button></div></div>";
       });
     }
     html += '<div style="padding:8px 12px;text-align:center"><button onclick="renderGuildPanelV2()" style="padding:5px 14px;background:#0a080a;border:1px solid #2a1a2a;color:#6a4a6a;font-size:8px;font-family:Cinzel,serif;cursor:pointer">\u{1F504} \uC0C8\uB85C\uACE0\uCE68</button></div>';
@@ -131224,6 +131273,51 @@ summon_add/summon_damage/summon_evolve \u2014 \uC18C\uD658\uC218 \uAD00\uB828`;
       }
     };
     window.GUILD_DEFS = GUILD_DEFS2;
+    const GUILD_MASTER_DEFS = {
+      adventurer: {
+        name: "\uAC15\uCCA0\uC758 \uB85C\uAC00\uC77C",
+        icon: "\u{1F6E1}\uFE0F",
+        title: "\uBC31\uC804\uB178\uC7A5\uC758 \uAE38\uB4DC\uC7A5",
+        greeting: '"\uC5EC\uAE30\uAE4C\uC9C0 \uC62C\uB77C\uC628 \uC790\uB294 \uBA87 \uC548 \uB41C\uB2E4. \uC774\uC81C\uBD80\uD130\uB294 \uB0B4\uAC00 \uC9C1\uC811 \uC758\uB8B0\uB97C \uB9E1\uAE30\uC9C0."',
+        giftGold: 200,
+        giftStat: { str: 10, end: 8 }
+      },
+      bounty: {
+        name: "\uADF8\uB9BC\uC790 \uCD94\uC801\uC790 \uBCA0\uB77C",
+        icon: "\u{1F3AF}",
+        title: "\uC870\uD569 \uCD5C\uACE0 \uCD94\uC801\uC790",
+        greeting: '"\uD45C\uC801\uC744 \uB193\uCE5C \uC801\uC774 \uC5C6\uB2E4\uB294 \uB0B4 \uAE30\uB85D, \uC774\uC81C \uB2F9\uC2E0\uB3C4 \uACF5\uC720\uD558\uAC8C \uB410\uC5B4."',
+        giftGold: 150,
+        giftStat: { per: 10, agi: 8 }
+      },
+      merchant: {
+        name: "\uD669\uAE08\uC190 \uD14C\uC624\uB3C4\uB974",
+        icon: "\u{1F4B0}",
+        title: "\uB300\uC0C1\uD68C\uC758 \uC228\uC740 \uC8FC\uC778",
+        greeting: '"\uC2E0\uC6A9\uC740 \uB3C8\uC73C\uB85C \uC548 \uC0AC\uC838. \uB2F9\uC2E0\uC740 \uADF8\uAC78 \uC99D\uBA85\uD588\uB2E4 \u2014 \uC774\uC81C \uB0B4 \uC7A5\uBD80\uC5D0 \uC774\uB984\uC744 \uC62C\uB9AC\uC9C0."',
+        giftGold: 300,
+        giftStat: { cha: 10, luk: 6 }
+      },
+      mage: {
+        name: "\uD604\uC790 \uBBF8\uB9AC\uC554",
+        icon: "\u{1F4D6}",
+        title: "\uD611\uD68C\uC758 \uC0B0\uC99D\uC778",
+        greeting: '"\uC9C0\uC2DD\uC758 \uB05D\uC5D0 \uB3C4\uB2EC\uD55C \uC790\uB294 \uC5C6\uB2E4. \uB2E4\uB9CC \uB2F9\uC2E0\uC740 \uADF8 \uB05D\uC744 \uD5A5\uD574 \uAC00\uC7A5 \uBA40\uB9AC \uAC04 \uC0AC\uB78C\uC774\uB2E4."',
+        giftGold: 150,
+        giftStat: { int: 10, mgc: 8 }
+      },
+      thieves: {
+        name: "\uAC80\uC740 \uC7A5\uB9C9\uC758 \uCE74\uC2EC",
+        icon: "\u{1F5E1}\uFE0F",
+        title: "\uBCF4\uC774\uC9C0 \uC54A\uB294 \uADF8\uB9BC\uC790 \uAD70\uC8FC",
+        greeting: '"\uC774 \uC790\uB9AC\uAE4C\uC9C0 \uC628 \uC790\uC5D0\uAC8C \uB354\uB294 \uC228\uAE38 \uAC8C \uC5C6\uB2E4. \uC5B4\uB460 \uC18D\uC5D0\uC11C\uB294 \uC774\uC81C \uB2F9\uC2E0\uB3C4 \uB098\uC640 \uAC19\uB2E4."',
+        giftGold: 250,
+        giftStat: { agi: 10, cal: 8 }
+      }
+    };
+    window.GUILD_MASTER_DEFS = GUILD_MASTER_DEFS;
+    const GUILD_RIVALRIES = [["thieves", "bounty"], ["thieves", "adventurer"]];
+    window.GUILD_RIVALRIES = GUILD_RIVALRIES;
     const GUILD_NAME_MAP = {
       "\uBAA8\uD5D8\uAC00 \uAE38\uB4DC": "adventurer",
       "\uBAA8\uD5D8\uAC00 \uAE38\uB4DC (\uB300)": "adventurer",

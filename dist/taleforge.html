@@ -19822,6 +19822,57 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       lootBonus: "\uC138\uACC4\uAD00 \uD575\uC2EC \uC544\uC774\uD15C \uB4DC\uB86D. \uBD09\uC778\uC11D \uD30C\uD3B8 \uD68D\uB4DD \uAC00\uB2A5. \uC5D4\uB529 \uC870\uAC74 \uC5F0\uB3D9."
     }
   };
+  var DUNGEON_BOSS_DEFS = {
+    loc_dungeon_ruins: {
+      name: "\uBD09\uC778\uB41C \uB9AC\uCE58 \uC544\uCF00\uB9AC\uC628",
+      icon: "\u{1F480}",
+      title: "\uD0DC\uACE0\uC758 \uBD09\uC778\uC790",
+      signatureLine: '\uBB34\uB108\uC9C4 \uC81C\uB2E8 \uC704, \uBD09\uC778\uB41C \uB9AC\uCE58 \uC544\uCF00\uB9AC\uC628\uC774 \uCC9C\uCC9C\uD788 \uB208\uC744 \uB72C\uB2E4. "\uB610 \uB2E4\uB978 \uCE68\uC785\uC790\uC778\uAC00... \uBD09\uC778\uC11D\uC758 \uC548\uC2DD\uC744 \uC5B4\uC9C0\uB7FD\uD788\uB294 \uC790\uB294 \uBAA8\uB450 \uC5EC\uAE30 \uBF08\uB97C \uBB3B\uB294\uB2E4."',
+      dropName: "\uC544\uCF00\uB9AC\uC628\uC758 \uBD09\uC778 \uD30C\uD3B8"
+    },
+    loc_north_glacier_dungeon: {
+      name: "\uC2EC\uC7A5\uC11D\uC758 \uAC70\uC778\uC655 \uD504\uB85C\uC2A4\uD2B8\uCE74\uC778",
+      icon: "\u{1F9CA}",
+      title: "\uC5BC\uC74C \uAC70\uC778\uC871\uC758 \uC655",
+      signatureLine: '\uBE59\uD558\uAC00 \uAC08\uB77C\uC9C0\uBA70 \uAC70\uC778\uC655 \uD504\uB85C\uC2A4\uD2B8\uCE74\uC778\uC774 \uBAA8\uC2B5\uC744 \uB4DC\uB7EC\uB0B8\uB2E4. \uADF8\uC758 \uAC00\uC2B4\uC5D0\uC11C \uC2EC\uC7A5\uC11D\uC774 \uD478\uB978 \uBE5B\uC744 \uBFDC\uC5B4\uB0B8\uB2E4 \u2014 "\uC774 \uC2EC\uC7A5\uC11D\uC5D0 \uC190\uB300\uB824\uB294 \uC790, \uC601\uC6D0\uD55C \uC5BC\uC74C \uC18D\uC5D0 \uC7A0\uB4E4\uB9AC\uB77C."',
+      dropName: "\uD504\uB85C\uC2A4\uD2B8\uCE74\uC778\uC758 \uC2EC\uC7A5\uC11D \uD30C\uD3B8"
+    },
+    loc_west_sunken_ruins: {
+      name: "\uD574\uC800 \uC2EC\uC5F0\uC758 \uC9C0\uBC30\uC790 \uD06C\uB77C\uCF04\uC790\uB974",
+      icon: "\u{1F419}",
+      title: "\uC218\uBAB0 \uC720\uC801\uC758 \uC2EC\uD574 \uC9C0\uBC30\uC790",
+      signatureLine: "\uBB3C\uC5D0 \uC7A0\uAE34 \uC2E0\uC804 \uAE4A\uC740 \uACF3\uC5D0\uC11C \uAC70\uB300\uD55C \uCD09\uC218\uAC00 \uC19F\uC544\uC624\uB978\uB2E4. \uD06C\uB77C\uCF04\uC790\uB974\uAC00 \uC720\uC801\uC744 \uD1B5\uC9F8\uB85C \uC9D1\uC5B4\uC0BC\uD0AC \uB4EF \uD718\uAC10\uC544\uC628\uB2E4.",
+      dropName: "\uD06C\uB77C\uCF04\uC790\uB974\uC758 \uBC1C\uAD11 \uBE44\uB298"
+    },
+    loc_south_lost_city: {
+      name: "\uC624\uB85C\uC2A4\uC758 \uB9C8\uC9C0\uB9C9 \uC218\uD638\uC790 \uC138\uD06C\uBA54\uD2B8",
+      icon: "\u{1F981}",
+      title: "\uC783\uC5B4\uBC84\uB9B0 \uB3C4\uC2DC\uC758 \uC218\uD638 \uC2A4\uD551\uD06C\uC2A4",
+      signatureLine: '\uBAA8\uB798 \uBA3C\uC9C0 \uC0AC\uC774\uB85C \uC2A4\uD551\uD06C\uC2A4 \uC138\uD06C\uBA54\uD2B8\uAC00 \uC77C\uC5B4\uC120\uB2E4. "\uC624\uB85C\uC2A4\uC758 \uBCF4\uBB3C\uC744 \uD0D0\uD558\uB294 \uC790\uB294 \uBA3C\uC800 \uB0B4 \uC218\uC218\uAED8\uB07C\uB97C \uD1B5\uACFC\uD574\uC57C \uD55C\uB2E4 \u2014 \uD1B5\uACFC\uD558\uC9C0 \uBABB\uD558\uBA74, \uD1B5\uACFC\uD55C \uC801\uB3C4 \uC5C6\uB2E4."',
+      dropName: "\uC138\uD06C\uBA54\uD2B8\uC758 \uD669\uAE08 \uC218\uD638\uC11D"
+    },
+    loc_east_cursed_ruins: {
+      name: "\uAD11\uAE30\uC5D0 \uC7A0\uC2DD\uB41C \uC6A9\uAE30\uC0AC \uBC1C\uB4DC\uB77C\uB4DC",
+      icon: "\u{1F432}",
+      title: "\uD3D0\uB3C4 \uBE14\uB799\uC2A4\uD1A4\uC758 \uBBF8\uCCD0\uBC84\uB9B0 \uC218\uD638\uC790",
+      signatureLine: "\uD3D0\uD5C8 \uC0AC\uC774\uB85C \uC6A9\uC871 \uD30C\uC218\uBCD1 \uBC1C\uB4DC\uB77C\uB4DC\uAC00 \uBE44\uD2C0\uAC70\uB9AC\uBA70 \uB2E4\uAC00\uC628\uB2E4 \u2014 \uD55C\uB54C \uAE30\uC0AC\uC600\uB358 \uADF8\uB294 \uC774\uC81C \uAD11\uAE30\uC5D0 \uC644\uC804\uD788 \uC7A0\uC2DD\uB418\uC5B4, \uC790\uC2E0\uC744 \uACF5\uACA9\uD558\uB294 \uAC83\uC870\uCC28 \uAE68\uB2EB\uC9C0 \uBABB\uD55C\uB2E4.",
+      dropName: "\uBC1C\uB4DC\uB77C\uB4DC\uC758 \uAD11\uAE30 \uC11C\uB9B0 \uBE44\uB298"
+    },
+    loc_celestial_dungeon: {
+      name: "\uD0C0\uB77D\uD55C \uB300\uCC9C\uC0AC \uC544\uC790\uC824",
+      icon: "\u{1F607}",
+      title: "\uBE5B\uC744 \uC783\uC740 \uC138\uB77C\uD504",
+      signatureLine: '\uBE5B\uBC14\uB79C \uB0A0\uAC1C\uAC00 \uD3BC\uCCD0\uC9C0\uBA70 \uD0C0\uB77D\uD55C \uB300\uCC9C\uC0AC \uC544\uC790\uC824\uC774 \uB0B4\uB824\uC120\uB2E4. "\uB098\uB294 \uD55C\uB54C \uBE5B\uC774\uC5C8\uB2E4. \uC774\uC81C\uB294 \uC774 \uC5B4\uB460\uC870\uCC28 \uB098\uB97C \uC678\uBA74\uD55C\uB2E4 \u2014 \uADF8\uB798\uC11C \uB124\uAC00 \uC5EC\uAE30 \uC788\uB294 \uAC83\uC774\uB2E4."',
+      dropName: "\uC544\uC790\uC824\uC758 \uBD80\uC11C\uC9C4 \uBE5B\uAE43"
+    },
+    loc_infernal_dungeon: {
+      name: "\uC9C0\uD558\uAC10\uC625\uC758 \uAC04\uC218\uC7A5 \uB9D0\uD53C\uB9AC\uC628",
+      icon: "\u{1F52A}",
+      title: "\uBB34\uD55C \uAC10\uC625\uC758 \uACE0\uBB38\uAD00",
+      signatureLine: '\uC1E0\uC0AC\uC2AC \uB044\uB294 \uC18C\uB9AC\uC640 \uD568\uAED8 \uACE0\uBB38\uAD00 \uC545\uB9C8 \uB9D0\uD53C\uB9AC\uC628\uC774 \uBAA8\uC2B5\uC744 \uB4DC\uB7EC\uB0B8\uB2E4. "\uD0C8\uC625\uC744 \uAFC8\uAFB8\uB294 \uB610 \uB2E4\uB978 \uC601\uD63C\uC774\uAD70. \uC774 \uAC10\uC625\uC5D0 \uC601\uC6D0\uC774\uB780 \uB9D0\uC758 \uC9C4\uC9DC \uC758\uBBF8\uB97C \uAC00\uB974\uCCD0\uC8FC\uACA0\uB2E4."',
+      dropName: "\uB9D0\uD53C\uB9AC\uC628\uC758 \uB179\uC2A8 \uAC04\uC218 \uC5F4\uC1E0"
+    }
+  };
   var UNDEAD_CHAIN_TYPES = {
     revenge: {
       label: "\uBCF5\uC218",
@@ -73575,10 +73626,25 @@ ${simDesc}` : playerRep;
       if (rest.length) description += " " + _pickFrom(rest);
     }
     if (anomalyNote) description += " \uC54C\uB824\uC84C\uB358 \uC815\uBCF4\uC640\uB294 \uBA85\uBC31\uD788 \uB2E4\uB978, \uD6E8\uC52C \uC704\uD611\uC801\uC778 \uAE30\uC6B4\uC774\uC5C8\uB2E4.";
-    let enemyName = null, enemyDesc = null, trapDesc = null, treasureDesc = null;
+    let enemyName = null, enemyDesc = null, trapDesc = null, treasureDesc = null, enemyIcon = null, bossDefId = null;
     if (rt === "combat" || rt === "boss") {
-      enemyName = _pickFrom(ENEMY_NAME_BANK[grade] || ENEMY_NAME_BANK.D);
-      enemyDesc = gi.enemyTone;
+      const session = typeof window !== "undefined" ? window._dungeonSession : null;
+      const bossDef = rt === "boss" && session?.dungeonId ? DUNGEON_BOSS_DEFS[session.dungeonId] : null;
+      const dungeonMonsters = session?.dungeonMonsters || [];
+      if (bossDef) {
+        enemyName = bossDef.name;
+        enemyIcon = bossDef.icon;
+        enemyDesc = bossDef.signatureLine;
+        bossDefId = session.dungeonId;
+      } else if (dungeonMonsters.length && Math.random() < 0.7) {
+        const m = _pickFrom(dungeonMonsters);
+        enemyName = rt === "boss" ? `${m.name} \uC6B0\uB450\uBA38\uB9AC` : m.name;
+        enemyIcon = m.icon;
+        enemyDesc = gi.enemyTone;
+      } else {
+        enemyName = _pickFrom(ENEMY_NAME_BANK[grade] || ENEMY_NAME_BANK.D);
+        enemyDesc = gi.enemyTone;
+      }
     }
     if (rt === "trap") trapDesc = `${gi.trapTone} ${_pickFrom(TRAP_DETAIL_BANK)}`;
     if (rt === "treasure") treasureDesc = `${gi.treasureTone} ${_pickFrom(TREASURE_DETAIL_BANK)}`;
@@ -73597,9 +73663,11 @@ ${simDesc}` : playerRep;
       description,
       enemyName,
       enemyDesc,
+      enemyIcon,
       trapDesc,
       treasureDesc,
       choices,
+      bossDefId,
       baseRewardGold: Math.round(50 * (gi.goldMult || 1)),
       baseHpDamage: Math.round(15 * (gi.hpDamageMult || 1)),
       floorHint: gi.desc,
@@ -73813,9 +73881,10 @@ ${simDesc}` : playerRep;
       <span style="font-size:18px">${icon}</span>
       <span style="color:#ccc;font-size:11px;letter-spacing:.5px">${room.title || "???"}</span>
       ${room.roomType === "boss" ? '<span style="font-size:9px;background:#6a0a2a;color:#e04060;padding:2px 5px;border-radius:2px">BOSS</span>' : ""}
+      ${room.bossDefId ? '<span style="font-size:9px;background:#5a1a6a;color:#d090f0;padding:2px 5px;border-radius:2px">\u{1F451} \uB124\uC784\uB4DC</span>' : ""}
     </div>
     <div style="font-size:11px;color:#bbb;line-height:1.7;margin-bottom:8px">${room.description || ""}</div>
-    ${room.enemyName ? `<div style="font-size:10px;color:#e08060;margin-bottom:4px">\u{1F479} <strong>${room.enemyName}</strong> \u2014 ${room.enemyDesc || ""}</div>` : ""}
+    ${room.enemyName ? `<div style="font-size:10px;color:#e08060;margin-bottom:4px">${room.enemyIcon || "\u{1F479}"} <strong>${room.enemyName}</strong> \u2014 ${room.enemyDesc || ""}</div>` : ""}
     ${room.trapDesc ? `<div style="font-size:10px;color:#c0a030;margin-bottom:4px">\u{1FAA4} ${room.trapDesc}</div>` : ""}
     ${room.treasureDesc ? `<div style="font-size:10px;color:#60c060;margin-bottom:4px">\u{1F48E} ${room.treasureDesc}</div>` : ""}
     ${room.floorHint ? `<div style="font-size:9px;color:#6060a0;margin-top:4px;font-style:italic">\u{1F4A1} ${room.floorHint}</div>` : ""}
@@ -79265,6 +79334,13 @@ ${simDesc}` : playerRep;
       dungeonName,
       dungeonIcon,
       dungeonTheme,
+      // [59번 섹션, 던전 시스템 확장] 이 장소 데이터(data/042·052)에
+      // 이미 작성돼 있던 `id`/`monsters`를 세션에 실어 composeLocalDungeonRoom이
+      // 등급 공용 뱅크 대신 이 던전 고유의 몬스터·보스를 쓸 수 있게 한다
+      // — 전엔 이 필드들을 세션에 아예 안 실어서 던전 로직이 접근할 길이
+      // 없었다(데이터는 있는데 안 쓰이던 공백).
+      dungeonId: loc?.id || null,
+      dungeonMonsters: Array.isArray(loc?.monsters) ? loc.monsters : [],
       grade: dungeonGrade,
       // 등급 저장
       maxFloors,
@@ -79313,11 +79389,17 @@ ${simDesc}` : playerRep;
       toastHTML(`${esc2(_affinMod.label)} (${esc2(_elemDef ? _elemDef.icon + _elemDef.name : _roomElem)}) \uD310\uC815 ${esc2(_baseRoll)}\u2192${esc2(effRoll)}`, 2e3);
     }
     try {
-      const result = await generateDungeonChoiceResult(room, choiceId, effRoll, choice.stat);
+      const result = { ...await generateDungeonChoiceResult(room, choiceId, effRoll, choice.stat) };
       const _dg = DUNGEON_GRADES[window._dungeonSession?.grade || "D"] || DUNGEON_GRADES["D"];
+      const bossDef = room.bossDefId ? DUNGEON_BOSS_DEFS[room.bossDefId] : null;
+      const bossDefeated = !!(bossDef && result.roomCleared);
+      if (bossDefeated) {
+        result.foundItem = true;
+        result.foundItemRarity = "legendary";
+      }
       const hpChg = Math.round((result.hpChange || 0) * (_dg.hpDamageMult || 1));
       const goldChg = Math.max(0, Math.round((result.goldChange || 0) * (_dg.goldMult || 1)));
-      const expGain = Math.max(0, Math.round((result.expGain || 10) * (_dg.expMult || 1)));
+      const expGain = Math.max(0, Math.round((result.expGain || 10) * (_dg.expMult || 1) * (bossDefeated ? 1.5 : 1)));
       S.stats.hp = Math.max(1, Math.min(typeof getPlayerMaxHp === "function" ? getPlayerMaxHp() : 999, (S.stats.hp || 100) + hpChg));
       if (goldChg > 0) {
         if (typeof addGoldWithExchange === "function") addGoldWithExchange(goldChg, "\uB358\uC804 \uACB0\uACFC");
@@ -79333,14 +79415,16 @@ ${simDesc}` : playerRep;
         } catch (e) {
         }
       }
+      if (bossDefeated) toastHTML(`\u{1F451} <strong>${esc2(bossDef.name)}</strong>\uC744(\uB97C) \uCC98\uCE58\uD588\uB2E4! ${esc2(bossDef.title)}\uC774(\uAC00) \uC4F0\uB7EC\uC84C\uB2E4.`, 4500);
       if (result.foundItem) {
         const _gradeMinRarity = { E: "common", D: "common", C: "uncommon", B: "rare", A: "rare", S: "legendary" };
         const _minRarity = _gradeMinRarity[window._dungeonSession?.grade || "D"] || "common";
         const rarityOrder = ["common", "uncommon", "rare", "legendary"];
         const resultRarity = result.foundItemRarity || "common";
         const rarity = rarityOrder.indexOf(resultRarity) >= rarityOrder.indexOf(_minRarity) ? resultRarity : _minRarity;
+        const itemTopic = bossDefeated ? bossDef.dropName : "\uB358\uC804 " + (ds.grade || "D") + "\uB4F1\uAE09 " + ds.floor + "\uCE35 \uBCF4\uC0C1";
         try {
-          const item = await generateAIItem("\uB358\uC804 " + (ds.grade || "D") + "\uB4F1\uAE09 " + ds.floor + "\uCE35 \uBCF4\uC0C1", null);
+          const item = await generateAIItem(itemTopic, null);
           if (item) {
             item.rarity = rarity;
             S.inventory.push(item);

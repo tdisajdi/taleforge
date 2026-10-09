@@ -2,7 +2,7 @@
 // Auto-extracted from taleforge.html (original section banner preserved above).
 import { ELEMENT_DEFS } from '../data/035-NEW-직업-조합-시너지-시스템.js';
 import { S } from '../data/084-TaleForge-순수-JS-엔진.js';
-import { DUNGEON_GRADES, UNDEAD_ACTION_TYPES, UNDEAD_CHAIN_TYPES, UNDEAD_DEATH_SIGHT_LEVELS } from '../data/257-renderMiniMap-던전-미니맵-일반-미니맵.js';
+import { DUNGEON_BOSS_DEFS, DUNGEON_GRADES, UNDEAD_ACTION_TYPES, UNDEAD_CHAIN_TYPES, UNDEAD_DEATH_SIGHT_LEVELS } from '../data/257-renderMiniMap-던전-미니맵-일반-미니맵.js';
 import { generateAIItem, generateItem } from '../items/006-세트-아이템-시스템.js';
 import { saveGold, saveInventory } from '../items/007-동적-아이템-생성-시스템-무제한-영구-캐시.js';
 import { loadPlayerLevel } from '../job/008-클리어-보상-시스템-시나리오-클리어-시-영구-아이템스킬.js';
@@ -294,6 +294,13 @@ export async function startAIDungeonExplore(){
 
   window._dungeonSession = {
     dungeonName, dungeonIcon, dungeonTheme,
+    // [59번 섹션, 던전 시스템 확장] 이 장소 데이터(data/042·052)에
+    // 이미 작성돼 있던 `id`/`monsters`를 세션에 실어 composeLocalDungeonRoom이
+    // 등급 공용 뱅크 대신 이 던전 고유의 몬스터·보스를 쓸 수 있게 한다
+    // — 전엔 이 필드들을 세션에 아예 안 실어서 던전 로직이 접근할 길이
+    // 없었다(데이터는 있는데 안 쓰이던 공백).
+    dungeonId: loc?.id || null,
+    dungeonMonsters: Array.isArray(loc?.monsters) ? loc.monsters : [],
     grade: dungeonGrade,         // 등급 저장
     maxFloors,                   // 최대 층 수
     floor:1, roomCount:0, kills:0, totalGold:0, totalExp:0, itemsFound:0,
@@ -335,15 +342,28 @@ export async function chooseDungeonAction(choiceId){
     toastHTML(`${esc(_affinMod.label)} (${esc(_elemDef?_elemDef.icon+_elemDef.name:_roomElem)}) 판정 ${esc(_baseRoll)}→${esc(effRoll)}`, 2000);
   }
   try{
-    const result = await generateDungeonChoiceResult(room, choiceId, effRoll, choice.stat);
+    // [59번 섹션, 던전 시스템 확장] 캐시(pickGeneratedObject/recordGeneratedObject)가
+    // 반환한 result 객체를 그대로 건드리면 다음에 같은 버킷을 뽑는 다른
+    // 던전/방까지 오염된다 — 얕은 복사본에만 보스 전용 보정을 적용한다.
+    const result = { ...(await generateDungeonChoiceResult(room, choiceId, effRoll, choice.stat)) };
     const _dg    = DUNGEON_GRADES[window._dungeonSession?.grade||'D'] || DUNGEON_GRADES['D'];
+    const bossDef = room.bossDefId ? DUNGEON_BOSS_DEFS[room.bossDefId] : null;
+    const bossDefeated = !!(bossDef && result.roomCleared);
+    if(bossDefeated){
+      // 수기 네임드 보스를 실제로 처치했을 때 — 고유 아이템 확정 지급 +
+      // 전용 토스트. 평범한 "던전 보상" 뽑기와 달리 이 보스의 이름이
+      // 붙은 전리품이 나온다.
+      result.foundItem = true;
+      result.foundItemRarity = 'legendary';
+    }
     const hpChg   = Math.round((result.hpChange||0) * (_dg.hpDamageMult||1));
     const goldChg = Math.max(0, Math.round((result.goldChange||0) * (_dg.goldMult||1)));
-    const expGain = Math.max(0, Math.round((result.expGain||10) * (_dg.expMult||1)));
+    const expGain = Math.max(0, Math.round((result.expGain||10) * (_dg.expMult||1) * (bossDefeated?1.5:1)));
     S.stats.hp = Math.max(1, Math.min((typeof getPlayerMaxHp==='function'?getPlayerMaxHp():999), (S.stats.hp||100) + hpChg));
     if(goldChg > 0){ if(typeof addGoldWithExchange==='function') addGoldWithExchange(goldChg, '던전 결과'); else { S.gold += goldChg; saveGold(S.gold); } }
     window.updateHeader();
     if(result.statusEffect && result.statusEffect !== 'null'){ try{ applyStatusEffect(result.statusEffect); }catch(e){} }
+    if(bossDefeated) toastHTML(`👑 <strong>${esc(bossDef.name)}</strong>을(를) 처치했다! ${esc(bossDef.title)}이(가) 쓰러졌다.`, 4500);
     if(result.foundItem){
       // 등급별 최소 희귀도 보장
       const _gradeMinRarity = {E:'common',D:'common',C:'uncommon',B:'rare',A:'rare',S:'legendary'};
@@ -352,8 +372,12 @@ export async function chooseDungeonAction(choiceId){
       const resultRarity = result.foundItemRarity||'common';
       // 등급 최소 희귀도보다 낮으면 올려줌
       const rarity = rarityOrder.indexOf(resultRarity) >= rarityOrder.indexOf(_minRarity) ? resultRarity : _minRarity;
+      // 네임드 보스를 처치한 경우 전리품 생성 주제를 그 보스의 고유
+      // 드롭명으로 — 평범한 "던전 보상"이 아니라 "아케리온의 봉인 파편"
+      // 같은 이름이 붙은 전리품이 생성되게 한다.
+      const itemTopic = bossDefeated ? bossDef.dropName : ('던전 ' + (ds.grade||'D') + '등급 ' + ds.floor + '층 보상');
       try{
-        const item = await generateAIItem('던전 ' + (ds.grade||'D') + '등급 ' + ds.floor + '층 보상', null);
+        const item = await generateAIItem(itemTopic, null);
         if(item){ item.rarity=rarity; S.inventory.push(item); saveInventory(S.inventory); toast('📦 ' + item.icon + ' ' + item.name + ' 획득! (' + rarity + ')', 3000); ds.itemsFound=(ds.itemsFound||0)+1; }
       }catch(e){ const fi=typeof generateItem==='function'?generateItem(null,rarity):null; if(fi){ S.inventory.push(fi); saveInventory(S.inventory); ds.itemsFound=(ds.itemsFound||0)+1; } }
     }

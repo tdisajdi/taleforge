@@ -3,7 +3,7 @@
 import { enrichAllExistingNPCs } from '../core/244-통합-초기화-매-턴-훅-연결.js';
 import { S } from '../data/084-TaleForge-순수-JS-엔진.js';
 import { DUNGEON_GRADE_ORDER } from '../data/256-회차가-높을수록-보스가-더-빨리-더-강하게-스폰됨.js';
-import { DUNGEON_GRADES } from '../data/257-renderMiniMap-던전-미니맵-일반-미니맵.js';
+import { DUNGEON_BOSS_DEFS, DUNGEON_GRADES } from '../data/257-renderMiniMap-던전-미니맵-일반-미니맵.js';
 import { getEnemyScaleMultiplier } from '../misc/054-이동수단-시스템.js';
 import { loadCycleCount } from '../progression/014-환생-누적-시스템-110번.js';
 import { getMonsterTierStats, pickGeneratedObject, recordGeneratedObject } from '../quest/086-퀘스트임무-수락-팝업-시스템.js';
@@ -244,10 +244,30 @@ function composeLocalDungeonRoom(grade, forcedRoomType, anomalyNote){
   }
   if(anomalyNote) description += ' 알려졌던 정보와는 명백히 다른, 훨씬 위협적인 기운이었다.';
 
-  let enemyName=null, enemyDesc=null, trapDesc=null, treasureDesc=null;
+  // [59번 섹션, 던전 시스템 확장] 전엔 'boss' 방도 'combat'과 똑같이
+  // 등급 공용 ENEMY_NAME_BANK(등급당 4개뿐)에서 뽑아 보스조차 이름이
+  // 따로 없었다 — ①이 던전에 수기 보스(DUNGEON_BOSS_DEFS)가 있으면
+  // 그걸 쓰고 ②없으면 이 던전 장소에 이미 적혀있던 고유 몬스터 목록
+  // (data/042·052의 `monsters`, 세션에 실려있음 — 전엔 세션에도 안
+  // 실려서 여기서 접근 자체가 불가능했음)에서 뽑아 보스면 "우두머리"를
+  // 붙이고 ③그래도 없으면(수기/몬스터 목록이 둘 다 없는 던전) 기존
+  // 등급 공용 뱅크로 폴백.
+  let enemyName=null, enemyDesc=null, trapDesc=null, treasureDesc=null, enemyIcon=null, bossDefId=null;
   if(rt==='combat' || rt==='boss'){
-    enemyName = _pickFrom(ENEMY_NAME_BANK[grade] || ENEMY_NAME_BANK.D);
-    enemyDesc = gi.enemyTone;
+    const session = (typeof window!=='undefined') ? window._dungeonSession : null;
+    const bossDef = (rt==='boss' && session?.dungeonId) ? DUNGEON_BOSS_DEFS[session.dungeonId] : null;
+    const dungeonMonsters = session?.dungeonMonsters || [];
+    if(bossDef){
+      enemyName = bossDef.name; enemyIcon = bossDef.icon; enemyDesc = bossDef.signatureLine;
+      bossDefId = session.dungeonId;
+    } else if(dungeonMonsters.length && Math.random() < 0.7){
+      const m = _pickFrom(dungeonMonsters);
+      enemyName = rt==='boss' ? `${m.name} 우두머리` : m.name;
+      enemyIcon = m.icon; enemyDesc = gi.enemyTone;
+    } else {
+      enemyName = _pickFrom(ENEMY_NAME_BANK[grade] || ENEMY_NAME_BANK.D);
+      enemyDesc = gi.enemyTone;
+    }
   }
   if(rt==='trap') trapDesc = `${gi.trapTone} ${_pickFrom(TRAP_DETAIL_BANK)}`;
   if(rt==='treasure') treasureDesc = `${gi.treasureTone} ${_pickFrom(TREASURE_DETAIL_BANK)}`;
@@ -262,7 +282,7 @@ function composeLocalDungeonRoom(grade, forcedRoomType, anomalyNote){
     { id:'c', text:choiceBank.mgc, stat:'mgc', riskLevel:riskC },
   ];
   return {
-    roomType: rt, title, description, enemyName, enemyDesc, trapDesc, treasureDesc, choices,
+    roomType: rt, title, description, enemyName, enemyDesc, enemyIcon, trapDesc, treasureDesc, choices, bossDefId,
     baseRewardGold: Math.round(50 * (gi.goldMult||1)),
     baseHpDamage: Math.round(15 * (gi.hpDamageMult||1)),
     floorHint: gi.desc,
@@ -513,9 +533,10 @@ function renderDungeonRoomHTML(room){
       <span style="font-size:18px">${icon}</span>
       <span style="color:#ccc;font-size:11px;letter-spacing:.5px">${room.title||'???'}</span>
       ${room.roomType==='boss'?'<span style="font-size:9px;background:#6a0a2a;color:#e04060;padding:2px 5px;border-radius:2px">BOSS</span>':''}
+      ${room.bossDefId?'<span style="font-size:9px;background:#5a1a6a;color:#d090f0;padding:2px 5px;border-radius:2px">👑 네임드</span>':''}
     </div>
     <div style="font-size:11px;color:#bbb;line-height:1.7;margin-bottom:8px">${room.description||''}</div>
-    ${room.enemyName?`<div style="font-size:10px;color:#e08060;margin-bottom:4px">👹 <strong>${room.enemyName}</strong> — ${room.enemyDesc||''}</div>`:''}
+    ${room.enemyName?`<div style="font-size:10px;color:#e08060;margin-bottom:4px">${room.enemyIcon||'👹'} <strong>${room.enemyName}</strong> — ${room.enemyDesc||''}</div>`:''}
     ${room.trapDesc?`<div style="font-size:10px;color:#c0a030;margin-bottom:4px">🪤 ${room.trapDesc}</div>`:''}
     ${room.treasureDesc?`<div style="font-size:10px;color:#60c060;margin-bottom:4px">💎 ${room.treasureDesc}</div>`:''}
     ${room.floorHint?`<div style="font-size:9px;color:#6060a0;margin-top:4px;font-style:italic">💡 ${room.floorHint}</div>`:''}

@@ -106,6 +106,39 @@ export const DUNGEON_GRADES = {
   },
 };
 
+// [59번 섹션, 던전 시스템 확장] 던전 장소(`data/042`/`052`)마다 이미
+// 고유한 `monsters`/`lore`/`desc`가 작성돼 있지만 던전 진행 로직
+// (`composeLocalDungeonRoom`)은 전혀 읽지 않고 등급(E~S)별 공용
+// `ENEMY_NAME_BANK`만 썼다 — "보스방"조차 일반 전투방과 같은 풀에서
+// 이름을 뽑아 이름있는 보스가 하나도 없었다. 여기서는 이미 풍부한
+// 로어가 있는 티어3/4 플래그십 던전 7곳만 골라 그 던전의 기존
+// `monsters` 중 하나를 승격시킨 고유 보스를 수기로 붙인다(66개 던전
+// 전부를 새로 창작하진 않음 — 기존 로어가 가장 두꺼운 곳부터).
+// 키는 해당 던전 장소의 `id`.
+export const DUNGEON_BOSS_DEFS = {
+  loc_dungeon_ruins: { name:'봉인된 리치 아케리온', icon:'💀', title:'태고의 봉인자',
+    signatureLine:'무너진 제단 위, 봉인된 리치 아케리온이 천천히 눈을 뜬다. "또 다른 침입자인가... 봉인석의 안식을 어지럽히는 자는 모두 여기 뼈를 묻는다."',
+    dropName:'아케리온의 봉인 파편' },
+  loc_north_glacier_dungeon: { name:'심장석의 거인왕 프로스트카인', icon:'🧊', title:'얼음 거인족의 왕',
+    signatureLine:'빙하가 갈라지며 거인왕 프로스트카인이 모습을 드러낸다. 그의 가슴에서 심장석이 푸른 빛을 뿜어낸다 — "이 심장석에 손대려는 자, 영원한 얼음 속에 잠들리라."',
+    dropName:'프로스트카인의 심장석 파편' },
+  loc_west_sunken_ruins: { name:'해저 심연의 지배자 크라켄자르', icon:'🐙', title:'수몰 유적의 심해 지배자',
+    signatureLine:'물에 잠긴 신전 깊은 곳에서 거대한 촉수가 솟아오른다. 크라켄자르가 유적을 통째로 집어삼킬 듯 휘감아온다.',
+    dropName:'크라켄자르의 발광 비늘' },
+  loc_south_lost_city: { name:'오로스의 마지막 수호자 세크메트', icon:'🦁', title:'잃어버린 도시의 수호 스핑크스',
+    signatureLine:'모래 먼지 사이로 스핑크스 세크메트가 일어선다. "오로스의 보물을 탐하는 자는 먼저 내 수수께끼를 통과해야 한다 — 통과하지 못하면, 통과한 적도 없다."',
+    dropName:'세크메트의 황금 수호석' },
+  loc_east_cursed_ruins: { name:'광기에 잠식된 용기사 발드라드', icon:'🐲', title:'폐도 블랙스톤의 미쳐버린 수호자',
+    signatureLine:'폐허 사이로 용족 파수병 발드라드가 비틀거리며 다가온다 — 한때 기사였던 그는 이제 광기에 완전히 잠식되어, 자신을 공격하는 것조차 깨닫지 못한다.',
+    dropName:'발드라드의 광기 서린 비늘' },
+  loc_celestial_dungeon: { name:'타락한 대천사 아자젤', icon:'😇', title:'빛을 잃은 세라프',
+    signatureLine:'빛바랜 날개가 펼쳐지며 타락한 대천사 아자젤이 내려선다. "나는 한때 빛이었다. 이제는 이 어둠조차 나를 외면한다 — 그래서 네가 여기 있는 것이다."',
+    dropName:'아자젤의 부서진 빛깃' },
+  loc_infernal_dungeon: { name:'지하감옥의 간수장 말피리온', icon:'🔪', title:'무한 감옥의 고문관',
+    signatureLine:'쇠사슬 끄는 소리와 함께 고문관 악마 말피리온이 모습을 드러낸다. "탈옥을 꿈꾸는 또 다른 영혼이군. 이 감옥에 영원이란 말의 진짜 의미를 가르쳐주겠다."',
+    dropName:'말피리온의 녹슨 간수 열쇠' },
+};
+
 export const UNDEAD_CHAIN_TYPES = {
   revenge:  { label:'복수',     icon:'⚔️', svgIcon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2 L22 9.5 L9.5 22 L2 14.5 Z"/><path d="M3.5 3.5 L7.5 7.5"/><path d="M16.5 16.5 L20.5 20.5"/></svg>',  color:'#c04040',
     desc:'죽기 전 빼앗긴 것—삶이든, 존엄이든, 사랑하는 자든. 그 빚을 받아내야 한다.',

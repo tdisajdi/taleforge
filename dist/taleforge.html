@@ -126365,12 +126365,60 @@ summon_add/summon_damage/summon_evolve \u2014 \uC18C\uD658\uC218 \uAD00\uB828`;
 
   // src/data/284-4-동료-시스템-강화.js
   var COMPANION_PERSONALITIES = {
-    loyal: { label: "\uCDA9\uC131\uD615", icon: "\u{1F49B}", leaveTrigger: ["\uC8FC\uC778\uACF5\uC774 \uBC30\uC2E0", "\uB3D9\uB8CC\uB97C \uC800\uBC84\uB9B0"], bonusStat: "end", growthStat: "end", subQuestHint: "\uC774 \uB3D9\uB8CC\uB294 \uACFC\uAC70\uC758 \uBC30\uC2E0 \uC0C1\uCC98\uB97C \uADF9\uBCF5\uD558\uB294 \uC774\uC57C\uAE30\uB97C \uAC00\uC9C0\uACE0 \uC788\uB2E4." },
-    brave: { label: "\uC6A9\uB9F9\uD615", icon: "\u2694\uFE0F", leaveTrigger: ["\uB3C4\uB9DD", "\uAC81\uC7C1\uC774"], bonusStat: "str", growthStat: "str", subQuestHint: "\uC774 \uB3D9\uB8CC\uB294 \uAC00\uC7A5 \uAC15\uD55C \uC801\uC5D0\uAC8C \uB9DE\uC11C\uB294 \uB3C4\uC804\uC744 \uC6D0\uD55C\uB2E4." },
-    wise: { label: "\uD604\uBA85\uD615", icon: "\u{1F4DC}", leaveTrigger: ["\uBB34\uBAA8\uD55C \uD589\uB3D9", "\uC774\uC131 \uC5C6\uC774"], bonusStat: "int", growthStat: "int", subQuestHint: "\uC774 \uB3D9\uB8CC\uB294 \uC783\uC5B4\uBC84\uB9B0 \uACE0\uB300 \uC9C0\uC2DD\uC744 \uCC3E\uACE0 \uC788\uB2E4." },
-    carefree: { label: "\uC790\uC720\uD615", icon: "\u{1F30A}", leaveTrigger: ["\uAD6C\uC18D", "\uBA85\uB839", "\uAC15\uC694"], bonusStat: "agi", growthStat: "agi", subQuestHint: "\uC774 \uB3D9\uB8CC\uB294 \uACFC\uAC70\uC5D0 \uC790\uC720\uB97C \uBE7C\uC557\uAE34 \uAE30\uC5B5\uC774 \uC788\uB2E4." },
-    ambitious: { label: "\uC57C\uC2EC\uD615", icon: "\u{1F451}", leaveTrigger: ["\uC8FC\uC778\uACF5\uC774 \uB354 \uAC15\uD574\uC9C8\uC218\uB85D"], bonusStat: "ldr", growthStat: "ldr", subQuestHint: "\uC774 \uB3D9\uB8CC\uB294 \uC5B8\uC820\uAC00 \uC8FC\uC778\uACF5\uC744 \uB2A5\uAC00\uD558\uACA0\uB2E4\uB294 \uC57C\uB9DD\uC744 \uD488\uACE0 \uC788\uB2E4." },
-    mysterious: { label: "\uC2E0\uBE44\uD615", icon: "\u{1F311}", leaveTrigger: ["\uC9C4\uC2E4\uC774 \uBC1D\uD600\uC9C0\uBA74"], bonusStat: "mgc", growthStat: "mgc", subQuestHint: "\uC774 \uB3D9\uB8CC\uC758 \uC815\uCCB4\uC5D0\uB294 \uC138\uACC4\uB97C \uB4A4\uD754\uB4E4 \uBE44\uBC00\uC774 \uC228\uC5B4\uC788\uB2E4." }
+    loyal: {
+      label: "\uCDA9\uC131\uD615",
+      icon: "\u{1F49B}",
+      leaveTrigger: ["\uC8FC\uC778\uACF5\uC774 \uBC30\uC2E0", "\uB3D9\uB8CC\uB97C \uC800\uBC84\uB9B0", "\uC740\uD61C\uB97C \uC78A\uC740", "\uBBFF\uC74C\uC744 \uAE68\uB294"],
+      bonusStat: "end",
+      growthStat: "end",
+      subQuestHint: "\uC774 \uB3D9\uB8CC\uB294 \uACFC\uAC70\uC758 \uBC30\uC2E0 \uC0C1\uCC98\uB97C \uADF9\uBCF5\uD558\uB294 \uC774\uC57C\uAE30\uB97C \uAC00\uC9C0\uACE0 \uC788\uB2E4.",
+      bondHint: "\uC774 \uB3D9\uB8CC\uAC00 \uB9C8\uCE68\uB0B4 \uACFC\uAC70\uC758 \uBC30\uC2E0 \uC0C1\uCC98\uB97C \uC644\uC804\uD788 \uADF9\uBCF5\uD558\uACE0, \uC8FC\uC778\uACF5\uC5D0\uAC8C \uD3C9\uC0DD\uC758 \uCDA9\uC131\uC744 \uB9F9\uC138\uD558\uB294 \uC21C\uAC04\uC774\uB2E4."
+    },
+    brave: {
+      label: "\uC6A9\uB9F9\uD615",
+      icon: "\u2694\uFE0F",
+      leaveTrigger: ["\uB3C4\uB9DD", "\uAC81\uC7C1\uC774", "\uBB3C\uB7EC\uC11C\uB294", "\uD53C\uD558\uB294"],
+      bonusStat: "str",
+      growthStat: "str",
+      subQuestHint: "\uC774 \uB3D9\uB8CC\uB294 \uAC00\uC7A5 \uAC15\uD55C \uC801\uC5D0\uAC8C \uB9DE\uC11C\uB294 \uB3C4\uC804\uC744 \uC6D0\uD55C\uB2E4.",
+      bondHint: "\uC774 \uB3D9\uB8CC\uAC00 \uC790\uC2E0\uC774 \uB450\uB824\uC6CC\uD558\uB358 \uAC00\uC7A5 \uAC15\uD55C \uC801\uACFC \uB9C8\uC8FC\uD574, \uC8FC\uC778\uACF5\uACFC \uD568\uAED8 \uADF8 \uB450\uB824\uC6C0\uC744 \uC644\uC804\uD788 \uADF9\uBCF5\uD574\uB0B4\uB294 \uC21C\uAC04\uC774\uB2E4."
+    },
+    wise: {
+      label: "\uD604\uBA85\uD615",
+      icon: "\u{1F4DC}",
+      leaveTrigger: ["\uBB34\uBAA8\uD55C \uD589\uB3D9", "\uC774\uC131 \uC5C6\uC774", "\uC0DD\uAC01 \uC5C6\uC774", "\uC989\uD765\uC801\uC778"],
+      bonusStat: "int",
+      growthStat: "int",
+      subQuestHint: "\uC774 \uB3D9\uB8CC\uB294 \uC783\uC5B4\uBC84\uB9B0 \uACE0\uB300 \uC9C0\uC2DD\uC744 \uCC3E\uACE0 \uC788\uB2E4.",
+      bondHint: "\uC774 \uB3D9\uB8CC\uAC00 \uADF8\uD1A0\uB85D \uCC3E\uB358 \uACE0\uB300 \uC9C0\uC2DD\uC758 \uB9C8\uC9C0\uB9C9 \uC870\uAC01\uC744 \uBC1C\uACAC\uD558\uACE0, \uADF8 \uAE68\uB2EC\uC74C\uC744 \uC8FC\uC778\uACF5\uACFC \uC628\uC804\uD788 \uB098\uB204\uB294 \uC21C\uAC04\uC774\uB2E4."
+    },
+    carefree: {
+      label: "\uC790\uC720\uD615",
+      icon: "\u{1F30A}",
+      leaveTrigger: ["\uAD6C\uC18D", "\uBA85\uB839", "\uAC15\uC694", "\uC5B5\uC555\uD558\uB294"],
+      bonusStat: "agi",
+      growthStat: "agi",
+      subQuestHint: "\uC774 \uB3D9\uB8CC\uB294 \uACFC\uAC70\uC5D0 \uC790\uC720\uB97C \uBE7C\uC557\uAE34 \uAE30\uC5B5\uC774 \uC788\uB2E4.",
+      bondHint: "\uC774 \uB3D9\uB8CC\uAC00 \uACFC\uAC70\uC5D0 \uC790\uC720\uB97C \uBE7C\uC557\uACBC\uB358 \uADF8 \uC7A5\uC18C\uB85C \uB3CC\uC544\uAC00, \uC8FC\uC778\uACF5\uACFC \uD568\uAED8 \uC644\uC804\uD788 \uADF8 \uAE30\uC5B5\uC744 \uB5A8\uCCD0\uB0B4\uB294 \uC21C\uAC04\uC774\uB2E4."
+    },
+    ambitious: {
+      label: "\uC57C\uC2EC\uD615",
+      icon: "\u{1F451}",
+      leaveTrigger: ["\uC8FC\uC778\uACF5\uC774 \uB354 \uAC15\uD574\uC9C8\uC218\uB85D", "\uB4A4\uCC98\uC9C0\uB294", "\uBC00\uB824\uB098\uB294"],
+      bonusStat: "ldr",
+      growthStat: "ldr",
+      subQuestHint: "\uC774 \uB3D9\uB8CC\uB294 \uC5B8\uC820\uAC00 \uC8FC\uC778\uACF5\uC744 \uB2A5\uAC00\uD558\uACA0\uB2E4\uB294 \uC57C\uB9DD\uC744 \uD488\uACE0 \uC788\uB2E4.",
+      bondHint: "\uC774 \uB3D9\uB8CC\uAC00 \uC790\uC2E0\uC758 \uC57C\uB9DD\uC774 \uC8FC\uC778\uACF5\uC744 \uB118\uC5B4\uC11C\uB294 \uAC83\uC774 \uC544\uB2C8\uB77C \uD568\uAED8 \uC815\uC0C1\uC5D0 \uC11C\uB294 \uAC83\uC784\uC744 \uAE68\uB2EB\uB294 \uC21C\uAC04\uC774\uB2E4."
+    },
+    mysterious: {
+      label: "\uC2E0\uBE44\uD615",
+      icon: "\u{1F311}",
+      leaveTrigger: ["\uC9C4\uC2E4\uC774 \uBC1D\uD600\uC9C0\uBA74", "\uC815\uCCB4\uB97C \uB4E4\uD0A8", "\uBE44\uBC00\uC744 \uCE90\uBB3B\uB294"],
+      bonusStat: "mgc",
+      growthStat: "mgc",
+      subQuestHint: "\uC774 \uB3D9\uB8CC\uC758 \uC815\uCCB4\uC5D0\uB294 \uC138\uACC4\uB97C \uB4A4\uD754\uB4E4 \uBE44\uBC00\uC774 \uC228\uC5B4\uC788\uB2E4.",
+      bondHint: "\uC774 \uB3D9\uB8CC\uAC00 \uB9C8\uCE68\uB0B4 \uC138\uACC4\uB97C \uB4A4\uD754\uB4E4 \uC790\uC2E0\uC758 \uBE44\uBC00\uC744 \uC8FC\uC778\uACF5\uC5D0\uAC8C\uB9CC \uC628\uC804\uD788 \uD138\uC5B4\uB193\uB294 \uC21C\uAC04\uC774\uB2E4."
+    }
   };
 
   // src/items/284-4-동료-시스템-강화.js
@@ -126387,7 +126435,7 @@ summon_add/summon_damage/summon_evolve \u2014 \uC18C\uD658\uC218 \uAD00\uB828`;
         const merged = {};
         const allNames = /* @__PURE__ */ new Set([...Object.keys(pObj), ...Object.keys(gObj)]);
         allNames.forEach((n) => {
-          merged[n] = { personality: pObj[n] || "", ...gObj[n] || { growth: 0, subQuestDone: false, trustLevel: 0 } };
+          merged[n] = { growth: 0, subQuestDone: false, trustLevel: 0, bondRewardGiven: false, ...gObj[n] || {}, personality: pObj[n] || "" };
         });
         return merged;
       }
@@ -126403,7 +126451,8 @@ summon_add/summon_damage/summon_evolve \u2014 \uC18C\uD658\uC218 \uAD00\uB828`;
       const grw = {};
       Object.keys(d).forEach((n) => {
         per[n] = d[n].personality || "";
-        grw[n] = { growth: d[n].growth || 0, subQuestDone: d[n].subQuestDone || false, trustLevel: d[n].trustLevel || 0 };
+        const { personality, ...rest } = d[n];
+        grw[n] = rest;
       });
       lsSet(COMP_PERSONALITY_KEY, JSON.stringify(per));
       lsSet(COMP_GROWTH_KEY, JSON.stringify(grw));
@@ -126443,12 +126492,29 @@ summon_add/summon_damage/summon_evolve \u2014 \uC18C\uD658\uC218 \uAD00\uB828`;
         toast(`${member.name} \uC131\uC7A5! ${pDef.growthStat.toUpperCase()} +2`, 3e3, member);
         changed = true;
       }
-      e.trustLevel = Math.min(100, (e.trustLevel || 0) + 1);
+      const npcRec = typeof loadNpcDB === "function" ? loadNpcDB()[member.name] : null;
+      if (npcRec && typeof npcRec.trust === "number") {
+        e.trustLevel = npcRec.trust;
+      } else {
+        e.trustLevel = Math.min(100, (e.trustLevel || 0) + 1);
+      }
       if (e.trustLevel >= 50 && !e.subQuestDone && !e._subQuestPending) {
         e._subQuestPending = true;
         setTimeout(() => {
           S._nextInjectedContext = (S._nextInjectedContext || "") + ` [\u{1F465} \uB3D9\uB8CC \uC11C\uBE0C\uD018\uC2A4\uD2B8: ${member.icon}${member.name}] \uC2E0\uB8B0\uB3C4\uAC00 \uC313\uC600\uB2E4. ${pDef.subQuestHint} \uB2E4\uC74C \uC7A5\uBA74\uC5D0\uC11C ${member.name}\uC774 \uC8FC\uC778\uACF5\uC5D0\uAC8C \uAC1C\uC778\uC801\uC778 \uBD80\uD0C1\uC774\uB098 \uACE0\uBC31\uC744 \uAEBC\uB0B4\uB294 \uC790\uC5F0\uC2A4\uB7EC\uC6B4 \uACC4\uAE30\uB97C \uB9CC\uB4E4\uC5B4\uB77C.`;
         }, 500);
+      }
+      if (e.trustLevel >= 85 && !e.bondRewardGiven) {
+        e.bondRewardGiven = true;
+        member.statBonus = member.statBonus || {};
+        member.statBonus[pDef.growthStat] = (member.statBonus[pDef.growthStat] || 0) + 5;
+        if (S.stats?.[pDef.growthStat] !== void 0)
+          S.stats[pDef.growthStat] = Math.min(999, (S.stats[pDef.growthStat] || 10) + 5);
+        toastHTML(`\u{1F49E} ${member.icon || ""} ${member.name}\uACFC(\uC640) \uAE4A\uC740 \uC2E0\uB8B0\uB97C \uC313\uC558\uB2E4! ${pDef.growthStat.toUpperCase()} +5 (\uC601\uAD6C)`, 4500);
+        setTimeout(() => {
+          S._nextInjectedContext = (S._nextInjectedContext || "") + ` [\u{1F49E} \uB3D9\uB8CC \uACB0\uC18D \uC644\uC131: ${member.icon}${member.name}] ${pDef.bondHint} \uB2E4\uC74C \uC7A5\uBA74\uC5D0\uC11C \uC774 \uACB0\uC18D\uC774 \uC644\uC131\uB418\uB294 \uC7A5\uBA74\uC744 \uC790\uC5F0\uC2A4\uB7FD\uAC8C \uBB18\uC0AC\uD558\uB77C.`;
+        }, 600);
+        changed = true;
       }
     });
     if (changed) {

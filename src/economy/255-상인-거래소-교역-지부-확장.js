@@ -6,7 +6,7 @@ import { S } from '../data/084-TaleForge-순수-JS-엔진.js';
 import { CROP_DEFS } from '../data/252-상단Caravan-UI-용병단-UI와-대칭-구조.js';
 import { NETWORK_TYPES, TOMB_RELIC_DEFS } from '../data/253-SVG-타일-렌더링-작물-단계별-애니메이션.js';
 import { SONG_GENRES } from '../data/254-음유시인-공연-후원자-전설곡.js';
-import { CONTINENT_HUB_NAMES, CONTINENT_PROPER_NAME, CONTINENT_PROPER_NAME_ICON, CONTINENT_TERRAIN, CREW_NAMES, CREW_PERSONALITIES, CREW_ROLES, DEAL_LORE_SHOP, DUNGEON_TIER_COLORS, ENEMY_SHIP_DEFS, HUNTING_GROUNDS, INTEL_MATERIALS, INTEL_SITES, ISLAND_DEFS, ISLAND_LOOT, ISLAND_REVISIT_COOLDOWN, ISLAND_REVISIT_RADIUS, MERCHANT_RANKS, NAMED_NPC_SHIPS, NAMED_NPC_SHIP_CHANCE, NPC_SHIP_KINDS, PORT_CONTROL_DISCOUNT, PORT_CONTROL_PASSIVE_INCOME, PORT_CONTROL_UNREST_PER_PLUNDER, PORT_CONTROL_UNREST_THRESHOLD, RECOMPOSE_YIELD_BY_RARITY, ROAD_EDGES, SEA_EVENT_POOL, SEA_REGION_PROFILES, SHIP_BRANCH_LABELS, SHIP_TIERS, SHIP_UPGRADE_BASE_COST, SHIP_UPGRADE_DEFS, SHIP_UPGRADE_SYNERGIES, SONG_LORE_SHOP, TALE_MATERIALS, TALE_SITES, TRAVEL_ENCOUNTER_POOL, TREASURE_MAP_FIND_CHANCE, WORLD_MAP_ZONES } from '../data/255-상인-거래소-교역-지부-확장.js';
+import { CONTINENT_HUB_NAMES, CONTINENT_PROPER_NAME, CONTINENT_PROPER_NAME_ICON, CONTINENT_TERRAIN, CREW_NAMES, CREW_PERSONALITIES, CREW_ROLES, DEAL_LORE_SHOP, DUNGEON_TIER_COLORS, ENEMY_SHIP_DEFS, HUNTING_GROUNDS, INTEL_MATERIALS, INTEL_SITES, ISLAND_DEFS, ISLAND_LOOT, ISLAND_REVISIT_COOLDOWN, ISLAND_REVISIT_RADIUS, MERCHANT_RANKS, NAMED_NPC_SHIPS, NAMED_NPC_SHIP_CHANCE, NPC_SHIP_KINDS, PORT_CONTROL_DISCOUNT, PORT_CONTROL_PASSIVE_INCOME, PORT_CONTROL_RETAKE_CHANCE_BASE, PORT_CONTROL_RETAKE_CHANCE_CAP, PORT_CONTROL_RETAKE_CHANCE_PER_PORT, PORT_CONTROL_RETAKE_GARRISON_BASE, PORT_CONTROL_RETAKE_GARRISON_PER_PORT, PORT_CONTROL_UNREST_PER_PLUNDER, PORT_CONTROL_UNREST_THRESHOLD, PORT_RIVAL_SPAWN_CHANCE, PORT_RIVAL_UNREST_PER_TURN, RECOMPOSE_YIELD_BY_RARITY, RIVAL_CAPTAIN_DEFS, ROAD_EDGES, SEA_EVENT_POOL, SEA_REGION_PROFILES, SHIP_BRANCH_LABELS, SHIP_TIERS, SHIP_UPGRADE_BASE_COST, SHIP_UPGRADE_DEFS, SHIP_UPGRADE_SYNERGIES, SONG_LORE_SHOP, TALE_MATERIALS, TALE_SITES, TRAVEL_ENCOUNTER_POOL, TREASURE_MAP_FIND_CHANCE, WORLD_MAP_ZONES } from '../data/255-상인-거래소-교역-지부-확장.js';
 import { getLocationMonsterPool, getOrCreateEnemyMaterials, registerLocationMonster, saveGold } from '../items/007-동적-아이템-생성-시스템-무제한-영구-캐시.js';
 import { isLocationExplored } from '../misc/015-시스템-1120.js';
 import { moveToLocation } from '../misc/053-게시판-시스템.js';
@@ -2715,12 +2715,16 @@ export function renderSeaMapSVG(ship, selectedDest){
     const isCurrent = !ship.atSea && p.name===ship.currentPort;
     const isOpen = popup && popup.kind==='port' && popup.id===p.name;
     // [58번 섹션, 해상 세력권 다툼] 영해는 왕관 아이콘 + 전용 색으로 구분.
-    const controlled = getPortControlState(p.name).controller==='player';
-    const color = isCurrent ? '#c0a030' : isOpen ? '#6aca6a' : controlled ? '#c060e0' : '#5a9aba';
+    // [59-4번 섹션] 라이벌이 장악한 항구는 또 다른 전용 색+아이콘으로 구분.
+    const pControlState = getPortControlState(p.name);
+    const controlled = pControlState.controller==='player';
+    const rivalHeld = pControlState.controller==='rival';
+    const color = isCurrent ? '#c0a030' : isOpen ? '#6aca6a' : controlled ? '#c060e0' : rivalHeld ? '#e0a060' : '#5a9aba';
     svg += `<g style="cursor:pointer" onclick="event.stopPropagation();openMapPopup('port','${esc(p.name).replace(/'/g,"\\'")}',${c.x},${c.y})">
       <circle cx="${c.x}" cy="${c.y}" r="${(isCurrent||isOpen?6:4)*k}" fill="${color}" opacity="0.9"/>
       ${isCurrent?`<circle cx="${c.x}" cy="${c.y}" r="${9*k}" fill="none" stroke="${color}" stroke-width="${1*k}"/>`:''}
       ${controlled?`<text x="${c.x}" y="${c.y+(isCurrent||isOpen?15:12)*k}" font-size="${7*k}" text-anchor="middle">👑</text>`:''}
+      ${rivalHeld?`<text x="${c.x}" y="${c.y+(isCurrent||isOpen?15:12)*k}" font-size="${7*k}" text-anchor="middle">⚔️</text>`:''}
       <text x="${c.x}" y="${c.y-9*k}" font-size="${8*k}" fill="${color}" text-anchor="middle">${p.icon}</text>
     </g>`;
   });
@@ -2745,16 +2749,22 @@ export function renderMapPopupSVG(popup, ship, k, vb){
     if(!port) return '';
     const controlState = getPortControlState(port.name);
     const isMine = controlState.controller==='player';
-    title = `${port.icon} ${port.name}${isMine?' 👑':''}`;
+    // [59-4번 섹션, 라이벌 선장과의 항구 쟁탈전] 라이벌이 장악한 항구는
+    // 별도 제목·행동(결투)을 보여준다.
+    const isRival = controlState.controller==='rival';
+    const rivalCaptain = isRival ? RIVAL_CAPTAIN_DEFS.find(c=>c.id===controlState.rivalId) : null;
+    title = `${port.icon} ${port.name}${isMine?' 👑':''}${isRival?` ${rivalCaptain?.icon||'⚔️'}`:''}`;
     if(ship.atSea){
       rows.push({ label:'항해 중에는 조작할 수 없음', action:null, color:'#888' });
     } else if(port.name===ship.currentPort){
       // [58번 섹션, 해상 세력권 다툼] 내 영해는 약탈 버튼 대신 안내만.
       if(isMine) rows.push({ label:'👑 당신의 영해 (할인·조공)', action:null, color:'#c060e0' });
+      else if(isRival) rows.push({ label:`⚔️ ${rivalCaptain?.name||'라이벌 선장'}에게 결투 신청 (항구 탈취)`, action:`challengeRivalCaptain('${esc(port.name).replace(/'/g,"\\'")}')`, color:'#e0a060' });
       else rows.push({ label:'🏴‍☠️ 이 항구 약탈', action:`attemptPlunderPort()`, color:'#e08080' });
     } else {
       rows.push({ label:'⛵ 이곳으로 출항', action:`startVoyage('${esc(port.name).replace(/'/g,"\\'")}')`, color:'#5a9aba' });
       if(isMine) rows.push({ label:'👑 당신의 영해', action:null, color:'#c060e0' });
+      else if(isRival) rows.push({ label:`⚔️ ${rivalCaptain?.name||'라이벌 선장'}이(가) 장악 중 (정박해야 도전 가능)`, action:null, color:'#e0a060' });
     }
   } else if(popup.kind==='island'){
     const isl = ISLAND_DEFS.find(i=>i.id===popup.id);
@@ -3097,7 +3107,9 @@ window.savePortControl = savePortControl;
 
 export function getPortControlState(portName){
   const all = loadPortControl();
-  return all[portName] || { controller:'crown', unrest:0 };
+  // [59-4번 섹션, 라이벌 선장과의 항구 쟁탈전] rivalId/rivalUnrest는
+  // 그 항구를 노리는 라이벌 선장이 있을 때만 채워진다(없으면 null/0).
+  return all[portName] || { controller:'crown', unrest:0, rivalId:null, rivalUnrest:0 };
 }
 window.getPortControlState = getPortControlState;
 
@@ -3119,6 +3131,9 @@ export function attemptPlunderPort(){
   const isPirateHaven = (loc.name||'').includes('블러드워터') || (loc.triggerKeywords||[]).some(k=>k.includes('해적'));
   if(isPirateHaven){ toast('⚓ 같은 해적의 항구는 약탈할 수 없습니다.'); return; }
   if(getPortControlState(loc.name).controller==='player'){ toast('👑 이미 당신의 영해입니다.'); return; }
+  // [59-4번 섹션, 라이벌 선장과의 항구 쟁탈전] 라이벌이 이미 장악한
+  // 항구는 일반 약탈로는 손댈 수 없다 — 그 선장을 직접 결투로 꺾어야 한다.
+  if(getPortControlState(loc.name).controller==='rival'){ toast('⚔️ 이 항구는 라이벌 선장이 장악하고 있습니다. 결투로만 빼앗을 수 있습니다.'); return; }
 
   const defenseRoll = 30 + Math.random()*40; // 항구 자체 방위력(추상치)
   const win = stats.combat > defenseRoll*0.6;
@@ -3130,17 +3145,23 @@ export function attemptPlunderPort(){
     // [58번 섹션, 해상 세력권 다툼] 같은 항구를 반복 약탈하면 불안도가
     // 쌓이고, 기준치를 넘으면 그 항구가 플레이어의 영해로 전환된다.
     const pc = loadPortControl();
-    const state = pc[loc.name] || { controller:'crown', unrest:0 };
+    const state = pc[loc.name] || { controller:'crown', unrest:0, rivalId:null, rivalUnrest:0 };
     let seized = false;
+    const hadRival = !!state.rivalId;
     state.unrest = (state.unrest||0) + PORT_CONTROL_UNREST_PER_PLUNDER;
     if(state.unrest >= PORT_CONTROL_UNREST_THRESHOLD){
       state.controller = 'player'; state.unrest = 0; seized = true;
+      // [59-4번 섹션] 라이벌 선장이 같은 항구를 노리고 있었다면, 플레이어가
+      // 먼저 기준치에 도달해 그 경쟁 자체를 무효화한 것 — 라이벌 흔적 제거.
+      state.rivalId = null; state.rivalUnrest = 0;
     }
     pc[loc.name] = state;
     savePortControl(pc);
     if(seized){
       toastHTML(`👑 ${esc(loc.name)}이(가) 당신의 깃발 아래 들어왔습니다! 이제 이 항구는 당신의 영해입니다.`, 5500);
-      S._pendingVoyageHint = `반복된 습격 끝에 ${loc.name}의 수비대가 결국 항복했다. 이 항구는 이제 당신의 깃발 아래 놓인 자유항이 되어, 수리와 거래가 더 저렴해지고 매 턴 작은 조공이 들어올 것이다.`;
+      S._pendingVoyageHint = hadRival
+        ? `반복된 습격 끝에 ${loc.name}의 수비대가 결국 항복했다. 때마침 이 항구를 노리던 라이벌 선장도 한 발 늦었다는 걸 알고 분해했다는 소문이 들린다. 이 항구는 이제 당신의 깃발 아래 놓인 자유항이 되어, 수리와 거래가 더 저렴해지고 매 턴 작은 조공이 들어올 것이다.`
+        : `반복된 습격 끝에 ${loc.name}의 수비대가 결국 항복했다. 이 항구는 이제 당신의 깃발 아래 놓인 자유항이 되어, 수리와 거래가 더 저렴해지고 매 턴 작은 조공이 들어올 것이다.`;
     } else {
       toast(`🏴‍☠️ ${loc.name} 약탈 성공! +${loot}G (해상 악명 상승)`, 4000);
       S._pendingVoyageHint = `주인공의 선단이 ${loc.name}을(를) 습격해 약탈했다. 이 소문은 빠르게 퍼져나갈 것이고, 왕국 해군이 주목할 수 있다.`;
@@ -3155,6 +3176,33 @@ export function attemptPlunderPort(){
   renderVoyagePanel();
 }
 window.attemptPlunderPort = attemptPlunderPort;
+
+// [59-4번 섹션, 라이벌 선장과의 항구 쟁탈전] 라이벌이 장악한 항구는
+// 일반 약탈로는 손댈 수 없다 — 그 항구에 직접 정박해 선장과 결투하면
+// (resolveSeaBattleRound/concludeSeaBattle의 기존 전투 흐름 재사용),
+// 승리 시 즉시 그 항구를 플레이어의 영해로 전환한다.
+export function challengeRivalCaptain(portName){
+  const ship = loadShip(); if(!ship){ toast('먼저 선박을 구매해야 합니다.'); return; }
+  if(ship.atSea || ship.currentPort!==portName){ toast('그 항구에 정박해 있을 때만 선장에게 도전할 수 있습니다.'); return; }
+  if(ship.activeBattle){ toast('이미 전투가 진행 중입니다.'); return; }
+  const state = getPortControlState(portName);
+  if(state.controller!=='rival' || !state.rivalId){ toast('이 항구에는 도전할 라이벌 선장이 없습니다.'); return; }
+  const captain = RIVAL_CAPTAIN_DEFS.find(c=>c.id===state.rivalId);
+  if(!captain){ toast('대상을 찾을 수 없습니다.'); return; }
+  const hp = captain.hp[0]+Math.floor(Math.random()*(captain.hp[1]-captain.hp[0]+1));
+  const combat = captain.combat[0]+Math.floor(Math.random()*(captain.combat[1]-captain.combat[0]+1));
+  ship.activeBattle = {
+    round:1, phase:'ongoing',
+    enemy: { defId: captain.id, name: captain.name, icon: captain.icon, isNavy:false, isRival:true, rivalPort: portName,
+             hp, maxHp:hp, combat, lootGold: captain.lootGold },
+    log:[],
+  };
+  saveShip(ship);
+  toastHTML(`⚔️ ${esc(captain.icon)} ${esc(captain.name)}에게 결투를 신청했습니다! ${esc(captain.desc||'')}`, 5000);
+  S._pendingVoyageHint = `${portName}을 장악한 ${captain.name}에게 직접 결투를 신청했다. 이 항구의 운명이 이번 전투에 달렸다.`;
+  renderVoyagePanel();
+}
+window.challengeRivalCaptain = challengeRivalCaptain;
 
 window.attemptPlunderPort = attemptPlunderPort;
 
@@ -3291,7 +3339,21 @@ export function concludeSeaBattle(action){
       toast(`⚓ ${enemy.name}을(를) 격퇴했습니다.`, 3500);
     }
   }
-  if(enemy.isNavy){
+  if(enemy.isRetake && enemy.retakePort){
+    // [59-4번 섹션, 왕실 재탈환 시도] 재탈환 함대를 격퇴 — 영해를 지켜냈다.
+    toastHTML(`🛡️ ${esc(enemy.retakePort)}에서 왕실 재탈환 함대를 격퇴했습니다! 영해를 지켜냈습니다.`, 5000);
+    S._pendingVoyageHint = `${enemy.retakePort}을 되찾으러 온 왕실 함대를 직접 격퇴했다. 이 항구는 여전히 당신의 깃발 아래 있다.`;
+  } else if(enemy.isRival && enemy.rivalPort){
+    // [59-4번 섹션, 라이벌 선장과의 항구 쟁탈전] 라이벌 선장을 꺾으면
+    // 기준치와 무관하게 즉시 그 항구가 플레이어의 영해로 전환된다.
+    const pc = loadPortControl();
+    const st = pc[enemy.rivalPort] || { controller:'crown', unrest:0, rivalId:null, rivalUnrest:0 };
+    st.controller = 'player'; st.unrest = 0; st.rivalId = null; st.rivalUnrest = 0;
+    pc[enemy.rivalPort] = st;
+    savePortControl(pc);
+    toastHTML(`👑 ${esc(enemy.name)}을(를) 격퇴하고 ${esc(enemy.rivalPort)}을(를) 빼앗았습니다! 이제 당신의 영해입니다.`, 5500);
+    S._pendingVoyageHint = `${enemy.rivalPort}을 장악하고 있던 ${enemy.name}을 결투로 꺾었다. 이 항구는 이제 당신의 깃발 아래 놓인 자유항이 되었다.`;
+  } else if(enemy.isNavy){
     // 해군 격퇴/나포 시 해상 악명 일부 경감
     const wantedLvl = (typeof getSeaWantedLevel==='function') ? getSeaWantedLevel() : 0;
     if(wantedLvl>0 && typeof updateReputation==='function') updateReputation(5);
@@ -3308,8 +3370,21 @@ window.concludeSeaBattle = concludeSeaBattle;
 
 export function fleeAfterDefeat(){
   const ship = loadShip(); if(!ship || !ship.activeBattle) return;
-  toast('🌊 패배하여 간신히 도주했습니다. 선체가 심각하게 손상된 상태입니다.', 4000);
-  S._pendingVoyageHint = '해상 전투에서 패배해 간신히 목숨만 건져 도주했다. 배는 만신창이가 되었다.';
+  const enemy = ship.activeBattle.enemy;
+  if(enemy && enemy.isRetake && enemy.retakePort){
+    // [59-4번 섹션, 왕실 재탈환 시도] 재탈환 함대에 패배 — 그 항구를
+    // 다시 왕실에 빼앗긴다(한 번 쟁취해도 영구 유지가 아니게 됨).
+    const pc = loadPortControl();
+    const st = pc[enemy.retakePort] || { controller:'crown', unrest:0, rivalId:null, rivalUnrest:0 };
+    st.controller = 'crown'; st.unrest = 0;
+    pc[enemy.retakePort] = st;
+    savePortControl(pc);
+    toastHTML(`👑 패배하여 ${esc(enemy.retakePort)}을(를) 왕실에 다시 빼앗겼습니다... 선체도 심각하게 손상됐습니다.`, 5500);
+    S._pendingVoyageHint = `왕실 재탈환 함대에 패배해 ${enemy.retakePort}을 다시 빼앗겼다. 간신히 목숨만 건져 도주했다.`;
+  } else {
+    toast('🌊 패배하여 간신히 도주했습니다. 선체가 심각하게 손상된 상태입니다.', 4000);
+    S._pendingVoyageHint = '해상 전투에서 패배해 간신히 목숨만 건져 도주했다. 배는 만신창이가 되었다.';
+  }
   ship.activeBattle = null; ship.activeSeaEvent = null;
   saveShip(ship);
   renderVoyagePanel();
@@ -3516,6 +3591,76 @@ export function tickVoyage(){
     if(typeof addGoldWithExchange==='function') addGoldWithExchange(tribute, '영해 조공'); else { S.gold += tribute; if(typeof saveGold==='function') saveGold(S.gold); }
     window.updateHeader&&window.updateHeader();
   }
+
+  // [59-4번 섹션, 왕실 재탈환 시도] 영해는 영구 소유가 아니다 — 영해가
+  // 많아질수록 왕실이 더 자주 반응해 매 턴 재탈환을 시도한다. 함대
+  // 기함이 그 항구에 바로 정박해 있으면 실제 전투로 방어시키고(패배
+  // 시에만 항구를 잃음), 자리를 비웠으면 평균 전투력 대 수비대 전력으로
+  // 자동 판정한다.
+  if(controlledPortCount>0){
+    const retakeChance = Math.min(PORT_CONTROL_RETAKE_CHANCE_CAP,
+      PORT_CONTROL_RETAKE_CHANCE_BASE + PORT_CONTROL_RETAKE_CHANCE_PER_PORT*(controlledPortCount-1));
+    const activeShipForRetake = fleet.find(s=>s.id===activeId);
+    Object.keys(portControl).forEach(portName=>{
+      const state = portControl[portName];
+      if(state.controller!=='player') return;
+      if(Math.random() >= retakeChance) return;
+      if(activeShipForRetake && !activeShipForRetake.atSea && activeShipForRetake.currentPort===portName && !activeShipForRetake.activeBattle){
+        // 플레이어가 직접 그 항구에 있다 — 실제 전투로 방어한다.
+        const stats = getShipEffectiveStats(activeShipForRetake);
+        const enemy = spawnEnemyShip('royal_retake_fleet', stats.combat);
+        enemy.isRetake = true; enemy.retakePort = portName;
+        activeShipForRetake.activeBattle = { round:1, phase:'ongoing', enemy, log:[] };
+        fleetChanged = true;
+        toastHTML(`🛡️ 왕실 재탈환 함대가 ${esc(portName)}에 나타났습니다! 맞서 싸워 영해를 지켜내야 합니다.`, 5000);
+        S._pendingVoyageHint = `왕실이 ${portName}을 되찾기 위해 정예 함대를 보냈다. 이 항구를 지켜낼 수 있을지는 전적으로 이번 전투에 달렸다.`;
+      } else {
+        // 플레이어가 자리를 비웠다 — 함대 평균 전투력으로 자동 판정.
+        const avgCombat = fleet.length ? fleet.reduce((s,sh)=>s+getShipEffectiveStats(sh).combat,0)/fleet.length : 0;
+        const garrisonStrength = PORT_CONTROL_RETAKE_GARRISON_BASE + PORT_CONTROL_RETAKE_GARRISON_PER_PORT*controlledPortCount;
+        if(avgCombat < garrisonStrength){
+          state.controller = 'crown'; state.unrest = 0;
+          toastHTML(`👑 ${esc(portName)}이(가) 왕실 함대에 재탈환당했습니다...`, 5000);
+          S._pendingVoyageHint = `함대가 자리를 비운 사이 왕실 함대가 ${portName}을 급습해 되찾아갔다. 영해를 지키려면 가끔은 그곳에 강한 함대를 두어야 할 것이다.`;
+        } else if(activeShipForRetake && activeShipForRetake.currentPort===portName){
+          toast(`🛡️ ${portName}의 수비대가 왕실의 재탈환 시도를 막아냈습니다.`, 3500);
+        }
+      }
+    });
+  }
+
+  // [59-4번 섹션, 라이벌 선장과의 항구 쟁탈전] 플레이어만 왕실 항구를
+  // 노리는 게 아니다 — 이름을 가진 라이벌 선장들도 같은 항구를 노리고
+  // 플레이어와 경쟁한다. 라이벌이 먼저 기준치에 도달하면 그 항구는
+  // 플레이어가 아닌 라이벌의 소속이 된다(결투로만 되찾을 수 있음).
+  (function tickPortRivalry(){
+    const ports = (typeof getPortLocations==='function') ? getPortLocations() : [];
+    ports.forEach(p=>{
+      const state = portControl[p.name] || { controller:'crown', unrest:0, rivalId:null, rivalUnrest:0 };
+      if(state.controller!=='crown') return; // 이미 player/rival 소속이면 경쟁 대상 아님
+      const isPirateHaven = (p.name||'').includes('블러드워터') || (p.triggerKeywords||[]).some(k=>k.includes('해적'));
+      if(isPirateHaven) return;
+      if(!state.rivalId){
+        if(Math.random() < PORT_RIVAL_SPAWN_CHANCE){
+          const captain = RIVAL_CAPTAIN_DEFS[Math.floor(Math.random()*RIVAL_CAPTAIN_DEFS.length)];
+          state.rivalId = captain.id; state.rivalUnrest = 0;
+          portControl[p.name] = state;
+        }
+        return;
+      }
+      state.rivalUnrest = (state.rivalUnrest||0) + PORT_RIVAL_UNREST_PER_TURN;
+      if(state.rivalUnrest >= PORT_CONTROL_UNREST_THRESHOLD){
+        const captain = RIVAL_CAPTAIN_DEFS.find(c=>c.id===state.rivalId);
+        state.controller = 'rival'; state.unrest = 0; state.rivalUnrest = 0;
+        portControl[p.name] = state;
+        toastHTML(`⚔️ ${esc(captain?.name||'라이벌 선장')}이(가) ${esc(p.name)}을(를) 장악했습니다! 결투로만 되찾을 수 있습니다.`, 5500);
+        S._pendingVoyageHint = `${captain?.name||'라이벌 선장'}이 ${p.name}을 먼저 장악했다는 소식이 들려온다. 이 항구를 되찾으려면 그 선장과 직접 결투해야 할 것이다.`;
+      } else {
+        portControl[p.name] = state;
+      }
+    });
+  })();
+  savePortControl(portControl);
 
   // 함대의 모든 배를 순회 — 탑승 중인 배뿐 아니라 다른 배가 항해 중이면 그것도 진행시킨다.
   const survivors = [];
@@ -3995,7 +4140,19 @@ export function renderVoyagePanel(){
     if(myPorts.length){
       html += `<div style="padding:10px 12px;border-bottom:1px solid #0a1a2a">
         <div style="font-family:Cinzel,serif;font-size:10px;color:#c060e0;margin-bottom:6px">👑 내 영해 (${myPorts.length}곳) — 매 턴 ${myPorts.length*PORT_CONTROL_PASSIVE_INCOME}G 조공</div>
-        ${myPorts.map(name=>`<div style="font-size:9px;color:var(--dim);padding:2px 0">⚓ ${esc(name)}</div>`).join('')}
+        ${myPorts.map(name=>`<div style="font-size:9px;color:var(--dim);padding:2px 0">⚓ ${esc(name)} — 왕실 재탈환 위험 있음</div>`).join('')}
+      </div>`;
+    }
+    // [59-4번 섹션, 라이벌 선장과의 항구 쟁탈전] 라이벌이 이미 장악한
+    // 항구 목록 — 어느 선장을 결투로 꺾어야 하는지 플레이어에게 알려준다.
+    const rivalPorts = Object.keys(pc).filter(name=>pc[name].controller==='rival');
+    if(rivalPorts.length){
+      html += `<div style="padding:10px 12px;border-bottom:1px solid #0a1a2a">
+        <div style="font-family:Cinzel,serif;font-size:10px;color:#e0a060;margin-bottom:6px">⚔️ 라이벌 선장이 장악 중 (${rivalPorts.length}곳)</div>
+        ${rivalPorts.map(name=>{
+          const captain = RIVAL_CAPTAIN_DEFS.find(c=>c.id===pc[name].rivalId);
+          return `<div style="font-size:9px;color:var(--dim);padding:2px 0">${captain?.icon||'⚔️'} ${esc(name)} — ${esc(captain?.name||'알려지지 않은 선장')}</div>`;
+        }).join('')}
       </div>`;
     }
   }

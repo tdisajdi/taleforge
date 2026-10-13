@@ -15092,6 +15092,33 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
   var PORT_CONTROL_UNREST_PER_PLUNDER = 35;
   var PORT_CONTROL_DISCOUNT = 0.8;
   var PORT_CONTROL_PASSIVE_INCOME = 8;
+  var PORT_CONTROL_RETAKE_CHANCE_BASE = 0.05;
+  var PORT_CONTROL_RETAKE_CHANCE_PER_PORT = 0.02;
+  var PORT_CONTROL_RETAKE_CHANCE_CAP = 0.25;
+  var PORT_CONTROL_RETAKE_GARRISON_BASE = 35;
+  var PORT_CONTROL_RETAKE_GARRISON_PER_PORT = 8;
+  var PORT_RIVAL_SPAWN_CHANCE = 0.03;
+  var PORT_RIVAL_UNREST_PER_TURN = 12;
+  var RIVAL_CAPTAIN_DEFS = [
+    {
+      id: "rival_morgana",
+      name: "\uAC80\uC740 \uB3DB\uC758 \uBAA8\uB974\uAC04",
+      icon: "\u{1F3F4}\u200D\u2620\uFE0F",
+      desc: "\uD14C\uB124\uBE0C\uB77C \uD574\uAD6C \uC77C\uB300\uB97C \uB178\uB9AC\uB294 \uC545\uBA85 \uB192\uC740 \uC5EC\uC120\uC7A5. \uC790\uC2E0\uB9CC\uC758 \uD56D\uAD6C\uB97C \uAC16\uAE30 \uC704\uD574 \uB04A\uC784\uC5C6\uC774 \uC655\uC2E4 \uD56D\uAD6C\uB97C \uC57D\uD0C8\uD55C\uB2E4.",
+      combat: [55, 75],
+      hp: [90, 120],
+      lootGold: [120, 220]
+    },
+    {
+      id: "rival_astrid",
+      name: "\uAC15\uCCA0 \uBC1C\uD1B1 \uC120\uC7A5 \uC544\uC2A4\uD2B8\uB9AC\uB4DC",
+      icon: "\u2694\uFE0F",
+      desc: "\uBD81\uBC29 \uBE59\uD574\uB97C \uC8FC \uBB34\uB300\uB85C \uC0BC\uB294 \uB0C9\uD639\uD55C \uC0AC\uB7B5\uC120\uC7A5. \uC655\uC2E4\uC5D0 \uB4F1\uC744 \uB3CC\uB9B0 \uB4A4 \uC790\uC2E0\uB9CC\uC758 \uD574\uC0C1 \uC601\uC9C0\uB97C \uC138\uC6B0\uB824 \uD55C\uB2E4.",
+      combat: [65, 90],
+      hp: [110, 150],
+      lootGold: [150, 260]
+    }
+  ];
   var ROAD_EDGES = [
     // central 내부 — 왕도를 중심으로 방사형
     ["\uC655\uB3C4 \uC544\uC774\uB7F0\uD640", "\uAD50\uC5ED \uB3C4\uC2DC \uACE8\uB4E0\uD06C\uB85C\uC2A4"],
@@ -15277,7 +15304,10 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
     { id: "corsair", name: "\uCF54\uB974\uC138\uC5B4", icon: "\u{1F3F4}\u200D\u2620\uFE0F", tierLike: "caravel", hpMult: 1, combatMult: 1, lootGold: [80, 160], desc: "\uD45C\uC900\uC801\uC778 \uD574\uC801\uC120. \uB9CC\uB9CC\uCE58 \uC54A\uC740 \uC0C1\uB300\uB2E4." },
     { id: "warship", name: "\uD574\uC801 \uC804\uD568", icon: "\u{1F6A2}", tierLike: "galleon", hpMult: 1.6, combatMult: 1.5, lootGold: [150, 300], desc: "\uC911\uBB34\uC7A5\uD55C \uD574\uC801 \uC804\uD568. \uD070 \uC704\uD5D8\uC744 \uAC10\uC218\uD574\uC57C \uD55C\uB2E4." },
     { id: "navy_frigate", name: "\uD574\uAD70 \uD638\uC704\uD568", icon: "\u2693", tierLike: "galleon", hpMult: 1.4, combatMult: 1.6, lootGold: [0, 0], isNavy: true, desc: "\uD574\uC0C1 \uC545\uBA85\uC744 \uCAD3\uC544\uC628 \uC655\uAD6D \uD574\uAD70. \uACA9\uD1F4 \uB610\uB294 \uB098\uD3EC\uD574\uB3C4 \uD604\uC0C1\uAE08\uC740 \uC5C6\uC9C0\uB9CC \uC545\uBA85\uC774 \uC904\uC5B4\uB4E0\uB2E4." },
-    { id: "ghost_ship", name: "\uC720\uB839\uC120", icon: "\u{1F47B}", tierLike: "galleon", hpMult: 1.3, combatMult: 1.3, lootGold: [100, 250], desc: "\uC800\uC8FC\uBC1B\uC740 \uC720\uB839\uC120. \uACA9\uD30C\uD558\uBA74 \uC624\uC2F9\uD558\uC9C0\uB9CC \uC804\uB9AC\uD488\uC740 \uD655\uC2E4\uD558\uB2E4." }
+    { id: "ghost_ship", name: "\uC720\uB839\uC120", icon: "\u{1F47B}", tierLike: "galleon", hpMult: 1.3, combatMult: 1.3, lootGold: [100, 250], desc: "\uC800\uC8FC\uBC1B\uC740 \uC720\uB839\uC120. \uACA9\uD30C\uD558\uBA74 \uC624\uC2F9\uD558\uC9C0\uB9CC \uC804\uB9AC\uD488\uC740 \uD655\uC2E4\uD558\uB2E4." },
+    // [59-4번 섹션, 왕실 재탈환 시도] 영해를 되찾으러 오는 전용 왕실 함대 —
+    // 일반 해군 호위함보다 훨씬 강하다(영해를 지키는 게 쉬운 일이 아니어야 함).
+    { id: "royal_retake_fleet", name: "\uC655\uC2E4 \uC7AC\uD0C8\uD658 \uD568\uB300", icon: "\u{1F6E1}\uFE0F", tierLike: "galleon", hpMult: 1.8, combatMult: 2, lootGold: [0, 0], isNavy: true, desc: "\uBE7C\uC557\uAE34 \uD56D\uAD6C\uB97C \uB418\uCC3E\uAE30 \uC704\uD574 \uC655\uC2E4\uC774 \uBCF4\uB0B8 \uC815\uC608 \uD568\uB300. \uACA9\uD1F4\uD558\uBA74 \uC601\uD574\uB97C \uC9C0\uCF1C\uB0BC \uC218 \uC788\uC9C0\uB9CC, \uD328\uBC30\uD558\uBA74 \uADF8 \uD56D\uAD6C\uB97C \uB2E4\uC2DC \uBE7C\uC557\uAE34\uB2E4." }
   ];
   var NPC_SHIP_KINDS = [
     { kind: "merchant", icon: "\u26F4\uFE0F", name: "\uC0C1\uC120", weight: 5, cargoValue: [40, 120], combat: [10, 20] },
@@ -48836,12 +48866,15 @@ ${lines.join("\n")}
       const c = coords[p.name];
       const isCurrent = !ship.atSea && p.name === ship.currentPort;
       const isOpen = popup && popup.kind === "port" && popup.id === p.name;
-      const controlled = getPortControlState(p.name).controller === "player";
-      const color = isCurrent ? "#c0a030" : isOpen ? "#6aca6a" : controlled ? "#c060e0" : "#5a9aba";
+      const pControlState = getPortControlState(p.name);
+      const controlled = pControlState.controller === "player";
+      const rivalHeld = pControlState.controller === "rival";
+      const color = isCurrent ? "#c0a030" : isOpen ? "#6aca6a" : controlled ? "#c060e0" : rivalHeld ? "#e0a060" : "#5a9aba";
       svg += `<g style="cursor:pointer" onclick="event.stopPropagation();openMapPopup('port','${esc2(p.name).replace(/'/g, "\\'")}',${c.x},${c.y})">
       <circle cx="${c.x}" cy="${c.y}" r="${(isCurrent || isOpen ? 6 : 4) * k}" fill="${color}" opacity="0.9"/>
       ${isCurrent ? `<circle cx="${c.x}" cy="${c.y}" r="${9 * k}" fill="none" stroke="${color}" stroke-width="${1 * k}"/>` : ""}
       ${controlled ? `<text x="${c.x}" y="${c.y + (isCurrent || isOpen ? 15 : 12) * k}" font-size="${7 * k}" text-anchor="middle">\u{1F451}</text>` : ""}
+      ${rivalHeld ? `<text x="${c.x}" y="${c.y + (isCurrent || isOpen ? 15 : 12) * k}" font-size="${7 * k}" text-anchor="middle">\u2694\uFE0F</text>` : ""}
       <text x="${c.x}" y="${c.y - 9 * k}" font-size="${8 * k}" fill="${color}" text-anchor="middle">${p.icon}</text>
     </g>`;
     });
@@ -48862,15 +48895,19 @@ ${lines.join("\n")}
       if (!port) return "";
       const controlState = getPortControlState(port.name);
       const isMine = controlState.controller === "player";
-      title = `${port.icon} ${port.name}${isMine ? " \u{1F451}" : ""}`;
+      const isRival = controlState.controller === "rival";
+      const rivalCaptain = isRival ? RIVAL_CAPTAIN_DEFS.find((c) => c.id === controlState.rivalId) : null;
+      title = `${port.icon} ${port.name}${isMine ? " \u{1F451}" : ""}${isRival ? ` ${rivalCaptain?.icon || "\u2694\uFE0F"}` : ""}`;
       if (ship.atSea) {
         rows.push({ label: "\uD56D\uD574 \uC911\uC5D0\uB294 \uC870\uC791\uD560 \uC218 \uC5C6\uC74C", action: null, color: "#888" });
       } else if (port.name === ship.currentPort) {
         if (isMine) rows.push({ label: "\u{1F451} \uB2F9\uC2E0\uC758 \uC601\uD574 (\uD560\uC778\xB7\uC870\uACF5)", action: null, color: "#c060e0" });
+        else if (isRival) rows.push({ label: `\u2694\uFE0F ${rivalCaptain?.name || "\uB77C\uC774\uBC8C \uC120\uC7A5"}\uC5D0\uAC8C \uACB0\uD22C \uC2E0\uCCAD (\uD56D\uAD6C \uD0C8\uCDE8)`, action: `challengeRivalCaptain('${esc2(port.name).replace(/'/g, "\\'")}')`, color: "#e0a060" });
         else rows.push({ label: "\u{1F3F4}\u200D\u2620\uFE0F \uC774 \uD56D\uAD6C \uC57D\uD0C8", action: `attemptPlunderPort()`, color: "#e08080" });
       } else {
         rows.push({ label: "\u26F5 \uC774\uACF3\uC73C\uB85C \uCD9C\uD56D", action: `startVoyage('${esc2(port.name).replace(/'/g, "\\'")}')`, color: "#5a9aba" });
         if (isMine) rows.push({ label: "\u{1F451} \uB2F9\uC2E0\uC758 \uC601\uD574", action: null, color: "#c060e0" });
+        else if (isRival) rows.push({ label: `\u2694\uFE0F ${rivalCaptain?.name || "\uB77C\uC774\uBC8C \uC120\uC7A5"}\uC774(\uAC00) \uC7A5\uC545 \uC911 (\uC815\uBC15\uD574\uC57C \uB3C4\uC804 \uAC00\uB2A5)`, action: null, color: "#e0a060" });
       }
     } else if (popup.kind === "island") {
       const isl = ISLAND_DEFS.find((i) => i.id === popup.id);
@@ -49303,7 +49340,7 @@ ${lines.join("\n")}
   window.savePortControl = savePortControl;
   function getPortControlState(portName) {
     const all = loadPortControl();
-    return all[portName] || { controller: "crown", unrest: 0 };
+    return all[portName] || { controller: "crown", unrest: 0, rivalId: null, rivalUnrest: 0 };
   }
   window.getPortControlState = getPortControlState;
   function getPortCostMult(portName) {
@@ -49340,6 +49377,10 @@ ${lines.join("\n")}
       toast("\u{1F451} \uC774\uBBF8 \uB2F9\uC2E0\uC758 \uC601\uD574\uC785\uB2C8\uB2E4.");
       return;
     }
+    if (getPortControlState(loc.name).controller === "rival") {
+      toast("\u2694\uFE0F \uC774 \uD56D\uAD6C\uB294 \uB77C\uC774\uBC8C \uC120\uC7A5\uC774 \uC7A5\uC545\uD558\uACE0 \uC788\uC2B5\uB2C8\uB2E4. \uACB0\uD22C\uB85C\uB9CC \uBE7C\uC557\uC744 \uC218 \uC788\uC2B5\uB2C8\uB2E4.");
+      return;
+    }
     const defenseRoll = 30 + Math.random() * 40;
     const win = stats.combat > defenseRoll * 0.6;
     if (win) {
@@ -49353,19 +49394,22 @@ ${lines.join("\n")}
       if (typeof window.updateStats === "function") window.updateStats("sea_plunder_count", 1);
       if (typeof updateReputation === "function") updateReputation(-12);
       const pc = loadPortControl();
-      const state = pc[loc.name] || { controller: "crown", unrest: 0 };
+      const state = pc[loc.name] || { controller: "crown", unrest: 0, rivalId: null, rivalUnrest: 0 };
       let seized = false;
+      const hadRival = !!state.rivalId;
       state.unrest = (state.unrest || 0) + PORT_CONTROL_UNREST_PER_PLUNDER;
       if (state.unrest >= PORT_CONTROL_UNREST_THRESHOLD) {
         state.controller = "player";
         state.unrest = 0;
         seized = true;
+        state.rivalId = null;
+        state.rivalUnrest = 0;
       }
       pc[loc.name] = state;
       savePortControl(pc);
       if (seized) {
         toastHTML(`\u{1F451} ${esc2(loc.name)}\uC774(\uAC00) \uB2F9\uC2E0\uC758 \uAE43\uBC1C \uC544\uB798 \uB4E4\uC5B4\uC654\uC2B5\uB2C8\uB2E4! \uC774\uC81C \uC774 \uD56D\uAD6C\uB294 \uB2F9\uC2E0\uC758 \uC601\uD574\uC785\uB2C8\uB2E4.`, 5500);
-        S._pendingVoyageHint = `\uBC18\uBCF5\uB41C \uC2B5\uACA9 \uB05D\uC5D0 ${loc.name}\uC758 \uC218\uBE44\uB300\uAC00 \uACB0\uAD6D \uD56D\uBCF5\uD588\uB2E4. \uC774 \uD56D\uAD6C\uB294 \uC774\uC81C \uB2F9\uC2E0\uC758 \uAE43\uBC1C \uC544\uB798 \uB193\uC778 \uC790\uC720\uD56D\uC774 \uB418\uC5B4, \uC218\uB9AC\uC640 \uAC70\uB798\uAC00 \uB354 \uC800\uB834\uD574\uC9C0\uACE0 \uB9E4 \uD134 \uC791\uC740 \uC870\uACF5\uC774 \uB4E4\uC5B4\uC62C \uAC83\uC774\uB2E4.`;
+        S._pendingVoyageHint = hadRival ? `\uBC18\uBCF5\uB41C \uC2B5\uACA9 \uB05D\uC5D0 ${loc.name}\uC758 \uC218\uBE44\uB300\uAC00 \uACB0\uAD6D \uD56D\uBCF5\uD588\uB2E4. \uB54C\uB9C8\uCE68 \uC774 \uD56D\uAD6C\uB97C \uB178\uB9AC\uB358 \uB77C\uC774\uBC8C \uC120\uC7A5\uB3C4 \uD55C \uBC1C \uB2A6\uC5C8\uB2E4\uB294 \uAC78 \uC54C\uACE0 \uBD84\uD574\uD588\uB2E4\uB294 \uC18C\uBB38\uC774 \uB4E4\uB9B0\uB2E4. \uC774 \uD56D\uAD6C\uB294 \uC774\uC81C \uB2F9\uC2E0\uC758 \uAE43\uBC1C \uC544\uB798 \uB193\uC778 \uC790\uC720\uD56D\uC774 \uB418\uC5B4, \uC218\uB9AC\uC640 \uAC70\uB798\uAC00 \uB354 \uC800\uB834\uD574\uC9C0\uACE0 \uB9E4 \uD134 \uC791\uC740 \uC870\uACF5\uC774 \uB4E4\uC5B4\uC62C \uAC83\uC774\uB2E4.` : `\uBC18\uBCF5\uB41C \uC2B5\uACA9 \uB05D\uC5D0 ${loc.name}\uC758 \uC218\uBE44\uB300\uAC00 \uACB0\uAD6D \uD56D\uBCF5\uD588\uB2E4. \uC774 \uD56D\uAD6C\uB294 \uC774\uC81C \uB2F9\uC2E0\uC758 \uAE43\uBC1C \uC544\uB798 \uB193\uC778 \uC790\uC720\uD56D\uC774 \uB418\uC5B4, \uC218\uB9AC\uC640 \uAC70\uB798\uAC00 \uB354 \uC800\uB834\uD574\uC9C0\uACE0 \uB9E4 \uD134 \uC791\uC740 \uC870\uACF5\uC774 \uB4E4\uC5B4\uC62C \uAC83\uC774\uB2E4.`;
       } else {
         toast(`\u{1F3F4}\u200D\u2620\uFE0F ${loc.name} \uC57D\uD0C8 \uC131\uACF5! +${loot}G (\uD574\uC0C1 \uC545\uBA85 \uC0C1\uC2B9)`, 4e3);
         S._pendingVoyageHint = `\uC8FC\uC778\uACF5\uC758 \uC120\uB2E8\uC774 ${loc.name}\uC744(\uB97C) \uC2B5\uACA9\uD574 \uC57D\uD0C8\uD588\uB2E4. \uC774 \uC18C\uBB38\uC740 \uBE60\uB974\uAC8C \uD37C\uC838\uB098\uAC08 \uAC83\uC774\uACE0, \uC655\uAD6D \uD574\uAD70\uC774 \uC8FC\uBAA9\uD560 \uC218 \uC788\uB2E4.`;
@@ -49380,6 +49424,55 @@ ${lines.join("\n")}
     renderVoyagePanel();
   }
   window.attemptPlunderPort = attemptPlunderPort;
+  function challengeRivalCaptain(portName) {
+    const ship = loadShip();
+    if (!ship) {
+      toast("\uBA3C\uC800 \uC120\uBC15\uC744 \uAD6C\uB9E4\uD574\uC57C \uD569\uB2C8\uB2E4.");
+      return;
+    }
+    if (ship.atSea || ship.currentPort !== portName) {
+      toast("\uADF8 \uD56D\uAD6C\uC5D0 \uC815\uBC15\uD574 \uC788\uC744 \uB54C\uB9CC \uC120\uC7A5\uC5D0\uAC8C \uB3C4\uC804\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4.");
+      return;
+    }
+    if (ship.activeBattle) {
+      toast("\uC774\uBBF8 \uC804\uD22C\uAC00 \uC9C4\uD589 \uC911\uC785\uB2C8\uB2E4.");
+      return;
+    }
+    const state = getPortControlState(portName);
+    if (state.controller !== "rival" || !state.rivalId) {
+      toast("\uC774 \uD56D\uAD6C\uC5D0\uB294 \uB3C4\uC804\uD560 \uB77C\uC774\uBC8C \uC120\uC7A5\uC774 \uC5C6\uC2B5\uB2C8\uB2E4.");
+      return;
+    }
+    const captain = RIVAL_CAPTAIN_DEFS.find((c) => c.id === state.rivalId);
+    if (!captain) {
+      toast("\uB300\uC0C1\uC744 \uCC3E\uC744 \uC218 \uC5C6\uC2B5\uB2C8\uB2E4.");
+      return;
+    }
+    const hp = captain.hp[0] + Math.floor(Math.random() * (captain.hp[1] - captain.hp[0] + 1));
+    const combat = captain.combat[0] + Math.floor(Math.random() * (captain.combat[1] - captain.combat[0] + 1));
+    ship.activeBattle = {
+      round: 1,
+      phase: "ongoing",
+      enemy: {
+        defId: captain.id,
+        name: captain.name,
+        icon: captain.icon,
+        isNavy: false,
+        isRival: true,
+        rivalPort: portName,
+        hp,
+        maxHp: hp,
+        combat,
+        lootGold: captain.lootGold
+      },
+      log: []
+    };
+    saveShip(ship);
+    toastHTML(`\u2694\uFE0F ${esc2(captain.icon)} ${esc2(captain.name)}\uC5D0\uAC8C \uACB0\uD22C\uB97C \uC2E0\uCCAD\uD588\uC2B5\uB2C8\uB2E4! ${esc2(captain.desc || "")}`, 5e3);
+    S._pendingVoyageHint = `${portName}\uC744 \uC7A5\uC545\uD55C ${captain.name}\uC5D0\uAC8C \uC9C1\uC811 \uACB0\uD22C\uB97C \uC2E0\uCCAD\uD588\uB2E4. \uC774 \uD56D\uAD6C\uC758 \uC6B4\uBA85\uC774 \uC774\uBC88 \uC804\uD22C\uC5D0 \uB2EC\uB838\uB2E4.`;
+    renderVoyagePanel();
+  }
+  window.challengeRivalCaptain = challengeRivalCaptain;
   window.attemptPlunderPort = attemptPlunderPort;
   function checkNavyPursuit() {
     const wanted = getSeaWantedLevel();
@@ -49524,7 +49617,21 @@ ${lines.join("\n")}
         toast(`\u2693 ${enemy.name}\uC744(\uB97C) \uACA9\uD1F4\uD588\uC2B5\uB2C8\uB2E4.`, 3500);
       }
     }
-    if (enemy.isNavy) {
+    if (enemy.isRetake && enemy.retakePort) {
+      toastHTML(`\u{1F6E1}\uFE0F ${esc2(enemy.retakePort)}\uC5D0\uC11C \uC655\uC2E4 \uC7AC\uD0C8\uD658 \uD568\uB300\uB97C \uACA9\uD1F4\uD588\uC2B5\uB2C8\uB2E4! \uC601\uD574\uB97C \uC9C0\uCF1C\uB0C8\uC2B5\uB2C8\uB2E4.`, 5e3);
+      S._pendingVoyageHint = `${enemy.retakePort}\uC744 \uB418\uCC3E\uC73C\uB7EC \uC628 \uC655\uC2E4 \uD568\uB300\uB97C \uC9C1\uC811 \uACA9\uD1F4\uD588\uB2E4. \uC774 \uD56D\uAD6C\uB294 \uC5EC\uC804\uD788 \uB2F9\uC2E0\uC758 \uAE43\uBC1C \uC544\uB798 \uC788\uB2E4.`;
+    } else if (enemy.isRival && enemy.rivalPort) {
+      const pc = loadPortControl();
+      const st = pc[enemy.rivalPort] || { controller: "crown", unrest: 0, rivalId: null, rivalUnrest: 0 };
+      st.controller = "player";
+      st.unrest = 0;
+      st.rivalId = null;
+      st.rivalUnrest = 0;
+      pc[enemy.rivalPort] = st;
+      savePortControl(pc);
+      toastHTML(`\u{1F451} ${esc2(enemy.name)}\uC744(\uB97C) \uACA9\uD1F4\uD558\uACE0 ${esc2(enemy.rivalPort)}\uC744(\uB97C) \uBE7C\uC557\uC558\uC2B5\uB2C8\uB2E4! \uC774\uC81C \uB2F9\uC2E0\uC758 \uC601\uD574\uC785\uB2C8\uB2E4.`, 5500);
+      S._pendingVoyageHint = `${enemy.rivalPort}\uC744 \uC7A5\uC545\uD558\uACE0 \uC788\uB358 ${enemy.name}\uC744 \uACB0\uD22C\uB85C \uAEBE\uC5C8\uB2E4. \uC774 \uD56D\uAD6C\uB294 \uC774\uC81C \uB2F9\uC2E0\uC758 \uAE43\uBC1C \uC544\uB798 \uB193\uC778 \uC790\uC720\uD56D\uC774 \uB418\uC5C8\uB2E4.`;
+    } else if (enemy.isNavy) {
       const wantedLvl = typeof getSeaWantedLevel === "function" ? getSeaWantedLevel() : 0;
       if (wantedLvl > 0 && typeof updateReputation === "function") updateReputation(5);
       S._pendingVoyageHint = "\uCD94\uACA9\uD574\uC628 \uC655\uAD6D \uD574\uAD70\uC744 \uB530\uB3CC\uB838\uB2E4. \uB2F9\uBD84\uAC04\uC740 \uC548\uC804\uD558\uB2E4.";
@@ -49540,8 +49647,20 @@ ${lines.join("\n")}
   function fleeAfterDefeat() {
     const ship = loadShip();
     if (!ship || !ship.activeBattle) return;
-    toast("\u{1F30A} \uD328\uBC30\uD558\uC5EC \uAC04\uC2E0\uD788 \uB3C4\uC8FC\uD588\uC2B5\uB2C8\uB2E4. \uC120\uCCB4\uAC00 \uC2EC\uAC01\uD558\uAC8C \uC190\uC0C1\uB41C \uC0C1\uD0DC\uC785\uB2C8\uB2E4.", 4e3);
-    S._pendingVoyageHint = "\uD574\uC0C1 \uC804\uD22C\uC5D0\uC11C \uD328\uBC30\uD574 \uAC04\uC2E0\uD788 \uBAA9\uC228\uB9CC \uAC74\uC838 \uB3C4\uC8FC\uD588\uB2E4. \uBC30\uB294 \uB9CC\uC2E0\uCC3D\uC774\uAC00 \uB418\uC5C8\uB2E4.";
+    const enemy = ship.activeBattle.enemy;
+    if (enemy && enemy.isRetake && enemy.retakePort) {
+      const pc = loadPortControl();
+      const st = pc[enemy.retakePort] || { controller: "crown", unrest: 0, rivalId: null, rivalUnrest: 0 };
+      st.controller = "crown";
+      st.unrest = 0;
+      pc[enemy.retakePort] = st;
+      savePortControl(pc);
+      toastHTML(`\u{1F451} \uD328\uBC30\uD558\uC5EC ${esc2(enemy.retakePort)}\uC744(\uB97C) \uC655\uC2E4\uC5D0 \uB2E4\uC2DC \uBE7C\uC557\uACBC\uC2B5\uB2C8\uB2E4... \uC120\uCCB4\uB3C4 \uC2EC\uAC01\uD558\uAC8C \uC190\uC0C1\uB410\uC2B5\uB2C8\uB2E4.`, 5500);
+      S._pendingVoyageHint = `\uC655\uC2E4 \uC7AC\uD0C8\uD658 \uD568\uB300\uC5D0 \uD328\uBC30\uD574 ${enemy.retakePort}\uC744 \uB2E4\uC2DC \uBE7C\uC557\uACBC\uB2E4. \uAC04\uC2E0\uD788 \uBAA9\uC228\uB9CC \uAC74\uC838 \uB3C4\uC8FC\uD588\uB2E4.`;
+    } else {
+      toast("\u{1F30A} \uD328\uBC30\uD558\uC5EC \uAC04\uC2E0\uD788 \uB3C4\uC8FC\uD588\uC2B5\uB2C8\uB2E4. \uC120\uCCB4\uAC00 \uC2EC\uAC01\uD558\uAC8C \uC190\uC0C1\uB41C \uC0C1\uD0DC\uC785\uB2C8\uB2E4.", 4e3);
+      S._pendingVoyageHint = "\uD574\uC0C1 \uC804\uD22C\uC5D0\uC11C \uD328\uBC30\uD574 \uAC04\uC2E0\uD788 \uBAA9\uC228\uB9CC \uAC74\uC838 \uB3C4\uC8FC\uD588\uB2E4. \uBC30\uB294 \uB9CC\uC2E0\uCC3D\uC774\uAC00 \uB418\uC5C8\uB2E4.";
+    }
     ship.activeBattle = null;
     ship.activeSeaEvent = null;
     saveShip(ship);
@@ -49765,6 +49884,70 @@ ${lines.join("\n")}
       }
       window.updateHeader && window.updateHeader();
     }
+    if (controlledPortCount > 0) {
+      const retakeChance = Math.min(
+        PORT_CONTROL_RETAKE_CHANCE_CAP,
+        PORT_CONTROL_RETAKE_CHANCE_BASE + PORT_CONTROL_RETAKE_CHANCE_PER_PORT * (controlledPortCount - 1)
+      );
+      const activeShipForRetake = fleet.find((s) => s.id === activeId);
+      Object.keys(portControl).forEach((portName) => {
+        const state = portControl[portName];
+        if (state.controller !== "player") return;
+        if (Math.random() >= retakeChance) return;
+        if (activeShipForRetake && !activeShipForRetake.atSea && activeShipForRetake.currentPort === portName && !activeShipForRetake.activeBattle) {
+          const stats = getShipEffectiveStats(activeShipForRetake);
+          const enemy = spawnEnemyShip("royal_retake_fleet", stats.combat);
+          enemy.isRetake = true;
+          enemy.retakePort = portName;
+          activeShipForRetake.activeBattle = { round: 1, phase: "ongoing", enemy, log: [] };
+          fleetChanged = true;
+          toastHTML(`\u{1F6E1}\uFE0F \uC655\uC2E4 \uC7AC\uD0C8\uD658 \uD568\uB300\uAC00 ${esc2(portName)}\uC5D0 \uB098\uD0C0\uB0AC\uC2B5\uB2C8\uB2E4! \uB9DE\uC11C \uC2F8\uC6CC \uC601\uD574\uB97C \uC9C0\uCF1C\uB0B4\uC57C \uD569\uB2C8\uB2E4.`, 5e3);
+          S._pendingVoyageHint = `\uC655\uC2E4\uC774 ${portName}\uC744 \uB418\uCC3E\uAE30 \uC704\uD574 \uC815\uC608 \uD568\uB300\uB97C \uBCF4\uB0C8\uB2E4. \uC774 \uD56D\uAD6C\uB97C \uC9C0\uCF1C\uB0BC \uC218 \uC788\uC744\uC9C0\uB294 \uC804\uC801\uC73C\uB85C \uC774\uBC88 \uC804\uD22C\uC5D0 \uB2EC\uB838\uB2E4.`;
+        } else {
+          const avgCombat = fleet.length ? fleet.reduce((s, sh) => s + getShipEffectiveStats(sh).combat, 0) / fleet.length : 0;
+          const garrisonStrength = PORT_CONTROL_RETAKE_GARRISON_BASE + PORT_CONTROL_RETAKE_GARRISON_PER_PORT * controlledPortCount;
+          if (avgCombat < garrisonStrength) {
+            state.controller = "crown";
+            state.unrest = 0;
+            toastHTML(`\u{1F451} ${esc2(portName)}\uC774(\uAC00) \uC655\uC2E4 \uD568\uB300\uC5D0 \uC7AC\uD0C8\uD658\uB2F9\uD588\uC2B5\uB2C8\uB2E4...`, 5e3);
+            S._pendingVoyageHint = `\uD568\uB300\uAC00 \uC790\uB9AC\uB97C \uBE44\uC6B4 \uC0AC\uC774 \uC655\uC2E4 \uD568\uB300\uAC00 ${portName}\uC744 \uAE09\uC2B5\uD574 \uB418\uCC3E\uC544\uAC14\uB2E4. \uC601\uD574\uB97C \uC9C0\uD0A4\uB824\uBA74 \uAC00\uB054\uC740 \uADF8\uACF3\uC5D0 \uAC15\uD55C \uD568\uB300\uB97C \uB450\uC5B4\uC57C \uD560 \uAC83\uC774\uB2E4.`;
+          } else if (activeShipForRetake && activeShipForRetake.currentPort === portName) {
+            toast(`\u{1F6E1}\uFE0F ${portName}\uC758 \uC218\uBE44\uB300\uAC00 \uC655\uC2E4\uC758 \uC7AC\uD0C8\uD658 \uC2DC\uB3C4\uB97C \uB9C9\uC544\uB0C8\uC2B5\uB2C8\uB2E4.`, 3500);
+          }
+        }
+      });
+    }
+    (function tickPortRivalry() {
+      const ports = typeof getPortLocations === "function" ? getPortLocations() : [];
+      ports.forEach((p) => {
+        const state = portControl[p.name] || { controller: "crown", unrest: 0, rivalId: null, rivalUnrest: 0 };
+        if (state.controller !== "crown") return;
+        const isPirateHaven = (p.name || "").includes("\uBE14\uB7EC\uB4DC\uC6CC\uD130") || (p.triggerKeywords || []).some((k) => k.includes("\uD574\uC801"));
+        if (isPirateHaven) return;
+        if (!state.rivalId) {
+          if (Math.random() < PORT_RIVAL_SPAWN_CHANCE) {
+            const captain = RIVAL_CAPTAIN_DEFS[Math.floor(Math.random() * RIVAL_CAPTAIN_DEFS.length)];
+            state.rivalId = captain.id;
+            state.rivalUnrest = 0;
+            portControl[p.name] = state;
+          }
+          return;
+        }
+        state.rivalUnrest = (state.rivalUnrest || 0) + PORT_RIVAL_UNREST_PER_TURN;
+        if (state.rivalUnrest >= PORT_CONTROL_UNREST_THRESHOLD) {
+          const captain = RIVAL_CAPTAIN_DEFS.find((c) => c.id === state.rivalId);
+          state.controller = "rival";
+          state.unrest = 0;
+          state.rivalUnrest = 0;
+          portControl[p.name] = state;
+          toastHTML(`\u2694\uFE0F ${esc2(captain?.name || "\uB77C\uC774\uBC8C \uC120\uC7A5")}\uC774(\uAC00) ${esc2(p.name)}\uC744(\uB97C) \uC7A5\uC545\uD588\uC2B5\uB2C8\uB2E4! \uACB0\uD22C\uB85C\uB9CC \uB418\uCC3E\uC744 \uC218 \uC788\uC2B5\uB2C8\uB2E4.`, 5500);
+          S._pendingVoyageHint = `${captain?.name || "\uB77C\uC774\uBC8C \uC120\uC7A5"}\uC774 ${p.name}\uC744 \uBA3C\uC800 \uC7A5\uC545\uD588\uB2E4\uB294 \uC18C\uC2DD\uC774 \uB4E4\uB824\uC628\uB2E4. \uC774 \uD56D\uAD6C\uB97C \uB418\uCC3E\uC73C\uB824\uBA74 \uADF8 \uC120\uC7A5\uACFC \uC9C1\uC811 \uACB0\uD22C\uD574\uC57C \uD560 \uAC83\uC774\uB2E4.`;
+        } else {
+          portControl[p.name] = state;
+        }
+      });
+    })();
+    savePortControl(portControl);
     const survivors = [];
     fleet.forEach((ship) => {
       const isRelevant = ship.atSea || ship.id === activeId;
@@ -50237,7 +50420,17 @@ ${lines.join("\n")}
       if (myPorts.length) {
         html += `<div style="padding:10px 12px;border-bottom:1px solid #0a1a2a">
         <div style="font-family:Cinzel,serif;font-size:10px;color:#c060e0;margin-bottom:6px">\u{1F451} \uB0B4 \uC601\uD574 (${myPorts.length}\uACF3) \u2014 \uB9E4 \uD134 ${myPorts.length * PORT_CONTROL_PASSIVE_INCOME}G \uC870\uACF5</div>
-        ${myPorts.map((name) => `<div style="font-size:9px;color:var(--dim);padding:2px 0">\u2693 ${esc2(name)}</div>`).join("")}
+        ${myPorts.map((name) => `<div style="font-size:9px;color:var(--dim);padding:2px 0">\u2693 ${esc2(name)} \u2014 \uC655\uC2E4 \uC7AC\uD0C8\uD658 \uC704\uD5D8 \uC788\uC74C</div>`).join("")}
+      </div>`;
+      }
+      const rivalPorts = Object.keys(pc).filter((name) => pc[name].controller === "rival");
+      if (rivalPorts.length) {
+        html += `<div style="padding:10px 12px;border-bottom:1px solid #0a1a2a">
+        <div style="font-family:Cinzel,serif;font-size:10px;color:#e0a060;margin-bottom:6px">\u2694\uFE0F \uB77C\uC774\uBC8C \uC120\uC7A5\uC774 \uC7A5\uC545 \uC911 (${rivalPorts.length}\uACF3)</div>
+        ${rivalPorts.map((name) => {
+          const captain = RIVAL_CAPTAIN_DEFS.find((c) => c.id === pc[name].rivalId);
+          return `<div style="font-size:9px;color:var(--dim);padding:2px 0">${captain?.icon || "\u2694\uFE0F"} ${esc2(name)} \u2014 ${esc2(captain?.name || "\uC54C\uB824\uC9C0\uC9C0 \uC54A\uC740 \uC120\uC7A5")}</div>`;
+        }).join("")}
       </div>`;
       }
     }

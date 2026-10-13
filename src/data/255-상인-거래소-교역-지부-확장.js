@@ -282,6 +282,33 @@ export const PORT_CONTROL_UNREST_PER_PLUNDER = 35;
 export const PORT_CONTROL_DISCOUNT = 0.8;
 export const PORT_CONTROL_PASSIVE_INCOME = 8;
 
+// [59-4번 섹션, 왕실 재탈환 시도] 영해는 한 번 쟁취하면 영구 유지되는 게
+// 아니라, 영해 수가 늘어날수록 왕실이 더 강하게 반응한다 — 매 턴 영해당
+// 재탈환 확률을 굴린다(영해가 많을수록 더 자주). 함대 기함이 그 항구에
+// 정박해 있으면 실제 전투로 방어하고, 자리를 비웠으면 평균 전투력으로
+// 자동 판정한다.
+export const PORT_CONTROL_RETAKE_CHANCE_BASE = 0.05;
+export const PORT_CONTROL_RETAKE_CHANCE_PER_PORT = 0.02;
+export const PORT_CONTROL_RETAKE_CHANCE_CAP = 0.25;
+export const PORT_CONTROL_RETAKE_GARRISON_BASE = 35;
+export const PORT_CONTROL_RETAKE_GARRISON_PER_PORT = 8;
+
+// [59-4번 섹션, 라이벌 선장과의 항구 쟁탈전] 왕실 소속 항구를 플레이어만
+// 노리는 게 아니다 — 이름을 가진 라이벌 선장들도 같은 항구를 노려
+// 플레이어와 경쟁한다. 라이벌이 먼저 기준치에 도달하면 그 항구는
+// `rival`(그 선장) 소속이 되고, 플레이어는 결투로만 되찾을 수 있다.
+export const PORT_RIVAL_SPAWN_CHANCE = 0.03;
+export const PORT_RIVAL_UNREST_PER_TURN = 12;
+
+export const RIVAL_CAPTAIN_DEFS = [
+  { id:'rival_morgana', name:'검은 돛의 모르간', icon:'🏴‍☠️',
+    desc:'테네브라 해구 일대를 노리는 악명 높은 여선장. 자신만의 항구를 갖기 위해 끊임없이 왕실 항구를 약탈한다.',
+    combat:[55,75], hp:[90,120], lootGold:[120,220] },
+  { id:'rival_astrid', name:'강철 발톱 선장 아스트리드', icon:'⚔️',
+    desc:'북방 빙해를 주 무대로 삼는 냉혹한 사략선장. 왕실에 등을 돌린 뒤 자신만의 해상 영지를 세우려 한다.',
+    combat:[65,90], hp:[110,150], lootGold:[150,260] },
+];
+
 export const ROAD_EDGES = [
   // central 내부 — 왕도를 중심으로 방사형
   ['왕도 아이런홀','교역 도시 골든크로스'],
@@ -401,6 +428,9 @@ export const ENEMY_SHIP_DEFS = [
   { id:'warship',   name:'해적 전함',  icon:'🚢', tierLike:'galleon', hpMult:1.6, combatMult:1.5, lootGold:[150,300], desc:'중무장한 해적 전함. 큰 위험을 감수해야 한다.' },
   { id:'navy_frigate', name:'해군 호위함', icon:'⚓', tierLike:'galleon', hpMult:1.4, combatMult:1.6, lootGold:[0,0], isNavy:true, desc:'해상 악명을 쫓아온 왕국 해군. 격퇴 또는 나포해도 현상금은 없지만 악명이 줄어든다.' },
   { id:'ghost_ship', name:'유령선',    icon:'👻', tierLike:'galleon', hpMult:1.3, combatMult:1.3, lootGold:[100,250], desc:'저주받은 유령선. 격파하면 오싹하지만 전리품은 확실하다.' },
+  // [59-4번 섹션, 왕실 재탈환 시도] 영해를 되찾으러 오는 전용 왕실 함대 —
+  // 일반 해군 호위함보다 훨씬 강하다(영해를 지키는 게 쉬운 일이 아니어야 함).
+  { id:'royal_retake_fleet', name:'왕실 재탈환 함대', icon:'🛡️', tierLike:'galleon', hpMult:1.8, combatMult:2.0, lootGold:[0,0], isNavy:true, desc:'빼앗긴 항구를 되찾기 위해 왕실이 보낸 정예 함대. 격퇴하면 영해를 지켜낼 수 있지만, 패배하면 그 항구를 다시 빼앗긴다.' },
 ];
 
 export const NPC_SHIP_KINDS = [

@@ -18448,6 +18448,14 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
     celestial: { name: "\uCC9C\uACC4", icon: "\u{1F47C}", baseRep: 40 },
     infernal: { name: "\uB9C8\uACC4", icon: "\u{1F608}", baseRep: 20 }
   };
+  var FACTION_DEF_SCENARIO_MAP = {
+    kingdom_knights: "\uC655\uAD6D \uAE30\uC0AC\uB2E8",
+    mage_assoc: "\uB9C8\uBC95\uC0AC \uD611\uD68C",
+    church: "\uAD50\uD68C",
+    thieves: "\uB3C4\uC801 \uAE38\uB4DC",
+    merchants: "\uC0C1\uC778 \uC870\uD569",
+    cabal: "\uC554\uD751 \uACB0\uC0AC"
+  };
 
   // src/world/219-17-세력-명성-변경-상태-조회.js
   window.FACTION_DEFS = FACTION_DEFS;
@@ -18467,7 +18475,7 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
     }
   }
   window.saveFactionRepV17 = saveFactionRepV17;
-  function changeFactionRep(factionId, delta, reason = "") {
+  function changeFactionRep(factionId, delta, reason = "", _skipMirror) {
     try {
       const fr = loadFactionRepV172();
       if (!fr[factionId]) {
@@ -18482,6 +18490,15 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
       const icon = def?.icon || "\u2696\uFE0F";
       if (Math.abs(delta) >= 10) toast(`${icon} ${def?.name || factionId}: ${delta > 0 ? "+" : ""}${delta} (${fr[factionId].rep})`, 2500);
     } catch (e) {
+    }
+    if (!_skipMirror) {
+      try {
+        const scenarioName = FACTION_DEF_SCENARIO_MAP[factionId];
+        if (scenarioName && typeof window.getCurrentFactions === "function" && window.getCurrentFactions()[scenarioName] && typeof window.updateFactionRep === "function") {
+          window.updateFactionRep(scenarioName, delta, true);
+        }
+      } catch (e3) {
+      }
     }
   }
   window.changeFactionRep = changeFactionRep;
@@ -67779,7 +67796,7 @@ ${cycleStatus} | ${chapterStatus} | ${sealStatus} | ${treeStatus}`;
     }
   }
   window.saveFactionRep = saveFactionRep;
-  function updateFactionRep2(factionName, delta) {
+  function updateFactionRep2(factionName, delta, _skipMirror) {
     const rep = loadFactionRep();
     rep[factionName] = Math.max(-100, Math.min(100, (rep[factionName] || 0) + delta));
     const factions = getCurrentFactions();
@@ -67793,6 +67810,15 @@ ${cycleStatus} | ${chapterStatus} | ${sealStatus} | ${treeStatus}`;
     const level = rep[factionName] >= 50 ? "\uB3D9\uB9F9" : rep[factionName] >= 20 ? "\uC6B0\uD638" : rep[factionName] >= -20 ? "\uC911\uB9BD" : rep[factionName] >= -50 ? "\uC801\uB300" : "\uC804\uC7C1";
     if (Math.abs(delta) >= 5)
       toastHTML(`${esc2(factions[factionName]?.icon || "")} ${esc2(factionName)}: ${esc2(level)} (${esc2(rep[factionName] > 0 ? "+" : "")}${esc2(rep[factionName])})`, 2500);
+    if (!_skipMirror) {
+      try {
+        const factionId = Object.keys(FACTION_DEF_SCENARIO_MAP).find((id) => FACTION_DEF_SCENARIO_MAP[id] === factionName);
+        if (factionId && typeof window.changeFactionRep === "function") {
+          window.changeFactionRep(factionId, delta, "", true);
+        }
+      } catch (e) {
+      }
+    }
   }
   window.updateFactionRep = updateFactionRep2;
   function getFactionDesc() {

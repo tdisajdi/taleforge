@@ -1,7 +1,7 @@
 // [17] 세력 명성 변경 / 상태 조회
 // Auto-extracted from taleforge.html (original section banner preserved above).
 import { S } from '../data/084-TaleForge-순수-JS-엔진.js';
-import { FACTION_DEFS } from '../data/219-17-세력-명성-변경-상태-조회.js';
+import { FACTION_DEF_SCENARIO_MAP, FACTION_DEFS } from '../data/219-17-세력-명성-변경-상태-조회.js';
 import { lsGet, lsSet, toast } from '../utils.js';
 
 window.FACTION_DEFS = FACTION_DEFS;
@@ -14,7 +14,7 @@ window.loadFactionRepV17 = loadFactionRepV17;
 export function saveFactionRepV17(d){ try{ lsSet(FACTION_REP_V17_KEY, JSON.stringify(d)); }catch(e){} }
 window.saveFactionRepV17 = saveFactionRepV17;
 
-export function changeFactionRep(factionId, delta, reason='') {
+export function changeFactionRep(factionId, delta, reason='', _skipMirror) {
   try {
     const fr = loadFactionRepV17();
     if (!fr[factionId]) {
@@ -29,6 +29,23 @@ export function changeFactionRep(factionId, delta, reason='') {
     const icon = def?.icon || '⚖️';
     if (Math.abs(delta) >= 10) toast(`${icon} ${def?.name||factionId}: ${delta>0?'+':''}${delta} (${fr[factionId].rep})`, 2500);
   } catch(e) {}
+  // [60-3번 섹션] FACTION_DEFS ↔ FACTIONS_BY_SCENARIO 연결(정방향).
+  // 매핑된 시나리오 파벌이 있고 현재 시나리오에 그 파벌이 실제로
+  // 존재하면 그쪽 평판도 같은 델타로 반영한다. window.X bare 참조를
+  // 쓰는 이유는 이 파일(world/219)이 npc/067을 ES import하지 않게
+  // 해서 순환 의존을 피하기 위함 — 호출 시점에 실시간 조회라 로드
+  // 순서와 무관하게 안전(이 세션의 "안전한 캡처 패턴" 3번).
+  // _skipMirror는 반대쪽 updateFactionRep가 이 함수를 부를 때 무한
+  // 반사를 막는 플래그.
+  if (!_skipMirror) {
+    try {
+      const scenarioName = FACTION_DEF_SCENARIO_MAP[factionId];
+      if (scenarioName && typeof window.getCurrentFactions === 'function' &&
+          window.getCurrentFactions()[scenarioName] && typeof window.updateFactionRep === 'function') {
+        window.updateFactionRep(scenarioName, delta, true);
+      }
+    } catch(e3) {}
+  }
 }
 window.changeFactionRep = changeFactionRep;
 

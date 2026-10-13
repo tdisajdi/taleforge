@@ -1,6 +1,7 @@
 // ③ NPC 관계망 시스템
 // Auto-extracted from taleforge.html (original section banner preserved above).
 import { CONTINENT_RULER_NPCS, FACTION_LEADER_NPCS, JOB_MASTER_NPCS, RACE_RULER_NPCS, SOCIAL_RANK_NPCS } from '../data/055-5대륙-왕국-시스템.js';
+import { FACTION_DEF_SCENARIO_MAP } from '../data/219-17-세력-명성-변경-상태-조회.js';
 import { MAIN_STORY_NPC_NAME_MAP } from '../data/061-볼린-드워프-기계-사제-프로필-패치-v40.js';
 import { S } from '../data/084-TaleForge-순수-JS-엔진.js';
 import { loadNPCs, saveNPCs } from '../misc/001-block0-preamble.js';
@@ -244,7 +245,7 @@ window.loadFactionRep = loadFactionRep;
 export function saveFactionRep(d){ try{ lsSet(FACTION_KEY, JSON.stringify(d)); }catch(e){} }
 window.saveFactionRep = saveFactionRep;
 
-export function updateFactionRep(factionName, delta){
+export function updateFactionRep(factionName, delta, _skipMirror){
   const rep = loadFactionRep();
   rep[factionName] = Math.max(-100, Math.min(100, (rep[factionName]||0) + delta));
 
@@ -261,6 +262,22 @@ export function updateFactionRep(factionName, delta){
   const level = rep[factionName] >= 50 ? '동맹' : rep[factionName] >= 20 ? '우호' : rep[factionName] >= -20 ? '중립' : rep[factionName] >= -50 ? '적대' : '전쟁';
   if(Math.abs(delta) >= 5)
     toastHTML(`${esc(factions[factionName]?.icon||'')} ${esc(factionName)}: ${esc(level)} (${esc(rep[factionName]>0?'+':'')}${esc(rep[factionName])})`, 2500);
+
+  // [60-3번 섹션] FACTION_DEFS ↔ FACTIONS_BY_SCENARIO 연결(역방향).
+  // 이 시나리오 파벌 이름이 FACTION_DEF_SCENARIO_MAP에 대응하는 영문
+  // ID가 있으면 그쪽(FACTION_DEFS, AI의 gs.faction_rep 태그·상점
+  // 가격 등이 참조하는 체계)도 같은 델타로 반영한다. 라이벌 반사
+  // 변동(위)은 대상에 포함 안 함 — 그쪽 라이벌엔 대응하는 FACTION_DEFS
+  // 항목이 거의 없어 범위를 단순하게 유지. _skipMirror는
+  // changeFactionRep가 이 함수를 부를 때 무한 반사를 막는 플래그.
+  if (!_skipMirror) {
+    try {
+      const factionId = Object.keys(FACTION_DEF_SCENARIO_MAP).find(id => FACTION_DEF_SCENARIO_MAP[id] === factionName);
+      if (factionId && typeof window.changeFactionRep === 'function') {
+        window.changeFactionRep(factionId, delta, '', true);
+      }
+    } catch(e) {}
+  }
 }
 window.updateFactionRep = updateFactionRep;
 

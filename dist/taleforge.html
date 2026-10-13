@@ -38083,6 +38083,14 @@ ${lines.join("\n")}
     { id: "pop_recovered", icon: "\u{1F331}", name: "\uBD88\uC0AC\uC870 \uB3C4\uC2DC", aiHint: "\uC7AC\uB09C\uC744 \uB51B\uACE0 \uB2E4\uC2DC \uC77C\uC5B4\uC120 \uB3C4\uC2DC\uB2E4." }
   ];
 
+  // src/data/212-9-왕국-시스템.js
+  var KINGDOM_TYPES_V50 = {
+    kingdom: { name: "\uC655\uAD6D", icon: "\u{1F451}", taxRate: 0.1, militaryMult: 1.2 },
+    republic: { name: "\uACF5\uD654\uAD6D", icon: "\u{1F3DB}\uFE0F", taxRate: 0.08, diplomacyMult: 1.3 },
+    empire: { name: "\uC81C\uAD6D", icon: "\u2694\uFE0F", taxRate: 0.12, militaryMult: 1.5 },
+    theocracy: { name: "\uC2E0\uC815\uAD6D", icon: "\u26EA", taxRate: 0.09, faithMult: 1.4 }
+  };
+
   // src/data/053-게시판-시스템.js
   var BULLETIN_SIZE_CONFIG = {
     hamlet: { minQuests: 0, maxQuests: 2, minInfo: 0, maxInfo: 1, label: "\uC18C\uCD0C", color: "#7a6a4a" },
@@ -64118,6 +64126,38 @@ export default TALEFORGE_HARDCODE_RULES;
     renderDemesnePanel2();
   }
   window.upgradeDemesneTier = upgradeDemesneTier;
+  function declareKingdom(type) {
+    const d = loadDemesne();
+    if (!d.established) {
+      toast("\uBA3C\uC800 \uC601\uC9C0\uB97C \uAC1C\uC124\uD558\uC138\uC694");
+      return;
+    }
+    if ((d.tier || 1) < 5) {
+      toast("\uACF5\uC791\uB839(5\uB4F1\uAE09) \uC774\uC0C1\uC774\uC5B4\uC57C \uC655\uAD6D\uC744 \uC120\uD3EC\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4");
+      return;
+    }
+    if (d.kingdomType) {
+      toast(`\uC774\uBBF8 ${KINGDOM_TYPES_V50[d.kingdomType]?.name || "\uC655\uAD6D"}\uC744 \uC120\uD3EC\uD588\uC2B5\uB2C8\uB2E4`);
+      return;
+    }
+    const def = KINGDOM_TYPES_V50[type] || KINGDOM_TYPES_V50.kingdom;
+    d.kingdomType = type;
+    d.kingdomDeclaredAt = S.msgCount || 0;
+    if (def.militaryMult) d.defense = Math.min(100, Math.round((d.defense || 30) * def.militaryMult));
+    if (def.diplomacyMult) d.loyalty = Math.min(100, Math.round((d.loyalty || 60) * def.diplomacyMult));
+    if (def.faithMult) d.prosperity = Math.min(100, Math.round((d.prosperity || 50) * def.faithMult));
+    d.history = d.history || [];
+    d.history.push({ type: "kingdom", label: `${def.icon} ${def.name} "${d.name}" \uC120\uD3EC!`, cost: 0, turn: S.msgCount || 0, at: (/* @__PURE__ */ new Date()).toISOString().slice(0, 16) });
+    saveDemesne(d);
+    applyDemesneStats();
+    checkDemesneAchievements(d);
+    toastHTML(`${def.icon} "${d.name}"\uC774(\uAC00) ${def.name}\uC73C\uB85C \uC120\uD3EC\uB418\uC5C8\uC2B5\uB2C8\uB2E4!`, 4500, def);
+    if (typeof unlockAchievement === "function") unlockAchievement("kingdom_builder");
+    if (S._nextInjectedContext !== void 0)
+      S._nextInjectedContext = (S._nextInjectedContext || "") + ` [${def.name} "${d.name}" \uC120\uD3EC]`;
+    renderDemesnePanel2();
+  }
+  window.declareKingdom = declareKingdom;
   function applyDemesneStats() {
     if (!S || !S.stats) return;
     const d = loadDemesne();
@@ -64347,7 +64387,21 @@ ${stage.aiHint} ${season.aiHint} ${bHints} ${pHints} ${stageHints} ${achHints} $
         <div style="font-size:8px;color:#3a3030">\uBC88\uC60160+ \xB7 \uCDA9\uC13150+ \xB7 ${uc}G</div>
       </div>
       <button onclick="upgradeDemesneTier()" style="padding:4px 10px;background:#1a1200;border:1px solid ${color};color:${color};font-family:'Cinzel',serif;font-size:9px;cursor:pointer;border-radius:2px">\uC2B9\uACA9 -${uc}G</button>
-    </div>` : `<div style="padding:6px 12px;background:#1a1400;border-bottom:1px solid var(--border);font-size:9px;color:${color};text-align:center;font-family:'Cinzel',serif">\u2B50 \uCD5C\uACE0 \uB4F1\uAE09 \uB2EC\uC131</div>`;
+    </div>` : (
+      // [60-1번 섹션] 공작령(최고 등급) 도달 시 — 아직 왕국을 선포 안
+      // 했으면 4종 유형(world/212의 KINGDOM_TYPES_V50) 선택 UI를,
+      // 이미 선포했으면 선포된 왕국 유형을 보여준다.
+      d.kingdomType ? (() => {
+        const kdef = KINGDOM_TYPES_V50[d.kingdomType] || KINGDOM_TYPES_V50.kingdom;
+        return `<div style="padding:6px 12px;background:#1a1400;border-bottom:1px solid var(--border);font-size:9px;color:${color};text-align:center;font-family:'Cinzel',serif">${kdef.icon} ${esc22(kdef.name)} "${esc22(d.name)}" \uC120\uD3EC\uB428</div>`;
+      })() : `<div style="padding:7px 12px;background:#1a1400;border-bottom:1px solid var(--border)">
+        <div style="font-size:9px;color:${color};text-align:center;font-family:'Cinzel',serif;margin-bottom:5px">\u2B50 \uCD5C\uACE0 \uB4F1\uAE09 \uB2EC\uC131 \u2014 \uC655\uAD6D\uC744 \uC120\uD3EC\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">
+          ${Object.entries(KINGDOM_TYPES_V50).map(([kid, kdef]) => `<button onclick="declareKingdom('${kid}')"
+            style="padding:5px 3px;background:var(--bg-screen);border:1px solid ${color}55;color:${color};font-size:8px;cursor:pointer;font-family:'Cinzel',serif;border-radius:2px">${kdef.icon} ${esc22(kdef.name)}</button>`).join("")}
+        </div>
+      </div>`
+    );
     const tabDefs = [
       { id: "buildings", label: "\u{1F3D7}\uFE0F \uAC74\uBB3C" },
       { id: "policies", label: "\u{1F4DC} \uC815\uCC45" },
@@ -124632,14 +124686,6 @@ summon_add/summon_damage/summon_evolve \u2014 \uC18C\uD658\uC218 \uAD00\uB828`;
     }
   }
   window.calcDamage = calcDamage;
-
-  // src/data/212-9-왕국-시스템.js
-  var KINGDOM_TYPES_V50 = {
-    kingdom: { name: "\uC655\uAD6D", icon: "\u{1F451}", taxRate: 0.1, militaryMult: 1.2 },
-    republic: { name: "\uACF5\uD654\uAD6D", icon: "\u{1F3DB}\uFE0F", taxRate: 0.08, diplomacyMult: 1.3 },
-    empire: { name: "\uC81C\uAD6D", icon: "\u2694\uFE0F", taxRate: 0.12, militaryMult: 1.5 },
-    theocracy: { name: "\uC2E0\uC815\uAD6D", icon: "\u26EA", taxRate: 0.09, faithMult: 1.4 }
-  };
 
   // src/world/212-9-왕국-시스템.js
   function buildKingdom(name, type = "kingdom") {

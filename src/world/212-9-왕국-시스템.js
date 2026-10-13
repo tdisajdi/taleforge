@@ -1,5 +1,17 @@
 // [9] 왕국 시스템
 // Auto-extracted from taleforge.html (original section banner preserved above).
+//
+// [60-1번 섹션, 2026-10-13] 이 파일의 4개 함수(buildKingdom/upgradeKingdom/
+// collectTax/expandTerritory)는 UI 진입점(버튼·패널·디스패처)이 전혀
+// 없는 100% 죽은 코드였다 — dist 빌드 전체를 그렙해도 buildKingdom(
+// 호출부가 이 파일 자기 정의부 1곳뿐임을 실측으로 확인. 삭제하지 않고
+// (과거 기록 보존 원칙), 아래 4종 왕국 유형(KINGDOM_TYPES_V50)을
+// `race/260`의 영지(demesne) 시스템 최고 등급(공작령, tier 5) 전용
+// "왕국 선포" 기능(`declareKingdom`)에 흡수시켜 되살렸다 — 영지가
+// 이미 티어/건물/인구/봉신까지 갖춘 훨씬 풍부한 시스템이라, 이 얕은
+// 평행 시스템을 따로 UI까지 새로 만드느니 그 쪽에 합치는 게 자연스러움.
+// 이 파일의 함수들 자체는 참조용으로 그대로 남겨두되, 실제 플레이에서는
+// 더 이상 호출되지 않는다.
 import { S } from '../data/084-TaleForge-순수-JS-엔진.js';
 import { KINGDOM_TYPES_V50 } from '../data/212-9-왕국-시스템.js';
 import { loadGold, saveGold } from '../items/007-동적-아이템-생성-시스템-무제한-영구-캐시.js';

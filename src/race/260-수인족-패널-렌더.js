@@ -4,7 +4,13 @@ import { renderDungeonUI } from '../combat/256-회차가-높을수록-보스가-
 import { S } from '../data/084-TaleForge-순수-JS-엔진.js';
 import { BEAST_ACTION_TYPES } from '../data/259-수인족-야생의-법칙-Law-of-the-Wild-시스템.js';
 import { ALL_BUILDINGS_MAP, BEAST_INSTINCT_GAIN, BEAST_LINEAGES, BEAST_SUPPRESS_METHODS, DEMESNE_ACHIEVEMENTS, DEMESNE_POLICIES, DEMESNE_SEASONS, DEMESNE_TITLES, DEMESNE_TRADE_PARTNERS, DEMESNE_UNLOCK_CONDITIONS, FG_STAGES, LONE_WOLF_PENALTY, PACK_RULES, STAGE_BUILDINGS, VASSAL_ROLES } from '../data/260-수인족-패널-렌더.js';
+// [60-1번 섹션] world/212의 "왕국 건설" 시스템(buildKingdom 등)은 UI
+// 진입점이 전혀 없는 100% 죽은 코드였다(실측 확인 — dist 전체에서
+// buildKingdom( 이 자기 정의부 1곳뿐) — 그 4종 왕국 유형만 영지
+// 시스템 최고 등급(공작령) 전용 "왕국 선포" 기능으로 흡수해 되살린다.
+import { KINGDOM_TYPES_V50 } from '../data/212-9-왕국-시스템.js';
 import { saveGold } from '../items/007-동적-아이템-생성-시스템-무제한-영구-캐시.js';
+import { unlockAchievement } from '../progression/187-2-업적-시스템.js';
 import { saveSkills } from '../job/002-스킬-시스템.js';
 import { _markDirty, saveStatsSplit } from '../misc/001-block0-preamble.js';
 import { getCurrentFactions } from '../npc/067-③-NPC-관계망-시스템.js';
@@ -2590,6 +2596,34 @@ export function upgradeDemesneTier(){
 }
 window.upgradeDemesneTier = upgradeDemesneTier;
 
+// [60-1번 섹션, 정착지/영지 경제 확장] 공작령(최고 등급)에 도달한
+// 영지가 4종 왕국 유형(world/212의 KINGDOM_TYPES_V50 — 왕국/공화국/
+// 제국/신정국) 중 하나를 선포해 영구 보너스를 받는다. 유형별 단일
+// 배수(militaryMult/diplomacyMult/faithMult)를 가장 가까운 영지
+// 자원(방어/충성/번영)에 매핑 — 세율(taxRate)은 모든 유형이 이미
+// 갖고 있어 별도 보너스로 쓰지 않음(유형 구분 의미가 없어짐).
+export function declareKingdom(type){
+  const d=loadDemesne();
+  if(!d.established){toast('먼저 영지를 개설하세요');return;}
+  if((d.tier||1)<5){toast('공작령(5등급) 이상이어야 왕국을 선포할 수 있습니다');return;}
+  if(d.kingdomType){toast(`이미 ${KINGDOM_TYPES_V50[d.kingdomType]?.name||'왕국'}을 선포했습니다`);return;}
+  const def=KINGDOM_TYPES_V50[type]||KINGDOM_TYPES_V50.kingdom;
+  d.kingdomType=type;
+  d.kingdomDeclaredAt=S.msgCount||0;
+  if(def.militaryMult)  d.defense    = Math.min(100, Math.round((d.defense||30) * def.militaryMult));
+  if(def.diplomacyMult) d.loyalty    = Math.min(100, Math.round((d.loyalty||60) * def.diplomacyMult));
+  if(def.faithMult)     d.prosperity = Math.min(100, Math.round((d.prosperity||50) * def.faithMult));
+  d.history=d.history||[];
+  d.history.push({type:'kingdom',label:`${def.icon} ${def.name} "${d.name}" 선포!`,cost:0,turn:S.msgCount||0,at:new Date().toISOString().slice(0,16)});
+  saveDemesne(d); applyDemesneStats(); checkDemesneAchievements(d);
+  toastHTML(`${def.icon} "${d.name}"이(가) ${def.name}으로 선포되었습니다!`,4500, def);
+  if(typeof unlockAchievement==='function') unlockAchievement('kingdom_builder');
+  if(S._nextInjectedContext!==undefined)
+    S._nextInjectedContext=(S._nextInjectedContext||'')+` [${def.name} "${d.name}" 선포]`;
+  renderDemesnePanel();
+}
+window.declareKingdom = declareKingdom;
+
 export function applyDemesneStats(){
   if(!S||!S.stats) return;
   const d=loadDemesne(); if(!d.established) return;
@@ -2809,7 +2843,21 @@ export function renderDemesnePanel(){
         <div style="font-size:8px;color:#3a3030">번영60+ · 충성50+ · ${uc}G</div>
       </div>
       <button onclick="upgradeDemesneTier()" style="padding:4px 10px;background:#1a1200;border:1px solid ${color};color:${color};font-family:'Cinzel',serif;font-size:9px;cursor:pointer;border-radius:2px">승격 -${uc}G</button>
-    </div>`:`<div style="padding:6px 12px;background:#1a1400;border-bottom:1px solid var(--border);font-size:9px;color:${color};text-align:center;font-family:'Cinzel',serif">⭐ 최고 등급 달성</div>`;
+    </div>`:(
+      // [60-1번 섹션] 공작령(최고 등급) 도달 시 — 아직 왕국을 선포 안
+      // 했으면 4종 유형(world/212의 KINGDOM_TYPES_V50) 선택 UI를,
+      // 이미 선포했으면 선포된 왕국 유형을 보여준다.
+      d.kingdomType ? (()=>{
+        const kdef=KINGDOM_TYPES_V50[d.kingdomType]||KINGDOM_TYPES_V50.kingdom;
+        return `<div style="padding:6px 12px;background:#1a1400;border-bottom:1px solid var(--border);font-size:9px;color:${color};text-align:center;font-family:'Cinzel',serif">${kdef.icon} ${esc2(kdef.name)} "${esc2(d.name)}" 선포됨</div>`;
+      })() : `<div style="padding:7px 12px;background:#1a1400;border-bottom:1px solid var(--border)">
+        <div style="font-size:9px;color:${color};text-align:center;font-family:'Cinzel',serif;margin-bottom:5px">⭐ 최고 등급 달성 — 왕국을 선포할 수 있습니다</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">
+          ${Object.entries(KINGDOM_TYPES_V50).map(([kid,kdef])=>`<button onclick="declareKingdom('${kid}')"
+            style="padding:5px 3px;background:var(--bg-screen);border:1px solid ${color}55;color:${color};font-size:8px;cursor:pointer;font-family:'Cinzel',serif;border-radius:2px">${kdef.icon} ${esc2(kdef.name)}</button>`).join('')}
+        </div>
+      </div>`
+    );
 
   // 탭 바
   const tabDefs=[

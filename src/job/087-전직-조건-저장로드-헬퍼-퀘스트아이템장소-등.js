@@ -349,6 +349,20 @@ export function useItem(idx){
     window.updateHeader();
   }
 
+  // [61-1번 섹션] 요리 음식의 지속 버프 — job/207의 스킬 버프 만료
+  // 큐(S._skillBuffQueue/expireSkillBuffs, quest/086의 매 턴 틱에서
+  // 이미 소비 중)를 그대로 재사용한다. 즉시 효과(effects)와 분리된
+  // buffEffects+buffDuration이 있는 음식만 해당 — 새 만료 메커니즘을
+  // 따로 만들지 않고 기존 걸로 그대로 등록.
+  if(item.buffEffects && item.buffDuration){
+    Object.entries(item.buffEffects).forEach(([k,v])=>{
+      if(S.stats[k]!==undefined) S.stats[k]=Math.min(999,Math.max(0,S.stats[k]+v));
+    });
+    S._skillBuffQueue = S._skillBuffQueue || [];
+    S._skillBuffQueue.push({ statMod:item.buffEffects, expiresAtMsgCount:(S.msgCount||0)+item.buffDuration, skillName:item.name });
+    window.updateHeader();
+  }
+
   // ── 특정 아이템 사용 시 SP 지급 ──────────────────────────
   // 희귀도별 SP 보상 (스킬 관련 소모품만)
   const SP_ITEM_KEYWORDS = /마법서|비전서|스킬북|기술서|무공서|비급|주문서|계시록|각성석|능력 결정|지식의|비밀 문서|고대 서판|봉인된 지식|깨달음/;

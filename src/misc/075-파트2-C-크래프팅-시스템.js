@@ -1,10 +1,12 @@
 // 파트2-C: 크래프팅 시스템
 // Auto-extracted from taleforge.html (original section banner preserved above).
-import { BLUEPRINT_SHOP, CRAFT_RECIPES, MATERIALS } from '../data/075-파트2-C-크래프팅-시스템.js';
+import { BLUEPRINT_SHOP, COOK_RECIPES, CRAFT_RECIPES, MATERIALS } from '../data/075-파트2-C-크래프팅-시스템.js';
 import { S } from '../data/084-TaleForge-순수-JS-엔진.js';
 import { ALCHEMY_MATERIALS, REMEDY_MATERIALS } from '../data/253-SVG-타일-렌더링-작물-단계별-애니메이션.js';
+import { CROP_DEFS } from '../data/252-상단Caravan-UI-용병단-UI와-대칭-구조.js';
 import { INTEL_MATERIALS, TALE_MATERIALS } from '../data/255-상인-거래소-교역-지부-확장.js';
 import { addToItemCache, loadDynMaterials, saveGold, saveInventory } from '../items/007-동적-아이템-생성-시스템-무제한-영구-캐시.js';
+import { loadFarmWarehouse, saveFarmWarehouse } from '../ui/252-상단Caravan-UI-용병단-UI와-대칭-구조.js';
 import { getAvailableRecipes } from '../job/029-숨겨진-직업-시스템.js';
 import { renderShop } from '../job/087-전직-조건-저장로드-헬퍼-퀘스트아이템장소-등.js';
 import { loadCycleCount } from '../progression/014-환생-누적-시스템-110번.js';
@@ -158,6 +160,33 @@ export function craftItem(recipeId){
 }
 window.craftItem = craftItem;
 
+export function cookFood(recipeId){
+  const recipe = COOK_RECIPES.find(r=>r.id===recipeId);
+  if(!recipe){ toast('요리법을 찾을 수 없습니다'); return; }
+
+  const wh = loadFarmWarehouse();
+  const missing = [];
+  Object.entries(recipe.ingredients).forEach(([cropId, need])=>{
+    const have = wh[cropId]||0;
+    if(have < need) missing.push(`${CROP_DEFS[cropId]?.name||cropId} ${need-have}개 부족`);
+  });
+
+  if(missing.length){ toast(`재료 부족: ${missing.join(', ')}`); return; }
+
+  Object.entries(recipe.ingredients).forEach(([cropId, need])=>{ wh[cropId]-=need; });
+  saveFarmWarehouse(wh);
+
+  const item = {...recipe.result};
+  S.inventory.push(item);
+  saveInventory(S.inventory);
+  addToItemCache(item);
+
+  if(typeof window.updateStats==='function') window.updateStats('cookCount', 1);
+  toastHTML(`🍳 요리 완성! ${typeof getEntityIconHTML==='function'?getEntityIconHTML(item,{size:14}):(item.icon)} ${esc(item.name)}`, 3000);
+  renderCraftPanel();
+}
+window.cookFood = cookFood;
+
 export function rollMaterialDrop(monsterRarity='common'){
   const tierMats = {
     common:    ['iron_ore','herb_bundle','ancient_wood','brimstone'],
@@ -232,6 +261,7 @@ export function renderCraftPanel(){
   if(!body) return;
 
   const bag      = loadMaterials();
+  const wh       = loadFarmWarehouse();
   const crafted  = new Set(loadCrafted());
   const ownedBps = new Set(loadBlueprints());
 
@@ -295,6 +325,33 @@ export function renderCraftPanel(){
     </div>`;
   };
 
+  // 요리 레시피 카드 렌더러 — 재료가 MATERIALS 가방이 아니라 농장
+  // 창고(CROP_DEFS 작물)에서 나온다는 점만 다르고, 그 외 레이아웃은
+  // 위 craft recipeCard와 동일하게 맞춰 일관성 유지. 설계도(bpId)
+  // 개념이 없어 locked 분기도 없다.
+  const cookRecipeCard = (r) => {
+    const canCook = Object.entries(r.ingredients).every(([id,n])=>(wh[id]||0)>=n);
+    const rc = rarityColor[r.result.rarity]||'#8a9a8a';
+    const rl = rarityLabel[r.result.rarity]||'일반';
+    const ingList = Object.entries(r.ingredients).map(([id,n])=>{
+      const have = wh[id]||0;
+      return `<span style="color:${have>=n?'#70c050':'#e05050'}">${typeof getEntityIconHTML==='function'?getEntityIconHTML(CROP_DEFS[id],{size:14}):(CROP_DEFS[id]?.icon||'')}${CROP_DEFS[id]?.name||id}×${n}(${have})</span>`;
+    }).join(' ');
+    return `<div style="padding:9px;background:#0d0800;border:1px solid ${canCook?'#3a5a2a':'var(--border)'};margin-bottom:4px">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+        <span style="font-size:17px">${typeof getEntityIconHTML==='function'?getEntityIconHTML(r,{size:17}):(r.icon)}</span>
+        <div style="flex:1">
+          <div style="font-family:Cinzel,serif;font-size:9px;color:${rc}">${esc(r.name)} <span style="font-size:8px">[${rl}]</span></div>
+          <div style="font-size:8px;color:var(--dim)">${esc(r.result.desc)}</div>
+        </div>
+      </div>
+      <div style="font-size:8px;margin-bottom:5px">${ingList}</div>
+      <button class="btn ${canCook?'btn-gold':'btn-dark'}" style="width:100%;padding:6px;font-size:9px" onclick="cookFood('${r.id}')" ${canCook?'':'disabled'}>
+        ${canCook?'🍳 요리하기':'재료 부족'}
+      </button>
+    </div>`;
+  };
+
   // 탭별 콘텐츠
   let tabContent = '';
 
@@ -308,6 +365,19 @@ export function renderCraftPanel(){
       if(!rs.length) return '';
       return `<div style="font-family:Cinzel,serif;font-size:10px;color:var(--gold);margin:8px 0 5px;letter-spacing:1px">${l}</div>${rs.map(recipeCard).join('')}`;
     }).join('');
+  } else if(_craftTab==='cook'){
+    const whSummary = Object.entries(CROP_DEFS).map(([id,def])=>{
+      const cnt = wh[id]||0;
+      if(cnt===0) return '';
+      return `<div style="padding:2px 7px;background:#0d0800;border:1px solid #3a5a2a;border-radius:2px;font-size:9px;color:#80c040">${typeof getEntityIconHTML==='function'?getEntityIconHTML(def,{size:9}):(def.icon)} ${def.name} ×${cnt}</div>`;
+    }).filter(Boolean).join('');
+    tabContent = `<div style="font-family:Cinzel,serif;font-size:10px;color:var(--gold);margin-bottom:5px;letter-spacing:1px">🌾 농장 창고</div>
+      <div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:10px">
+        ${whSummary||'<span style="font-size:9px;color:var(--dim)">작물 없음 — 농장에서 수확하세요</span>'}
+      </div>
+      <div style="font-family:Cinzel,serif;font-size:10px;color:var(--gold);margin-bottom:8px;letter-spacing:1px">🍳 요리</div>
+      <div style="font-size:9px;color:var(--dim);margin-bottom:8px;line-height:1.5">농장에서 수확한 작물로 요리를 만든다. 설계도가 필요 없어 재료만 있으면 바로 시도 가능.<br>일부 요리는 일정 턴 동안 지속되는 효과가 함께 붙는다.</div>
+      ${COOK_RECIPES.map(cookRecipeCard).join('')}`;
   } else if(_craftTab==='alchemy'){
     const rs = CRAFT_RECIPES.filter(r=>r.category==='alchemy');
     tabContent = `<div style="font-family:Cinzel,serif;font-size:10px;color:var(--gold);margin-bottom:8px;letter-spacing:1px">⚗️ 연금술 레시피</div>
@@ -360,6 +430,7 @@ export function renderCraftPanel(){
     </div>
     <div style="display:flex;gap:4px;margin-bottom:10px;flex-wrap:wrap">
       <button style="${tabStyle('craft')}"   onclick="_craftTab='craft';   renderCraftPanel()">⚔️ 제작</button>
+      <button style="${tabStyle('cook')}"    onclick="_craftTab='cook';    renderCraftPanel()">🍳 요리</button>
       <button style="${tabStyle('alchemy')}" onclick="_craftTab='alchemy'; renderCraftPanel()">⚗️ 연금술</button>
       <button style="${tabStyle('shop')}"    onclick="_craftTab='shop';    renderCraftPanel()">🛒 설계도 상점</button>
       <button style="${tabStyle('blueprints')}" onclick="_craftTab='blueprints'; renderCraftPanel()">📜 내 설계도</button>

@@ -231,3 +231,35 @@ export const CRAFT_RECIPES = [
     materials:{ philosophers_ore:2, void_shard:3, star_crystal:4, moonwater:5, dragon_scale:2 },
     result:{ id:'alch_phil_stone_c', name:'현자의 돌',             icon:'🌑', type:'consume', rarity:'legendary',effects:{str:20,int:20,end:20,mgc:30,luk:20,hp:200,mp:200},desc:'연금술사가 평생 꿈꾸는 전설의 돌. 모든 능력을 극한까지 끌어올린다.' } },
 ];
+
+// ────────── 요리 레시피 (61-1번 섹션 신설) ──────────
+// CRAFT_RECIPES와 달리 ingredients는 MATERIALS 가방이 아니라 농장
+// 창고(tf-farm-warehouse, CROP_DEFS 작물)에서 소비한다 — misc/075의
+// cookFood()가 처리. 설계도(bpId) 요구 없음: 요리는 농사만 지으면
+// 누구나 바로 시도할 수 있는 생활 콘텐츠로 설계. result.effects는
+// 기존 소모품과 동일하게 즉시 적용, result.buffEffects+buffDuration은
+// job/087의 useItem()이 S._skillBuffQueue(job/207의 스킬 버프 만료
+// 큐를 그대로 재사용)에 등록해 지정 턴 수 뒤 자동으로 되돌린다.
+export const COOK_RECIPES = [
+  { id:'cook_bread', name:'구운 빵', icon:'🍞',
+    ingredients:{ wheat:3 },
+    result:{ id:'bread_c', name:'구운 빵', icon:'🍞', type:'consume', rarity:'common', effects:{hp:15}, desc:'밀로 구운 투박한 빵. 허기를 가볍게 채운다.' } },
+  { id:'cook_potato_stew', name:'감자 스튜', icon:'🍲',
+    ingredients:{ potato:3, herb:1 },
+    result:{ id:'potato_stew_c', name:'감자 스튜', icon:'🍲', type:'consume', rarity:'common', effects:{hp:35}, buffEffects:{end:5}, buffDuration:5, desc:'든든한 감자 스튜. 한동안 몸이 덜 지친다.' } },
+  { id:'cook_herb_tea', name:'약초차', icon:'🍵',
+    ingredients:{ herb:2 },
+    result:{ id:'herb_tea_c', name:'약초차', icon:'🍵', type:'consume', rarity:'common', effects:{mp:25}, buffEffects:{int:5}, buffDuration:4, desc:'은은한 약초 향이 나는 차. 정신이 맑아진다.' } },
+  { id:'cook_hearty_meal', name:'든든한 한 끼', icon:'🍽️',
+    ingredients:{ wheat:2, potato:2 },
+    result:{ id:'hearty_meal_c', name:'든든한 한 끼', icon:'🍽️', type:'consume', rarity:'common', effects:{hp:40,mp:20}, desc:'밀빵과 감자구이를 곁들인 한 끼. 몸과 마음이 동시에 채워진다.' } },
+  { id:'cook_warrior_stew', name:'전사의 스튜', icon:'🍖',
+    ingredients:{ potato:4, wheat:2, herb:1 },
+    result:{ id:'warrior_stew_c', name:'전사의 스튜', icon:'🍖', type:'consume', rarity:'uncommon', effects:{hp:30}, buffEffects:{str:8,end:8}, buffDuration:6, desc:'전장에 나가기 전 먹는 기름진 스튜. 한동안 몸이 무겁지만 힘이 넘친다.' } },
+  { id:'cook_manaflower_soup', name:'마나꽃 수프', icon:'🍜',
+    ingredients:{ manaflower:1, herb:2 },
+    result:{ id:'manaflower_soup_c', name:'마나꽃 수프', icon:'🍜', type:'consume', rarity:'rare', effects:{mp:60}, buffEffects:{mgc:15,int:10}, buffDuration:6, desc:'마나꽃을 우려낸 수프. 혈관 속에 마력이 흐르는 듯한 기분이 든다.' } },
+  { id:'cook_cursed_feast', name:'저주받은 연회', icon:'🥘',
+    ingredients:{ cursedcrop:1 },
+    result:{ id:'cursed_feast_c', name:'저주받은 연회', icon:'🥘', type:'consume', rarity:'epic', effects:{hp:-20}, buffEffects:{str:20,luk:-10}, buffDuration:5, desc:'금단의 작물로 차린 상. 몸을 깎아 힘을 빌려오는 대가가 따른다.' } },
+];

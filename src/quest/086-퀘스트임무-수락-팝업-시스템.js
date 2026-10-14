@@ -101,7 +101,7 @@ import { FIVE_CONTINENTS, JOB_TURN_KEY, checkJobMasterySkillUnlock, updateJobTur
 import { renderUndeadBorrowedTimePanel } from '../race/258-언데드-패널-렌더.js';
 import { applyBeastWildlawStats, clearBeastWildlaw, getBeastBloodStage, getBeastPackRankStage, loadBeastWildlaw } from '../race/259-수인족-야생의-법칙-Law-of-the-Wild-시스템.js';
 import { BEAST_AWAKENING_STAGES, applyBeastAwakeningStats, applyBeastLineageStats, applyBeastPackBondStats, checkDemesneUnlockTrigger, clearBeastAwakening, loadBeastAwakening, loadDemesne, renderBeastAwakeningPanel, renderBeastLineagePanel, renderBeastPackBondPanel, renderBeastWildlawPanel } from '../race/260-수인족-패널-렌더.js';
-import { clearVoidSummon } from '../summon/023-3-균열-소환-시스템.js';
+import { clearDemonSummon, clearVoidSummon } from '../summon/023-3-균열-소환-시스템.js';
 import { ELF_MEMORY_STAGES, HUMAN_AWAKENING_STAGES, applyElfEmotionStats, applyElfForgettingStats, clearElfMemory, clearNpcInspire, loadElfMemory, loadHumanAwakening, renderElfEmotionPanel, renderElfForgettingPanel, renderElfMemoryPanel } from '../ui/025-통합-패널-공허-확장-탭-시스템.js';
 import { applyHumanLegacyStats, applyHumanStigmaStats, checkDominationAbility, clearNpcCorruption, clearThrall, renderHumanLegacyPanel, renderHumanStigmaPanel, renderSocialRankPanel } from '../ui/026-renderHumanAwakeningPanel-완전-재정의.js';
 import { EXPLORE_KEY, STATUS_STATE_KEY, buySealHintFromSilver, checkTrueEndingCondition, getActiveEffects, getBossPhaseBLS, getSilverSealPrice, loadSealDiscovery, renderSaveSlotPanel, tickStatusEffects } from '../ui/155-⑭-메모리-패널-UI.js';
@@ -2726,6 +2726,9 @@ export async function sendMsg(userMsg, isChoice=false){
     // 로직이 어디에도 없어 영원히 활성 상태로 누적되던 문제 — 다른
     // 매 턴 tick 함수들과 같은 자리에서 호출
     try{ if(typeof tickVoidSummon==='function') tickVoidSummon(); }catch(e){}
+    // [61-3번 섹션] 마계 소환(악마족)도 균열 소환과 동일하게 duration
+    // 소진 로직이 필요해 같은 자리에 같은 패턴으로 추가.
+    try{ if(typeof tickDemonSummon==='function') tickDemonSummon(); }catch(e){}
     // [CRITICAL BUG FIX] checkTrueEndingCondition이 attemptSealRestore()
     // 안에서만 호출돼서, 진엔딩 조건(10개 봉인석+15회차+화해)이 모두
     // 갖춰진 "이후"에는 새로 복원할 봉인석이 없어 다시는 호출되지 않던
@@ -6969,6 +6972,7 @@ function doReincarnate(){
   lsDel('tf-npc-dlg-quests'); // NPC 대화 의뢰 초기화
   if(typeof clearAtmosphere==='function') clearAtmosphere(); // 🌦️ 날씨/시간대 초기화 (이번 생 한정 상태, 다음 생은 다시 배정되어야 함)
   clearDemonCorruption();      // 😈 악마족 타락 시스템 초기화
+  if(typeof clearDemonSummon==='function') clearDemonSummon();   // 😈 악마족 마계 소환 초기화
   if(typeof clearDragonHeart==='function') clearDragonHeart();         // 🐉 드래곤혈 용심 시스템 초기화
   if(typeof clearNpcCorruption==='function') clearNpcCorruption(); // 😈 NPC 타락 데이터 초기화
   if(typeof clearElfMemory==='function') clearElfMemory();         // 🧝 엘프족 기억 시스템 초기화

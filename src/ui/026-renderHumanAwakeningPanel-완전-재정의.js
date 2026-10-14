@@ -15,6 +15,7 @@ import { loadJobSkills, saveJobSkills } from '../misc/009-레벨업-스탯-포�
 import { getEnemyScaleMultiplier } from '../misc/054-이동수단-시스템.js';
 import { saveStats } from '../patches/299-플레이-통계-성향-분석-시스템-v57-완전판.js';
 import { DEMON_CORRUPTION_STAGES, applyDemonCorruptionStats, getDemonCorruptionStatus, loadDemonCorruption, saveDemonCorruption } from '../progression/020-101130번-환생-누적-시스템.js';
+import { activateDemonSummon, dismissDemonSummon, getAvailableDemonSummons, loadDemonSummon } from '../summon/023-3-균열-소환-시스템.js';
 import { getMonsterTierStats, renderSkills, updateCharHeader } from '../quest/086-퀘스트임무-수락-팝업-시스템.js';
 import { loadDemesne, saveDemesne } from '../race/260-수인족-패널-렌더.js';
 import { esc, lsDel, lsGet, lsSet, toast } from '../utils.js';
@@ -1975,7 +1976,50 @@ window.renderDemonCorruptionPanel = function() {
       </div>
     </div>
 
-    <!-- ⑧ 타락 정화 -->
+    <!-- ⑧ 마계 소환 (61-3번 섹션 신규 — 다크링 균열 소환과 동일한 구조,
+         게이트만 타락도 단계 재사용) -->
+    <div style="padding:10px 12px;border-bottom:1px solid #1a0015">
+      <div style="font-family:'Cinzel',serif;font-size:9px;color:${color};letter-spacing:1px;margin-bottom:8px">── 😈 마계 소환 ──</div>
+      ${(() => {
+        const ds = loadDemonSummon();
+        const available = getAvailableDemonSummons();
+        const mp = S.stats.mp !== undefined ? S.stats.mp : (S.stats.mgc || 50);
+        if (dc.stage < 2) return `<div style="font-size:9px;color:#3a1a3a;text-align:center;padding:8px">타락 2단계 이상에서 소환 가능 (현재 ${dc.stage}단계)</div>`;
+        const activeHtml = (ds.activeSummons||[]).length ? `
+          <div style="margin-bottom:8px">
+            ${(ds.activeSummons||[]).map((s, i) => `
+              <div style="padding:7px 9px;background:#150010;border:1px solid ${color}55;margin-bottom:4px;border-radius:2px;display:flex;align-items:center;gap:8px">
+                <span style="font-size:15px">${typeof getEntityIconHTML==='function'?getEntityIconHTML(s,{size:15}):(s.icon)}</span>
+                <div style="flex:1">
+                  <div style="font-family:'Cinzel',serif;font-size:9px;color:${color}">${esc(s.name)}</div>
+                  <div style="font-size:7px;color:#6a406a">Tier ${s.tier} · HP ${s.hp} · ATK ${s.atk} · ${s.duration}턴 남음</div>
+                </div>
+                <button onclick="dismissDemonSummon(${i});renderDemonCorruptionPanel()" style="padding:3px 7px;background:#0a0008;border:1px solid ${color}44;color:${color};font-size:8px;cursor:pointer;border-radius:2px">귀환</button>
+              </div>`).join('')}
+          </div>` : '';
+        const poolHtml = available.length === 0 ? `<div style="font-size:9px;color:#3a1a3a;text-align:center;padding:8px">소환 가능한 대상 없음</div>` :
+          available.map(s => {
+            const canAfford = mp >= s.mpCost;
+            return `<div style="padding:7px 9px;background:${canAfford?'#0a0008':'#060005'};border:1px solid ${canAfford?color+'44':'#1a0015'};margin-bottom:5px;border-radius:2px">
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+                <span style="font-size:15px">${typeof getEntityIconHTML==='function'?getEntityIconHTML(s,{size:15}):(s.icon)}</span>
+                <div style="flex:1">
+                  <div style="font-family:'Cinzel',serif;font-size:9px;color:${canAfford?color:'#4a2a4a'}">${esc(s.name)}</div>
+                  <div style="font-size:7px;color:#4a2a4a">Tier ${s.tier} · HP ${s.hp} · ATK ${s.atk}</div>
+                </div>
+                <div style="font-size:8px;color:${canAfford?'#d04080':'#4a2a4a'}">MP ${s.mpCost}</div>
+              </div>
+              <div style="font-size:8px;color:#6040a0;margin-bottom:5px">${esc(s.desc)}</div>
+              <button onclick="activateDemonSummon('${s.id}');renderDemonCorruptionPanel()"
+                style="width:100%;padding:4px;background:${canAfford?'#1a0a3a':'#0a0010'};border:1px solid ${canAfford?color+'55':'#1a0015'};color:${canAfford?color:'#3a1a5a'};font-family:'Cinzel',serif;font-size:8px;cursor:${canAfford?'pointer':'not-allowed'};border-radius:2px"
+                ${canAfford?'':'disabled'}>${canAfford ? `😈 소환하기 (MP -${s.mpCost})` : `MP 부족 (${s.mpCost} 필요)`}</button>
+            </div>`;
+          }).join('');
+        return activeHtml + poolHtml;
+      })()}
+    </div>
+
+    <!-- ⑨ 타락 정화 -->
     <div style="padding:10px 12px;border-bottom:1px solid #1a0015">
       <div style="font-family:'Cinzel',serif;font-size:9px;color:${color};letter-spacing:1px;margin-bottom:6px">── 타락 정화 ──</div>
       ${DEMON_PURIFY_METHODS.map(m => {
@@ -1997,7 +2041,7 @@ window.renderDemonCorruptionPanel = function() {
       }).join('')}
     </div>
 
-    <!-- ⑨ 최근 기록 -->
+    <!-- ⑩ 최근 기록 -->
     ${dc.history && dc.history.length ? `
     <div style="padding:10px 12px">
       <div style="font-family:'Cinzel',serif;font-size:9px;color:${color};letter-spacing:1px;margin-bottom:6px">── 최근 기록 ──</div>

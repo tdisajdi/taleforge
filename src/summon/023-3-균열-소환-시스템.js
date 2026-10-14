@@ -1,9 +1,9 @@
 // 🌀 3. 균열 소환 시스템
 // Auto-extracted from taleforge.html (original section banner preserved above).
-import { VOID_SUMMON_POOL } from '../data/023-3-균열-소환-시스템.js';
+import { DEMON_SUMMON_POOL, VOID_SUMMON_POOL } from '../data/023-3-균열-소환-시스템.js';
 import { S } from '../data/084-TaleForge-순수-JS-엔진.js';
 import { saveStats } from '../patches/299-플레이-통계-성향-분석-시스템-v57-완전판.js';
-import { gainDarklingVoid, loadDarklingVoid } from '../progression/020-101130번-환생-누적-시스템.js';
+import { gainDarklingVoid, loadDarklingVoid, loadDemonCorruption } from '../progression/020-101130번-환생-누적-시스템.js';
 import { lsDel, lsGet, lsSet, toast } from '../utils.js';
 
 export const VOID_SUMMON_KEY   = 'tf-darkling-summon';
@@ -95,6 +95,91 @@ export function tickVoidSummon() {
   } catch(e) { console.warn('[tickVoidSummon]', e); }
 }
 window.tickVoidSummon = tickVoidSummon;
+
+// [61-3번 섹션] 마계 소환 — 위 다크링 균열 소환과 완전히 같은 흐름
+// (조회→MP 체크→소환→저장→공허도/타락도 상승→AI 컨텍스트 주입)을
+// 악마족에게도 제공. 저장 키/게이트 스탯(타락도)만 다르고 나머지
+// 로직은 그대로 복제 — 공용 헬퍼로 합치면 두 종족 전용 분기(race
+// 체크, 진행치 조회 함수)가 서로 얽혀 오히려 복잡해지므로 독립
+// 함수로 유지.
+export const DEMON_SUMMON_KEY  = 'tf-demon-summon';
+
+export const loadDemonSummon   = () => { try { const r = lsGet(DEMON_SUMMON_KEY); return r ? JSON.parse(r) : { totalSummons: 0, activeSummons: [], history: [], cooldown: 0 }; } catch(e) { return { totalSummons: 0, activeSummons: [], history: [], cooldown: 0 }; } };
+
+export const saveDemonSummon   = (d) => { try { lsSet(DEMON_SUMMON_KEY, JSON.stringify(d)); } catch(e) {} };
+
+export const clearDemonSummon  = () => lsDel(DEMON_SUMMON_KEY);
+
+export function getAvailableDemonSummons() {
+  const dc = loadDemonCorruption();
+  const stage = dc.stage || 0;
+  if (stage < 2) return [];
+  const pool = {};
+  for (let s = 2; s <= stage; s++) {
+    (DEMON_SUMMON_POOL[s] || []).forEach(e => { pool[e.id] = e; });
+  }
+  return Object.values(pool);
+}
+window.getAvailableDemonSummons = getAvailableDemonSummons;
+
+export function activateDemonSummon(summonId) {
+  const race = S.character?.race || '';
+  if (!race.includes('악마') && !race.includes('demon')) return;
+  const available = getAvailableDemonSummons();
+  const summon = available.find(s => s.id === summonId);
+  if (!summon) { toast('소환 불가: 현재 타락 단계가 너무 낮습니다.', 2000); return; }
+  const mp = S.stats.mp !== undefined ? S.stats.mp : (S.stats.mgc || 50);
+  if (mp < summon.mpCost) { toast(`MP 부족! ${summon.mpCost} MP 필요 (현재: ${mp})`, 2000); return; }
+  if (S.stats.mp !== undefined) S.stats.mp = Math.max(0, S.stats.mp - summon.mpCost);
+  else S.stats.mgc = Math.max(0, (S.stats.mgc || 50) - Math.floor(summon.mpCost / 2));
+  const ds = loadDemonSummon();
+  const entry = { ...summon, summonedAt: new Date().toISOString().slice(0, 16), duration: 3 };
+  ds.activeSummons = ds.activeSummons || [];
+  ds.activeSummons.push(entry);
+
+  ds.totalSummons = (ds.totalSummons || 0) + 1;
+  ds.history = ds.history || [];
+  ds.history.push({ name: summon.name, icon: summon.icon, tier: summon.tier, at: entry.summonedAt });
+
+  saveDemonSummon(ds);
+  if (typeof saveStats === 'function') saveStats(S.stats);
+  if (typeof gainDemonCorruption === 'function') gainDemonCorruption('contract', summon.tier * 4);
+  if (S._nextInjectedContext !== undefined) {
+    S._nextInjectedContext = (S._nextInjectedContext || '') + ` [악마족 마계 소환: ${summon.icon} "${summon.name}" 소환! ${summon.desc} MP -${summon.mpCost}]`;
+  }
+  window.updateHeader();
+  toastHTML(`😈 ${typeof getEntityIconHTML==='function'?getEntityIconHTML(summon,{size:14}):(summon.icon)} ${esc(summon.name)} 소환! (MP -${esc(summon.mpCost)}, 타락도 +${esc(summon.tier*4)})`, 3500);
+}
+window.activateDemonSummon = activateDemonSummon;
+
+export function dismissDemonSummon(idx) {
+  const ds = loadDemonSummon();
+  if (!ds.activeSummons || !ds.activeSummons[idx]) return;
+  const dismissed = ds.activeSummons.splice(idx, 1)[0];
+  saveDemonSummon(ds);
+  toastHTML(`🔥 ${typeof getEntityIconHTML==='function'?getEntityIconHTML(dismissed,{size:14}):(dismissed.icon)} ${esc(dismissed.name)} 귀환`, 2000);
+}
+window.dismissDemonSummon = dismissDemonSummon;
+
+export function tickDemonSummon() {
+  try {
+    const ds = loadDemonSummon();
+    if (!ds.activeSummons || !ds.activeSummons.length) return;
+    const remaining = [];
+    const expired = [];
+    ds.activeSummons.forEach(s => {
+      const d = (s.duration !== undefined ? s.duration : 3) - 1;
+      if (d > 0) remaining.push({ ...s, duration: d });
+      else expired.push(s);
+    });
+    ds.activeSummons = remaining;
+    saveDemonSummon(ds);
+    if (expired.length) {
+      expired.forEach(s => toastHTML(`🔥 ${typeof getEntityIconHTML==='function'?getEntityIconHTML(s,{size:14}):(s.icon||"")} ${esc(s.name)} 소환 지속시간 만료 — 마계로 돌아갔다`, 2500));
+    }
+  } catch(e) { console.warn('[tickDemonSummon]', e); }
+}
+window.tickDemonSummon = tickDemonSummon;
 
 export function renderVoidSummonPanel(containerId) {
   const body = document.getElementById(containerId);

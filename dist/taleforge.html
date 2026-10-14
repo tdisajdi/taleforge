@@ -28172,7 +28172,7 @@ ${lines.join("\n")}
       aiHint: "7\uB2E8\uACC4 \uD0C0\uB77D: \uC644\uC804\uD55C \uC6D0\uCD08 \uD63C\uB3C8 \uC0C1\uD0DC. \uC774 \uC874\uC7AC\uC758 \uC2DC\uC120\uB9CC\uC73C\uB85C \uC8FC\uBCC0 \uC0DD\uBB3C\uC758 \uBCF8\uC131\uC774 \uD754\uB4E4\uB9AC\uBA70, \uC2E0\uC131\xB7\uC545\uB9C8\uC758 \uAD6C\uBD84\uC774 \uBB34\uC758\uBBF8\uD574\uC9C4\uB2E4."
     }
   ];
-  function gainDemonCorruption(sinType, customGain) {
+  function gainDemonCorruption2(sinType, customGain) {
     const race = S.character?.race || "";
     const isDemon = race.includes("\uC545\uB9C8") || race.includes("demon");
     if (!isDemon) return;
@@ -28218,7 +28218,7 @@ ${lines.join("\n")}
     applyDemonCorruptionStats();
     return dc;
   }
-  window.gainDemonCorruption = gainDemonCorruption;
+  window.gainDemonCorruption = gainDemonCorruption2;
   function reduceDemonCorruption(amount, methodId) {
     const race = S.character?.race || "";
     const isDemon = race.includes("\uC545\uB9C8") || race.includes("demon");
@@ -28308,7 +28308,7 @@ ${lines.join("\n")}
     window.updateHeader();
   }
   window.demonPurify = demonPurify;
-  window.gainDemonCorruption = gainDemonCorruption;
+  window.gainDemonCorruption = gainDemonCorruption2;
   window.reduceDemonCorruption = reduceDemonCorruption;
   window.demonPurify = demonPurify;
   var DWARF_CRAFT_KEY = "tf-dwarf-craft";
@@ -33594,23 +33594,23 @@ ${lines.join("\n")}
       if (!isDemon) return;
       let triggered = false;
       if (/협박|강요|계약|대가|거래/.test(text) && Math.random() < 0.5) {
-        gainDemonCorruption("contract", 4);
+        gainDemonCorruption2("contract", 4);
         triggered = true;
       }
       if (/공포|두려움|떨었|비명|겁에/.test(text) && Math.random() < 0.4) {
-        gainDemonCorruption("fear", 3);
+        gainDemonCorruption2("fear", 3);
         triggered = true;
       }
       if (/배신|속임|거짓|기만|배반/.test(text) && Math.random() < 0.5) {
-        gainDemonCorruption("betrayal", 5);
+        gainDemonCorruption2("betrayal", 5);
         triggered = true;
       }
       if (/학살|무참|잔혹|처형|몰살/.test(text) && Math.random() < 0.4) {
-        gainDemonCorruption("slaughter", 6);
+        gainDemonCorruption2("slaughter", 6);
         triggered = true;
       }
       if (/유혹|꼬드|빠뜨|흑화|타락/.test(text) && Math.random() < 0.4) {
-        gainDemonCorruption("temptation", 4);
+        gainDemonCorruption2("temptation", 4);
         triggered = true;
       }
     }
@@ -35526,6 +35526,324 @@ ${lines.join("\n")}
       aiHint: (lv) => `\uD608\uD1B5 \uD0D1\uC758 \uCCA8\uD0D1\uC5D0\uC11C \uBD89\uC740 \uBE5B\uC774 \uD758\uB7EC\uB0B4\uB9B0\uB2E4. \uBC18\uACBD \uC218 \uD0AC\uB85C\uBBF8\uD130\uC758 \uAD8C\uC18D\uB4E4\uC774 \uAD70\uC8FC\uC758 \uBAA9\uC18C\uB9AC\uB97C \uB4E3\uB294\uB2E4.`
     }
   };
+
+  // src/data/023-3-균열-소환-시스템.js
+  var VOID_SUMMON_POOL = {
+    2: [
+      { id: "vs_shade", name: "\uADF8\uB9BC\uC790 \uC870\uAC01", icon: "\u{1F311}", svgIcon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="7" stroke-width="1.2" opacity="0.6"/><circle cx="12" cy="12" r="7" fill="currentColor" fill-opacity="0.4" stroke="none"/></svg>', tier: 1, hp: 20, atk: 8, desc: "\uD76C\uBBF8\uD55C \uADF8\uB9BC\uC790 \uD30C\uD3B8. \uC801\uC5D0\uAC8C FEAR +5 \uBD80\uC5EC. \uBE5B\uC5D0 \uB2FF\uC73C\uBA74 \uC989\uC2DC \uC18C\uBA78.", mpCost: 15 }
+    ],
+    3: [
+      { id: "vs_shade", name: "\uADF8\uB9BC\uC790 \uC870\uAC01", icon: "\u{1F311}", svgIcon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="7" stroke-width="1.2" opacity="0.6"/><circle cx="12" cy="12" r="7" fill="currentColor" fill-opacity="0.4" stroke="none"/></svg>', tier: 1, hp: 20, atk: 8, desc: "\uD76C\uBBF8\uD55C \uADF8\uB9BC\uC790 \uD30C\uD3B8. \uC801\uC5D0\uAC8C FEAR +5 \uBD80\uC5EC. \uBE5B\uC5D0 \uB2FF\uC73C\uBA74 \uC989\uC2DC \uC18C\uBA78.", mpCost: 15 },
+      { id: "vs_wraith", name: "\uACF5\uD5C8 \uB9DD\uB839", icon: "\u{1F47B}", svgIcon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21 C12 21 4 15.5 4 9.5 C4 6.5 6.2 4.5 8.8 4.5 C10.2 4.5 11.3 5.2 12 6.3 C12.7 5.2 13.8 4.5 15.2 4.5 C17.8 4.5 20 6.5 20 9.5 C20 15.5 12 21 12 21 Z" stroke-linejoin="round" opacity="0.7"/></svg>', tier: 2, hp: 45, atk: 15, desc: "\uACF5\uD5C8 \uCC28\uC6D0\uC758 \uB9DD\uB839. \uC801\uC758 WIL\uACFC FATH\uC744 \uB9E4 \uD134 -5 \uC57D\uD654. \uBB3C\uB9AC \uACF5\uACA9 \uBA74\uC5ED.", mpCost: 25 }
+    ],
+    4: [
+      { id: "vs_wraith", name: "\uACF5\uD5C8 \uB9DD\uB839", icon: "\u{1F47B}", svgIcon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21 C12 21 4 15.5 4 9.5 C4 6.5 6.2 4.5 8.8 4.5 C10.2 4.5 11.3 5.2 12 6.3 C12.7 5.2 13.8 4.5 15.2 4.5 C17.8 4.5 20 6.5 20 9.5 C20 15.5 12 21 12 21 Z" stroke-linejoin="round" opacity="0.7"/></svg>', tier: 2, hp: 45, atk: 15, desc: "\uACF5\uD5C8 \uCC28\uC6D0\uC758 \uB9DD\uB839. \uC801\uC758 WIL\uACFC FATH\uC744 \uB9E4 \uD134 -5 \uC57D\uD654. \uBB3C\uB9AC \uACF5\uACA9 \uBA74\uC5ED.", mpCost: 25 },
+      { id: "vs_voidbeast", name: "\uACF5\uD5C8 \uB9F9\uC218", icon: "\u{1F43A}", svgIcon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20 C4 16 6 14 6 11 C6 8.5 7.5 7 9.5 7 C11.5 7 13 8.5 13 11 C13 14 15 16 15 20"/><path d="M15 20 C15 17 16.5 15.5 18 15.5 C19.5 15.5 20.5 17 20.5 19"/></svg>', tier: 3, hp: 80, atk: 28, desc: "\uC5B4\uB460 \uCC28\uC6D0\uC5D0\uC11C \uB04C\uB824\uC628 \uB9F9\uC218. STR \uAE30\uBC18 \uACF5\uACA9. \uCC98\uCE58 \uC2DC \uADF8\uB9BC\uC790 \uD3ED\uBC1C\uB85C FEAR +15.", mpCost: 38 }
+    ],
+    5: [
+      { id: "vs_voidbeast", name: "\uACF5\uD5C8 \uB9F9\uC218", icon: "\u{1F43A}", svgIcon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20 C4 16 6 14 6 11 C6 8.5 7.5 7 9.5 7 C11.5 7 13 8.5 13 11 C13 14 15 16 15 20"/><path d="M15 20 C15 17 16.5 15.5 18 15.5 C19.5 15.5 20.5 17 20.5 19"/></svg>', tier: 3, hp: 80, atk: 28, desc: "\uC5B4\uB460 \uCC28\uC6D0\uC5D0\uC11C \uB04C\uB824\uC628 \uB9F9\uC218. STR \uAE30\uBC18 \uACF5\uACA9. \uCC98\uCE58 \uC2DC \uADF8\uB9BC\uC790 \uD3ED\uBC1C\uB85C FEAR +15.", mpCost: 38 },
+      { id: "vs_dread", name: "\uC808\uB9DD\uC758 \uD604\uC2E0", icon: "\u{1F631}", svgIcon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 C7.5 3 4.5 6.2 4.5 10.5 C4.5 13.2 6 15.3 6 17 L6 18.5 L18 18.5 L18 17 C18 15.3 19.5 13.2 19.5 10.5 C19.5 6.2 16.5 3 12 3 Z" stroke-width="1.3"/><circle cx="9" cy="11" r="1.6" fill="currentColor" stroke="none"/><circle cx="15" cy="11" r="1.6" fill="currentColor" stroke="none"/></svg>', tier: 4, hp: 120, atk: 40, desc: '\uACF5\uD3EC \uC790\uCCB4\uAC00 \uD615\uD0DC\uB97C \uAC16\uCD98 \uC874\uC7AC. \uC811\uCD09\uD55C \uC801\uC5D0\uAC8C "\uC808\uB9DD" \uC0C1\uD0DC\uC774\uC0C1. \uBAA8\uB4E0 \uD310\uC815 -20.', mpCost: 50 }
+    ],
+    6: [
+      { id: "vs_dread", name: "\uC808\uB9DD\uC758 \uD604\uC2E0", icon: "\u{1F631}", svgIcon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 C7.5 3 4.5 6.2 4.5 10.5 C4.5 13.2 6 15.3 6 17 L6 18.5 L18 18.5 L18 17 C18 15.3 19.5 13.2 19.5 10.5 C19.5 6.2 16.5 3 12 3 Z" stroke-width="1.3"/><circle cx="9" cy="11" r="1.6" fill="currentColor" stroke="none"/><circle cx="15" cy="11" r="1.6" fill="currentColor" stroke="none"/></svg>', tier: 4, hp: 120, atk: 40, desc: '\uACF5\uD3EC \uC790\uCCB4\uAC00 \uD615\uD0DC\uB97C \uAC16\uCD98 \uC874\uC7AC. \uC811\uCD09\uD55C \uC801\uC5D0\uAC8C "\uC808\uB9DD" \uC0C1\uD0DC\uC774\uC0C1. \uBAA8\uB4E0 \uD310\uC815 -20.', mpCost: 50 },
+      { id: "vs_voidlord", name: "\uACF5\uD5C8\uC758 \uAD70\uC8FC", icon: "\u{1F451}", svgIcon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17 L3 8 L7.5 12 L12 4 L16.5 12 L21 8 L21 17 Z" stroke-linejoin="round"/></svg>', tier: 5, hp: 200, atk: 65, desc: "\uACF5\uD5C8 \uCC28\uC6D0\uC758 \uC9C0\uBC30\uC790. \uC804\uC7A5 \uC804\uCCB4\uC5D0 \uACF5\uD5C8 \uC601\uC5ED \uC0DD\uC131. \uC801 \uC804\uCCB4 \uB9E4 \uD134 HP -8, WIL -8.", mpCost: 70 }
+    ],
+    7: [
+      { id: "vs_voidlord", name: "\uACF5\uD5C8\uC758 \uAD70\uC8FC", icon: "\u{1F451}", svgIcon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17 L3 8 L7.5 12 L12 4 L16.5 12 L21 8 L21 17 Z" stroke-linejoin="round"/></svg>', tier: 5, hp: 200, atk: 65, desc: "\uACF5\uD5C8 \uCC28\uC6D0\uC758 \uC9C0\uBC30\uC790. \uC804\uC7A5 \uC804\uCCB4\uC5D0 \uACF5\uD5C8 \uC601\uC5ED \uC0DD\uC131. \uC801 \uC804\uCCB4 \uB9E4 \uD134 HP -8, WIL -8.", mpCost: 70 },
+      { id: "vs_abyss", name: "\uC2EC\uC5F0 \uADF8 \uC790\uCCB4", icon: "\u26AB", svgIcon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" fill="currentColor" stroke="none"/></svg>', tier: 6, hp: 350, atk: 100, desc: "\uACF5\uD5C8\uB3C4 7\uB2E8\uACC4 \uC804\uC6A9. \uD615\uD0DC \uC5C6\uB294 \uC2EC\uC5F0. \uBE5B\uACFC \uC2E0\uC131\uD55C \uC874\uC7AC\uB97C \uC790\uB3D9\uC73C\uB85C \uD761\uC218 \uC18C\uBA78.", mpCost: 100 }
+    ]
+  };
+  var DEMON_SUMMON_POOL = {
+    2: [
+      { id: "ds_imp", name: "\uC784\uD504", icon: "\u{1F479}", svgIcon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="7" stroke-width="1.2" opacity="0.6"/><path d="M9 9 L7 6 M15 9 L17 6" stroke-width="1.1"/></svg>', tier: 1, hp: 20, atk: 8, desc: "\uD558\uAE09 \uB9C8\uACC4 \uC885\uC790. \uC801\uC744 \uBE44\uC6C3\uC5B4 NEG +5 \uC720\uBC1C. \uAE08\uBC29 \uD769\uC5B4\uC9C0\uB294 \uC57D\uD55C \uC874\uC7AC.", mpCost: 15 }
+    ],
+    3: [
+      { id: "ds_imp", name: "\uC784\uD504", icon: "\u{1F479}", svgIcon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="7" stroke-width="1.2" opacity="0.6"/><path d="M9 9 L7 6 M15 9 L17 6" stroke-width="1.1"/></svg>', tier: 1, hp: 20, atk: 8, desc: "\uD558\uAE09 \uB9C8\uACC4 \uC885\uC790. \uC801\uC744 \uBE44\uC6C3\uC5B4 NEG +5 \uC720\uBC1C. \uAE08\uBC29 \uD769\uC5B4\uC9C0\uB294 \uC57D\uD55C \uC874\uC7AC.", mpCost: 15 },
+      { id: "ds_hellhound", name: "\uC9C0\uC625 \uC0AC\uB0E5\uAC1C", icon: "\u{1F415}", svgIcon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19 C4 15 6 13 9 13 C12 13 13 15 14 19"/><path d="M14 19 C15 16.5 17 15 19 15" stroke-width="1.2"/></svg>', tier: 2, hp: 45, atk: 15, desc: "\uC9C0\uC625\uC758 \uC0AC\uB0E5\uAC1C. \uC801\uC758 FEAR\uB97C \uB9E4 \uD134 +5 \uCD95\uC801. \uD654\uC5FC\uC5D0 \uBA74\uC5ED.", mpCost: 25 }
+    ],
+    4: [
+      { id: "ds_hellhound", name: "\uC9C0\uC625 \uC0AC\uB0E5\uAC1C", icon: "\u{1F415}", svgIcon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19 C4 15 6 13 9 13 C12 13 13 15 14 19"/><path d="M14 19 C15 16.5 17 15 19 15" stroke-width="1.2"/></svg>', tier: 2, hp: 45, atk: 15, desc: "\uC9C0\uC625\uC758 \uC0AC\uB0E5\uAC1C. \uC801\uC758 FEAR\uB97C \uB9E4 \uD134 +5 \uCD95\uC801. \uD654\uC5FC\uC5D0 \uBA74\uC5ED.", mpCost: 25 },
+      { id: "ds_tormentor", name: "\uACE0\uBB38\uC790", icon: "\u{1F525}", svgIcon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20 C4 16 6 14 6 11 C6 8.5 7.5 7 9.5 7 C11.5 7 13 8.5 13 11 C13 14 15 16 15 20"/></svg>', tier: 3, hp: 80, atk: 28, desc: "\uC8C4\uC778\uC744 \uBC8C\uD558\uB294 \uB9C8\uACC4 \uC9D1\uD589\uC790. STR \uAE30\uBC18 \uACF5\uACA9. \uCC98\uCE58 \uC2DC \uD654\uC5FC \uD3ED\uBC1C\uB85C FEAR +15.", mpCost: 38 }
+    ],
+    5: [
+      { id: "ds_tormentor", name: "\uACE0\uBB38\uC790", icon: "\u{1F525}", svgIcon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20 C4 16 6 14 6 11 C6 8.5 7.5 7 9.5 7 C11.5 7 13 8.5 13 11 C13 14 15 16 15 20"/></svg>', tier: 3, hp: 80, atk: 28, desc: "\uC8C4\uC778\uC744 \uBC8C\uD558\uB294 \uB9C8\uACC4 \uC9D1\uD589\uC790. STR \uAE30\uBC18 \uACF5\uACA9. \uCC98\uCE58 \uC2DC \uD654\uC5FC \uD3ED\uBC1C\uB85C FEAR +15.", mpCost: 38 },
+      { id: "ds_contractor", name: "\uACC4\uC57D\uC758 \uC545\uB9C8", icon: "\u{1F4DC}", svgIcon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4 L5 20 L19 20 L19 4 Z" stroke-linejoin="round"/><path d="M8 9 L16 9 M8 13 L16 13" stroke-width="1.1"/></svg>', tier: 4, hp: 120, atk: 40, desc: '\uC601\uD63C \uACC4\uC57D\uC744 \uC804\uBB38\uC73C\uB85C \uD558\uB294 \uC545\uB9C8. \uC811\uCD09\uD55C \uC801\uC5D0\uAC8C "\uAD74\uC885" \uC0C1\uD0DC\uC774\uC0C1. \uBAA8\uB4E0 \uD310\uC815 -20.', mpCost: 50 }
+    ],
+    6: [
+      { id: "ds_contractor", name: "\uACC4\uC57D\uC758 \uC545\uB9C8", icon: "\u{1F4DC}", svgIcon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4 L5 20 L19 20 L19 4 Z" stroke-linejoin="round"/><path d="M8 9 L16 9 M8 13 L16 13" stroke-width="1.1"/></svg>', tier: 4, hp: 120, atk: 40, desc: '\uC601\uD63C \uACC4\uC57D\uC744 \uC804\uBB38\uC73C\uB85C \uD558\uB294 \uC545\uB9C8. \uC811\uCD09\uD55C \uC801\uC5D0\uAC8C "\uAD74\uC885" \uC0C1\uD0DC\uC774\uC0C1. \uBAA8\uB4E0 \uD310\uC815 -20.', mpCost: 50 },
+      { id: "ds_duke", name: "\uC9C0\uC625 \uACF5\uC791", icon: "\u{1F451}", svgIcon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17 L3 8 L7.5 12 L12 4 L16.5 12 L21 8 L21 17 Z" stroke-linejoin="round"/></svg>', tier: 5, hp: 200, atk: 65, desc: "\uB9C8\uACC4 \uC11C\uC5F4 \uC0C1\uC704 \uACF5\uC791. \uC804\uC7A5\uC5D0 \uC720\uD669 \uC548\uAC1C\uB97C \uD3BC\uCCD0 \uC801 \uC804\uCCB4 \uB9E4 \uD134 HP -8, END -8.", mpCost: 70 }
+    ],
+    7: [
+      { id: "ds_duke", name: "\uC9C0\uC625 \uACF5\uC791", icon: "\u{1F451}", svgIcon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17 L3 8 L7.5 12 L12 4 L16.5 12 L21 8 L21 17 Z" stroke-linejoin="round"/></svg>', tier: 5, hp: 200, atk: 65, desc: "\uB9C8\uACC4 \uC11C\uC5F4 \uC0C1\uC704 \uACF5\uC791. \uC804\uC7A5\uC5D0 \uC720\uD669 \uC548\uAC1C\uB97C \uD3BC\uCCD0 \uC801 \uC804\uCCB4 \uB9E4 \uD134 HP -8, END -8.", mpCost: 70 },
+      { id: "ds_primordial", name: "\uC6D0\uCD08 \uC545\uB9C8", icon: "\u{1F30B}", svgIcon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20 L8 6 L11 12 L13 9 L22 20 Z" stroke-linejoin="round"/></svg>', tier: 6, hp: 350, atk: 100, desc: "\uD0C0\uB77D\uB3C4 7\uB2E8\uACC4 \uC804\uC6A9. \uD615\uD0DC\uB97C \uAC16\uCD94\uAE30 \uC804\uC758 \uD63C\uB3C8. \uC2E0\uC131\uD55C \uC874\uC7AC\uB97C \uC790\uB3D9\uC73C\uB85C \uBD88\uD0DC\uC6CC \uC18C\uBA78.", mpCost: 100 }
+    ]
+  };
+
+  // src/summon/023-3-균열-소환-시스템.js
+  var VOID_SUMMON_KEY = "tf-darkling-summon";
+  var loadVoidSummon = () => {
+    try {
+      const r = lsGet(VOID_SUMMON_KEY);
+      return r ? JSON.parse(r) : { totalSummons: 0, activeSummons: [], history: [], cooldown: 0 };
+    } catch (e) {
+      return { totalSummons: 0, activeSummons: [], history: [], cooldown: 0 };
+    }
+  };
+  var saveVoidSummon = (d) => {
+    try {
+      lsSet(VOID_SUMMON_KEY, JSON.stringify(d));
+    } catch (e) {
+    }
+  };
+  var clearVoidSummon = () => lsDel(VOID_SUMMON_KEY);
+  function getAvailableSummons() {
+    const dv = loadDarklingVoid();
+    const stage = dv.stage || 0;
+    if (stage < 2) return [];
+    const pool = {};
+    for (let s = 2; s <= stage; s++) {
+      (VOID_SUMMON_POOL[s] || []).forEach((e) => {
+        pool[e.id] = e;
+      });
+    }
+    return Object.values(pool);
+  }
+  window.getAvailableSummons = getAvailableSummons;
+  function activateVoidSummon(summonId) {
+    const race = S.character?.race || "";
+    if (!race.includes("\uB2E4\uD06C\uB9C1") && !race.includes("darkling")) return;
+    const available = getAvailableSummons();
+    const summon = available.find((s) => s.id === summonId);
+    if (!summon) {
+      toast("\uC18C\uD658 \uBD88\uAC00: \uD604\uC7AC \uACF5\uD5C8 \uB2E8\uACC4\uAC00 \uB108\uBB34 \uB0AE\uC2B5\uB2C8\uB2E4.", 2e3);
+      return;
+    }
+    const mp = S.stats.mp !== void 0 ? S.stats.mp : S.stats.mgc || 50;
+    if (mp < summon.mpCost) {
+      toast(`MP \uBD80\uC871! ${summon.mpCost} MP \uD544\uC694 (\uD604\uC7AC: ${mp})`, 2e3);
+      return;
+    }
+    if (S.stats.mp !== void 0) S.stats.mp = Math.max(0, S.stats.mp - summon.mpCost);
+    else S.stats.mgc = Math.max(0, (S.stats.mgc || 50) - Math.floor(summon.mpCost / 2));
+    const vs = loadVoidSummon();
+    const entry = { ...summon, summonedAt: (/* @__PURE__ */ new Date()).toISOString().slice(0, 16), duration: 3 };
+    vs.activeSummons = vs.activeSummons || [];
+    vs.activeSummons.push(entry);
+    vs.totalSummons = (vs.totalSummons || 0) + 1;
+    vs.history = vs.history || [];
+    vs.history.push({ name: summon.name, icon: summon.icon, tier: summon.tier, at: entry.summonedAt });
+    saveVoidSummon(vs);
+    if (typeof saveStats === "function") saveStats(S.stats);
+    gainDarklingVoid("void_touch", summon.tier * 4);
+    if (S._nextInjectedContext !== void 0) {
+      S._nextInjectedContext = (S._nextInjectedContext || "") + ` [\uB2E4\uD06C\uB9C1 \uACF5\uD5C8 \uC18C\uD658: ${summon.icon} "${summon.name}" \uC18C\uD658! ${summon.desc} MP -${summon.mpCost}]`;
+    }
+    window.updateHeader();
+    toastHTML(`\u{1F300} ${typeof getEntityIconHTML === "function" ? getEntityIconHTML(summon, { size: 14 }) : summon.icon} ${esc(summon.name)} \uC18C\uD658! (MP -${esc(summon.mpCost)}, \uACF5\uD5C8\uB3C4 +${esc(summon.tier * 4)})`, 3500);
+  }
+  window.activateVoidSummon = activateVoidSummon;
+  function dismissVoidSummon(idx) {
+    const vs = loadVoidSummon();
+    if (!vs.activeSummons || !vs.activeSummons[idx]) return;
+    const dismissed = vs.activeSummons.splice(idx, 1)[0];
+    saveVoidSummon(vs);
+    toastHTML(`\u{1F311} ${typeof getEntityIconHTML === "function" ? getEntityIconHTML(dismissed, { size: 14 }) : dismissed.icon} ${esc(dismissed.name)} \uADC0\uD658`, 2e3);
+  }
+  window.dismissVoidSummon = dismissVoidSummon;
+  function tickVoidSummon2() {
+    try {
+      const vs = loadVoidSummon();
+      if (!vs.activeSummons || !vs.activeSummons.length) return;
+      const remaining = [];
+      const expired = [];
+      vs.activeSummons.forEach((s) => {
+        const d = (s.duration !== void 0 ? s.duration : 3) - 1;
+        if (d > 0) remaining.push({ ...s, duration: d });
+        else expired.push(s);
+      });
+      vs.activeSummons = remaining;
+      saveVoidSummon(vs);
+      if (expired.length) {
+        expired.forEach((s) => toastHTML(`\u{1F311} ${typeof getEntityIconHTML === "function" ? getEntityIconHTML(s, { size: 14 }) : s.icon || ""} ${esc(s.name)} \uC18C\uD658 \uC9C0\uC18D\uC2DC\uAC04 \uB9CC\uB8CC \u2014 \uADE0\uC5F4 \uB108\uBA38\uB85C \uB3CC\uC544\uAC14\uB2E4`, 2500));
+      }
+    } catch (e) {
+      console.warn("[tickVoidSummon]", e);
+    }
+  }
+  window.tickVoidSummon = tickVoidSummon2;
+  var DEMON_SUMMON_KEY = "tf-demon-summon";
+  var loadDemonSummon = () => {
+    try {
+      const r = lsGet(DEMON_SUMMON_KEY);
+      return r ? JSON.parse(r) : { totalSummons: 0, activeSummons: [], history: [], cooldown: 0 };
+    } catch (e) {
+      return { totalSummons: 0, activeSummons: [], history: [], cooldown: 0 };
+    }
+  };
+  var saveDemonSummon = (d) => {
+    try {
+      lsSet(DEMON_SUMMON_KEY, JSON.stringify(d));
+    } catch (e) {
+    }
+  };
+  var clearDemonSummon = () => lsDel(DEMON_SUMMON_KEY);
+  function getAvailableDemonSummons() {
+    const dc = loadDemonCorruption();
+    const stage = dc.stage || 0;
+    if (stage < 2) return [];
+    const pool = {};
+    for (let s = 2; s <= stage; s++) {
+      (DEMON_SUMMON_POOL[s] || []).forEach((e) => {
+        pool[e.id] = e;
+      });
+    }
+    return Object.values(pool);
+  }
+  window.getAvailableDemonSummons = getAvailableDemonSummons;
+  function activateDemonSummon(summonId) {
+    const race = S.character?.race || "";
+    if (!race.includes("\uC545\uB9C8") && !race.includes("demon")) return;
+    const available = getAvailableDemonSummons();
+    const summon = available.find((s) => s.id === summonId);
+    if (!summon) {
+      toast("\uC18C\uD658 \uBD88\uAC00: \uD604\uC7AC \uD0C0\uB77D \uB2E8\uACC4\uAC00 \uB108\uBB34 \uB0AE\uC2B5\uB2C8\uB2E4.", 2e3);
+      return;
+    }
+    const mp = S.stats.mp !== void 0 ? S.stats.mp : S.stats.mgc || 50;
+    if (mp < summon.mpCost) {
+      toast(`MP \uBD80\uC871! ${summon.mpCost} MP \uD544\uC694 (\uD604\uC7AC: ${mp})`, 2e3);
+      return;
+    }
+    if (S.stats.mp !== void 0) S.stats.mp = Math.max(0, S.stats.mp - summon.mpCost);
+    else S.stats.mgc = Math.max(0, (S.stats.mgc || 50) - Math.floor(summon.mpCost / 2));
+    const ds = loadDemonSummon();
+    const entry = { ...summon, summonedAt: (/* @__PURE__ */ new Date()).toISOString().slice(0, 16), duration: 3 };
+    ds.activeSummons = ds.activeSummons || [];
+    ds.activeSummons.push(entry);
+    ds.totalSummons = (ds.totalSummons || 0) + 1;
+    ds.history = ds.history || [];
+    ds.history.push({ name: summon.name, icon: summon.icon, tier: summon.tier, at: entry.summonedAt });
+    saveDemonSummon(ds);
+    if (typeof saveStats === "function") saveStats(S.stats);
+    if (typeof gainDemonCorruption === "function") gainDemonCorruption("contract", summon.tier * 4);
+    if (S._nextInjectedContext !== void 0) {
+      S._nextInjectedContext = (S._nextInjectedContext || "") + ` [\uC545\uB9C8\uC871 \uB9C8\uACC4 \uC18C\uD658: ${summon.icon} "${summon.name}" \uC18C\uD658! ${summon.desc} MP -${summon.mpCost}]`;
+    }
+    window.updateHeader();
+    toastHTML(`\u{1F608} ${typeof getEntityIconHTML === "function" ? getEntityIconHTML(summon, { size: 14 }) : summon.icon} ${esc(summon.name)} \uC18C\uD658! (MP -${esc(summon.mpCost)}, \uD0C0\uB77D\uB3C4 +${esc(summon.tier * 4)})`, 3500);
+  }
+  window.activateDemonSummon = activateDemonSummon;
+  function dismissDemonSummon(idx) {
+    const ds = loadDemonSummon();
+    if (!ds.activeSummons || !ds.activeSummons[idx]) return;
+    const dismissed = ds.activeSummons.splice(idx, 1)[0];
+    saveDemonSummon(ds);
+    toastHTML(`\u{1F525} ${typeof getEntityIconHTML === "function" ? getEntityIconHTML(dismissed, { size: 14 }) : dismissed.icon} ${esc(dismissed.name)} \uADC0\uD658`, 2e3);
+  }
+  window.dismissDemonSummon = dismissDemonSummon;
+  function tickDemonSummon2() {
+    try {
+      const ds = loadDemonSummon();
+      if (!ds.activeSummons || !ds.activeSummons.length) return;
+      const remaining = [];
+      const expired = [];
+      ds.activeSummons.forEach((s) => {
+        const d = (s.duration !== void 0 ? s.duration : 3) - 1;
+        if (d > 0) remaining.push({ ...s, duration: d });
+        else expired.push(s);
+      });
+      ds.activeSummons = remaining;
+      saveDemonSummon(ds);
+      if (expired.length) {
+        expired.forEach((s) => toastHTML(`\u{1F525} ${typeof getEntityIconHTML === "function" ? getEntityIconHTML(s, { size: 14 }) : s.icon || ""} ${esc(s.name)} \uC18C\uD658 \uC9C0\uC18D\uC2DC\uAC04 \uB9CC\uB8CC \u2014 \uB9C8\uACC4\uB85C \uB3CC\uC544\uAC14\uB2E4`, 2500));
+      }
+    } catch (e) {
+      console.warn("[tickDemonSummon]", e);
+    }
+  }
+  window.tickDemonSummon = tickDemonSummon2;
+  function renderVoidSummonPanel(containerId) {
+    const body = document.getElementById(containerId);
+    if (!body) return;
+    const race = S.character?.race || "";
+    if (!race.includes("\uB2E4\uD06C\uB9C1") && !race.includes("darkling")) {
+      body.innerHTML = '<div style="text-align:center;padding:20px;color:#304060;font-size:10px">\uB2E4\uD06C\uB9C1 \uC804\uC6A9 \uC2DC\uC2A4\uD15C</div>';
+      return;
+    }
+    const dv = loadDarklingVoid();
+    const vs = loadVoidSummon();
+    const stage = dv.stage || 0;
+    const color = "#8040e0";
+    const available = getAvailableSummons();
+    const mp = S.stats.mp !== void 0 ? S.stats.mp : S.stats.mgc || 50;
+    body.innerHTML = `
+    <div style="padding:12px;background:linear-gradient(135deg,#050010,#0a0020);border-bottom:2px solid ${color}">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:26px">\u{1F300}</span>
+        <div style="flex:1">
+          <div style="font-family:'Cinzel',serif;font-size:12px;color:${color}">\uADE0\uC5F4 \uC18C\uD658</div>
+          <div style="font-size:9px;color:#402060">\uACF5\uD5C8 ${stage}\uB2E8\uACC4 \xB7 \uC18C\uD658 \uAC00\uB2A5 ${available.length}\uC885 \xB7 \uD65C\uC131 ${(vs.activeSummons || []).length}\uCCB4</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:9px;color:#402060">\uD604\uC7AC MP</div>
+          <div style="font-family:'Cinzel',serif;font-size:14px;color:${color}">${mp}</div>
+        </div>
+      </div>
+      ${stage < 2 ? `<div style="margin-top:8px;padding:6px;background:#05000a;border:1px solid #2a0050;border-radius:2px;font-size:9px;color:#402060">\u26A0\uFE0F \uACF5\uD5C8 2\uB2E8\uACC4 \uC774\uC0C1\uC5D0\uC11C \uC18C\uD658\uC774 \uAC00\uB2A5\uD569\uB2C8\uB2E4. (\uD604\uC7AC ${stage}\uB2E8\uACC4)</div>` : ""}
+    </div>
+    <!-- \uD65C\uC131 \uC18C\uD658 -->
+    ${(vs.activeSummons || []).length > 0 ? `
+    <div style="padding:10px 12px;border-bottom:1px solid #0d0020">
+      <div style="font-family:'Cinzel',serif;font-size:9px;color:${color};letter-spacing:1px;margin-bottom:6px">\u2500\u2500 \uD65C\uC131 \uC18C\uD658\uCCB4 \u2500\u2500</div>
+      ${(vs.activeSummons || []).map((s, i) => `
+        <div style="padding:8px;background:#0a0018;border:1px solid ${color}66;margin-bottom:4px;border-radius:2px;display:flex;align-items:center;gap:8px">
+          <span style="color:${color};display:inline-flex;flex-shrink:0">${typeof getEntityIconHTML === "function" ? getEntityIconHTML(s, { size: 16 }) : s.svgIcon || s.icon}</span>
+          <div style="flex:1">
+            <div style="font-family:'Cinzel',serif;font-size:10px;color:${color}">${s.name}</div>
+            <div style="font-size:8px;color:#402060">Tier ${s.tier} \xB7 HP ${s.hp} \xB7 ATK ${s.atk}</div>
+          </div>
+          <button onclick="dismissVoidSummon(${i});renderDarklingVoidExtPanel()" style="padding:3px 8px;background:#1a0030;border:1px solid ${color}44;color:${color};font-size:8px;cursor:pointer;border-radius:2px">\uADC0\uD658</button>
+        </div>`).join("")}
+    </div>` : ""}
+    <!-- \uC18C\uD658 \uAC00\uB2A5 \uBAA9\uB85D -->
+    <div style="padding:10px 12px;border-bottom:1px solid #0d0020">
+      <div style="font-family:'Cinzel',serif;font-size:9px;color:${color};letter-spacing:1px;margin-bottom:6px">\u2500\u2500 \uC18C\uD658 \uAC00\uB2A5 \uC874\uC7AC \u2500\u2500</div>
+      ${available.length === 0 ? `<div style="font-size:9px;color:#402060;text-align:center;padding:10px">\uACF5\uD5C8 2\uB2E8\uACC4 \uC774\uC0C1\uC5D0\uC11C \uC18C\uD658 \uAC00\uB2A5</div>` : available.map((s) => {
+      const canAfford = mp >= s.mpCost;
+      return `<div style="padding:8px 10px;background:${canAfford ? "#080015" : "#04000a"};border:1px solid ${canAfford ? color + "44" : "#1a0030"};margin-bottom:5px;border-radius:2px">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+              <span style="font-size:16px">${typeof getEntityIconHTML === "function" ? getEntityIconHTML(s, { size: 16 }) : s.icon}</span>
+              <div style="flex:1">
+                <div style="font-family:'Cinzel',serif;font-size:10px;color:${canAfford ? color : "#402060"}">${s.name}</div>
+                <div style="font-size:8px;color:#402060">Tier ${s.tier} \xB7 HP ${s.hp} \xB7 ATK ${s.atk}</div>
+              </div>
+              <div style="text-align:right">
+                <div style="font-size:9px;color:${canAfford ? "#a060f0" : "#402060"}">MP ${s.mpCost}</div>
+              </div>
+            </div>
+            <div style="font-size:9px;color:#402060;margin-bottom:5px">${s.desc}</div>
+            <button onclick="activateVoidSummon('${s.id}');renderDarklingVoidExtPanel()"
+              style="width:100%;padding:5px;background:${canAfford ? "#120028" : "#04000a"};border:1px solid ${canAfford ? color + "55" : "#1a0030"};color:${canAfford ? color : "#402060"};font-family:'Cinzel',serif;font-size:9px;cursor:${canAfford ? "pointer" : "not-allowed"};border-radius:2px"
+              ${canAfford ? "" : "disabled"}>
+              ${canAfford ? `\u{1F300} \uC18C\uD658\uD558\uAE30 (MP -${s.mpCost})` : `MP \uBD80\uC871 (${s.mpCost} \uD544\uC694)`}
+            </button>
+          </div>`;
+    }).join("")}
+    </div>
+    <!-- \uC18C\uD658 \uAE30\uB85D -->
+    ${(vs.history || []).length > 0 ? `
+    <div style="padding:10px 12px">
+      <div style="font-family:'Cinzel',serif;font-size:9px;color:${color};letter-spacing:1px;margin-bottom:6px">\u2500\u2500 \uC18C\uD658 \uAE30\uB85D (\uCD1D ${vs.totalSummons}\uD68C) \u2500\u2500</div>
+      ${[...vs.history || []].reverse().slice(0, 8).map((h) => `
+        <div style="display:flex;align-items:center;gap:5px;padding:3px 0;border-bottom:1px solid #05000f;font-size:9px">
+          <span>${typeof getEntityIconHTML === "function" ? getEntityIconHTML(h, { size: 16 }) : h.icon}</span>
+          <span style="flex:1;color:#402060">${h.name}</span>
+          <span style="color:#6030a0;font-size:8px">Tier ${h.tier}</span>
+        </div>`).join("")}
+    </div>` : ""}
+  `;
+  }
+  window.renderVoidSummonPanel = renderVoidSummonPanel;
 
   // src/data/259-수인족-야생의-법칙-Law-of-the-Wild-시스템.js
   var BEAST_ACTION_TYPES = {
@@ -53874,208 +54192,6 @@ ${lines.join("\n")}
   }
   window.renderShadowPactPanel = renderShadowPactPanel;
 
-  // src/data/023-3-균열-소환-시스템.js
-  var VOID_SUMMON_POOL = {
-    2: [
-      { id: "vs_shade", name: "\uADF8\uB9BC\uC790 \uC870\uAC01", icon: "\u{1F311}", svgIcon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="7" stroke-width="1.2" opacity="0.6"/><circle cx="12" cy="12" r="7" fill="currentColor" fill-opacity="0.4" stroke="none"/></svg>', tier: 1, hp: 20, atk: 8, desc: "\uD76C\uBBF8\uD55C \uADF8\uB9BC\uC790 \uD30C\uD3B8. \uC801\uC5D0\uAC8C FEAR +5 \uBD80\uC5EC. \uBE5B\uC5D0 \uB2FF\uC73C\uBA74 \uC989\uC2DC \uC18C\uBA78.", mpCost: 15 }
-    ],
-    3: [
-      { id: "vs_shade", name: "\uADF8\uB9BC\uC790 \uC870\uAC01", icon: "\u{1F311}", svgIcon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="7" stroke-width="1.2" opacity="0.6"/><circle cx="12" cy="12" r="7" fill="currentColor" fill-opacity="0.4" stroke="none"/></svg>', tier: 1, hp: 20, atk: 8, desc: "\uD76C\uBBF8\uD55C \uADF8\uB9BC\uC790 \uD30C\uD3B8. \uC801\uC5D0\uAC8C FEAR +5 \uBD80\uC5EC. \uBE5B\uC5D0 \uB2FF\uC73C\uBA74 \uC989\uC2DC \uC18C\uBA78.", mpCost: 15 },
-      { id: "vs_wraith", name: "\uACF5\uD5C8 \uB9DD\uB839", icon: "\u{1F47B}", svgIcon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21 C12 21 4 15.5 4 9.5 C4 6.5 6.2 4.5 8.8 4.5 C10.2 4.5 11.3 5.2 12 6.3 C12.7 5.2 13.8 4.5 15.2 4.5 C17.8 4.5 20 6.5 20 9.5 C20 15.5 12 21 12 21 Z" stroke-linejoin="round" opacity="0.7"/></svg>', tier: 2, hp: 45, atk: 15, desc: "\uACF5\uD5C8 \uCC28\uC6D0\uC758 \uB9DD\uB839. \uC801\uC758 WIL\uACFC FATH\uC744 \uB9E4 \uD134 -5 \uC57D\uD654. \uBB3C\uB9AC \uACF5\uACA9 \uBA74\uC5ED.", mpCost: 25 }
-    ],
-    4: [
-      { id: "vs_wraith", name: "\uACF5\uD5C8 \uB9DD\uB839", icon: "\u{1F47B}", svgIcon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21 C12 21 4 15.5 4 9.5 C4 6.5 6.2 4.5 8.8 4.5 C10.2 4.5 11.3 5.2 12 6.3 C12.7 5.2 13.8 4.5 15.2 4.5 C17.8 4.5 20 6.5 20 9.5 C20 15.5 12 21 12 21 Z" stroke-linejoin="round" opacity="0.7"/></svg>', tier: 2, hp: 45, atk: 15, desc: "\uACF5\uD5C8 \uCC28\uC6D0\uC758 \uB9DD\uB839. \uC801\uC758 WIL\uACFC FATH\uC744 \uB9E4 \uD134 -5 \uC57D\uD654. \uBB3C\uB9AC \uACF5\uACA9 \uBA74\uC5ED.", mpCost: 25 },
-      { id: "vs_voidbeast", name: "\uACF5\uD5C8 \uB9F9\uC218", icon: "\u{1F43A}", svgIcon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20 C4 16 6 14 6 11 C6 8.5 7.5 7 9.5 7 C11.5 7 13 8.5 13 11 C13 14 15 16 15 20"/><path d="M15 20 C15 17 16.5 15.5 18 15.5 C19.5 15.5 20.5 17 20.5 19"/></svg>', tier: 3, hp: 80, atk: 28, desc: "\uC5B4\uB460 \uCC28\uC6D0\uC5D0\uC11C \uB04C\uB824\uC628 \uB9F9\uC218. STR \uAE30\uBC18 \uACF5\uACA9. \uCC98\uCE58 \uC2DC \uADF8\uB9BC\uC790 \uD3ED\uBC1C\uB85C FEAR +15.", mpCost: 38 }
-    ],
-    5: [
-      { id: "vs_voidbeast", name: "\uACF5\uD5C8 \uB9F9\uC218", icon: "\u{1F43A}", svgIcon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20 C4 16 6 14 6 11 C6 8.5 7.5 7 9.5 7 C11.5 7 13 8.5 13 11 C13 14 15 16 15 20"/><path d="M15 20 C15 17 16.5 15.5 18 15.5 C19.5 15.5 20.5 17 20.5 19"/></svg>', tier: 3, hp: 80, atk: 28, desc: "\uC5B4\uB460 \uCC28\uC6D0\uC5D0\uC11C \uB04C\uB824\uC628 \uB9F9\uC218. STR \uAE30\uBC18 \uACF5\uACA9. \uCC98\uCE58 \uC2DC \uADF8\uB9BC\uC790 \uD3ED\uBC1C\uB85C FEAR +15.", mpCost: 38 },
-      { id: "vs_dread", name: "\uC808\uB9DD\uC758 \uD604\uC2E0", icon: "\u{1F631}", svgIcon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 C7.5 3 4.5 6.2 4.5 10.5 C4.5 13.2 6 15.3 6 17 L6 18.5 L18 18.5 L18 17 C18 15.3 19.5 13.2 19.5 10.5 C19.5 6.2 16.5 3 12 3 Z" stroke-width="1.3"/><circle cx="9" cy="11" r="1.6" fill="currentColor" stroke="none"/><circle cx="15" cy="11" r="1.6" fill="currentColor" stroke="none"/></svg>', tier: 4, hp: 120, atk: 40, desc: '\uACF5\uD3EC \uC790\uCCB4\uAC00 \uD615\uD0DC\uB97C \uAC16\uCD98 \uC874\uC7AC. \uC811\uCD09\uD55C \uC801\uC5D0\uAC8C "\uC808\uB9DD" \uC0C1\uD0DC\uC774\uC0C1. \uBAA8\uB4E0 \uD310\uC815 -20.', mpCost: 50 }
-    ],
-    6: [
-      { id: "vs_dread", name: "\uC808\uB9DD\uC758 \uD604\uC2E0", icon: "\u{1F631}", svgIcon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 C7.5 3 4.5 6.2 4.5 10.5 C4.5 13.2 6 15.3 6 17 L6 18.5 L18 18.5 L18 17 C18 15.3 19.5 13.2 19.5 10.5 C19.5 6.2 16.5 3 12 3 Z" stroke-width="1.3"/><circle cx="9" cy="11" r="1.6" fill="currentColor" stroke="none"/><circle cx="15" cy="11" r="1.6" fill="currentColor" stroke="none"/></svg>', tier: 4, hp: 120, atk: 40, desc: '\uACF5\uD3EC \uC790\uCCB4\uAC00 \uD615\uD0DC\uB97C \uAC16\uCD98 \uC874\uC7AC. \uC811\uCD09\uD55C \uC801\uC5D0\uAC8C "\uC808\uB9DD" \uC0C1\uD0DC\uC774\uC0C1. \uBAA8\uB4E0 \uD310\uC815 -20.', mpCost: 50 },
-      { id: "vs_voidlord", name: "\uACF5\uD5C8\uC758 \uAD70\uC8FC", icon: "\u{1F451}", svgIcon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17 L3 8 L7.5 12 L12 4 L16.5 12 L21 8 L21 17 Z" stroke-linejoin="round"/></svg>', tier: 5, hp: 200, atk: 65, desc: "\uACF5\uD5C8 \uCC28\uC6D0\uC758 \uC9C0\uBC30\uC790. \uC804\uC7A5 \uC804\uCCB4\uC5D0 \uACF5\uD5C8 \uC601\uC5ED \uC0DD\uC131. \uC801 \uC804\uCCB4 \uB9E4 \uD134 HP -8, WIL -8.", mpCost: 70 }
-    ],
-    7: [
-      { id: "vs_voidlord", name: "\uACF5\uD5C8\uC758 \uAD70\uC8FC", icon: "\u{1F451}", svgIcon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17 L3 8 L7.5 12 L12 4 L16.5 12 L21 8 L21 17 Z" stroke-linejoin="round"/></svg>', tier: 5, hp: 200, atk: 65, desc: "\uACF5\uD5C8 \uCC28\uC6D0\uC758 \uC9C0\uBC30\uC790. \uC804\uC7A5 \uC804\uCCB4\uC5D0 \uACF5\uD5C8 \uC601\uC5ED \uC0DD\uC131. \uC801 \uC804\uCCB4 \uB9E4 \uD134 HP -8, WIL -8.", mpCost: 70 },
-      { id: "vs_abyss", name: "\uC2EC\uC5F0 \uADF8 \uC790\uCCB4", icon: "\u26AB", svgIcon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" fill="currentColor" stroke="none"/></svg>', tier: 6, hp: 350, atk: 100, desc: "\uACF5\uD5C8\uB3C4 7\uB2E8\uACC4 \uC804\uC6A9. \uD615\uD0DC \uC5C6\uB294 \uC2EC\uC5F0. \uBE5B\uACFC \uC2E0\uC131\uD55C \uC874\uC7AC\uB97C \uC790\uB3D9\uC73C\uB85C \uD761\uC218 \uC18C\uBA78.", mpCost: 100 }
-    ]
-  };
-
-  // src/summon/023-3-균열-소환-시스템.js
-  var VOID_SUMMON_KEY = "tf-darkling-summon";
-  var loadVoidSummon = () => {
-    try {
-      const r = lsGet(VOID_SUMMON_KEY);
-      return r ? JSON.parse(r) : { totalSummons: 0, activeSummons: [], history: [], cooldown: 0 };
-    } catch (e) {
-      return { totalSummons: 0, activeSummons: [], history: [], cooldown: 0 };
-    }
-  };
-  var saveVoidSummon = (d) => {
-    try {
-      lsSet(VOID_SUMMON_KEY, JSON.stringify(d));
-    } catch (e) {
-    }
-  };
-  var clearVoidSummon = () => lsDel(VOID_SUMMON_KEY);
-  function getAvailableSummons() {
-    const dv = loadDarklingVoid();
-    const stage = dv.stage || 0;
-    if (stage < 2) return [];
-    const pool = {};
-    for (let s = 2; s <= stage; s++) {
-      (VOID_SUMMON_POOL[s] || []).forEach((e) => {
-        pool[e.id] = e;
-      });
-    }
-    return Object.values(pool);
-  }
-  window.getAvailableSummons = getAvailableSummons;
-  function activateVoidSummon(summonId) {
-    const race = S.character?.race || "";
-    if (!race.includes("\uB2E4\uD06C\uB9C1") && !race.includes("darkling")) return;
-    const available = getAvailableSummons();
-    const summon = available.find((s) => s.id === summonId);
-    if (!summon) {
-      toast("\uC18C\uD658 \uBD88\uAC00: \uD604\uC7AC \uACF5\uD5C8 \uB2E8\uACC4\uAC00 \uB108\uBB34 \uB0AE\uC2B5\uB2C8\uB2E4.", 2e3);
-      return;
-    }
-    const mp = S.stats.mp !== void 0 ? S.stats.mp : S.stats.mgc || 50;
-    if (mp < summon.mpCost) {
-      toast(`MP \uBD80\uC871! ${summon.mpCost} MP \uD544\uC694 (\uD604\uC7AC: ${mp})`, 2e3);
-      return;
-    }
-    if (S.stats.mp !== void 0) S.stats.mp = Math.max(0, S.stats.mp - summon.mpCost);
-    else S.stats.mgc = Math.max(0, (S.stats.mgc || 50) - Math.floor(summon.mpCost / 2));
-    const vs = loadVoidSummon();
-    const entry = { ...summon, summonedAt: (/* @__PURE__ */ new Date()).toISOString().slice(0, 16), duration: 3 };
-    vs.activeSummons = vs.activeSummons || [];
-    vs.activeSummons.push(entry);
-    vs.totalSummons = (vs.totalSummons || 0) + 1;
-    vs.history = vs.history || [];
-    vs.history.push({ name: summon.name, icon: summon.icon, tier: summon.tier, at: entry.summonedAt });
-    saveVoidSummon(vs);
-    if (typeof saveStats === "function") saveStats(S.stats);
-    gainDarklingVoid("void_touch", summon.tier * 4);
-    if (S._nextInjectedContext !== void 0) {
-      S._nextInjectedContext = (S._nextInjectedContext || "") + ` [\uB2E4\uD06C\uB9C1 \uACF5\uD5C8 \uC18C\uD658: ${summon.icon} "${summon.name}" \uC18C\uD658! ${summon.desc} MP -${summon.mpCost}]`;
-    }
-    window.updateHeader();
-    toastHTML(`\u{1F300} ${typeof getEntityIconHTML === "function" ? getEntityIconHTML(summon, { size: 14 }) : summon.icon} ${esc(summon.name)} \uC18C\uD658! (MP -${esc(summon.mpCost)}, \uACF5\uD5C8\uB3C4 +${esc(summon.tier * 4)})`, 3500);
-  }
-  window.activateVoidSummon = activateVoidSummon;
-  function dismissVoidSummon(idx) {
-    const vs = loadVoidSummon();
-    if (!vs.activeSummons || !vs.activeSummons[idx]) return;
-    const dismissed = vs.activeSummons.splice(idx, 1)[0];
-    saveVoidSummon(vs);
-    toastHTML(`\u{1F311} ${typeof getEntityIconHTML === "function" ? getEntityIconHTML(dismissed, { size: 14 }) : dismissed.icon} ${esc(dismissed.name)} \uADC0\uD658`, 2e3);
-  }
-  window.dismissVoidSummon = dismissVoidSummon;
-  function tickVoidSummon2() {
-    try {
-      const vs = loadVoidSummon();
-      if (!vs.activeSummons || !vs.activeSummons.length) return;
-      const remaining = [];
-      const expired = [];
-      vs.activeSummons.forEach((s) => {
-        const d = (s.duration !== void 0 ? s.duration : 3) - 1;
-        if (d > 0) remaining.push({ ...s, duration: d });
-        else expired.push(s);
-      });
-      vs.activeSummons = remaining;
-      saveVoidSummon(vs);
-      if (expired.length) {
-        expired.forEach((s) => toastHTML(`\u{1F311} ${typeof getEntityIconHTML === "function" ? getEntityIconHTML(s, { size: 14 }) : s.icon || ""} ${esc(s.name)} \uC18C\uD658 \uC9C0\uC18D\uC2DC\uAC04 \uB9CC\uB8CC \u2014 \uADE0\uC5F4 \uB108\uBA38\uB85C \uB3CC\uC544\uAC14\uB2E4`, 2500));
-      }
-    } catch (e) {
-      console.warn("[tickVoidSummon]", e);
-    }
-  }
-  window.tickVoidSummon = tickVoidSummon2;
-  function renderVoidSummonPanel(containerId) {
-    const body = document.getElementById(containerId);
-    if (!body) return;
-    const race = S.character?.race || "";
-    if (!race.includes("\uB2E4\uD06C\uB9C1") && !race.includes("darkling")) {
-      body.innerHTML = '<div style="text-align:center;padding:20px;color:#304060;font-size:10px">\uB2E4\uD06C\uB9C1 \uC804\uC6A9 \uC2DC\uC2A4\uD15C</div>';
-      return;
-    }
-    const dv = loadDarklingVoid();
-    const vs = loadVoidSummon();
-    const stage = dv.stage || 0;
-    const color = "#8040e0";
-    const available = getAvailableSummons();
-    const mp = S.stats.mp !== void 0 ? S.stats.mp : S.stats.mgc || 50;
-    body.innerHTML = `
-    <div style="padding:12px;background:linear-gradient(135deg,#050010,#0a0020);border-bottom:2px solid ${color}">
-      <div style="display:flex;align-items:center;gap:10px">
-        <span style="font-size:26px">\u{1F300}</span>
-        <div style="flex:1">
-          <div style="font-family:'Cinzel',serif;font-size:12px;color:${color}">\uADE0\uC5F4 \uC18C\uD658</div>
-          <div style="font-size:9px;color:#402060">\uACF5\uD5C8 ${stage}\uB2E8\uACC4 \xB7 \uC18C\uD658 \uAC00\uB2A5 ${available.length}\uC885 \xB7 \uD65C\uC131 ${(vs.activeSummons || []).length}\uCCB4</div>
-        </div>
-        <div style="text-align:right">
-          <div style="font-size:9px;color:#402060">\uD604\uC7AC MP</div>
-          <div style="font-family:'Cinzel',serif;font-size:14px;color:${color}">${mp}</div>
-        </div>
-      </div>
-      ${stage < 2 ? `<div style="margin-top:8px;padding:6px;background:#05000a;border:1px solid #2a0050;border-radius:2px;font-size:9px;color:#402060">\u26A0\uFE0F \uACF5\uD5C8 2\uB2E8\uACC4 \uC774\uC0C1\uC5D0\uC11C \uC18C\uD658\uC774 \uAC00\uB2A5\uD569\uB2C8\uB2E4. (\uD604\uC7AC ${stage}\uB2E8\uACC4)</div>` : ""}
-    </div>
-    <!-- \uD65C\uC131 \uC18C\uD658 -->
-    ${(vs.activeSummons || []).length > 0 ? `
-    <div style="padding:10px 12px;border-bottom:1px solid #0d0020">
-      <div style="font-family:'Cinzel',serif;font-size:9px;color:${color};letter-spacing:1px;margin-bottom:6px">\u2500\u2500 \uD65C\uC131 \uC18C\uD658\uCCB4 \u2500\u2500</div>
-      ${(vs.activeSummons || []).map((s, i) => `
-        <div style="padding:8px;background:#0a0018;border:1px solid ${color}66;margin-bottom:4px;border-radius:2px;display:flex;align-items:center;gap:8px">
-          <span style="color:${color};display:inline-flex;flex-shrink:0">${typeof getEntityIconHTML === "function" ? getEntityIconHTML(s, { size: 16 }) : s.svgIcon || s.icon}</span>
-          <div style="flex:1">
-            <div style="font-family:'Cinzel',serif;font-size:10px;color:${color}">${s.name}</div>
-            <div style="font-size:8px;color:#402060">Tier ${s.tier} \xB7 HP ${s.hp} \xB7 ATK ${s.atk}</div>
-          </div>
-          <button onclick="dismissVoidSummon(${i});renderDarklingVoidExtPanel()" style="padding:3px 8px;background:#1a0030;border:1px solid ${color}44;color:${color};font-size:8px;cursor:pointer;border-radius:2px">\uADC0\uD658</button>
-        </div>`).join("")}
-    </div>` : ""}
-    <!-- \uC18C\uD658 \uAC00\uB2A5 \uBAA9\uB85D -->
-    <div style="padding:10px 12px;border-bottom:1px solid #0d0020">
-      <div style="font-family:'Cinzel',serif;font-size:9px;color:${color};letter-spacing:1px;margin-bottom:6px">\u2500\u2500 \uC18C\uD658 \uAC00\uB2A5 \uC874\uC7AC \u2500\u2500</div>
-      ${available.length === 0 ? `<div style="font-size:9px;color:#402060;text-align:center;padding:10px">\uACF5\uD5C8 2\uB2E8\uACC4 \uC774\uC0C1\uC5D0\uC11C \uC18C\uD658 \uAC00\uB2A5</div>` : available.map((s) => {
-      const canAfford = mp >= s.mpCost;
-      return `<div style="padding:8px 10px;background:${canAfford ? "#080015" : "#04000a"};border:1px solid ${canAfford ? color + "44" : "#1a0030"};margin-bottom:5px;border-radius:2px">
-            <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
-              <span style="font-size:16px">${typeof getEntityIconHTML === "function" ? getEntityIconHTML(s, { size: 16 }) : s.icon}</span>
-              <div style="flex:1">
-                <div style="font-family:'Cinzel',serif;font-size:10px;color:${canAfford ? color : "#402060"}">${s.name}</div>
-                <div style="font-size:8px;color:#402060">Tier ${s.tier} \xB7 HP ${s.hp} \xB7 ATK ${s.atk}</div>
-              </div>
-              <div style="text-align:right">
-                <div style="font-size:9px;color:${canAfford ? "#a060f0" : "#402060"}">MP ${s.mpCost}</div>
-              </div>
-            </div>
-            <div style="font-size:9px;color:#402060;margin-bottom:5px">${s.desc}</div>
-            <button onclick="activateVoidSummon('${s.id}');renderDarklingVoidExtPanel()"
-              style="width:100%;padding:5px;background:${canAfford ? "#120028" : "#04000a"};border:1px solid ${canAfford ? color + "55" : "#1a0030"};color:${canAfford ? color : "#402060"};font-family:'Cinzel',serif;font-size:9px;cursor:${canAfford ? "pointer" : "not-allowed"};border-radius:2px"
-              ${canAfford ? "" : "disabled"}>
-              ${canAfford ? `\u{1F300} \uC18C\uD658\uD558\uAE30 (MP -${s.mpCost})` : `MP \uBD80\uC871 (${s.mpCost} \uD544\uC694)`}
-            </button>
-          </div>`;
-    }).join("")}
-    </div>
-    <!-- \uC18C\uD658 \uAE30\uB85D -->
-    ${(vs.history || []).length > 0 ? `
-    <div style="padding:10px 12px">
-      <div style="font-family:'Cinzel',serif;font-size:9px;color:${color};letter-spacing:1px;margin-bottom:6px">\u2500\u2500 \uC18C\uD658 \uAE30\uB85D (\uCD1D ${vs.totalSummons}\uD68C) \u2500\u2500</div>
-      ${[...vs.history || []].reverse().slice(0, 8).map((h) => `
-        <div style="display:flex;align-items:center;gap:5px;padding:3px 0;border-bottom:1px solid #05000f;font-size:9px">
-          <span>${typeof getEntityIconHTML === "function" ? getEntityIconHTML(h, { size: 16 }) : h.icon}</span>
-          <span style="flex:1;color:#402060">${h.name}</span>
-          <span style="color:#6030a0;font-size:8px">Tier ${h.tier}</span>
-        </div>`).join("")}
-    </div>` : ""}
-  `;
-  }
-  window.renderVoidSummonPanel = renderVoidSummonPanel;
-
   // src/ui/025-통합-패널-공허-확장-탭-시스템.js
   function renderDarklingVoidExtPanel() {
     const body = document.getElementById("pb-darkling-void");
@@ -66475,7 +66591,49 @@ ${oldRank?.icon || ""} ${oldRank?.name || "\uD604\uC7AC"} \u2192 ${newRank.icon}
       </div>
     </div>
 
-    <!-- \u2467 \uD0C0\uB77D \uC815\uD654 -->
+    <!-- \u2467 \uB9C8\uACC4 \uC18C\uD658 (61-3\uBC88 \uC139\uC158 \uC2E0\uADDC \u2014 \uB2E4\uD06C\uB9C1 \uADE0\uC5F4 \uC18C\uD658\uACFC \uB3D9\uC77C\uD55C \uAD6C\uC870,
+         \uAC8C\uC774\uD2B8\uB9CC \uD0C0\uB77D\uB3C4 \uB2E8\uACC4 \uC7AC\uC0AC\uC6A9) -->
+    <div style="padding:10px 12px;border-bottom:1px solid #1a0015">
+      <div style="font-family:'Cinzel',serif;font-size:9px;color:${color};letter-spacing:1px;margin-bottom:8px">\u2500\u2500 \u{1F608} \uB9C8\uACC4 \uC18C\uD658 \u2500\u2500</div>
+      ${(() => {
+      const ds = loadDemonSummon();
+      const available = getAvailableDemonSummons();
+      const mp = S.stats.mp !== void 0 ? S.stats.mp : S.stats.mgc || 50;
+      if (dc.stage < 2) return `<div style="font-size:9px;color:#3a1a3a;text-align:center;padding:8px">\uD0C0\uB77D 2\uB2E8\uACC4 \uC774\uC0C1\uC5D0\uC11C \uC18C\uD658 \uAC00\uB2A5 (\uD604\uC7AC ${dc.stage}\uB2E8\uACC4)</div>`;
+      const activeHtml = (ds.activeSummons || []).length ? `
+          <div style="margin-bottom:8px">
+            ${(ds.activeSummons || []).map((s, i) => `
+              <div style="padding:7px 9px;background:#150010;border:1px solid ${color}55;margin-bottom:4px;border-radius:2px;display:flex;align-items:center;gap:8px">
+                <span style="font-size:15px">${typeof getEntityIconHTML === "function" ? getEntityIconHTML(s, { size: 15 }) : s.icon}</span>
+                <div style="flex:1">
+                  <div style="font-family:'Cinzel',serif;font-size:9px;color:${color}">${esc2(s.name)}</div>
+                  <div style="font-size:7px;color:#6a406a">Tier ${s.tier} \xB7 HP ${s.hp} \xB7 ATK ${s.atk} \xB7 ${s.duration}\uD134 \uB0A8\uC74C</div>
+                </div>
+                <button onclick="dismissDemonSummon(${i});renderDemonCorruptionPanel()" style="padding:3px 7px;background:#0a0008;border:1px solid ${color}44;color:${color};font-size:8px;cursor:pointer;border-radius:2px">\uADC0\uD658</button>
+              </div>`).join("")}
+          </div>` : "";
+      const poolHtml = available.length === 0 ? `<div style="font-size:9px;color:#3a1a3a;text-align:center;padding:8px">\uC18C\uD658 \uAC00\uB2A5\uD55C \uB300\uC0C1 \uC5C6\uC74C</div>` : available.map((s) => {
+        const canAfford = mp >= s.mpCost;
+        return `<div style="padding:7px 9px;background:${canAfford ? "#0a0008" : "#060005"};border:1px solid ${canAfford ? color + "44" : "#1a0015"};margin-bottom:5px;border-radius:2px">
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+                <span style="font-size:15px">${typeof getEntityIconHTML === "function" ? getEntityIconHTML(s, { size: 15 }) : s.icon}</span>
+                <div style="flex:1">
+                  <div style="font-family:'Cinzel',serif;font-size:9px;color:${canAfford ? color : "#4a2a4a"}">${esc2(s.name)}</div>
+                  <div style="font-size:7px;color:#4a2a4a">Tier ${s.tier} \xB7 HP ${s.hp} \xB7 ATK ${s.atk}</div>
+                </div>
+                <div style="font-size:8px;color:${canAfford ? "#d04080" : "#4a2a4a"}">MP ${s.mpCost}</div>
+              </div>
+              <div style="font-size:8px;color:#6040a0;margin-bottom:5px">${esc2(s.desc)}</div>
+              <button onclick="activateDemonSummon('${s.id}');renderDemonCorruptionPanel()"
+                style="width:100%;padding:4px;background:${canAfford ? "#1a0a3a" : "#0a0010"};border:1px solid ${canAfford ? color + "55" : "#1a0015"};color:${canAfford ? color : "#3a1a5a"};font-family:'Cinzel',serif;font-size:8px;cursor:${canAfford ? "pointer" : "not-allowed"};border-radius:2px"
+                ${canAfford ? "" : "disabled"}>${canAfford ? `\u{1F608} \uC18C\uD658\uD558\uAE30 (MP -${s.mpCost})` : `MP \uBD80\uC871 (${s.mpCost} \uD544\uC694)`}</button>
+            </div>`;
+      }).join("");
+      return activeHtml + poolHtml;
+    })()}
+    </div>
+
+    <!-- \u2468 \uD0C0\uB77D \uC815\uD654 -->
     <div style="padding:10px 12px;border-bottom:1px solid #1a0015">
       <div style="font-family:'Cinzel',serif;font-size:9px;color:${color};letter-spacing:1px;margin-bottom:6px">\u2500\u2500 \uD0C0\uB77D \uC815\uD654 \u2500\u2500</div>
       ${DEMON_PURIFY_METHODS.map((m) => {
@@ -66497,7 +66655,7 @@ ${oldRank?.icon || ""} ${oldRank?.name || "\uD604\uC7AC"} \u2192 ${newRank.icon}
     }).join("")}
     </div>
 
-    <!-- \u2468 \uCD5C\uADFC \uAE30\uB85D -->
+    <!-- \u2469 \uCD5C\uADFC \uAE30\uB85D -->
     ${dc.history && dc.history.length ? `
     <div style="padding:10px 12px">
       <div style="font-family:'Cinzel',serif;font-size:9px;color:${color};letter-spacing:1px;margin-bottom:6px">\u2500\u2500 \uCD5C\uADFC \uAE30\uB85D \u2500\u2500</div>
@@ -90989,6 +91147,10 @@ ${lines.join("\n")}
       } catch (e) {
       }
       try {
+        if (typeof tickDemonSummon === "function") tickDemonSummon();
+      } catch (e) {
+      }
+      try {
         if (typeof checkTrueEndingCondition === "function") checkTrueEndingCondition();
       } catch (e) {
       }
@@ -95168,6 +95330,7 @@ ${lines.join("\n")}
         lsDel("tf-npc-dlg-quests");
         if (typeof clearAtmosphere === "function") clearAtmosphere();
         clearDemonCorruption();
+        if (typeof clearDemonSummon === "function") clearDemonSummon();
         if (typeof clearDragonHeart === "function") clearDragonHeart();
         if (typeof clearNpcCorruption === "function") clearNpcCorruption();
         if (typeof clearElfMemory === "function") clearElfMemory();

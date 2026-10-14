@@ -21,6 +21,7 @@ import { loadHiddenQuests } from '../quest/039-NEW-히든-퀘스트-시스템.js
 import { getMonsterTierStats } from '../quest/086-퀘스트임무-수락-팝업-시스템.js';
 import { loadAILocations } from '../quest/229-NPC-대화-퀘스트-시스템-AI-생성.js';
 import { getCropPrice, loadFarmWarehouse, saveFarmWarehouse, tickFarm } from '../ui/252-상단Caravan-UI-용병단-UI와-대칭-구조.js';
+import { tickAuction } from '../misc/314-⑤-이벤트-경매-시스템.js';
 import { esc, lsGet, lsSet, toast } from '../utils.js';
 import { loadCurrentLocation } from '../world/052-동대륙-추가-장소-4.js';
 
@@ -4539,6 +4540,7 @@ window._wandererAxisHook=function(cleanText,userMsg){
   try{ ensureWorkshopButtonVisible(); }catch(e){}
   try{ tickNetwork(); }catch(e){}
   try{ ensureNetworkButtonVisible(); }catch(e){}
+  try{ tickAuction(); }catch(e){}
   // 패널을 열어둔 채로 턴이 진행돼도 최신 상태가 바로 보이도록 갱신
   try{ if(document.getElementById('p-contracts')?.classList.contains('open')) renderContractsPanel(); }catch(e){}
   try{ if(document.getElementById('p-farm')?.classList.contains('open')) renderFarmPanel(); }catch(e){}

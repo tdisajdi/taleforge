@@ -46494,6 +46494,264 @@ ${lines.join("\n")}
   }
   window.composeLegendarySong = composeLegendarySong;
 
+  // src/misc/314-⑤-이벤트-경매-시스템.js
+  var AUCTION_KEY = "tf-auction";
+  function loadAuction() {
+    try {
+      return JSON.parse(lsGet(AUCTION_KEY) || "null");
+    } catch (e) {
+      return null;
+    }
+  }
+  window.loadAuction = loadAuction;
+  function saveAuction(d) {
+    try {
+      lsSet(AUCTION_KEY, JSON.stringify(d));
+    } catch (e) {
+    }
+  }
+  window.saveAuction = saveAuction;
+  var AUCTION_TITLE_BANK = ["\uB2EC\uBE5B \uC544\uB798 \uACBD\uB9E4", "\uC740\uBC00\uD55C \uBB3C\uBC11 \uAC70\uB798", "\uC0C1\uC778 \uAE38\uB4DC\uC758 \uD2B9\uBCC4 \uACBD\uB9E4", "\uB5A0\uB3CC\uC774 \uC0C1\uB2E8\uC758 \uC88C\uD310", "\uC800\uD0DD\uC758 \uC720\uC0B0 \uC815\uB9AC \uACBD\uB9E4", "\uC804\uC7C1 \uC774\uD6C4\uC758 \uC804\uB9AC\uD488 \uACBD\uB9E4"];
+  var AUCTION_ITEM_BANK = {
+    \uC720\uBB3C: [
+      { name: "\uB0A1\uC740 \uC778\uC7A5 \uBC18\uC9C0", desc: "\uB204\uAD70\uAC00\uC758 \uC2E0\uBD84\uC744 \uC99D\uBA85\uD588\uB358 \uBB3C\uAC74\uC774\uB2E4." },
+      { name: "\uBE5B\uBC14\uB79C \uC9C0\uB3C4 \uC870\uAC01", desc: "\uC54C \uC218 \uC5C6\uB294 \uC7A5\uC18C\uB97C \uAC00\uB9AC\uD0A4\uACE0 \uC788\uB2E4." },
+      { name: "\uBD09\uC778\uB41C \uBAA9\uD568", desc: "\uC5F4\uC5B4\uBCF8 \uC774\uAC00 \uC5C6\uB2E4\uB294 \uC18C\uBB38\uC774 \uC788\uB2E4." },
+      { name: "\uC774\uAC00 \uB098\uAC04 \uAC80", desc: "\uD55C\uB54C \uC774\uB984\uC744 \uB5A8\uCCE4\uC744 \uAC83 \uAC19\uC740 \uAC80\uC774\uB2E4." }
+    ],
+    \uC815\uBCF4: [
+      { name: "\uC0C1\uB2E8\uC758 \uC774\uB3D9 \uACBD\uB85C \uC815\uBCF4", desc: "\uAC12\uC744 \uB9E4\uAE30\uAE30 \uD798\uB4E0 \uC815\uBCF4\uB2E4." },
+      { name: "\uADC0\uC871\uAC00\uC758 \uB4B7\uC774\uC57C\uAE30", desc: "\uB4E3\uB294 \uAC83\uB9CC\uC73C\uB85C\uB3C4 \uC704\uD5D8\uD560 \uC218 \uC788\uB2E4." },
+      { name: "\uC228\uACA8\uC9C4 \uB358\uC804\uC758 \uB2E8\uC11C", desc: "\uC9C4\uC704\uB294 \uD655\uC778\uB418\uC9C0 \uC54A\uC558\uB2E4." },
+      { name: "\uC218\uBC30\uC790\uC758 \uC740\uC2E0\uCC98 \uC815\uBCF4", desc: "\uBBFF\uC744 \uB9CC\uD55C \uCD9C\uCC98\uC778\uC9C0\uB294 \uC54C \uC218 \uC5C6\uB2E4." }
+    ],
+    \uD1A0\uC9C0: [
+      { name: "\uBCC0\uB450\uB9AC \uACF5\uD130 \uAD8C\uB9AC\uC99D", desc: "\uAC1C\uBC1C \uAC00\uB2A5\uC131\uC774 \uC788\uB2E4\uB294 \uD3C9\uAC00\uB2E4." },
+      { name: "\uBC84\uB824\uC9C4 \uCC3D\uACE0 \uBD80\uC9C0", desc: "\uC704\uCE58\uAC00 \uB098\uC058\uC9C0 \uC54A\uB2E4." },
+      { name: "\uACBD\uACC4 \uC9C0\uC5ED \uB18D\uC9C0", desc: "\uBD84\uC7C1 \uC18C\uC9C0\uAC00 \uC788\uB2E4\uB294 \uC18C\uBB38\uB3C4 \uC788\uB2E4." },
+      { name: "\uB0A1\uC740 \uC5EC\uAD00 \uAC74\uBB3C", desc: "\uC218\uB9AC\uD558\uBA74 \uC4F8 \uB9CC\uD574 \uBCF4\uC778\uB2E4." }
+    ],
+    \uC11C\uBE44\uC2A4: [
+      { name: "\uACBD\uBE44\uB300 \uC778\uB9E5 \uC18C\uAC1C", desc: "\uAE09\uD560 \uB54C \uB3C4\uC6C0\uC774 \uB420 \uC218 \uC788\uB2E4." },
+      { name: "\uB300\uC7A5\uC7A5\uC774\uC758 \uD2B9\uBCC4 \uC81C\uC791\uAD8C", desc: "\uD55C\uC815\uB41C \uAE30\uD68C\uB77C\uACE0 \uD55C\uB2E4." },
+      { name: "\uC6A9\uBCD1\uB2E8 \uD558\uB8E8 \uACE0\uC6A9\uAD8C", desc: "\uB2E8\uAE30\uAC04 \uC804\uB825 \uBCF4\uAC15\uC5D0 \uC720\uC6A9\uD558\uB2E4." },
+      { name: "\uC0C1\uB2E8 \uD638\uC704 \uB3D9\uD589\uAD8C", desc: "\uC548\uC804\uD55C \uC774\uB3D9\uC744 \uBCF4\uC7A5\uD55C\uB2E4." }
+    ],
+    \uC2A4\uD0AC: [
+      { name: "\uBE44\uC804 \uC2A4\uD06C\uB864 \uC870\uAC01", desc: "\uC644\uC804\uD558\uC9C0 \uC54A\uC544 \uBCF4\uC778\uB2E4." },
+      { name: "\uC218\uB828 \uBE44\uBC95\uC11C", desc: "\uB0A1\uC558\uC9C0\uB9CC \uB0B4\uC6A9\uC740 \uC628\uC804\uD558\uB2E4." },
+      { name: "\uC624\uB798\uB41C \uBB34\uACF5 \uD544\uC0AC\uBCF8", desc: "\uD574\uB3C5\uC5D0 \uC2DC\uAC04\uC774 \uAC78\uB9B4 \uB4EF\uD558\uB2E4." },
+      { name: "\uC2A4\uC2B9 \uC5C6\uB294 \uC81C\uC790\uC758 \uB178\uD2B8", desc: "\uAC1C\uC778\uC801\uC778 \uAE30\uB85D\uC774 \uC11E\uC5EC \uC788\uB2E4." }
+    ]
+  };
+  var AUCTION_NPC_BIDDERS = ["\uC218\uC9D1\uAC00 \uD558\uC778\uB9AC\uD788", "\uC0C1\uC778 \uBCA0\uC544\uD2B8\uB9AC\uC2A4", "\uD638\uC0AC\uAC00 \uD3A0\uB9AD\uC2A4", "\uB5A0\uB3CC\uC774 \uC815\uBCF4\uC0C1 \uB85C\uC790", "\uADF8\uB9BC\uC790 \uC911\uAC1C\uC778 \uCE74\uC77C", "\uACBD\uC7C1 \uC218\uC9D1\uAC00 \uC62C\uAC00", "\uADC0\uC871\uAC00 \uB300\uB9AC\uC778 \uD14C\uC624", "\uB5A0\uB3CC\uC774 \uD22C\uAE30\uAFBC \uBAA8\uB9AC\uC2A4"];
+  var AUCTION_BID_RANGE = { \uC77C\uBC18: [20, 80], \uD76C\uADC0: [80, 250], \uC804\uC124: [250, 800] };
+  function rollAuctionRarity() {
+    const r = Math.random();
+    return r < 0.55 ? "\uC77C\uBC18" : r < 0.9 ? "\uD76C\uADC0" : "\uC804\uC124";
+  }
+  function composeLocalAuction(gold) {
+    const categories = Object.keys(AUCTION_ITEM_BANK).sort(() => Math.random() - 0.5).slice(0, 4);
+    const goldFactor = Math.max(0.7, Math.min(2.5, (gold || 500) / 500));
+    const items = categories.map((cat) => {
+      const pool = AUCTION_ITEM_BANK[cat];
+      const base = pool[Math.floor(Math.random() * pool.length)];
+      const rarity = rollAuctionRarity();
+      const [lo, hi] = AUCTION_BID_RANGE[rarity];
+      const startBid = Math.round((lo + Math.random() * (hi - lo)) * goldFactor);
+      let desc = base.desc;
+      if (rarity === "\uC804\uC124") desc += " \uBCF4\uAE30 \uB4DC\uBB38 \uBB3C\uAC74\uC774\uB77C\uB294 \uAC10\uC815\uAC00\uC758 \uD3C9\uAC00\uAC00 \uC788\uC5C8\uB2E4.";
+      return { name: base.name, desc, startBid, rarity, category: cat, topBidder: null };
+    });
+    const title = AUCTION_TITLE_BANK[Math.floor(Math.random() * AUCTION_TITLE_BANK.length)];
+    return { title, items };
+  }
+  window.composeLocalAuction = composeLocalAuction;
+  async function generateAuction() {
+    const gold = S.gold || 0;
+    const era = S.character?.scenario || "\uC911\uC138 \uD310\uD0C0\uC9C0";
+    const btn = document.getElementById("auction-gen-btn");
+    if (btn) btn.disabled = true;
+    toast("\u{1F3AA} \uACBD\uB9E4 \uBAA9\uB85D \uC0DD\uC131 \uC911...", 800);
+    const auctionBucketKey = "auction|" + era;
+    const reusedAuction = pickGeneratedObject(auctionBucketKey);
+    const auctionPrompt = `\uB2F9\uC2E0\uC740 TaleForge RPG\uC758 \uACBD\uB9E4 \uC9C4\uD589\uC790\uC785\uB2C8\uB2E4. \uC138\uACC4\uAD00 "${era}"\uC5D0 \uC5B4\uC6B8\uB9AC\uB294 \uACBD\uB9E4 \uBB3C\uD488 4\uAC1C\uB97C JSON\uC73C\uB85C \uC0DD\uC131\uD558\uC138\uC694.
+\uCE74\uD14C\uACE0\uB9AC\uB294 \uC720\uBB3C/\uC815\uBCF4/\uD1A0\uC9C0/\uC11C\uBE44\uC2A4/\uC2A4\uD0AC \uC911\uC5D0\uC11C \uC11C\uB85C \uB2E4\uB978 4\uAC1C\uB97C \uACE8\uACE0\uB8E8 \uC11E\uC73C\uC138\uC694.
+\uBC18\uB4DC\uC2DC \uB2E4\uC74C JSON\uB9CC \uCD9C\uB825\uD558\uC138\uC694:
+{"title":"\uACBD\uB9E4 \uC81C\uBAA9","items":[{"name":"\uBB3C\uD488\uBA85","desc":"1\uBB38\uC7A5 \uC124\uBA85","rarity":"\uC77C\uBC18|\uD76C\uADC0|\uC804\uC124","category":"\uC720\uBB3C|\uC815\uBCF4|\uD1A0\uC9C0|\uC11C\uBE44\uC2A4|\uC2A4\uD0AC"}]}`;
+    const _shapeAuction = (raw) => {
+      if (!raw || !raw.title || !Array.isArray(raw.items) || !raw.items.length) return null;
+      const bidRange = { \uC77C\uBC18: [20, 80], \uD76C\uADC0: [80, 250], \uC804\uC124: [250, 800] };
+      const goldFactor = Math.max(0.7, Math.min(2.5, (gold || 500) / 500));
+      const items = raw.items.slice(0, 4).map((it) => {
+        const rarity = ["\uC77C\uBC18", "\uD76C\uADC0", "\uC804\uC124"].includes(it.rarity) ? it.rarity : "\uC77C\uBC18";
+        const [lo, hi] = bidRange[rarity];
+        return {
+          name: it.name || "\uACBD\uB9E4 \uBB3C\uD488",
+          desc: it.desc || "",
+          rarity,
+          category: it.category || "\uC720\uBB3C",
+          startBid: Math.round((lo + Math.random() * (hi - lo)) * goldFactor),
+          topBidder: null
+        };
+      });
+      items.forEach((it) => {
+        if (it.desc) recordMarkovSample("auction_item_desc", it.desc);
+      });
+      return { title: raw.title, items };
+    };
+    const result = reusedAuction || await tryCloudThenLocalModelThenBank(
+      async () => _shapeAuction(await callGeminiDirect(auctionPrompt)),
+      async () => _shapeAuction(await callLocalModelJSON(auctionPrompt, { maxTokens: 400 })),
+      () => composeLocalAuction(gold),
+      "\uACBD\uB9E4 \uC0DD\uC131"
+    );
+    if (!reusedAuction) recordGeneratedObject(auctionBucketKey, result);
+    const auction = {
+      ...result,
+      items: result.items.map((item) => ({ ...item, myBid: 0, topBid: item.startBid, won: false })),
+      generatedAt: S.msgCount || 0,
+      expiresAt: (S.msgCount || 0) + 20,
+      finalized: false
+    };
+    saveAuction(auction);
+    renderAuctionPanel();
+    toast("\u{1F3AA} \uACBD\uB9E4\uAC00 \uC2DC\uC791\uB418\uC5C8\uC2B5\uB2C8\uB2E4!", 2e3);
+    if (btn) btn.disabled = false;
+  }
+  window.generateAuction = generateAuction;
+  function bidAuction(idx, amount) {
+    const a = loadAuction();
+    if (!a || !a.items[idx]) return;
+    if (a.finalized) {
+      toast("\uC774\uBBF8 \uC885\uB8CC\uB41C \uACBD\uB9E4\uC785\uB2C8\uB2E4", 1500);
+      return;
+    }
+    const item = a.items[idx];
+    if ((S.msgCount || 0) > a.expiresAt) {
+      toast("\uACBD\uB9E4\uAC00 \uC885\uB8CC\uB418\uC5C8\uC2B5\uB2C8\uB2E4", 1500);
+      return;
+    }
+    const gold = S.gold || 0;
+    if (amount > gold) {
+      toast("\uACE8\uB4DC\uAC00 \uBD80\uC871\uD569\uB2C8\uB2E4", 1500);
+      return;
+    }
+    if (amount <= item.topBid) {
+      toast(`\uD604\uC7AC \uCD5C\uACE0\uAC00(${item.topBid}G)\uBCF4\uB2E4 \uB192\uC544\uC57C \uD569\uB2C8\uB2E4`, 1500);
+      return;
+    }
+    item.myBid = amount;
+    item.topBid = amount;
+    item.topBidder = "\uB098";
+    S.gold = (S.gold || 0) - amount;
+    if (typeof saveGold === "function") saveGold(S.gold);
+    if (typeof window.updateHeader === "function") window.updateHeader();
+    saveAuction(a);
+    renderAuctionPanel();
+    toast(`\u2705 "${item.name}" \uC785\uCC30! -${amount}G (\uACBD\uC7C1\uC790\uAC00 \uB354 \uB192\uAC8C \uBD80\uB97C \uC218 \uC788\uC2B5\uB2C8\uB2E4)`, 2500);
+  }
+  window.bidAuction = bidAuction;
+  function tickAuction() {
+    const a = loadAuction();
+    if (!a) return;
+    const now = S.msgCount || 0;
+    let changed = false;
+    if (now > a.expiresAt) {
+      if (!a.finalized) {
+        a.finalized = true;
+        a.items.forEach((item) => {
+          if (item.topBidder === "\uB098") {
+            item.won = true;
+            toastHTML(`\u{1F3C6} "${esc2(item.name)}" \uB099\uCC30 \uC131\uACF5! (\uCD5C\uC885 ${item.topBid}G)`, 3e3);
+          } else if (item.topBidder) {
+            toast(`\u{1F4C9} "${item.name}"\uC740 ${item.topBidder}\uC5D0\uAC8C \uB099\uCC30\uB410\uC2B5\uB2C8\uB2E4. (\uCD5C\uC885 ${item.topBid}G)`, 3e3);
+          }
+        });
+        changed = true;
+      }
+    } else {
+      const rarityBoost = { \uC77C\uBC18: 0, \uD76C\uADC0: 0.08, \uC804\uC124: 0.18 };
+      a.items.forEach((item) => {
+        const chance = 0.22 + (rarityBoost[item.rarity] || 0);
+        if (Math.random() >= chance) return;
+        const bidder = AUCTION_NPC_BIDDERS[Math.floor(Math.random() * AUCTION_NPC_BIDDERS.length)];
+        const raise = Math.max(10, Math.round(item.topBid * (0.1 + Math.random() * 0.3)));
+        const prevTopBidder = item.topBidder;
+        const prevMyBid = item.myBid;
+        item.topBid += raise;
+        item.topBidder = bidder;
+        if (prevTopBidder === "\uB098" && prevMyBid > 0) {
+          item.myBid = 0;
+          S.gold = (S.gold || 0) + prevMyBid;
+          if (typeof saveGold === "function") saveGold(S.gold);
+          if (typeof window.updateHeader === "function") window.updateHeader();
+          toast(`\u{1F4C8} ${bidder}\uAC00 "${item.name}"\uC5D0 ${item.topBid}G\uB97C \uBD88\uB800\uC2B5\uB2C8\uB2E4! (+${prevMyBid}G \uD658\uBD88)`, 2500);
+        }
+        changed = true;
+      });
+    }
+    if (changed) {
+      saveAuction(a);
+      if (document.getElementById("p-auction")?.classList.contains("open")) renderAuctionPanel();
+    }
+  }
+  window.tickAuction = tickAuction;
+  function renderAuctionPanel() {
+    const body = document.getElementById("pb-auction");
+    if (!body) return;
+    const a = loadAuction();
+    const gold = S.gold || 0;
+    const rarityColors = { \uC77C\uBC18: "#8a9a8a", \uD76C\uADC0: "#4090d0", \uC804\uC124: "#e0a030" };
+    const catIcons = { \uC720\uBB3C: "\u2697\uFE0F", \uC815\uBCF4: "\u{1F50D}", \uD1A0\uC9C0: "\u{1F3F0}", \uC11C\uBE44\uC2A4: "\u{1F91D}", \uC2A4\uD0AC: "\u26A1" };
+    if (!a) {
+      body.innerHTML = `
+      <div style="padding:20px;text-align:center">
+        <div style="font-size:40px;margin-bottom:12px">\u{1F3AA}</div>
+        <div style="font-family:Cinzel,serif;font-size:12px;color:#e09040;margin-bottom:8px">\uC774\uBCA4\uD2B8 \uACBD\uB9E4</div>
+        <div style="font-size:11px;color:var(--dim);line-height:1.6;margin-bottom:16px">\uCD95\uC81C\uC77C\xB7\uC804\uC7C1 \uD6C4\xB7\uD2B9\uBCC4\uD55C \uB0A0\uC5D0 \uC5F4\uB9AC\uB294 \uACBD\uB9E4\uC7A5.<br>\uD76C\uADC0 \uC720\uBB3C, NPC \uC815\uBCF4, \uD1A0\uC9C0 \uAD8C\uB9AC \uB4F1\uC744 \uC785\uCC30\uD558\uC138\uC694.</div>
+        <button id="auction-gen-btn" class="btn btn-gold" onclick="generateAuction()">\u{1F3AA} \uACBD\uB9E4 \uC2DC\uC791\uD558\uAE30</button>
+      </div>`;
+      return;
+    }
+    const expired = (S.msgCount || 0) > a.expiresAt;
+    body.innerHTML = `
+    <div style="padding:10px 14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="font-family:Cinzel,serif;font-size:11px;color:#e09040">${esc2(a.title || "\uC774\uBCA4\uD2B8 \uACBD\uB9E4")}</div>
+        <div style="font-size:9px;color:${expired ? "#e05050" : "#60c060"}">${expired ? "\u231B \uACBD\uB9E4 \uC885\uB8CC" : "\u2705 \uC9C4\uD589 \uC911"} (\uBCF4\uC720: ${gold}G)</div>
+      </div>
+      ${a.items.map((item, i) => {
+      const resultBadge = !a.finalized ? "" : item.won ? '<span style="margin-left:auto;font-size:9px;color:#e0a030">\u{1F3C6} \uB099\uCC30</span>' : item.topBidder ? `<span style="margin-left:auto;font-size:9px;color:#8a9a8a">${esc2(item.topBidder)}\uC5D0\uAC8C \uB099\uCC30</span>` : '<span style="margin-left:auto;font-size:9px;color:#8a9a8a">\uC720\uCC30</span>';
+      const bidderLabel = item.topBidder ? `(${item.topBidder === "\uB098" ? "\uB0B4 \uC785\uCC30" : esc2(item.topBidder)})` : "(\uC2DC\uC791\uAC00)";
+      const borderColor = item.won ? "#806020" : a.finalized && item.topBidder ? "#4a3a2a" : "#2a1a00";
+      return `
+        <div style="padding:11px 13px;background:#0c0800;border:1px solid ${borderColor};margin-bottom:8px;border-radius:2px">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
+            <span>${catIcons[item.category] || "\u{1F4E6}"}</span>
+            <span style="font-size:10px;color:${rarityColors[item.rarity] || "#8a9a8a"};font-family:Cinzel,serif">${esc2(item.name)}</span>
+            <span style="font-size:8px;padding:1px 6px;background:${rarityColors[item.rarity] || "#8a9a8a"}18;border:1px solid ${rarityColors[item.rarity] || "#8a9a8a"}44;color:${rarityColors[item.rarity] || "#8a9a8a"};border-radius:2px">${item.rarity}</span>
+            ${resultBadge}
+          </div>
+          <div style="font-size:10px;color:var(--dim);margin-bottom:6px">${esc2(item.desc || "")}</div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:10px;color:#c8a050">\uCD5C\uACE0\uAC00: ${item.topBid}G ${bidderLabel}</span>
+            ${!a.finalized && !expired ? `
+              <input id="bid-${i}" type="number" min="${item.topBid + 1}" placeholder="${item.topBid + 100}" style="width:80px;padding:4px 6px;background:var(--bg-input);border:1px solid var(--border);color:var(--gold);font-size:10px;outline:none"/>
+              <button onclick="(function(){const v=parseInt(document.getElementById('bid-${i}').value);if(!v)return;bidAuction(${i},v);})()" style="padding:4px 10px;background:#1a0d00;border:1px solid #806020;color:#e09040;font-size:9px;cursor:pointer;font-family:Cinzel,serif">\uC785\uCC30</button>` : ""}
+          </div>
+        </div>`;
+    }).join("")}
+      <div style="margin-top:10px;text-align:center">
+        <button id="auction-gen-btn" class="btn btn-dark" onclick="generateAuction()" style="font-size:9px">\u{1F3AA} \uC0C8 \uACBD\uB9E4 \uC0DD\uC131</button>
+      </div>
+    </div>`;
+  }
+  window.renderAuctionPanel = renderAuctionPanel;
+  window.renderAuctionPanel = renderAuctionPanel;
+  window.generateAuction = generateAuction;
+  window.bidAuction = bidAuction;
+
   // src/economy/255-상인-거래소-교역-지부-확장.js
   function loadTradeToHere(cropId, qty) {
     const net = loadNetwork();
@@ -50841,6 +51099,10 @@ ${lines.join("\n")}
       }
       try {
         ensureNetworkButtonVisible();
+      } catch (e) {
+      }
+      try {
+        tickAuction();
       } catch (e) {
       }
       try {
@@ -85588,203 +85850,6 @@ ${lines.join("\n")}
   }
   window.renderDreamPanel = renderDreamPanel;
   window.renderDreamPanel = renderDreamPanel;
-
-  // src/misc/314-⑤-이벤트-경매-시스템.js
-  var AUCTION_KEY = "tf-auction";
-  function loadAuction() {
-    try {
-      return JSON.parse(lsGet(AUCTION_KEY) || "null");
-    } catch (e) {
-      return null;
-    }
-  }
-  window.loadAuction = loadAuction;
-  function saveAuction(d) {
-    try {
-      lsSet(AUCTION_KEY, JSON.stringify(d));
-    } catch (e) {
-    }
-  }
-  window.saveAuction = saveAuction;
-  var AUCTION_TITLE_BANK = ["\uB2EC\uBE5B \uC544\uB798 \uACBD\uB9E4", "\uC740\uBC00\uD55C \uBB3C\uBC11 \uAC70\uB798", "\uC0C1\uC778 \uAE38\uB4DC\uC758 \uD2B9\uBCC4 \uACBD\uB9E4", "\uB5A0\uB3CC\uC774 \uC0C1\uB2E8\uC758 \uC88C\uD310", "\uC800\uD0DD\uC758 \uC720\uC0B0 \uC815\uB9AC \uACBD\uB9E4", "\uC804\uC7C1 \uC774\uD6C4\uC758 \uC804\uB9AC\uD488 \uACBD\uB9E4"];
-  var AUCTION_ITEM_BANK = {
-    \uC720\uBB3C: [
-      { name: "\uB0A1\uC740 \uC778\uC7A5 \uBC18\uC9C0", desc: "\uB204\uAD70\uAC00\uC758 \uC2E0\uBD84\uC744 \uC99D\uBA85\uD588\uB358 \uBB3C\uAC74\uC774\uB2E4." },
-      { name: "\uBE5B\uBC14\uB79C \uC9C0\uB3C4 \uC870\uAC01", desc: "\uC54C \uC218 \uC5C6\uB294 \uC7A5\uC18C\uB97C \uAC00\uB9AC\uD0A4\uACE0 \uC788\uB2E4." },
-      { name: "\uBD09\uC778\uB41C \uBAA9\uD568", desc: "\uC5F4\uC5B4\uBCF8 \uC774\uAC00 \uC5C6\uB2E4\uB294 \uC18C\uBB38\uC774 \uC788\uB2E4." },
-      { name: "\uC774\uAC00 \uB098\uAC04 \uAC80", desc: "\uD55C\uB54C \uC774\uB984\uC744 \uB5A8\uCCE4\uC744 \uAC83 \uAC19\uC740 \uAC80\uC774\uB2E4." }
-    ],
-    \uC815\uBCF4: [
-      { name: "\uC0C1\uB2E8\uC758 \uC774\uB3D9 \uACBD\uB85C \uC815\uBCF4", desc: "\uAC12\uC744 \uB9E4\uAE30\uAE30 \uD798\uB4E0 \uC815\uBCF4\uB2E4." },
-      { name: "\uADC0\uC871\uAC00\uC758 \uB4B7\uC774\uC57C\uAE30", desc: "\uB4E3\uB294 \uAC83\uB9CC\uC73C\uB85C\uB3C4 \uC704\uD5D8\uD560 \uC218 \uC788\uB2E4." },
-      { name: "\uC228\uACA8\uC9C4 \uB358\uC804\uC758 \uB2E8\uC11C", desc: "\uC9C4\uC704\uB294 \uD655\uC778\uB418\uC9C0 \uC54A\uC558\uB2E4." },
-      { name: "\uC218\uBC30\uC790\uC758 \uC740\uC2E0\uCC98 \uC815\uBCF4", desc: "\uBBFF\uC744 \uB9CC\uD55C \uCD9C\uCC98\uC778\uC9C0\uB294 \uC54C \uC218 \uC5C6\uB2E4." }
-    ],
-    \uD1A0\uC9C0: [
-      { name: "\uBCC0\uB450\uB9AC \uACF5\uD130 \uAD8C\uB9AC\uC99D", desc: "\uAC1C\uBC1C \uAC00\uB2A5\uC131\uC774 \uC788\uB2E4\uB294 \uD3C9\uAC00\uB2E4." },
-      { name: "\uBC84\uB824\uC9C4 \uCC3D\uACE0 \uBD80\uC9C0", desc: "\uC704\uCE58\uAC00 \uB098\uC058\uC9C0 \uC54A\uB2E4." },
-      { name: "\uACBD\uACC4 \uC9C0\uC5ED \uB18D\uC9C0", desc: "\uBD84\uC7C1 \uC18C\uC9C0\uAC00 \uC788\uB2E4\uB294 \uC18C\uBB38\uB3C4 \uC788\uB2E4." },
-      { name: "\uB0A1\uC740 \uC5EC\uAD00 \uAC74\uBB3C", desc: "\uC218\uB9AC\uD558\uBA74 \uC4F8 \uB9CC\uD574 \uBCF4\uC778\uB2E4." }
-    ],
-    \uC11C\uBE44\uC2A4: [
-      { name: "\uACBD\uBE44\uB300 \uC778\uB9E5 \uC18C\uAC1C", desc: "\uAE09\uD560 \uB54C \uB3C4\uC6C0\uC774 \uB420 \uC218 \uC788\uB2E4." },
-      { name: "\uB300\uC7A5\uC7A5\uC774\uC758 \uD2B9\uBCC4 \uC81C\uC791\uAD8C", desc: "\uD55C\uC815\uB41C \uAE30\uD68C\uB77C\uACE0 \uD55C\uB2E4." },
-      { name: "\uC6A9\uBCD1\uB2E8 \uD558\uB8E8 \uACE0\uC6A9\uAD8C", desc: "\uB2E8\uAE30\uAC04 \uC804\uB825 \uBCF4\uAC15\uC5D0 \uC720\uC6A9\uD558\uB2E4." },
-      { name: "\uC0C1\uB2E8 \uD638\uC704 \uB3D9\uD589\uAD8C", desc: "\uC548\uC804\uD55C \uC774\uB3D9\uC744 \uBCF4\uC7A5\uD55C\uB2E4." }
-    ],
-    \uC2A4\uD0AC: [
-      { name: "\uBE44\uC804 \uC2A4\uD06C\uB864 \uC870\uAC01", desc: "\uC644\uC804\uD558\uC9C0 \uC54A\uC544 \uBCF4\uC778\uB2E4." },
-      { name: "\uC218\uB828 \uBE44\uBC95\uC11C", desc: "\uB0A1\uC558\uC9C0\uB9CC \uB0B4\uC6A9\uC740 \uC628\uC804\uD558\uB2E4." },
-      { name: "\uC624\uB798\uB41C \uBB34\uACF5 \uD544\uC0AC\uBCF8", desc: "\uD574\uB3C5\uC5D0 \uC2DC\uAC04\uC774 \uAC78\uB9B4 \uB4EF\uD558\uB2E4." },
-      { name: "\uC2A4\uC2B9 \uC5C6\uB294 \uC81C\uC790\uC758 \uB178\uD2B8", desc: "\uAC1C\uC778\uC801\uC778 \uAE30\uB85D\uC774 \uC11E\uC5EC \uC788\uB2E4." }
-    ]
-  };
-  var AUCTION_BID_RANGE = { \uC77C\uBC18: [20, 80], \uD76C\uADC0: [80, 250], \uC804\uC124: [250, 800] };
-  function rollAuctionRarity() {
-    const r = Math.random();
-    return r < 0.55 ? "\uC77C\uBC18" : r < 0.9 ? "\uD76C\uADC0" : "\uC804\uC124";
-  }
-  function composeLocalAuction(gold) {
-    const categories = Object.keys(AUCTION_ITEM_BANK).sort(() => Math.random() - 0.5).slice(0, 4);
-    const goldFactor = Math.max(0.7, Math.min(2.5, (gold || 500) / 500));
-    const items = categories.map((cat) => {
-      const pool = AUCTION_ITEM_BANK[cat];
-      const base = pool[Math.floor(Math.random() * pool.length)];
-      const rarity = rollAuctionRarity();
-      const [lo, hi] = AUCTION_BID_RANGE[rarity];
-      const startBid = Math.round((lo + Math.random() * (hi - lo)) * goldFactor);
-      let desc = base.desc;
-      if (rarity === "\uC804\uC124") desc += " \uBCF4\uAE30 \uB4DC\uBB38 \uBB3C\uAC74\uC774\uB77C\uB294 \uAC10\uC815\uAC00\uC758 \uD3C9\uAC00\uAC00 \uC788\uC5C8\uB2E4.";
-      return { name: base.name, desc, startBid, rarity, category: cat };
-    });
-    const title = AUCTION_TITLE_BANK[Math.floor(Math.random() * AUCTION_TITLE_BANK.length)];
-    return { title, items };
-  }
-  window.composeLocalAuction = composeLocalAuction;
-  async function generateAuction() {
-    const gold = S.gold || 0;
-    const era = S.character?.scenario || "\uC911\uC138 \uD310\uD0C0\uC9C0";
-    const btn = document.getElementById("auction-gen-btn");
-    if (btn) btn.disabled = true;
-    toast("\u{1F3AA} \uACBD\uB9E4 \uBAA9\uB85D \uC0DD\uC131 \uC911...", 800);
-    const auctionBucketKey = "auction|" + era;
-    const reusedAuction = pickGeneratedObject(auctionBucketKey);
-    const auctionPrompt = `\uB2F9\uC2E0\uC740 TaleForge RPG\uC758 \uACBD\uB9E4 \uC9C4\uD589\uC790\uC785\uB2C8\uB2E4. \uC138\uACC4\uAD00 "${era}"\uC5D0 \uC5B4\uC6B8\uB9AC\uB294 \uACBD\uB9E4 \uBB3C\uD488 4\uAC1C\uB97C JSON\uC73C\uB85C \uC0DD\uC131\uD558\uC138\uC694.
-\uCE74\uD14C\uACE0\uB9AC\uB294 \uC720\uBB3C/\uC815\uBCF4/\uD1A0\uC9C0/\uC11C\uBE44\uC2A4/\uC2A4\uD0AC \uC911\uC5D0\uC11C \uC11C\uB85C \uB2E4\uB978 4\uAC1C\uB97C \uACE8\uACE0\uB8E8 \uC11E\uC73C\uC138\uC694.
-\uBC18\uB4DC\uC2DC \uB2E4\uC74C JSON\uB9CC \uCD9C\uB825\uD558\uC138\uC694:
-{"title":"\uACBD\uB9E4 \uC81C\uBAA9","items":[{"name":"\uBB3C\uD488\uBA85","desc":"1\uBB38\uC7A5 \uC124\uBA85","rarity":"\uC77C\uBC18|\uD76C\uADC0|\uC804\uC124","category":"\uC720\uBB3C|\uC815\uBCF4|\uD1A0\uC9C0|\uC11C\uBE44\uC2A4|\uC2A4\uD0AC"}]}`;
-    const _shapeAuction = (raw) => {
-      if (!raw || !raw.title || !Array.isArray(raw.items) || !raw.items.length) return null;
-      const bidRange = { \uC77C\uBC18: [20, 80], \uD76C\uADC0: [80, 250], \uC804\uC124: [250, 800] };
-      const goldFactor = Math.max(0.7, Math.min(2.5, (gold || 500) / 500));
-      const items = raw.items.slice(0, 4).map((it) => {
-        const rarity = ["\uC77C\uBC18", "\uD76C\uADC0", "\uC804\uC124"].includes(it.rarity) ? it.rarity : "\uC77C\uBC18";
-        const [lo, hi] = bidRange[rarity];
-        return {
-          name: it.name || "\uACBD\uB9E4 \uBB3C\uD488",
-          desc: it.desc || "",
-          rarity,
-          category: it.category || "\uC720\uBB3C",
-          startBid: Math.round((lo + Math.random() * (hi - lo)) * goldFactor)
-        };
-      });
-      items.forEach((it) => {
-        if (it.desc) recordMarkovSample("auction_item_desc", it.desc);
-      });
-      return { title: raw.title, items };
-    };
-    const result = reusedAuction || await tryCloudThenLocalModelThenBank(
-      async () => _shapeAuction(await callGeminiDirect(auctionPrompt)),
-      async () => _shapeAuction(await callLocalModelJSON(auctionPrompt, { maxTokens: 400 })),
-      () => composeLocalAuction(gold),
-      "\uACBD\uB9E4 \uC0DD\uC131"
-    );
-    if (!reusedAuction) recordGeneratedObject(auctionBucketKey, result);
-    const auction = {
-      ...result,
-      items: result.items.map((item) => ({ ...item, myBid: 0, topBid: item.startBid, won: false })),
-      generatedAt: S.msgCount || 0,
-      expiresAt: (S.msgCount || 0) + 20
-    };
-    saveAuction(auction);
-    renderAuctionPanel();
-    toast("\u{1F3AA} \uACBD\uB9E4\uAC00 \uC2DC\uC791\uB418\uC5C8\uC2B5\uB2C8\uB2E4!", 2e3);
-    if (btn) btn.disabled = false;
-  }
-  window.generateAuction = generateAuction;
-  function bidAuction(idx, amount) {
-    const a = loadAuction();
-    if (!a || !a.items[idx]) return;
-    const item = a.items[idx];
-    const gold = S.gold || 0;
-    if (amount > gold) {
-      toast("\uACE8\uB4DC\uAC00 \uBD80\uC871\uD569\uB2C8\uB2E4", 1500);
-      return;
-    }
-    if (amount <= item.topBid) {
-      toast(`\uD604\uC7AC \uCD5C\uACE0\uAC00(${item.topBid}G)\uBCF4\uB2E4 \uB192\uC544\uC57C \uD569\uB2C8\uB2E4`, 1500);
-      return;
-    }
-    item.myBid = amount;
-    item.topBid = amount;
-    item.won = true;
-    S.gold = (S.gold || 0) - amount;
-    if (typeof saveGold === "function") saveGold(S.gold);
-    if (typeof window.updateHeader === "function") window.updateHeader();
-    saveAuction(a);
-    renderAuctionPanel();
-    toast(`\u{1F389} "${item.name}" \uB099\uCC30! -${amount}G`, 2500);
-  }
-  window.bidAuction = bidAuction;
-  function renderAuctionPanel() {
-    const body = document.getElementById("pb-auction");
-    if (!body) return;
-    const a = loadAuction();
-    const gold = S.gold || 0;
-    const rarityColors = { \uC77C\uBC18: "#8a9a8a", \uD76C\uADC0: "#4090d0", \uC804\uC124: "#e0a030" };
-    const catIcons = { \uC720\uBB3C: "\u2697\uFE0F", \uC815\uBCF4: "\u{1F50D}", \uD1A0\uC9C0: "\u{1F3F0}", \uC11C\uBE44\uC2A4: "\u{1F91D}", \uC2A4\uD0AC: "\u26A1" };
-    if (!a) {
-      body.innerHTML = `
-      <div style="padding:20px;text-align:center">
-        <div style="font-size:40px;margin-bottom:12px">\u{1F3AA}</div>
-        <div style="font-family:Cinzel,serif;font-size:12px;color:#e09040;margin-bottom:8px">\uC774\uBCA4\uD2B8 \uACBD\uB9E4</div>
-        <div style="font-size:11px;color:var(--dim);line-height:1.6;margin-bottom:16px">\uCD95\uC81C\uC77C\xB7\uC804\uC7C1 \uD6C4\xB7\uD2B9\uBCC4\uD55C \uB0A0\uC5D0 \uC5F4\uB9AC\uB294 \uACBD\uB9E4\uC7A5.<br>\uD76C\uADC0 \uC720\uBB3C, NPC \uC815\uBCF4, \uD1A0\uC9C0 \uAD8C\uB9AC \uB4F1\uC744 \uC785\uCC30\uD558\uC138\uC694.</div>
-        <button id="auction-gen-btn" class="btn btn-gold" onclick="generateAuction()">\u{1F3AA} \uACBD\uB9E4 \uC2DC\uC791\uD558\uAE30</button>
-      </div>`;
-      return;
-    }
-    const expired = (S.msgCount || 0) > a.expiresAt;
-    body.innerHTML = `
-    <div style="padding:10px 14px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <div style="font-family:Cinzel,serif;font-size:11px;color:#e09040">${esc2(a.title || "\uC774\uBCA4\uD2B8 \uACBD\uB9E4")}</div>
-        <div style="font-size:9px;color:${expired ? "#e05050" : "#60c060"}">${expired ? "\u231B \uACBD\uB9E4 \uC885\uB8CC" : "\u2705 \uC9C4\uD589 \uC911"} (\uBCF4\uC720: ${gold}G)</div>
-      </div>
-      ${a.items.map((item, i) => `
-        <div style="padding:11px 13px;background:#0c0800;border:1px solid ${item.won ? "#806020" : "#2a1a00"};margin-bottom:8px;border-radius:2px">
-          <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
-            <span>${catIcons[item.category] || "\u{1F4E6}"}</span>
-            <span style="font-size:10px;color:${rarityColors[item.rarity] || "#8a9a8a"};font-family:Cinzel,serif">${esc2(item.name)}</span>
-            <span style="font-size:8px;padding:1px 6px;background:${rarityColors[item.rarity] || "#8a9a8a"}18;border:1px solid ${rarityColors[item.rarity] || "#8a9a8a"}44;color:${rarityColors[item.rarity] || "#8a9a8a"};border-radius:2px">${item.rarity}</span>
-            ${item.won ? '<span style="margin-left:auto;font-size:9px;color:#e0a030">\u{1F3C6} \uB099\uCC30</span>' : ""}
-          </div>
-          <div style="font-size:10px;color:var(--dim);margin-bottom:6px">${esc2(item.desc || "")}</div>
-          <div style="display:flex;align-items:center;gap:8px">
-            <span style="font-size:10px;color:#c8a050">\uCD5C\uACE0\uAC00: ${item.topBid}G</span>
-            ${!item.won && !expired ? `
-              <input id="bid-${i}" type="number" min="${item.topBid + 1}" placeholder="${item.topBid + 100}" style="width:80px;padding:4px 6px;background:var(--bg-input);border:1px solid var(--border);color:var(--gold);font-size:10px;outline:none"/>
-              <button onclick="(function(){const v=parseInt(document.getElementById('bid-${i}').value);if(!v)return;bidAuction(${i},v);})()" style="padding:4px 10px;background:#1a0d00;border:1px solid #806020;color:#e09040;font-size:9px;cursor:pointer;font-family:Cinzel,serif">\uC785\uCC30</button>` : ""}
-          </div>
-        </div>`).join("")}
-      <div style="margin-top:10px;text-align:center">
-        <button id="auction-gen-btn" class="btn btn-dark" onclick="generateAuction()" style="font-size:9px">\u{1F3AA} \uC0C8 \uACBD\uB9E4 \uC0DD\uC131</button>
-      </div>
-    </div>`;
-  }
-  window.renderAuctionPanel = renderAuctionPanel;
-  window.renderAuctionPanel = renderAuctionPanel;
-  window.generateAuction = generateAuction;
-  window.bidAuction = bidAuction;
 
   // src/misc/317-⑨-동맹배신-시스템.js
   var ALLIANCE_KEY = "tf-alliances";

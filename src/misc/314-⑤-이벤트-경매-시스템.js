@@ -53,6 +53,12 @@ const AUCTION_ITEM_BANK = {
     { name:'스승 없는 제자의 노트', desc:'개인적인 기록이 섞여 있다.' },
   ],
 };
+// [61-2번 섹션] 경쟁 NPC 입찰 — 기존엔 topBid를 올리는 주체가 플레이어
+// 자신뿐이라, "경매"라는 이름과 달리 골드만 있으면 항상 낙찰되는
+// 가격표에 가까웠다. 이 풀에서 뽑은 NPC가 tickAuction()에서 매 턴
+// 확률적으로 맞불을 놓아 실제 경쟁 입찰처럼 가격이 오르고, 플레이어가
+// 선두를 뺏기면 입찰금을 환불해준다.
+const AUCTION_NPC_BIDDERS = ['수집가 하인리히','상인 베아트리스','호사가 펠릭스','떠돌이 정보상 로자','그림자 중개인 카일','경쟁 수집가 올가','귀족가 대리인 테오','떠돌이 투기꾼 모리스'];
 const AUCTION_BID_RANGE = { 일반:[20,80], 희귀:[80,250], 전설:[250,800] };
 function rollAuctionRarity(){
   const r = Math.random();
@@ -69,7 +75,7 @@ function composeLocalAuction(gold){
     const startBid = Math.round((lo + Math.random()*(hi-lo)) * goldFactor);
     let desc = base.desc;
     if(rarity==='전설') desc += ' 보기 드문 물건이라는 감정가의 평가가 있었다.';
-    return { name: base.name, desc, startBid, rarity, category: cat };
+    return { name: base.name, desc, startBid, rarity, category: cat, topBidder: null };
   });
   const title = AUCTION_TITLE_BANK[Math.floor(Math.random()*AUCTION_TITLE_BANK.length)];
   return { title, items };
@@ -105,7 +111,7 @@ export async function generateAuction(){
       const rarity = ['일반','희귀','전설'].includes(it.rarity) ? it.rarity : '일반';
       const [lo,hi] = bidRange[rarity];
       return { name: it.name||'경매 물품', desc: it.desc||'', rarity, category: it.category||'유물',
-        startBid: Math.round((lo + Math.random()*(hi-lo)) * goldFactor) };
+        startBid: Math.round((lo + Math.random()*(hi-lo)) * goldFactor), topBidder: null };
     });
     // [패턴 학습] 진짜 AI가 쓴 경매 물품 설명만 코퍼스에 누적.
     items.forEach(it=>{ if(it.desc) recordMarkovSample('auction_item_desc', it.desc); });
@@ -124,6 +130,7 @@ export async function generateAuction(){
     items: result.items.map(item=>({ ...item, myBid:0, topBid:item.startBid, won:false })),
     generatedAt: S.msgCount||0,
     expiresAt: (S.msgCount||0)+20,
+    finalized: false,
   };
   saveAuction(auction);
   renderAuctionPanel();
@@ -135,7 +142,12 @@ window.generateAuction = generateAuction;
 export function bidAuction(idx, amount){
   const a = loadAuction();
   if(!a||!a.items[idx]) return;
+  // [61-2번 섹션] 경매 종료 후(finalized) 입찰 차단 — 기존엔 즉시
+  // 낙찰 처리라 이 분기가 필요 없었지만, 이제 만료 후에도 패널이
+  // 열려있으면 입찰 시도가 들어올 수 있다.
+  if(a.finalized){ toast('이미 종료된 경매입니다',1500); return; }
   const item = a.items[idx];
+  if((S.msgCount||0) > a.expiresAt){ toast('경매가 종료되었습니다',1500); return; }
   // [버그 수정] S.stats?.gold는 항상 undefined(→0)라서 어떤 입찰액을
   // 넣어도 "amount > gold"가 항상 참이 되어 매번 "골드가 부족합니다"로
   // 막히던 버그 — 경매 입찰 기능 자체가 한 번도 성공한 적이 없었다.
@@ -143,17 +155,73 @@ export function bidAuction(idx, amount){
   const gold = S.gold||0;
   if(amount > gold){ toast('골드가 부족합니다',1500); return; }
   if(amount <= item.topBid){ toast(`현재 최고가(${item.topBid}G)보다 높아야 합니다`,1500); return; }
+  // [61-2번 섹션] 즉시 낙찰(won:true)이 아니라 "현재 선두"로만 표시 —
+  // 실제 낙찰 여부는 경매 만료 시 tickAuction()이 그때의 topBidder를
+  // 보고 확정한다. 경쟁 NPC가 나중에 선두를 뺏으면 이 입찰금은
+  // tickAuction()에서 환불된다.
   item.myBid = amount;
   item.topBid = amount;
-  item.won = true; // 낙찰 (간단화)
+  item.topBidder = '나';
   S.gold = (S.gold||0) - amount;
   if(typeof saveGold==='function') saveGold(S.gold);
   if(typeof window.updateHeader==='function') window.updateHeader();
   saveAuction(a);
   renderAuctionPanel();
-  toast(`🎉 "${item.name}" 낙찰! -${amount}G`,2500);
+  toast(`✅ "${item.name}" 입찰! -${amount}G (경쟁자가 더 높게 부를 수 있습니다)`,2500);
 }
 window.bidAuction = bidAuction;
+
+// [61-2번 섹션] 경쟁 NPC 입찰 — 매 턴(_wandererAxisHook) 호출. 만료
+// 전이면 각 미낙찰 품목에 확률적으로 NPC가 맞불을 놓아 topBid를 올리고,
+// 그 순간 선두가 플레이어였다면 입찰금을 환불한다. 만료 후 최초 1회만
+// (finalized 플래그로 가드) 그 시점의 topBidder를 보고 낙찰을 확정한다.
+export function tickAuction(){
+  const a = loadAuction();
+  if(!a) return;
+  const now = S.msgCount||0;
+  let changed = false;
+
+  if(now > a.expiresAt){
+    if(!a.finalized){
+      a.finalized = true;
+      a.items.forEach(item=>{
+        if(item.topBidder==='나'){
+          item.won = true;
+          toastHTML(`🏆 "${esc(item.name)}" 낙찰 성공! (최종 ${item.topBid}G)`,3000);
+        } else if(item.topBidder){
+          toast(`📉 "${item.name}"은 ${item.topBidder}에게 낙찰됐습니다. (최종 ${item.topBid}G)`,3000);
+        }
+      });
+      changed = true;
+    }
+  } else {
+    const rarityBoost = { 일반:0, 희귀:0.08, 전설:0.18 };
+    a.items.forEach(item=>{
+      const chance = 0.22 + (rarityBoost[item.rarity]||0);
+      if(Math.random() >= chance) return;
+      const bidder = AUCTION_NPC_BIDDERS[Math.floor(Math.random()*AUCTION_NPC_BIDDERS.length)];
+      const raise = Math.max(10, Math.round(item.topBid * (0.1 + Math.random()*0.3)));
+      const prevTopBidder = item.topBidder;
+      const prevMyBid = item.myBid;
+      item.topBid += raise;
+      item.topBidder = bidder;
+      if(prevTopBidder==='나' && prevMyBid>0){
+        item.myBid = 0;
+        S.gold = (S.gold||0) + prevMyBid;
+        if(typeof saveGold==='function') saveGold(S.gold);
+        if(typeof window.updateHeader==='function') window.updateHeader();
+        toast(`📈 ${bidder}가 "${item.name}"에 ${item.topBid}G를 불렀습니다! (+${prevMyBid}G 환불)`,2500);
+      }
+      changed = true;
+    });
+  }
+
+  if(changed){
+    saveAuction(a);
+    if(document.getElementById('p-auction')?.classList.contains('open')) renderAuctionPanel();
+  }
+}
+window.tickAuction = tickAuction;
 
 export function renderAuctionPanel(){
   const body = document.getElementById('pb-auction');
@@ -179,22 +247,30 @@ export function renderAuctionPanel(){
         <div style="font-family:Cinzel,serif;font-size:11px;color:#e09040">${esc(a.title||'이벤트 경매')}</div>
         <div style="font-size:9px;color:${expired?'#e05050':'#60c060'}">${expired?'⌛ 경매 종료':'✅ 진행 중'} (보유: ${gold}G)</div>
       </div>
-      ${a.items.map((item,i)=>`
-        <div style="padding:11px 13px;background:#0c0800;border:1px solid ${item.won?'#806020':'#2a1a00'};margin-bottom:8px;border-radius:2px">
+      ${a.items.map((item,i)=>{
+        const resultBadge = !a.finalized ? ''
+          : item.won ? '<span style="margin-left:auto;font-size:9px;color:#e0a030">🏆 낙찰</span>'
+          : item.topBidder ? `<span style="margin-left:auto;font-size:9px;color:#8a9a8a">${esc(item.topBidder)}에게 낙찰</span>`
+          : '<span style="margin-left:auto;font-size:9px;color:#8a9a8a">유찰</span>';
+        const bidderLabel = item.topBidder ? `(${item.topBidder==='나'?'내 입찰':esc(item.topBidder)})` : '(시작가)';
+        const borderColor = item.won ? '#806020' : (a.finalized && item.topBidder) ? '#4a3a2a' : '#2a1a00';
+        return `
+        <div style="padding:11px 13px;background:#0c0800;border:1px solid ${borderColor};margin-bottom:8px;border-radius:2px">
           <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
             <span>${catIcons[item.category]||'📦'}</span>
             <span style="font-size:10px;color:${rarityColors[item.rarity]||'#8a9a8a'};font-family:Cinzel,serif">${esc(item.name)}</span>
             <span style="font-size:8px;padding:1px 6px;background:${rarityColors[item.rarity]||'#8a9a8a'}18;border:1px solid ${rarityColors[item.rarity]||'#8a9a8a'}44;color:${rarityColors[item.rarity]||'#8a9a8a'};border-radius:2px">${item.rarity}</span>
-            ${item.won?'<span style="margin-left:auto;font-size:9px;color:#e0a030">🏆 낙찰</span>':''}
+            ${resultBadge}
           </div>
           <div style="font-size:10px;color:var(--dim);margin-bottom:6px">${esc(item.desc||'')}</div>
           <div style="display:flex;align-items:center;gap:8px">
-            <span style="font-size:10px;color:#c8a050">최고가: ${item.topBid}G</span>
-            ${!item.won&&!expired?`
+            <span style="font-size:10px;color:#c8a050">최고가: ${item.topBid}G ${bidderLabel}</span>
+            ${!a.finalized&&!expired?`
               <input id="bid-${i}" type="number" min="${item.topBid+1}" placeholder="${item.topBid+100}" style="width:80px;padding:4px 6px;background:var(--bg-input);border:1px solid var(--border);color:var(--gold);font-size:10px;outline:none"/>
               <button onclick="(function(){const v=parseInt(document.getElementById('bid-${i}').value);if(!v)return;bidAuction(${i},v);})()" style="padding:4px 10px;background:#1a0d00;border:1px solid #806020;color:#e09040;font-size:9px;cursor:pointer;font-family:Cinzel,serif">입찰</button>`:''}
           </div>
-        </div>`).join('')}
+        </div>`;
+      }).join('')}
       <div style="margin-top:10px;text-align:center">
         <button id="auction-gen-btn" class="btn btn-dark" onclick="generateAuction()" style="font-size:9px">🎪 새 경매 생성</button>
       </div>

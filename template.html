@@ -2139,6 +2139,7 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
         <button class="grp-sub-btn" onclick="openP('factions');renderFactionPanel();closeGrp()"><svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-right:3px;vertical-align:-1px"><path d="M8 2 L8 14 M2 5 L8 2 L14 5" stroke-linejoin="round"/><path d="M3 7 L3 13 M13 7 L13 13 M8 5 L8 10" stroke-linecap="round"/><path d="M1.5 13 L14.5 13" stroke-linecap="round"/></svg>세력</button>
         <button class="grp-sub-btn" onclick="openP('faction-gauge');renderFactionGaugePanel();closeGrp()" style="color:#a080e0"><svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-right:3px;vertical-align:-1px"><path d="M8 2 L8 14" stroke-linecap="round"/><path d="M2 8 L14 8" stroke-linecap="round"/><circle cx="8" cy="8" r="2.5"/><path d="M3 5 L5.5 7.5 M11 10.5 L13 12.5" stroke-linecap="round" stroke-width="1"/><path d="M13 5 L10.5 7.5 M5 10.5 L3 12.5" stroke-linecap="round" stroke-width="1"/></svg>파벌게이지</button>
         <button class="grp-sub-btn" onclick="openP('demesne');renderDemesnePanel();closeGrp()" style="color:#c8a040"><svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-right:3px;vertical-align:-1px"><path d="M2 14 L2 7 L8 2 L14 7 L14 14 Z" stroke-linejoin="round"/><path d="M6 14 L6 10 L10 10 L10 14"/><path d="M2 7 L8 2 L14 7" stroke-linecap="round"/></svg>영지경영</button>
+        <button class="grp-sub-btn" onclick="openP('housing');renderHousingPanel();closeGrp()" style="color:#c8a040"><svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-right:3px;vertical-align:-1px"><path d="M2 14 L2 7 L8 2 L14 7 L14 14 Z" stroke-linejoin="round"/><path d="M6.5 14 L6.5 11 L9.5 11 L9.5 14"/></svg>내 집</button>
 
       </div>
       <div class="grp-submenu" id="sub-story">
@@ -2665,6 +2666,11 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
 </div></div>
 
 <!-- 🏰 영지 경영 시스템 패널 -->
+<div class="panel-ov" id="p-housing"><div class="panel">
+  <div class="p-hdr"><span class="p-title">🏠 내 집</span><button class="p-close" onclick="closeP('housing')">✕</button></div>
+  <div class="p-body scrollable" id="pb-housing"></div>
+</div></div>
+
 <div class="panel-ov" id="p-demesne"><div class="panel">
   <div class="p-hdr" style="background:linear-gradient(135deg,#08050a,#100808);border-bottom:1px solid #4a2a08">
     <span class="p-title" style="color:#c8a040">🏰 영지 경영</span>

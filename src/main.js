@@ -420,6 +420,7 @@ import './misc/329-block19-preamble.js';
 import './misc/330-block20-preamble.js';
 import './quest/331-로컬-AI-모델-엔진.js';
 import './economy/332-정착지-경제-평판-시스템.js';
+import './misc/333-주택-하우징-시스템.js';
 import './world/320-⑦-실시간-필드-이동.js';
 
 import { __tfDeferred_8 } from './job/010-스킬-강화-시스템.js';

@@ -6120,6 +6120,11 @@ export function renderPanel(name){
     // 직접 같이 호출하고 있어 겉으로는 멀쩡했지만, 방어적으로 같이 추가).
     case 'religion': renderReligionPanel?.(); break;
     case 'demesne': renderDemesnePanel?.(); break;
+    // [62-1번 섹션] "🏠 주택/하우징" 메뉴 버튼이 openP('housing')을 호출 —
+    // 위 demesne/religion 주석이 남긴 경고(openP가 renderPanel을 bare로
+    // 직접 호출해 window.renderPanel 래핑을 건너뛴다)를 그대로 지켜,
+    // 실제 switch 안에 직접 case를 추가한다.
+    case 'housing': if(typeof window.renderHousingPanel==='function') window.renderHousingPanel(); break;
     // [실시간 필드 이동] 월드맵 패널(economy/255)의 "🎮 실시간 필드 이동"
     // 버튼에서 openP('fieldmove')로 진입한다 — world/320 참고.
     case 'fieldmove': renderFieldPanel?.(); break;

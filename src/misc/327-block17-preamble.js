@@ -60,49 +60,49 @@ const RAID_BOSS_POOL = {
       svgIcon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L12 22 M4 7 L20 17 M20 7 L4 17"/></svg>',
       color:'#6aace8', maxHp:2200, atk:58, def:34,
       desc:'빙결 산맥 깊은 곳에서 거인 왕이 부족을 이끌고 남하하기 시작했다.',
-      rewardPool:['frost_axe_c'] },
+      rewardPool:['frost_axe_c','frost_giant_pauldron_c'] },
   ],
   east: [
     { id:'rb_magma_behemoth', name:'용암 베히모스', icon:'🌋',
       svgIcon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20 L8 6 L11 12 L13 9 L22 20 Z" stroke-linejoin="round"/></svg>',
       color:'#e85a30', maxHp:2800, atk:66, def:24,
       desc:'화산맥 심연에서 거대한 용암 짐승이 기어나와 마을들을 불태우고 있다.',
-      rewardPool:['flame_greatsword_c'] },
+      rewardPool:['flame_greatsword_c','magma_behemoth_plate_c'] },
   ],
   west: [
     { id:'rb_kraken', name:'심해의 크라켄', icon:'🐙',
       svgIcon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="5"/><path d="M7 13 C6 16 4 17 3 20 M9 14 C8.5 17 7 19 6 21 M12 14 L12 21 M15 14 C15.5 17 17 19 18 21 M17 13 C18 16 20 17 21 20" stroke-width="1.2"/></svg>',
       color:'#2a5a8a', maxHp:2400, atk:60, def:22,
       desc:'무역항 인근 해역에 거대한 크라켄이 출몰해 선박들을 침몰시키고 있다.',
-      rewardPool:['leviathan_trident_c'] },
+      rewardPool:['leviathan_trident_c','kraken_ink_cloak_c'] },
   ],
   south: [
     { id:'rb_sand_pharaoh', name:'각성한 모래 파라오', icon:'☀️',
       svgIcon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2 L12 4.5 M12 19.5 L12 22 M2 12 L4.5 12 M19.5 12 L22 12 M5.1 5.1 L6.8 6.8 M17.2 17.2 L18.9 18.9 M18.9 5.1 L17.2 6.8 M6.8 17.2 L5.1 18.9"/></svg>',
       color:'#e8a050', maxHp:2500, atk:60, def:30,
       desc:'봉인된 고대 신전이 무너지며 미라 파라오가 군세를 일으켜 부활했다.',
-      rewardPool:['sun_scepter_c'] },
+      rewardPool:['sun_scepter_c','pharaoh_greaves_c'] },
   ],
   northeast: [
     { id:'rb_corrupted_treant', name:'타락한 세계수 정령', icon:'🌳',
       svgIcon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21 L12 11" /><path d="M12 11 C7 11 4 8 4 4 C8 4 11 6 12 9 C13 6 16 4 20 4 C20 8 17 11 12 11 Z" stroke-linejoin="round"/></svg>',
       color:'#70c878', maxHp:2300, atk:56, def:32,
       desc:'세계수 뿌리 깊은 곳이 병들어 정령이 타락한 채로 숲을 휩쓸고 있다.',
-      rewardPool:['worldroot_staff_c'] },
+      rewardPool:['worldroot_staff_c','purified_bark_armor_c'] },
   ],
   southeast: [
     { id:'rb_abyss_leviathan', name:'테네브라 해구의 심연괴수', icon:'🌊',
       svgIcon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12 C2 12 5 9 8 12 C11 15 13 12 16 12 C19 12 22 9 22 9 M2 17 C2 17 5 14 8 17 C11 20 13 17 16 17 C19 17 22 14 22 14" stroke-width="1.4"/></svg>',
       color:'#3060a0', maxHp:2700, atk:64, def:26,
       desc:'봉인이 흔들리며 심연에서 태고의 괴수가 수면 위로 떠오르고 있다.',
-      rewardPool:['abyssal_harpoon_c'] },
+      rewardPool:['abyssal_harpoon_c','abyssal_scale_armor_c'] },
   ],
   northwest: [
     { id:'rb_rogue_colossus', name:'폭주한 고대 기계 거신', icon:'⚙️',
       svgIcon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 3 L12 6 M12 18 L12 21 M3 12 L6 12 M18 12 L21 12 M5.5 5.5 L7.5 7.5 M16.5 16.5 L18.5 18.5 M18.5 5.5 L16.5 7.5 M7.5 16.5 L5.5 18.5" stroke-width="1.2"/></svg>',
       color:'#a07848', maxHp:2900, atk:68, def:36,
       desc:'지하 왕국 심층부의 고대 기계 신전에서 거대 골렘이 폭주하며 깨어났다.',
-      rewardPool:['gearheart_hammer_c'] },
+      rewardPool:['gearheart_hammer_c','colossus_gauntlet_c'] },
   ],
 };
 
@@ -117,6 +117,18 @@ const RAID_REWARD_ITEMS = {
   worldroot_staff_c:   { id:'worldroot_staff_c',  name:'세계수 뿌리 지팡이', icon:'🌿', type:'equip', slot:'weapon', rarity:'epic',      effects:{mgc:32,wil:18,mp:40},           desc:'정령을 정화하고 남은 세계수의 힘이 깃들었다.' },
   abyssal_harpoon_c:   { id:'abyssal_harpoon_c',  name:'심연의 작살',        icon:'🌑', type:'equip', slot:'weapon', rarity:'legendary', effects:{str:36,fear:20,crit:24},        desc:'심연괴수의 뼈를 벼린 작살. 닿는 것을 얼어붙게 한다.' },
   gearheart_hammer_c:  { id:'gearheart_hammer_c', name:'기어하트의 망치',    icon:'⚙️', type:'equip', slot:'weapon', rarity:'legendary', effects:{str:44,end:20,crit:16,hp:40},   desc:'폭주한 거신의 핵을 부수고 얻은 전리품. 파괴력이 압도적이다.' },
+  // [63번 섹션] 보스 8종 중 7종이 rewardPool에 아이템 1개뿐이라
+  // Math.random() 추첨이 사실상 늘 같은 결과만 내던 공백을 메우려
+  // 추가한 2번째 보상 — 중앙 보스(룬 블레이드+드래곤 갑옷)처럼
+  // "무기 또는 방어구" 중 하나를 뽑는 기존 구조를 나머지 7개 보스에도
+  // 동일하게 적용(새 보상 등급·슬롯 체계를 지어내지 않고 그대로 재사용).
+  frost_giant_pauldron_c:  { id:'frost_giant_pauldron_c',  name:'서리거인의 어깨 갑주', icon:'🧊', type:'equip', slot:'armor', rarity:'epic', effects:{end:28,str:15,hp:45}, desc:'거인 왕의 갑주 조각. 한기가 뼛속까지 스며든다.' },
+  magma_behemoth_plate_c:  { id:'magma_behemoth_plate_c',  name:'용암 베히모스의 비늘 흉갑', icon:'🌋', type:'equip', slot:'armor', rarity:'epic', effects:{end:30,str:12,hp:50}, desc:'베히모스의 비늘을 겹겹이 엮은 흉갑. 뜨거운 열기가 남아있다.' },
+  kraken_ink_cloak_c:       { id:'kraken_ink_cloak_c',      name:'크라켄의 먹물 망토', icon:'🖤', type:'equip', slot:'armor', rarity:'epic', effects:{agi:25,per:18,hp:35}, desc:'크라켄의 먹물로 염색한 망토. 어둠 속에서 기척을 지운다.' },
+  pharaoh_greaves_c:        { id:'pharaoh_greaves_c',       name:'파라오의 성스러운 각반', icon:'☀️', type:'equip', slot:'armor', rarity:'epic', effects:{wil:20,fath:15,hp:40}, desc:'파라오의 무덤을 지키던 성스러운 각반.' },
+  purified_bark_armor_c:    { id:'purified_bark_armor_c',   name:'정화된 수피 갑옷', icon:'🌳', type:'equip', slot:'armor', rarity:'epic', effects:{wil:22,mgc:15,hp:45}, desc:'타락에서 정화된 세계수 수피로 짠 갑옷.' },
+  abyssal_scale_armor_c:    { id:'abyssal_scale_armor_c',   name:'심연의 비늘 갑옷', icon:'🌊', type:'equip', slot:'armor', rarity:'epic', effects:{end:28,str:14,hp:50}, desc:'심연괴수의 비늘로 벼린 갑옷. 수압을 견딘다.' },
+  colossus_gauntlet_c:      { id:'colossus_gauntlet_c',     name:'거신의 장갑판', icon:'⚙️', type:'equip', slot:'armor', rarity:'epic', effects:{end:34,str:10,hp:55}, desc:'폭주한 거신의 손에서 뜯어낸 장갑판.' },
 };
 window.RAID_REWARD_ITEMS = RAID_REWARD_ITEMS;
 

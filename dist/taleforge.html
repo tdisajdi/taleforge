@@ -7784,7 +7784,7 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
         ],
         interactions: [
           { id: "int_dock_work", name: "\uBD80\uB450 \uD558\uC5ED \uC77C", icon: "\u{1F4E6}", desc: "\uC9D0\uC744 \uB098\uB974\uBA70 \uACE8\uB4DC \uD68D\uB4DD. STR+2.", action: "farmWork" },
-          { id: "int_gamble", name: "\uB4B7\uACE8\uBAA9 \uB3C4\uBC15\uC7A5", icon: "\u{1F3B2}", desc: "\uACE8\uB4DC\uB97C \uAC78\uACE0 \uB3C4\uBC15. \uD070\uB3C8\uC744 \uBC8C\uAC70\uB098 \uC783\uB294\uB2E4.", action: "checkBounty" }
+          { id: "int_gamble", name: "\uB4B7\uACE8\uBAA9 \uB3C4\uBC15\uC7A5", icon: "\u{1F3B2}", desc: "\uACE8\uB4DC\uB97C \uAC78\uACE0 \uB3C4\uBC15. \uD070\uB3C8\uC744 \uBC8C\uAC70\uB098 \uBE5A\uC744 \uC9C4\uB2E4.", action: "gambleAtDen" }
         ],
         priceModifier: 1
       },
@@ -37195,6 +37195,848 @@ ${lines.join("\n")}
   ];
   var PATRON_CANDIDATES = ["\uADC0\uC871 \uBC31\uC791 \uBD80\uC778", "\uAC70\uC0C1 \uAE38\uB4DC\uC7A5", "\uC740\uD1F4\uD55C \uC7A5\uAD70", "\uC655\uC2E4 \uC2DC\uC885\uC7A5", "\uC218\uB3C4\uC6D0\uC7A5"];
 
+  // src/data/211-8-로맨스-시스템.js
+  var ROMANCE_STAGES = [
+    { level: 0, name: "\uBAA8\uB984", threshold: 0, icon: "\u{1F464}", desc: "\uC544\uC9C1 \uC778\uC5F0\uC774 \uC5C6\uB2E4" },
+    { level: 1, name: "\uC548\uBA74", threshold: 20, icon: "\u{1F91D}", desc: "\uC11C\uB85C\uB97C \uC54C\uAE30 \uC2DC\uC791\uD588\uB2E4" },
+    { level: 2, name: "\uCE5C\uAD6C", threshold: 40, icon: "\u{1F60A}", desc: "\uBBFF\uC744 \uC218 \uC788\uB294 \uC0AC\uC774" },
+    { level: 3, name: "\uD638\uAC10", threshold: 60, icon: "\u{1F499}", desc: "\uB9C8\uC74C\uC18D\uC5D0 \uD2B9\uBCC4\uD55C \uC790\uB9AC" },
+    { level: 4, name: "\uC5F0\uC778", threshold: 80, icon: "\u{1F495}", desc: "\uC11C\uB85C\uC758 \uACC1\uC5D0 \uC788\uACE0 \uC2F6\uB2E4" },
+    { level: 5, name: "\uC601\uC6D0\uD55C \uC778\uC5F0", threshold: 100, icon: "\u{1F48D}", desc: "\uC774 \uC0DD\uC774 \uB05D\uB098\uB3C4 \uCC3E\uC544\uC62C \uAC83\uC774\uB2E4" }
+  ];
+
+  // src/data/018-5170번-환생-누적-시스템.js
+  var STAR_SIGNS = [
+    { id: "aries", icon: "\u2648", name: "\uC591\uC790\uB9AC", trait: "\uC804\uC0AC", bonus: "\uC804\uD22C \uD310\uC815 +10, \uC120\uC81C \uACF5\uACA9 \uC6B0\uC704", penalty: "\uC678\uAD50 \uD611\uC0C1 -10" },
+    { id: "taurus", icon: "\u2649", name: "\uD669\uC18C\uC790\uB9AC", trait: "\uC218\uD638\uC790", bonus: "HP \uCD5C\uB300\uCE58 +20, \uBC29\uC5B4 \uD310\uC815 +10", penalty: "\uBBFC\uCCA9 \uAD00\uB828 \uD310\uC815 -5" },
+    { id: "gemini", icon: "\u264A", name: "\uC30D\uB465\uC774\uC790\uB9AC", trait: "\uBCC0\uC2E0\uC790", bonus: "\uC704\uC7A5\xB7\uBCC0\uC7A5 \uD310\uC815 +15, \uC5B8\uC5B4 \uC7AC\uB2A5", penalty: "\uC758\uC9C0\uB825 \uD310\uC815 -10" },
+    { id: "cancer", icon: "\u264B", name: "\uAC8C\uC790\uB9AC", trait: "\uCE58\uC720\uC0AC", bonus: "\uD68C\uBCF5 \uC544\uC774\uD15C \uD6A8\uACFC +30%, NPC \uC2E0\uB8B0", penalty: "\uC9C1\uC811 \uC804\uD22C \uD310\uC815 -5" },
+    { id: "leo", icon: "\u264C", name: "\uC0AC\uC790\uC790\uB9AC", trait: "\uC9C0\uB3C4\uC790", bonus: "\uCE74\uB9AC\uC2A4\uB9C8 \uD310\uC815 +15, \uB3D9\uB8CC \uC0AC\uAE30 \uC0C1\uC2B9", penalty: "\uB2E8\uB3C5 \uC740\uC2E0 \uD310\uC815 -10" },
+    { id: "virgo", icon: "\u264D", name: "\uCC98\uB140\uC790\uB9AC", trait: "\uBD84\uC11D\uAC00", bonus: "\uC815\uBCF4 \uC218\uC9D1\xB7\uBD84\uC11D \uD310\uC815 +15", penalty: "\uCDA9\uB3D9\uC801 \uD310\uC815 +5 (\uBD88\uB9AC)" },
+    { id: "libra", icon: "\u264E", name: "\uCC9C\uCE6D\uC790\uB9AC", trait: "\uC911\uC7AC\uC790", bonus: "\uD611\uC0C1\xB7\uC911\uC7AC \uD310\uC815 +15, \uADE0\uD615\uC758 \uAE38", penalty: "\uADF9\uB2E8\uC801 \uC120\uD0DD \uC2DC \uD398\uB110\uD2F0" },
+    { id: "scorpio", icon: "\u264F", name: "\uC804\uAC08\uC790\uB9AC", trait: "\uC554\uC0B4\uC790", bonus: "\uB3C5\xB7\uD568\uC815 \uD310\uC815 +15, \uBE44\uBC00 \uD0D0\uC9C0", penalty: "\uBE5B\uC758 \uC7A5\uC18C\uC5D0\uC11C \uD310\uC815 -5" },
+    { id: "sagittarius", icon: "\u2650", name: "\uC0AC\uC218\uC790\uB9AC", trait: "\uD0D0\uD5D8\uAC00", bonus: "\uBBF8\uC9C0 \uD0D0\uD5D8 \uD310\uC815 +15, \uC774\uB3D9 \uC18D\uB3C4", penalty: "\uD55C \uACF3\uC5D0 \uC624\uB798 \uC788\uC73C\uBA74 -5" },
+    { id: "capricorn", icon: "\u2651", name: "\uC5FC\uC18C\uC790\uB9AC", trait: "\uC7A5\uC778", bonus: "\uC81C\uC791\xB7\uAC74\uC124 \uD310\uC815 +15, \uCCB4\uB825 \uC9C0\uC18D\uB825", penalty: "\uC9C1\uAD00 \uD310\uC815 -10" },
+    { id: "aquarius", icon: "\u2652", name: "\uBB3C\uBCD1\uC790\uB9AC", trait: "\uD601\uC2E0\uAC00", bonus: "\uB9C8\uBC95\xB7\uAE30\uC220 \uD310\uC815 +15, \uCC3D\uC758\uC801 \uD574\uACB0", penalty: "\uC804\uD1B5\uC801 \uBC29\uC2DD \uD310\uC815 -5" },
+    { id: "pisces", icon: "\u2653", name: "\uBB3C\uACE0\uAE30\uC790\uB9AC", trait: "\uC608\uC5B8\uC790", bonus: "\uC608\uC9C0\xB7\uC9C1\uAD00 \uD310\uC815 +15, \uAFC8 \uC774\uBCA4\uD2B8 \uAC15\uD654", penalty: "\uD604\uC2E4 \uC778\uC2DD \uD310\uC815 -5" }
+  ];
+  var PAST_LANGUAGE_PHRASES = [
+    { level: 3, phrase: "\uC544\uB178\uC2A4 \uD2F0\uB974", meaning: "\uB098\uB294 \uC774\uACF3\uC744 \uC548\uB2E4", trigger: "\uACE0\uB300 \uC720\uC801\xB7\uC2E0\uC804 NPC\uC5D0\uAC8C \uC0AC\uC6A9 \uC2DC \uD788\uB4E0 \uD018\uC2A4\uD2B8" },
+    { level: 4, phrase: "\uBA5C\uB9AC\uC544 \uC18C\uB860", meaning: "\uC6B0\uB9AC\uB294 \uC774\uC804\uC5D0 \uB9CC\uB0AC\uB2E4", trigger: "\uC804\uC0DD \uC778\uC5F0 NPC \uC870\uC6B0 \uC2DC \uAE30\uC5B5 \uAC01\uC131" },
+    { level: 5, phrase: "\uCE74\uC774\uB85C\uC2A4 \uC5D4\uB4DC", meaning: "\uC2DC\uAC04\uC740 \uBC18\uBCF5\uB41C\uB2E4", trigger: "\uC2DC\uAC04 \uAD00\uB828 \uBCF4\uC2A4\xB7\uC774\uBCA4\uD2B8\uC5D0\uC11C \uC0AC\uC6A9 \uC2DC \uC57D\uC810 \uB178\uCD9C" },
+    { level: 6, phrase: "\uC5D0\uD14C\uB974 \uB098\uC2DC\uC628", meaning: "\uB098\uB294 \uD658\uC0DD\uC790\uB2E4", trigger: "\uB8E8\uD504 \uC790\uAC01\uC790 \uAE38\uB4DC \uC785\uC7A5 \uCF54\uB4DC" },
+    { level: 7, phrase: "\uC624\uBA54\uAC00 \uB9AC\uD23C", meaning: "\uC138\uACC4\uC758 \uB05D\uC744 \uBCF4\uC558\uB2E4", trigger: "\uCD5C\uC885 \uBCF4\uC2A4\uC5D0\uAC8C \uC0AC\uC6A9 \uC2DC \uD2B9\uC218 \uB300\uD654 \uB8E8\uD2B8" },
+    { level: 8, phrase: "\uC544\uD06C \uB514\uBE44\uB204\uC2A4", meaning: "\uC2E0\uC740 \uAC70\uC9D3\uC774\uB2E4", trigger: "\uC2E0\uD654 \uC138\uACC4\uAD00 \uC2DC\uB098\uB9AC\uC624 \uD788\uB4E0 \uB8E8\uD2B8 \uD574\uAE08" },
+    { level: 9, phrase: "\uB808\uBE44 \uC544\uC2A4\uCE7C", meaning: "\uB098\uB294 \uBAA8\uB4E0 \uAC83\uC744 \uAE30\uC5B5\uD55C\uB2E4", trigger: "\uBB34\uD55C \uD68C\uADC0 \uC790\uAC01 \uC774\uBCA4\uD2B8 \uD2B8\uB9AC\uAC70" },
+    { level: 10, phrase: "\uC194 \uC774\uD130\uB2C8\uC6C0", meaning: "\uC601\uC6D0\uD55C \uC601\uD63C", trigger: "\uD574\uD0C8 \uC5D4\uB529 \uB8E8\uD2B8 \uD574\uAE08 \uD0A4" }
+  ];
+  var IDENTITY_ARCHETYPES = [
+    { id: "noble", icon: "\u{1F451}", label: "\uADC0\uC871 \uC2E0\uBD84", desc: "\uC0C1\uB958\uCE35 \uC811\uADFC \uAC00\uB2A5, \uC758\uC2EC \uC5C6\uC774 \uC131\xB7\uC800\uD0DD \uCD9C\uC785", bonus: "\uC0AC\uAD50 \uD310\uC815 +20, \uADC0\uC871 NPC \uCD08\uAE30 \uD638\uAC10" },
+    { id: "merchant", icon: "\u{1F4B0}", label: "\uC0C1\uC778 \uC2E0\uBD84", desc: "\uC2DC\uC7A5\xB7\uD56D\uAD6C \uC790\uC720 \uC811\uADFC, \uAC70\uB798 \uC2DC \uC720\uB9AC\uD55C \uC704\uCE58", bonus: "\uAC70\uB798 \uD310\uC815 +15, \uC815\uBCF4 \uAD6C\uB9E4 \uD560\uC778" },
+    { id: "scholar", icon: "\u{1F4DA}", label: "\uD559\uC790 \uC2E0\uBD84", desc: "\uB3C4\uC11C\uAD00\xB7\uB9C8\uBC95\uD0D1 \uC811\uADFC, \uACE0\uB300 \uBB38\uD5CC \uC5F4\uB78C \uAD8C\uD55C", bonus: "\uC9C0\uC2DD \uD310\uC815 +15, \uBE44\uBC00 \uBB38\uC11C \uC811\uADFC" },
+    { id: "soldier", icon: "\u2694\uFE0F", label: "\uBCD1\uC0AC \uC2E0\uBD84", desc: "\uAD70\uC0AC \uC2DC\uC124 \uC811\uADFC, \uBB34\uAE30 \uC18C\uC9C0 \uD569\uBC95\uD654", bonus: "\uAD70\uC0AC NPC \uD611\uB825, \uC21C\uCC30 \uBB34\uC2DC" },
+    { id: "priest", icon: "\u26EA", label: "\uC0AC\uC81C \uC2E0\uBD84", desc: "\uC2E0\uC804\xB7\uC131\uC18C \uC811\uADFC, \uC77C\uBC18\uC778 \uC2E0\uB8B0 \uC790\uB3D9 \uD68D\uB4DD", bonus: "\uCE58\uC720 \uAD00\uB828 \uD310\uC815 +10, \uC545\uB839 \uD1F4\uCE58 \uAD8C\uD55C" },
+    { id: "assassin", icon: "\u{1F5E1}\uFE0F", label: "\uC554\uC0B4\uC790 \uC2E0\uBD84", desc: "\uC9C0\uD558\uC138\uACC4 \uC811\uADFC, \uC815\uBCF4 \uBE0C\uB85C\uCEE4\uC640 \uC5F0\uACB0", bonus: "\uC740\uC2E0 \uD310\uC815 +15, \uD0AC \uC758\uB8B0 \uC218\uB77D" },
+    { id: "wanderer", icon: "\u{1F30D}", label: "\uBC29\uB791\uC790 \uC2E0\uBD84", desc: "\uC5B4\uB290 \uC138\uB825\uC5D0\uB3C4 \uC18D\uD558\uC9C0 \uC54A\uC74C. \uC790\uC720\uB85C\uC6B4 \uC774\uB3D9", bonus: "\uC774\uB3D9 \uD310\uC815 +10, \uC911\uB9BD \uC9C0\uC5ED \uC5B4\uB514\uC11C\uB098 \uD658\uC601" },
+    { id: "bard", icon: "\u{1F3B5}", label: "\uC74C\uC720\uC2DC\uC778 \uC2E0\uBD84", desc: "\uAC01\uC9C0 \uC18C\uBB38 \uC218\uC9D1, \uACF5\uC5F0\uC73C\uB85C NPC \uC8FC\uC758 \uBD84\uC0B0", bonus: "\uC815\uBCF4 \uC218\uC9D1 +15, \uAD70\uC911 \uB9E4\uD639 \uD310\uC815" }
+  ];
+  var RIFT_SCENARIOS = [
+    { id: "medieval_bleed", icon: "\u{1F3F0}", label: "\uC911\uC138 \uADE0\uC5F4", desc: "\uAE30\uC0AC\uC640 \uC131\uBCBD\uC758 \uC794\uC0C1\uC774 \uD604\uC7AC \uC138\uACC4\uC5D0 \uD22C\uC601\uB41C\uB2E4.", loot: "\uB9C8\uBC95 \uAC80 \uD30C\uD3B8 / \uACE0\uB300 \uBB38\uC11C", npc: "\uBC29\uB791 \uAE30\uC0AC" },
+    { id: "fantasy_bleed", icon: "\u{1F9D9}", label: "\uB9C8\uBC95 \uC138\uACC4 \uADE0\uC5F4", desc: "\uC815\uB839\uC758 \uB178\uB798\uC640 \uB9C8\uBC95\uC9C4 \uC794\uAD11\uC774 \uD76C\uBBF8\uD558\uAC8C \uBCF4\uC778\uB2E4.", loot: "\uB9C8\uBC95\uC11D / \uD76C\uADC0 \uC57D\uCD08", npc: "\uB5A0\uB3C4\uB294 \uB9C8\uBC95\uC0AC" },
+    { id: "void_bleed", icon: "\u{1F30C}", label: "\uD5C8\uACF5 \uADE0\uC5F4", desc: "\uC644\uC804\uD55C \uC5B4\uB460 \uC18D\uC5D0\uC11C \uD615\uC5B8\uD560 \uC218 \uC5C6\uB294 \uC874\uC7AC\uC758 \uC228\uACB0.", loot: "\uD5C8\uACF5\uC758 \uACB0\uC815 / \uBD09\uC778 \uBB38\uC591", npc: "\uACF5\uD5C8\uC758 \uAC10\uC2DC\uC790" }
+  ];
+  var RECIPE_TIERS = [
+    { tier: 1, icon: "\u{1F9EA}", label: "\uC77C\uBC18 \uC81C\uC870\uBC95", minCycle: 1, recipes: ["\uCCB4\uB825 \uD3EC\uC158", "\uD574\uB3C5\uC81C", "\uD683\uBD88", "\uC2DD\uB7C9 \uC555\uCD95", "\uAE30\uCD08 \uB3C5\uC57D"] },
+    { tier: 2, icon: "\u2697\uFE0F", label: "\uACE0\uAE09 \uC81C\uC870\uBC95", minCycle: 3, recipes: ["\uAC15\uD654 \uD3EC\uC158", "\uC6D0\uC18C \uD0C4\uD658", "\uB9C8\uBC95 \uC789\uD06C", "\uC2DD\uBB3C \uCD09\uC9C4\uC81C", "\uBC29\uC5B4 \uBD80\uC801"] },
+    { tier: 3, icon: "\u{1F52E}", label: "\uD76C\uADC0 \uC81C\uC870\uBC95", minCycle: 5, recipes: ["\uC5D8\uB9AD\uC11C", "\uD658\uC601 \uD3ED\uD0C4", "\uC601\uD63C \uACB0\uC815 \uC870\uAC01", "\uC2DC\uAC04 \uC9C0\uC5F0 \uC57D", "\uC815\uC2E0 \uAC15\uD654\uC81C"] },
+    { tier: 4, icon: "\u{1F48E}", label: "\uC804\uC124 \uC81C\uC870\uBC95", minCycle: 8, recipes: ["\uBD88\uC0AC\uC758 \uC57D\uCD08", "\uCC28\uC6D0 \uC808\uB2E8\uAE30", "\uC6B4\uBA85 \uBCC0\uD658\uC81C", "\uC2E0\uC758 \uBD84\uB178 \uACB0\uC815", "\uAE30\uC5B5 \uACB0\uC815"] },
+    { tier: 5, icon: "\u{1F31F}", label: "\uC2E0\uD654 \uC81C\uC870\uBC95", minCycle: 12, recipes: ["\uC138\uACC4 \uC885\uB9D0 \uC5B5\uC81C\uC81C", "\uC601\uD63C \uBD80\uD65C\uC57D", "\uC2DC\uAC04 \uC5ED\uD589 \uCD09\uB9E4", "\uC2E0\uACA9\uD654 \uC5D8\uB9AD\uC11C", "\uACF5\uD5C8 \uBD09\uC778\uC7AC"] }
+  ];
+  var ROMANCE_FATES = [
+    { depth: 1, icon: "\u{1F338}", label: "\uC124\uB818", firstMeet: "\uCC98\uC74C \uB9CC\uB098\uB294\uB370\uB3C4 \uC5B4\uB518\uAC00 \uD3B8\uC548\uD55C \uB290\uB08C\uC744 \uBC1B\uB294\uB2E4.", bond: 15 },
+    { depth: 2, icon: "\u{1F490}", label: "\uC778\uC5F0", firstMeet: "\uB208\uC774 \uB9C8\uC8FC\uCE58\uB294 \uC21C\uAC04, \uC2EC\uC7A5\uC774 \uC774\uC0C1\uD558\uAC8C \uB6F4\uB2E4.", bond: 25 },
+    { depth: 3, icon: "\u{1F495}", label: "\uAE4A\uC740 \uC778\uC5F0", firstMeet: '"\uC5B4\uB514\uC120\uAC00 \uB2F9\uC2E0\uC744 \uBCF8 \uAC83 \uAC19\uC544\uC694"\uB77C\uACE0 \uB9D0\uC744 \uAC74\uB128\uB2E4.', bond: 40 },
+    { depth: 4, icon: "\u{1F49E}", label: "\uC6B4\uBA85", firstMeet: "\uC774 \uC0AC\uB78C\uACFC \uD568\uAED8\uB77C\uBA74 \uBB34\uC5C7\uC774\uB4E0 \uD560 \uC218 \uC788\uB2E4\uB294 \uD655\uC2E0\uC774 \uB4E0\uB2E4.", bond: 55 },
+    { depth: 5, icon: "\u{1F496}", label: "\uC601\uC6D0\uD55C \uC778\uC5F0", firstMeet: "\uC11C\uB85C\uAC00 \uC11C\uB85C\uB97C \uC54C\uC544\uBCF8\uB2E4. \uB9D0 \uC5C6\uC774\uB3C4 \uBAA8\uB4E0 \uAC8C \uC804\uB2EC\uB41C\uB2E4.", bond: 70 }
+  ];
+  var MERCHANT_HINTS = [
+    { id: "trap_location", icon: "\u26A0\uFE0F", label: "\uD568\uC815 \uC704\uCE58 \uD78C\uD2B8", cost: "\uAE30\uC5B5 \uD30C\uD3B8 1\uAC1C", desc: "\uC774\uBC88 \uC2DC\uB098\uB9AC\uC624 \uC8FC\uC694 \uD568\uC815 \uC704\uCE58\uB97C \uC54C\uB824\uC900\uB2E4." },
+    { id: "boss_weakness", icon: "\u2694\uFE0F", label: "\uBCF4\uC2A4 \uC57D\uC810 \uD78C\uD2B8", cost: "\uAE30\uC5B5 \uD30C\uD3B8 2\uAC1C", desc: "\uD604\uC7AC \uCD5C\uC885 \uBCF4\uC2A4\uC758 \uD575\uC2EC \uC57D\uC810\uC744 \uC54C\uB824\uC900\uB2E4." },
+    { id: "npc_secret", icon: "\u{1F5DD}\uFE0F", label: "NPC \uBE44\uBC00", cost: "\uAE30\uC5B5 \uD30C\uD3B8 1\uAC1C", desc: "\uC8FC\uC694 NPC\uC758 \uC228\uACA8\uC9C4 \uC815\uCCB4\uB098 \uB3D9\uAE30\uB97C \uC54C\uB824\uC900\uB2E4." },
+    { id: "hidden_path", icon: "\u{1F5FA}\uFE0F", label: "\uC228\uACA8\uC9C4 \uAE38", cost: "\uAE30\uC5B5 \uD30C\uD3B8 1\uAC1C", desc: "\uC77C\uBC18 \uD0D0\uC0C9\uC73C\uB85C\uB294 \uCC3E\uAE30 \uC5B4\uB824\uC6B4 \uC9C0\uB984\uAE38\uC744 \uC54C\uB824\uC900\uB2E4." },
+    { id: "item_location", icon: "\u{1F48E}", label: "\uD76C\uADC0 \uC544\uC774\uD15C \uC704\uCE58", cost: "\uAE30\uC5B5 \uD30C\uD3B8 2\uAC1C", desc: "\uC774\uBC88 \uD68C\uCC28 \uC228\uACA8\uC9C4 \uB808\uC5B4 \uC544\uC774\uD15C \uC704\uCE58\uB97C \uC54C\uB824\uC900\uB2E4." },
+    { id: "fate_preview", icon: "\u{1F52E}", label: "\uC6B4\uBA85\uC758 \uBBF8\uB9AC\uBCF4\uAE30", cost: "\uAE30\uC5B5 \uD30C\uD3B8 3\uAC1C", desc: "\uC774\uBC88 \uD68C\uCC28 \uC911\uC694 \uBD84\uAE30\uC810 \uC911 \uD558\uB098\uB97C \uBBF8\uB9AC \uC54C\uB824\uC900\uB2E4." },
+    { id: "ending_hint", icon: "\u{1F31F}", label: "\uC5D4\uB529 \uD78C\uD2B8", cost: "\uAE30\uC5B5 \uD30C\uD3B8 4\uAC1C", desc: "\uD788\uB4E0 \uC5D4\uB529 \uC870\uAC74 \uC911 \uD558\uB098\uB97C \uC54C\uB824\uC900\uB2E4." }
+  ];
+  var TIME_TOKEN_CONDITIONS = [
+    { id: "perfect_escape", label: "\uAE30\uC801\uC758 \uD0C8\uCD9C", desc: "\uC808\uCCB4\uC808\uBA85\uC758 \uC21C\uAC04\uC744 \uADF9\uC801\uC73C\uB85C \uB3CC\uD30C \uC2DC" },
+    { id: "tragic_sacrifice", label: "\uBE44\uADF9\uC801 \uD76C\uC0DD", desc: "\uC18C\uC911\uD55C NPC\uB97C \uC783\uB294 \uBE44\uADF9\uC801 \uC21C\uAC04\uC5D0" },
+    { id: "legendary_act", label: "\uC804\uC124\uC801 \uD589\uB3D9", desc: "\uC138\uACC4\uC0AC\uC5D0 \uB0A8\uC744 \uC704\uC5C5\uC744 \uB2EC\uC131 \uC2DC" },
+    { id: "cycle_milestone", label: "\uD68C\uCC28 \uB9C8\uC77C\uC2A4\uD1A4", desc: "\uD2B9\uC815 \uD68C\uCC28(5, 10, 20...) \uB3C4\uB2EC \uC2DC \uC790\uB3D9 \uC9C0\uAE09" }
+  ];
+  var COMPANION_MEMORY_STAGES = [
+    { stage: 0, label: "\uB0AF\uC775\uC740 \uC774\uBC29\uC778", firstMeet: "\uCC98\uC74C \uBCF4\uB294 \uC0AC\uB78C\uC778\uB370, \uC5B4\uB518\uAC00 \uB0AF\uC774 \uC775\uB2E4.", bond: 10 },
+    { stage: 1, label: "\uAE30\uC5B5\uC758 \uC870\uAC01", firstMeet: '\uB2F9\uC2E0\uC744 \uBCF4\uC790 \uC190\uC744 \uB5A0\uB294 \uB0AF\uC120 \uC774. "\uD639\uC2DC... \uC544\uB2CC\uAC00\uC694?"', bond: 20 },
+    { stage: 2, label: "\uD76C\uBBF8\uD55C \uAC01\uC131", firstMeet: '"\uB2F9\uC2E0\uC744 \uC5B4\uB518\uAC00\uC11C \uBCF8 \uAC83 \uAC19\uC544\uC694. \uAFC8\uC5D0\uC11C?" \uB208\uBE5B\uC774 \uD754\uB4E4\uB9B0\uB2E4.', bond: 35 },
+    { stage: 3, label: "\uAC15\uD55C \uAC01\uC131", firstMeet: '"...\uAE30\uC5B5\uB098\uC694. \uB2F9\uC2E0\uC774\uC796\uC544\uC694. \uB2E4\uC2DC \uB9CC\uB0AC\uB124\uC694." \uB208\uBB3C\uC774 \uACE0\uC778\uB2E4.', bond: 55 },
+    { stage: 4, label: "\uC644\uC804\uD55C \uAE30\uC5B5 \uAC01\uC131", firstMeet: '"\uBA87 \uBC88\uC758 \uC0DD\uC744 \uAC74\uB108\uB3C4 \uACB0\uAD6D \uB2E4\uC2DC \uB9CC\uB098\uB294\uAD70\uC694." \uD658\uD558\uAC8C \uC6C3\uB294\uB2E4.', bond: 75 }
+  ];
+  var LANGUAGE_DEFS = [
+    { id: "elvish", icon: "\u{1F33F}", name: "\uC5D8\uD504\uC5B4", race: "\uC5D8\uD504", minBond: 30, bonus: "\uC5D8\uD504 NPC\uC640 \uAE4A\uC740 \uB300\uD654, \uC232\xB7\uC790\uC5F0 \uAD00\uB828 \uD788\uB4E0 \uC815\uBCF4" },
+    { id: "dwarvish", icon: "\u2692\uFE0F", name: "\uB4DC\uC6CC\uD504\uC5B4", race: "\uB4DC\uC6CC\uD504", minBond: 30, bonus: "\uB4DC\uC6CC\uD504 \uC7A5\uC778\uACFC \uD2B9\uC218 \uC81C\uC791, \uC9C0\uD558 \uC9C0\uB3C4 \uC5F4\uB78C" },
+    { id: "draconic", icon: "\u{1F409}", name: "\uC6A9\uC5B4", race: "\uB4DC\uB798\uACE4\uD608", minBond: 40, bonus: "\uC6A9\uC871 NPC \uAD50\uC12D, \uACE0\uB300 \uB9C8\uBC95 \uC8FC\uBB38 \uBC1C\uB3D9" },
+    { id: "celestial", icon: "\u2728", name: "\uCC9C\uC0C1\uC5B4", race: "\uC2E0\uC871", minBond: 50, bonus: "\uC2E0\uC758 \uC804\uB839\uACFC \uB300\uD654, \uC131\uC18C \uD788\uB4E0 \uC758\uC2DD \uCC38\uC5EC" },
+    { id: "infernal", icon: "\u{1F525}", name: "\uC2EC\uC5F0\uC5B4", race: "\uC545\uB9C8\uC871", minBond: 40, bonus: "\uC545\uB9C8 \uACC4\uC57D \uC9C1\uC811 \uD611\uC0C1, \uAE08\uC9C0 \uC9C0\uC2DD \uC5F4\uB78C" },
+    { id: "ancient", icon: "\u{1F4DC}", name: "\uACE0\uB300\uC5B4", race: "\uC5C6\uC74C", minBond: 60, bonus: "\uACE0\uB300 \uC720\uC801 \uBE44\uBB38 \uB3C5\uD574, \uC2E0\uAE09 \uB9C8\uBC95 \uC8FC\uBB38 \uD574\uB3C5" },
+    { id: "beast", icon: "\u{1F43E}", name: "\uC57C\uC218\uC5B4", race: "\uC218\uC778\uC871", minBond: 25, bonus: "\uC57C\uC0DD \uB3D9\uBB3C \uB300\uD654, \uBE44\uACF5\uAC1C \uC0AC\uB0E5\uD130 \uC548\uB0B4" },
+    { id: "void", icon: "\u{1F30C}", name: "\uACF5\uD5C8\uC5B4", race: "\uACF5\uD5C8\uC874\uC7AC", minBond: 70, bonus: "\uACF5\uD5C8 \uCC28\uC6D0 NPC \uB300\uD654, \uCC28\uC6D0 \uADE0\uC5F4 \uC81C\uC5B4" }
+  ];
+  var LEGEND_DISTORTION_LEVELS = [
+    { level: 0, label: "\uC0AC\uC2E4\uC5D0 \uAC00\uAE4C\uC6B4 \uC18C\uBB38", multiplier: 1, desc: "\uBE44\uAD50\uC801 \uC815\uD655\uD55C \uC774\uC57C\uAE30\uAC00 \uD37C\uC9C4\uB2E4." },
+    { level: 1, label: "\uC57D\uAC04 \uACFC\uC7A5\uB41C \uC18C\uBB38", multiplier: 1.3, desc: "\uACF5\uC801\uC774 \uC870\uAE08 \uBD80\uD480\uB824\uC84C\uB2E4." },
+    { level: 2, label: "\uAF64 \uACFC\uC7A5\uB41C \uC804\uC124", multiplier: 1.8, desc: "\uC601\uC6C5\uC801 \uD589\uB3D9\uC774 \uC2E0\uD654\uCC98\uB7FC \uBB18\uC0AC\uB41C\uB2E4." },
+    { level: 3, label: "\uC2EC\uD558\uAC8C \uC65C\uACE1\uB41C \uC804\uC124", multiplier: 2.5, desc: "\uC2E4\uC81C\uC640 \uB2E4\uB978 \uB0B4\uC6A9\uC774 \uC808\uBC18 \uC774\uC0C1\uC744 \uCC28\uC9C0\uD55C\uB2E4." },
+    { level: 4, label: "\uC644\uC804\uD788 \uC2E0\uD654\uD654", multiplier: 4, desc: "\uB2F9\uC2E0\uC740 \uC774\uBBF8 \uC778\uAC04\uC744 \uCD08\uC6D4\uD55C \uC874\uC7AC\uB85C \uC54C\uB824\uC838 \uC788\uB2E4." }
+  ];
+  var MYSTERY_PIECES = [
+    { id: "origin", icon: "\u{1F30C}", title: "\uC138\uACC4\uC758 \uAE30\uC6D0", hint: "\uC774 \uC138\uACC4\uB294 \uC5B4\uB514\uC11C \uC654\uB294\uAC00?", revealAt: 1 },
+    { id: "first_death", icon: "\u{1F480}", title: "\uCD5C\uCD08\uC758 \uC8FD\uC74C", hint: "\uB204\uAC00 \uCC98\uC74C\uC73C\uB85C \uC774 \uC21C\uD658\uC744 \uC2DC\uC791\uD588\uB294\uAC00?", revealAt: 2 },
+    { id: "hidden_god", icon: "\u{1F441}\uFE0F", title: "\uC228\uACA8\uC9C4 \uC2E0", hint: "\uC9C4\uC9DC \uC138\uACC4\uB97C \uC9C0\uBC30\uD558\uB294 \uC874\uC7AC\uB294 \uB530\uB85C \uC788\uB2E4.", revealAt: 3 },
+    { id: "true_enemy", icon: "\u{1F534}", title: "\uC9C4\uC9DC \uC801", hint: "\uBAA8\uB4E0 \uBCF4\uC2A4 \uB4A4\uC5D0 \uC788\uB294 \uC9C4\uC815\uD55C \uC6D0\uC778.", revealAt: 4 },
+    { id: "loop_reason", icon: "\u{1F504}", title: "\uD658\uC0DD\uC758 \uC774\uC720", hint: "\uC65C \uC774 \uC601\uD63C\uC740 \uACC4\uC18D \uD658\uC0DD\uD558\uB294\uAC00?", revealAt: 5 },
+    { id: "key_npc", icon: "\u{1F5DD}\uFE0F", title: "\uC5F4\uC1E0\uB97C \uAC00\uC9C4 \uC790", hint: "\uC9C4\uC2E4\uC5D0 \uAC00\uC7A5 \uAC00\uAE4C\uC774 \uC788\uB294 NPC\uC758 \uC815\uCCB4.", revealAt: 6 },
+    { id: "forbidden", icon: "\u{1F6AB}", title: "\uAE08\uC9C0\uB41C \uC9C0\uC2DD", hint: "\uC54C\uBA74 \uC548 \uB418\uB294 \uAC83. \uD558\uC9C0\uB9CC \uBC18\uB4DC\uC2DC \uC54C\uC544\uC57C \uD55C\uB2E4.", revealAt: 7 },
+    { id: "world_curse", icon: "\u{1F49C}", title: "\uC138\uACC4\uC758 \uC800\uC8FC", hint: "\uC774 \uC138\uACC4 \uC804\uCCB4\uC5D0 \uAC78\uB9B0 \uACE0\uB300\uC758 \uC800\uC8FC.", revealAt: 8 },
+    { id: "true_power", icon: "\u26A1", title: "\uC9C4\uC815\uD55C \uD798\uC758 \uC6D0\uCC9C", hint: "\uBAA8\uB4E0 \uD798\uC740 \uC5B4\uB514\uC11C \uC624\uB294\uAC00?", revealAt: 9 },
+    { id: "sacrifice", icon: "\u{1F339}", title: "\uCD5C\uCD08\uC758 \uD76C\uC0DD", hint: "\uC774 \uBAA8\uB4E0 \uAC83\uC758 \uB300\uAC00\uB85C \uBB34\uC5C7\uC774 \uC0AC\uB77C\uC84C\uB294\uAC00?", revealAt: 10 },
+    { id: "salvation", icon: "\u{1F31F}", title: "\uAD6C\uC6D0\uC758 \uC870\uAC74", hint: "\uC774 \uBAA8\uB4E0 \uC21C\uD658\uC744 \uB05D\uB0BC \uC218 \uC788\uB294 \uB2E8 \uD558\uB098\uC758 \uBC29\uBC95.", revealAt: 11 },
+    { id: "truth", icon: "\u{1F308}", title: "\uAD81\uADF9\uC758 \uC9C4\uC2E4", hint: "\uBAA8\uB4E0 \uAC83\uC758 \uB2F5. \uC138\uACC4\uC758 \uC644\uC804\uD55C \uC9C4\uC2E4.", revealAt: 12 }
+  ];
+  var WATCHER_STAGES = [
+    { stage: 0, desc: "\uC544\uC9C1 \uC544\uBB34\uAC83\uB3C4 \uB290\uB07C\uC9C0 \uBABB\uD55C\uB2E4.", hint: null },
+    { stage: 1, desc: "\uB54C\uB54C\uB85C \uB204\uAD70\uAC00\uC758 \uC2DC\uC120\uC774 \uB290\uAEF4\uC9C4\uB2E4.", hint: "\uACE0\uC694\uD55C \uC21C\uAC04, \uB4F1 \uB4A4\uAC00 \uC11C\uB298\uD574\uC9C4\uB2E4." },
+    { stage: 2, desc: "\uBD84\uBA85\uD788 \uBB34\uC5B8\uAC00\uAC00 \uB098\uB97C \uAD00\uCC30\uD558\uACE0 \uC788\uB2E4.", hint: "\uAFC8 \uC18D\uC5D0\uC11C \uC218\uB9CE\uC740 \uB208\uB3D9\uC790\uAC00 \uB098\uB97C \uBC14\uB77C\uBCF8\uB2E4." },
+    { stage: 3, desc: "\uADF8\uAC83\uC774 \uB098\uC758 \uBAA8\uB4E0 \uD68C\uCC28\uB97C \uC9C0\uCF1C\uBD10 \uC654\uB2E4\uB294 \uAC78 \uC548\uB2E4.", hint: "\uAC70\uC6B8\uC5D0 \uBE44\uCE5C \uB0B4 \uB208\uC774 \uC7A0\uAE50 \uB2E4\uB978 \uC0C9\uC73C\uB85C \uBE5B\uB09C\uB2E4." },
+    { stage: 4, desc: "\uADF8\uAC83\uC758 \uC815\uCCB4\uB97C \uAC70\uC758 \uC54C \uAC83 \uAC19\uB2E4. \uACE7 \uB9CC\uB0A0 \uC218 \uC788\uB2E4.", hint: "\uC138\uACC4\uC758 \uB05D \uC5B4\uB518\uAC00\uC5D0\uC11C \uBAA9\uC18C\uB9AC\uAC00 \uB4E4\uB9B0\uB2E4. '\uC774\uC81C \uB54C\uAC00 \uB418\uC5C8\uB2E4.'" },
+    { stage: 5, desc: "\uAC10\uC2DC\uC790\uC758 \uC815\uCCB4\uAC00 \uBC1D\uD600\uC84C\uB2E4. \uBA54\uD0C0 \uC2A4\uD1A0\uB9AC\uAC00 \uC2DC\uC791\uB41C\uB2E4.", hint: "\uBAA8\uB4E0 \uAC83\uC774 \uC5F0\uACB0\uB41C\uB2E4." }
+  ];
+  var FATE_CARD_POOL = [
+    { id: "tower", icon: "\u{1F5FC}", name: "\uD0D1", theme: "\uBD95\uAD34\uC640 \uC7AC\uAC74", effect: "\uC774\uBC88 \uD68C\uCC28 \uBAA8\uB4E0 \uAC83\uC774 \uBB34\uB108\uC9C0\uACE0 \uB2E4\uC2DC \uC138\uC6CC\uC9C4\uB2E4. \uC704\uAE30\uAC00 \uB9CE\uC9C0\uB9CC \uBCF4\uC0C1\uB3C4 \uD06C\uB2E4.", bonus: "\uC704\uAE30 \uADF9\uBCF5 \uC2DC \uC2A4\uD0EF +5", penalty: "\uCD08\uBC18 \uC5ED\uACBD \uC99D\uAC00" },
+    { id: "star", icon: "\u2B50", name: "\uBCC4", theme: "\uD76C\uB9DD\uACFC \uC778\uB3C4", effect: "\uC5B4\uB450\uC6B4 \uC21C\uAC04\uB9C8\uB2E4 \uAE38\uC744 \uBE44\uCD94\uB294 \uBE5B\uC774 \uB098\uD0C0\uB09C\uB2E4. \uD78C\uD2B8\uC640 \uC870\uB825\uC790\uAC00 \uD48D\uBD80\uD558\uB2E4.", bonus: "NPC \uD638\uAC10 +20% \uC804\uCCB4", penalty: "\uB3C4\uC804 \uBCF4\uC0C1 \uC18C\uD3ED \uAC10\uC18C" },
+    { id: "moon", icon: "\u{1F319}", name: "\uB2EC", theme: "\uD658\uC0C1\uACFC \uC9C1\uAD00", effect: "\uAFC8\uACFC \uD604\uC2E4\uC774 \uB4A4\uC11E\uC778\uB2E4. \uC9C1\uAD00\uC774 \uAC15\uD574\uC9C0\uC9C0\uB9CC \uD604\uC2E4 \uC778\uC2DD\uC774 \uD750\uB824\uC9C4\uB2E4.", bonus: "\uC608\uC9C0 \uD310\uC815 +20", penalty: "\uD604\uC2E4 \uD310\uC815 -10" },
+    { id: "sun", icon: "\u2600\uFE0F", name: "\uD0DC\uC591", theme: "\uC2B9\uB9AC\uC640 \uC601\uAD11", effect: "\uC774\uBC88 \uD68C\uCC28 \uC601\uC6C5\uC801 \uACB0\uB9D0\uC5D0 \uAC00\uAE4C\uC6CC\uC9C4\uB2E4. \uBAA8\uB4E0 \uD589\uB3D9\uC774 \uBE5B\uB09C\uB2E4.", bonus: "\uBAA8\uB4E0 \uD310\uC815 +5", penalty: "\uC740\uC2E0\xB7\uC704\uC7A5 \uBD88\uB9AC" },
+    { id: "death", icon: "\u{1F480}", name: "\uC8FD\uC74C", theme: "\uBCC0\uD654\uC640 \uC885\uB9D0", effect: "\uC774\uBC88 \uD68C\uCC28 \uD070 \uBCC0\uD654\uC640 \uC0C1\uC2E4\uC774 \uCC3E\uC544\uC628\uB2E4. \uD558\uC9C0\uB9CC \uB05D\uC740 \uC0C8 \uC2DC\uC791\uC774\uB2E4.", bonus: "\uCD5C\uC885 \uBCF4\uC0C1 2\uBC30", penalty: "\uB3D9\uB8CC \uD76C\uC0DD \uAC00\uB2A5\uC131 \uC99D\uAC00" },
+    { id: "wheel", icon: "\u2699\uFE0F", name: "\uC6B4\uBA85\uC758 \uBC14\uD034", theme: "\uC21C\uD658\uACFC \uC804\uD658", effect: "\uC6B4\uBA85\uC774 \uBE60\uB974\uAC8C \uB3CC\uC544\uAC04\uB2E4. \uC0C1\uD669\uC774 \uADF9\uC801\uC73C\uB85C \uB4A4\uBC14\uB00C\uB294 \uC21C\uAC04\uB4E4\uC774 \uCC3E\uC544\uC628\uB2E4.", bonus: "\uC5ED\uC804 \uD310\uC815 +15", penalty: "\uC548\uC815\uC801 \uC9C4\uD589 \uBD88\uAC00" },
+    { id: "hermit", icon: "\u{1F56F}\uFE0F", name: "\uC740\uB454\uC790", theme: "\uACE0\uB3C5\uACFC \uC9C0\uD61C", effect: "\uD63C\uC790\uC11C \uAC77\uB294 \uAE38. \uB3D9\uB8CC\uBCF4\uB2E4 \uB0B4\uBA74\uC758 \uD798\uC744 \uD0A4\uC6B0\uB294 \uD68C\uCC28.", bonus: "\uB2E8\uB3C5 \uD310\uC815 +20", penalty: "\uB3D9\uB8CC \uD611\uB825 \uBCF4\uB108\uC2A4 \uAC10\uC18C" },
+    { id: "emperor", icon: "\u{1F451}", name: "\uD669\uC81C", theme: "\uC9C0\uBC30\uC640 \uC9C8\uC11C", effect: "\uC774\uBC88 \uD68C\uCC28 \uAD8C\uB825\uACFC \uC870\uC9C1\uC744 \uB2E4\uB8E8\uB294 \uC774\uC57C\uAE30\uAC00 \uC911\uC2EC\uC774 \uB41C\uB2E4.", bonus: "\uB9AC\uB354\uC2ED \uD310\uC815 +15", penalty: "\uAC1C\uC778 \uC804\uD22C \uBD88\uB9AC" },
+    { id: "lovers", icon: "\u{1F495}", name: "\uC5F0\uC778", theme: "\uC120\uD0DD\uACFC \uC778\uC5F0", effect: "\uC911\uC694\uD55C \uC778\uC5F0\uACFC\uC758 \uB9CC\uB0A8\uC774 \uD575\uC2EC\uC774 \uB41C\uB2E4. \uC120\uD0DD\uC774 \uAD00\uACC4\uB97C \uC88C\uC6B0\uD55C\uB2E4.", bonus: "\uB85C\uB9E8\uC2A4 \uD310\uC815 +25", penalty: "\uC804\uD22C \uC9D1\uC911\uB825 -5" },
+    { id: "strength", icon: "\u{1F4AA}", name: "\uD798", theme: "\uC778\uB0B4\uC640 \uADF9\uBCF5", effect: "\uC774\uBC88 \uD68C\uCC28 \uC721\uCCB4\uC640 \uC758\uC9C0\uC758 \uD55C\uACC4\uC5D0 \uB3C4\uC804\uD55C\uB2E4. \uBC84\uD2F8\uC218\uB85D \uAC15\uD574\uC9C4\uB2E4.", bonus: "\uCCB4\uB825 \uD310\uC815 +15", penalty: "\uC815\uC2E0\uB825 \uD310\uC815 -5" },
+    { id: "magician", icon: "\u{1FA84}", name: "\uB9C8\uBC95\uC0AC", theme: "\uC758\uC9C0\uC640 \uCC3D\uC870", effect: "\uC774\uBC88 \uD68C\uCC28 \uCC3D\uC758\uC801 \uD574\uACB0\uCC45\uACFC \uB9C8\uBC95\uC774 \uD575\uC2EC\uC774 \uB41C\uB2E4.", bonus: "\uB9C8\uBC95\xB7\uAE30\uC220 \uD310\uC815 +15", penalty: "\uC815\uBA74 \uB3CC\uD30C \uBD88\uB9AC" },
+    { id: "justice", icon: "\u2696\uFE0F", name: "\uC815\uC758", theme: "\uADE0\uD615\uACFC \uC2EC\uD310", effect: "\uC774\uBC88 \uD68C\uCC28 \uC120\uC545\uC758 \uADE0\uD615\uC774 \uC2DC\uD5D8\uB41C\uB2E4. \uACF5\uC815\uD55C \uD310\uB2E8\uC774 \uBCF4\uC0C1\uC744 \uBD80\uB978\uB2E4.", bonus: "\uB3C4\uB355\uC801 \uC120\uD0DD \uC2DC \uD310\uC815 +10", penalty: "\uBD88\uC758\uD55C \uD589\uB3D9 \uD398\uB110\uD2F0 \uC99D\uAC00" }
+  ];
+  var HIDEOUT_FACILITIES = [
+    { id: "campfire", icon: "\u{1F525}", name: "\uC57C\uC601\uC9C0", unlockCycle: 1, bonus: "\uD68C\uCC28 \uC2DC\uC791 \uC2DC HP +20% \uD68C\uBCF5", desc: "\uC5B4\uB514\uC11C\uB098 \uC274 \uC218 \uC788\uB294 \uC791\uC740 \uBD88\uC528." },
+    { id: "library", icon: "\u{1F4DA}", name: "\uB3C4\uC11C\uAD00", unlockCycle: 2, bonus: "\uC9C0\uC2DD \uD310\uC815 +10, \uC804\uC0DD \uD78C\uD2B8 1\uAC1C \uCD94\uAC00", desc: "\uC804\uC0DD\uC758 \uAE30\uC5B5\uC774 \uCC45\uC73C\uB85C \uC313\uC778\uB2E4." },
+    { id: "forge", icon: "\u2692\uFE0F", name: "\uB2E8\uB828\uC7A5", unlockCycle: 3, bonus: "\uC804\uD22C \uD310\uC815 +8, \uBB34\uAE30 \uB0B4\uAD6C\uB3C4 +30%", desc: "\uBAB8\uACFC \uC7A5\uBE44\uB97C \uB2E8\uB828\uD558\uB294 \uACF5\uAC04." },
+    { id: "alchemy", icon: "\u2697\uFE0F", name: "\uC5F0\uAE08\uC220\uC2E4", unlockCycle: 4, bonus: "\uD3EC\uC158 \uD6A8\uACFC +20%, \uB808\uC2DC\uD53C 1\uAC1C \uCD94\uAC00", desc: "\uC57D\uCD08\uC640 \uAD11\uC11D\uC73C\uB85C \uAE30\uC801\uC744 \uB9CC\uB4E0\uB2E4." },
+    { id: "infirmary", icon: "\u{1F3E5}", name: "\uCE58\uB8CC\uC18C", unlockCycle: 5, bonus: "\uBD80\uC0C1 \uD68C\uBCF5 \uC18D\uB3C4 +50%, HP \uCD5C\uB300\uCE58 +10", desc: "\uC0C1\uCC98\uB97C \uCE58\uC720\uD558\uB294 \uC2E0\uC131\uD55C \uACF5\uAC04." },
+    { id: "shrine", icon: "\u26E9\uFE0F", name: "\uC2E0\uC804", unlockCycle: 6, bonus: "\uCE74\uB974\uB9C8 \uD310\uC815 +10, \uC2E0\uC559 NPC \uD638\uAC10 \uC0C1\uC2B9", desc: "\uC804\uC0DD\uC758 \uC601\uD63C\uC744 \uAE30\uB9AC\uB294 \uC131\uC18C." },
+    { id: "shop", icon: "\u{1F3EA}", name: "\uBE44\uBC00 \uC0C1\uC810", unlockCycle: 7, bonus: "\uC544\uC774\uD15C \uAD6C\uB9E4\uAC00 -20%, \uD76C\uADC0 \uC544\uC774\uD15C \uB4F1\uC7A5", desc: "\uC804\uC0DD\uC758 \uC778\uC5F0\uC774 \uC6B4\uC601\uD558\uB294 \uC0C1\uC810." },
+    { id: "watchtower", icon: "\u{1F5FC}", name: "\uB9DD\uB8E8", unlockCycle: 8, bonus: "\uD0D0\uC0C9 \uD310\uC815 +15, \uAE30\uC2B5 \uBC29\uC5B4\uC728 +30%", desc: "\uC138\uACC4\uB97C \uB0B4\uB824\uB2E4\uBCF4\uB294 \uB192\uC740 \uD0D1." },
+    { id: "dungeon", icon: "\u{1F3DA}\uFE0F", name: "\uC9C0\uD558 \uAC10\uC625", unlockCycle: 10, bonus: "\uC2EC\uBB38 \uD310\uC815 +20, \uD3EC\uB85C \uC815\uBCF4 \uCD94\uCD9C", desc: "\uBE44\uBC00\uC744 \uCE90\uB0B4\uB294 \uC5B4\uB450\uC6B4 \uC7A5\uC18C." },
+    { id: "portal", icon: "\u{1F300}", name: "\uCC28\uC6D0\uBB38", unlockCycle: 12, bonus: "\uCC28\uC6D0 \uADE0\uC5F4 \uC774\uBCA4\uD2B8 \uBC1C\uC0DD\uB960 +50%", desc: "\uB2E4\uB978 \uC138\uACC4\uB85C \uD1B5\uD558\uB294 \uADE0\uC5F4." },
+    { id: "throne", icon: "\u{1F451}", name: "\uC655\uC88C", unlockCycle: 15, bonus: "\uB9AC\uB354\uC2ED \uD310\uC815 +20, NPC \uCDA9\uC131\uB3C4 +20", desc: "\uC804\uC124\uC774 \uC549\uB294 \uAD8C\uC88C." },
+    { id: "fortress", icon: "\u{1F3F0}", name: "\uC694\uC0C8", unlockCycle: 20, bonus: "\uBAA8\uB4E0 \uD310\uC815 +5, \uC804\uC0DD \uBCF8\uAC70\uC9C0 \uC644\uC131", desc: "\uD68C\uCC28\uB97C \uAC70\uCCD0 \uC138\uC6CC\uC9C4 \uC644\uC804\uD55C \uC694\uC0C8." }
+  ];
+  var EVIL_EYE_LEVELS = [
+    { level: 0, killsRequired: 0, label: "\uBD09\uC778\uB428", ability: "\uC5C6\uC74C", desc: "\uC544\uC9C1 \uAC01\uC131\uD558\uC9C0 \uC54A\uC558\uB2E4." },
+    { level: 1, killsRequired: 10, label: "\uBBF8\uC57D\uD55C \uC545\uC548", ability: "\uC0C1\uB300 HP \uB300\uB7B5 \uD30C\uC545 (\uB9CE\uC74C/\uBCF4\uD1B5/\uC801\uC74C)", desc: "\uB208\uC774 \uAC00\uB054 \uBD89\uAC8C \uBE5B\uB09C\uB2E4." },
+    { level: 2, killsRequired: 25, label: "\uC131\uC7A5\uD558\uB294 \uC545\uC548", ability: "\uC0C1\uB300 HP \uD37C\uC13C\uD2B8 \uD30C\uC545, \uC8FC\uC694 \uC57D\uC810 1\uAC1C \uAC10\uC9C0", desc: "\uB208 \uD770\uC790\uC704\uC5D0 \uD54F\uC904\uC774 \uC120\uB2E4." },
+    { level: 3, killsRequired: 50, label: "\uC644\uC131\uB41C \uC545\uC548", ability: "\uC0C1\uB300 HP \uC218\uCE58, \uBAA8\uB4E0 \uC57D\uC810, \uB2E4\uC74C \uD589\uB3D9 \uD328\uD134 \uC608\uCE21", desc: "\uD55C\uCABD \uB208\uC774 \uD56D\uC0C1 \uBD89\uB2E4." },
+    { level: 4, killsRequired: 100, label: "\uC800\uC8FC\uBC1B\uC740 \uC545\uC548", ability: "\uC989\uC0AC \uACF5\uACA9 \uC870\uAC74 \uD30C\uC545, \uC0C1\uB300 \uC6B4\uBA85\uAE4C\uC9C0 \uC5B4\uB834\uD48B\uC774 \uAC10\uC9C0", desc: "\uB450 \uB208 \uBAA8\uB450 \uAE4A\uC740 \uBD89\uC740\uC0C9. \uBCF4\uB294 \uC790\uB4E4\uC774 \uB450\uB824\uC6CC\uD55C\uB2E4." }
+  ];
+  var MOON_PHASES = [
+    { id: "new", icon: "\u{1F311}", name: "\uCD08\uC2B9\uB2EC (\uC0AD)", effect: "\uC5B4\uB460 \uC18D \uD589\uB3D9 +10, \uC740\uC2E0\xB7\uC7A0\uC785 \uBCF4\uB108\uC2A4", specialEvent: "\uADF8\uB9BC\uC790 \uC815\uB839 \uCD9C\uBAB0 \uD655\uB960 \uC0C1\uC2B9" },
+    { id: "crescent", icon: "\u{1F312}", name: "\uCD08\uC0DD\uB2EC", effect: "\uC0C8 \uC2DC\uC791 \uD310\uC815 +5, \uCCAB \uB9CC\uB0A8 NPC \uBC18\uC751 \uD638\uC758\uC801", specialEvent: "\uBC29\uB791\uC790\uC640\uC758 \uD2B9\uBCC4 \uB9CC\uB0A8" },
+    { id: "quarter1", icon: "\u{1F313}", name: "\uC0C1\uD604\uB2EC", effect: "\uC131\uC7A5 \uD310\uC815 +8, \uD559\uC2B5\xB7\uD6C8\uB828 \uD6A8\uACFC +20%", specialEvent: "\uC2A4\uC2B9 NPC \uB4F1\uC7A5 \uD655\uB960 \uC0C1\uC2B9" },
+    { id: "gibbous1", icon: "\u{1F314}", name: "\uC0C1\uD604\uB9DD\uAC04\uB2EC", effect: "\uC804\uD22C\uB825 \uC131\uC7A5 +10, \uAC15\uD574\uC9C0\uB294 \uB290\uB08C", specialEvent: "\uAC15\uC801\uACFC\uC758 \uC870\uC6B0 \uC99D\uAC00" },
+    { id: "full", icon: "\u{1F315}", name: "\uBCF4\uB984\uB2EC", effect: "\uBAA8\uB4E0 \uB2A5\uB825\uCE58 \uCD5C\uACE0\uC870, \uD558\uC9C0\uB9CC \uC57C\uC0DD\uC758 \uAE30\uC6B4 \uCDA9\uB9CC", specialEvent: "\uB291\uB300\uC778\uAC04\xB7\uC57C\uC218 \uC774\uBCA4\uD2B8 \uD655\uB960 \uB300\uD3ED \uC0C1\uC2B9" },
+    { id: "gibbous2", icon: "\u{1F316}", name: "\uD558\uD604\uB9DD\uAC04\uB2EC", effect: "\uC9C1\uAD00 +10, \uC228\uACA8\uC9C4 \uAC83\uB4E4\uC774 \uBCF4\uC778\uB2E4", specialEvent: "\uBE44\uBC00\xB7\uC74C\uBAA8 \uAD00\uB828 \uC774\uBCA4\uD2B8 \uC99D\uAC00" },
+    { id: "quarter2", icon: "\u{1F317}", name: "\uD558\uD604\uB2EC", effect: "\uC9C0\uD61C \uD310\uC815 +8, \uACFC\uAC70 \uAE30\uC5B5 \uC811\uADFC\uC131 \uD5A5\uC0C1", specialEvent: "\uC804\uC0DD \uAE30\uC5B5 \uC774\uBCA4\uD2B8 \uBC1C\uC0DD\uB960 \uC0C1\uC2B9" },
+    { id: "crescent2", icon: "\u{1F318}", name: "\uADF8\uBBD0\uB2EC", effect: "\uB9C8\uC9C0\uB9C9 \uAE30\uD68C \uD310\uC815 +15, \uC5ED\uC804 \uAC00\uB2A5\uC131 \uC99D\uAC00", specialEvent: "\uCD5C\uD6C4\uC758 \uC77C\uC804 \uC774\uBCA4\uD2B8 \uAC15\uD654" }
+  ];
+
+  // src/progression/018-5170번-환생-누적-시스템.js
+  var STAR_SIGN_KEY = "taleforge-star-sign";
+  var loadStarSign = () => {
+    const r = lsGet(STAR_SIGN_KEY);
+    return r ? JSON.parse(r) : null;
+  };
+  var saveStarSign = (s) => lsSet(STAR_SIGN_KEY, JSON.stringify(s));
+  var assignStarSign = (deathMonth) => {
+    let month = deathMonth !== void 0 ? deathMonth : (/* @__PURE__ */ new Date()).getMonth();
+    if (month >= 12) month = month - 1;
+    if (month < 0) month = 0;
+    const idx = month % STAR_SIGNS.length;
+    const sign = STAR_SIGNS[idx];
+    saveStarSign({ ...sign, assignedAt: (/* @__PURE__ */ new Date()).toISOString() });
+    return sign;
+  };
+  var getStarSign = () => {
+    const cycle = loadCycleCount();
+    if (cycle < 1) return null;
+    return loadStarSign();
+  };
+  var PAST_LANGUAGE_KEY = "taleforge-past-language";
+  var loadPastLanguage = () => {
+    const r = lsGet(PAST_LANGUAGE_KEY);
+    return r ? JSON.parse(r) : { level: 0, phrases: [], unlockedAt: null };
+  };
+  var savePastLanguage = (l) => lsSet(PAST_LANGUAGE_KEY, JSON.stringify(l));
+  var growPastLanguage = (cycle) => {
+    const lang = loadPastLanguage();
+    const newLevel = Math.min(10, Math.floor(cycle / 2));
+    if (newLevel > (lang.level || 0)) {
+      lang.level = newLevel;
+      lang.unlockedAt = (/* @__PURE__ */ new Date()).toISOString();
+      const newPhrases = PAST_LANGUAGE_PHRASES.filter((p) => p.level <= newLevel);
+      lang.phrases = newPhrases;
+      savePastLanguage(lang);
+    }
+    return lang;
+  };
+  var getPastLanguage = () => {
+    const cycle = loadCycleCount();
+    if (cycle < 3) return null;
+    return loadPastLanguage();
+  };
+  var IDENTITY_VAULT_KEY = "taleforge-identity-vault";
+  var loadIdentityVault = () => {
+    const r = lsGet(IDENTITY_VAULT_KEY);
+    return r ? JSON.parse(r) : [];
+  };
+  var saveIdentityVault = (v) => lsSet(IDENTITY_VAULT_KEY, JSON.stringify(v));
+  var recordIdentity = (identityType, alias, scenario) => {
+    if (!identityType) return;
+    const vault = loadIdentityVault();
+    const archetype = IDENTITY_ARCHETYPES.find((a) => a.id === identityType);
+    if (!archetype) return;
+    const existing = vault.find((v) => v.id === identityType);
+    if (existing) {
+      existing.useCount = (existing.useCount || 1) + 1;
+      existing.polished = existing.useCount >= 3;
+    } else {
+      vault.push({ ...archetype, alias: alias || archetype.label, useCount: 1, polished: false, scenario: scenario || "", recordedAt: (/* @__PURE__ */ new Date()).toISOString() });
+    }
+    saveIdentityVault(vault);
+  };
+  var getIdentityVault = () => {
+    const cycle = loadCycleCount();
+    if (cycle < 1) return [];
+    return loadIdentityVault();
+  };
+  var RIFT_KEY = "taleforge-dimensional-rift";
+  var loadRifts = () => {
+    const r = lsGet(RIFT_KEY);
+    return r ? JSON.parse(r) : { totalRifts: 0, encounters: [] };
+  };
+  var saveRifts = (r) => lsSet(RIFT_KEY, JSON.stringify(r));
+  var recordRiftEncounter = (scenarioId, cycle) => {
+    const rifts = loadRifts();
+    rifts.totalRifts = (rifts.totalRifts || 0) + 1;
+    const scenario = RIFT_SCENARIOS.find((s) => s.id === scenarioId) || RIFT_SCENARIOS[rifts.totalRifts % RIFT_SCENARIOS.length];
+    rifts.encounters = rifts.encounters || [];
+    rifts.encounters.push({ ...scenario, cycle: cycle || loadCycleCount(), encounteredAt: (/* @__PURE__ */ new Date()).toISOString() });
+    saveRifts(rifts);
+  };
+  var getRiftStatus = () => {
+    const cycle = loadCycleCount();
+    if (cycle < 5) return null;
+    const rifts = loadRifts();
+    const nextRift = RIFT_SCENARIOS[rifts.totalRifts % RIFT_SCENARIOS.length];
+    return { ...rifts, nextRift, available: cycle >= 5 };
+  };
+  var RECIPE_BOOK_KEY = "taleforge-recipe-book";
+  var loadRecipeBook = () => {
+    const r = lsGet(RECIPE_BOOK_KEY);
+    return r ? JSON.parse(r) : [];
+  };
+  var saveRecipeBook = (b) => lsSet(RECIPE_BOOK_KEY, JSON.stringify(b));
+  var updateRecipeBook = (cycle) => {
+    const book = loadRecipeBook();
+    const newTiers = RECIPE_TIERS.filter((t) => t.minCycle <= cycle && !book.find((b) => b.tier === t.tier));
+    newTiers.forEach((t) => book.push({ ...t, unlockedAt: (/* @__PURE__ */ new Date()).toISOString(), discoveredCycle: cycle }));
+    saveRecipeBook(book);
+    return book;
+  };
+  var getRecipeBook = () => {
+    const cycle = loadCycleCount();
+    if (cycle < 1) return [];
+    return loadRecipeBook();
+  };
+  var ACHIEVEMENT_RATE_KEY = "taleforge-achievement-rate";
+  var loadAchievementRates = () => {
+    const r = lsGet(ACHIEVEMENT_RATE_KEY);
+    return r ? JSON.parse(r) : [];
+  };
+  var saveAchievementRates = (a) => lsSet(ACHIEVEMENT_RATE_KEY, JSON.stringify(a));
+  var getAchievementBonus = (rate) => {
+    if (rate >= 90) return { icon: "\u{1F3C6}", label: "\uC644\uC804 \uB2EC\uC131", bonus: "\uB2E4\uC74C \uD68C\uCC28 \uC2DC\uC791 \uC2A4\uD0EF +5 \uC804\uCCB4, \uACE8\uB4DC +200", penalty: null };
+    if (rate >= 70) return { icon: "\u2B50", label: "\uC6B0\uC218 \uB2EC\uC131", bonus: "\uB2E4\uC74C \uD68C\uCC28 \uC2DC\uC791 \uC2A4\uD0EF +3 \uC804\uCCB4", penalty: null };
+    if (rate >= 50) return { icon: "\u2705", label: "\uBCF4\uD1B5 \uB2EC\uC131", bonus: "\uB2E4\uC74C \uD68C\uCC28 \uC2DC\uC791 \uC2A4\uD0EF +1 \uC804\uCCB4", penalty: null };
+    if (rate >= 30) return { icon: "\u26A0\uFE0F", label: "\uBD80\uC9C4 \uB2EC\uC131", bonus: null, penalty: "\uB2E4\uC74C \uD68C\uCC28 \uC2DC\uC791 \uC2A4\uD0EF -2 \uC804\uCCB4" };
+    return { icon: "\u{1F480}", label: "\uC2E4\uD328", bonus: null, penalty: "\uB2E4\uC74C \uD68C\uCC28 \uC2DC\uC791 \uC2A4\uD0EF -5, NPC \uC2E0\uB8B0\uB3C4 \uD558\uB77D" };
+  };
+  var recordAchievementRate = (rate, scenario) => {
+    const rates = loadAchievementRates();
+    rates.push({ rate: Math.round(rate), scenario: scenario || "", recordedAt: (/* @__PURE__ */ new Date()).toISOString(), bonus: getAchievementBonus(rate) });
+    saveAchievementRates(rates);
+  };
+  var getLastAchievementBonus = () => {
+    const cycle = loadCycleCount();
+    if (cycle < 1) return null;
+    const rates = loadAchievementRates();
+    if (!rates.length) return null;
+    const last = rates[rates.length - 1];
+    return { ...last, ...getAchievementBonus(last.rate) };
+  };
+  var ROMANCE_LEGACY_KEY = "taleforge-romance-legacy";
+  var loadRomanceLegacy = () => {
+    const r = lsGet(ROMANCE_LEGACY_KEY);
+    return r ? JSON.parse(r) : [];
+  };
+  var saveRomanceLegacy = (l) => lsSet(ROMANCE_LEGACY_KEY, JSON.stringify(l));
+  var recordRomanceLegacy = (npcName, depth, scenario) => {
+    if (!npcName || depth < 1) return;
+    const legacy = loadRomanceLegacy();
+    const existing = legacy.find((l) => l.npcName === npcName);
+    if (existing) {
+      existing.depth = Math.min(5, (existing.depth || 1) + 1);
+      existing.encounters = (existing.encounters || 1) + 1;
+    } else {
+      const fate = ROMANCE_FATES[Math.min(4, Math.max(0, depth - 1))];
+      legacy.push({ npcName, depth: Math.min(5, depth), encounters: 1, scenario: scenario || "", fate, recordedAt: (/* @__PURE__ */ new Date()).toISOString() });
+    }
+    saveRomanceLegacy(legacy);
+  };
+  var getRomanceLegacy = () => {
+    const cycle = loadCycleCount();
+    if (cycle < 1) return [];
+    return loadRomanceLegacy().map((l) => ({ ...l, fate: ROMANCE_FATES[Math.min(4, (l.depth || 1) - 1)] }));
+  };
+  var BESTIARY_KEY = "taleforge-bestiary";
+  var loadBestiary = () => {
+    const r = lsGet(BESTIARY_KEY);
+    return r ? JSON.parse(r) : {};
+  };
+  var saveBestiary = (b) => lsSet(BESTIARY_KEY, JSON.stringify(b));
+  var getBestiaryInsight = (killCount) => {
+    if (killCount >= 20) return { level: "\uC804\uBB38\uAC00", icon: "\u{1F480}", desc: "\uC774 \uBAAC\uC2A4\uD130\uC758 \uBAA8\uB4E0 \uC57D\uC810\uACFC \uD328\uD134\uC744 \uAFF0\uB6AB\uACE0 \uC788\uB2E4.", bonus: "\uD574\uB2F9 \uBAAC\uC2A4\uD130 \uC804\uD22C \uD310\uC815 +25" };
+    if (killCount >= 10) return { level: "\uC219\uB828", icon: "\u2694\uFE0F", desc: "\uC8FC\uC694 \uC57D\uC810\uC744 \uD30C\uC545\uD558\uACE0 \uC788\uB2E4.", bonus: "\uD574\uB2F9 \uBAAC\uC2A4\uD130 \uC804\uD22C \uD310\uC815 +15" };
+    if (killCount >= 5) return { level: "\uC775\uC219", icon: "\u{1F5E1}\uFE0F", desc: "\uAE30\uBCF8 \uD328\uD134 \uC815\uB3C4\uB294 \uC54C\uACE0 \uC788\uB2E4.", bonus: "\uD574\uB2F9 \uBAAC\uC2A4\uD130 \uC804\uD22C \uD310\uC815 +8" };
+    if (killCount >= 2) return { level: "\uACBD\uD5D8", icon: "\u{1F441}\uFE0F", desc: "\uC774 \uBAAC\uC2A4\uD130\uB97C \uBCF8 \uC801\uC774 \uC788\uB2E4.", bonus: "\uAE30\uC2B5 \uD53C\uD574 \uD655\uB960 \uAC10\uC18C" };
+    return { level: "\uCD08\uBA74", icon: "\u2753", desc: "\uCC98\uC74C \uBCF4\uB294 \uBAAC\uC2A4\uD130\uB2E4.", bonus: "\uC5C6\uC74C" };
+  };
+  var recordMonsterKill = (monsterName, monsterType) => {
+    if (!monsterName) return;
+    const bestiary = loadBestiary();
+    if (!bestiary[monsterName]) {
+      bestiary[monsterName] = { name: monsterName, type: monsterType || "\uC77C\uBC18", killCount: 0, firstKill: (/* @__PURE__ */ new Date()).toISOString() };
+    }
+    bestiary[monsterName].killCount = (bestiary[monsterName].killCount || 0) + 1;
+    bestiary[monsterName].lastKill = (/* @__PURE__ */ new Date()).toISOString();
+    saveBestiary(bestiary);
+  };
+  var getBestiaryStatus = (monsterName) => {
+    if (!monsterName) return null;
+    const bestiary = loadBestiary();
+    const entry = bestiary[monsterName];
+    if (!entry) return { name: monsterName, killCount: 0, insight: getBestiaryInsight(0) };
+    return { ...entry, insight: getBestiaryInsight(entry.killCount) };
+  };
+  var getFullBestiary = () => {
+    const cycle = loadCycleCount();
+    if (cycle < 1) return {};
+    const bestiary = loadBestiary();
+    const total = Object.keys(bestiary).length;
+    const totalKills = Object.values(bestiary).reduce((sum, e) => sum + (e.killCount || 0), 0);
+    return { entries: bestiary, total, totalKills, completionBonus: total >= 20 ? "\uB3C4\uAC10 \uC644\uC131: \uBAA8\uB4E0 \uBAAC\uC2A4\uD130 \uC804\uD22C \uD310\uC815 +5" : null };
+  };
+  var MEMORY_MERCHANT_KEY = "taleforge-memory-merchant";
+  var loadMemoryMerchant = () => {
+    const r = lsGet(MEMORY_MERCHANT_KEY);
+    return r ? JSON.parse(r) : { visits: 0, purchasedHints: [] };
+  };
+  var getMemoryMerchantStatus = () => {
+    const cycle = loadCycleCount();
+    if (cycle < 4) return null;
+    const merchant = loadMemoryMerchant();
+    return { ...merchant, availableHints: MERCHANT_HINTS, appears: cycle >= 4 };
+  };
+  var TIME_TOKEN_KEY = "taleforge-time-token";
+  var loadTimeTokens = () => {
+    const r = lsGet(TIME_TOKEN_KEY);
+    return r ? JSON.parse(r) : { tokens: 0, used: 0, totalEarned: 0 };
+  };
+  var saveTimeTokens = (t) => lsSet(TIME_TOKEN_KEY, JSON.stringify(t));
+  var earnTimeToken = (conditionId) => {
+    const tokens = loadTimeTokens();
+    if ((tokens.tokens || 0) >= 10) return false;
+    tokens.tokens = (tokens.tokens || 0) + 1;
+    tokens.totalEarned = (tokens.totalEarned || 0) + 1;
+    tokens.lastEarned = { conditionId, earnedAt: (/* @__PURE__ */ new Date()).toISOString() };
+    saveTimeTokens(tokens);
+    return true;
+  };
+  var useTimeToken = () => {
+    const tokens = loadTimeTokens();
+    if ((tokens.tokens || 0) <= 0) return false;
+    tokens.tokens -= 1;
+    tokens.used = (tokens.used || 0) + 1;
+    tokens.lastUsed = (/* @__PURE__ */ new Date()).toISOString();
+    saveTimeTokens(tokens);
+    return true;
+  };
+  var resetTimeTokens = () => {
+    const tokens = loadTimeTokens();
+    tokens.tokens = 0;
+    saveTimeTokens(tokens);
+  };
+  var getTimeTokenStatus = () => {
+    return loadTimeTokens();
+  };
+  var SURVIVOR_COMPANIONS_KEY = "taleforge-survivor-companions";
+  var loadSurvivorCompanions = () => {
+    const r = lsGet(SURVIVOR_COMPANIONS_KEY);
+    return r ? JSON.parse(r) : [];
+  };
+  var saveSurvivorCompanions = (c) => lsSet(SURVIVOR_COMPANIONS_KEY, JSON.stringify(c));
+  var recordSurvivorCompanion = (npcName, bond, survived, scenario) => {
+    if (!npcName || !survived) return;
+    const companions = loadSurvivorCompanions();
+    const existing = companions.find((c) => c.npcName === npcName);
+    if (existing) {
+      existing.encounters = (existing.encounters || 1) + 1;
+      existing.stage = Math.min(4, (existing.stage || 0) + 1);
+      existing.bond = Math.min(100, (existing.bond || bond) + 10);
+    } else {
+      companions.push({ npcName, bond: bond || 30, survived: true, encounters: 1, stage: 0, scenario: scenario || "", recordedAt: (/* @__PURE__ */ new Date()).toISOString() });
+    }
+    saveSurvivorCompanions(companions);
+  };
+  var getSurvivorCompanions = () => {
+    const cycle = loadCycleCount();
+    if (cycle < 1) return [];
+    return loadSurvivorCompanions().map((c) => ({ ...c, memoryStage: COMPANION_MEMORY_STAGES[Math.min(4, c.stage || 0)] }));
+  };
+  var UNDYING_GAUGE_KEY = "taleforge-undying-gauge";
+  var loadUndyingGauge = () => {
+    const r = lsGet(UNDYING_GAUGE_KEY);
+    return r ? JSON.parse(r) : { gauge: 0, maxGauge: 10, passiveReady: false, passiveUsedThisCycle: false, totalNearDeaths: 0 };
+  };
+  var saveUndyingGauge = (g) => lsSet(UNDYING_GAUGE_KEY, JSON.stringify(g));
+  var fillUndyingGauge = (amount) => {
+    const g = loadUndyingGauge();
+    g.gauge = Math.min(g.maxGauge || 10, (g.gauge || 0) + (amount || 1));
+    g.totalNearDeaths = (g.totalNearDeaths || 0) + 1;
+    g.passiveReady = g.gauge >= (g.maxGauge || 10);
+    saveUndyingGauge(g);
+    return g;
+  };
+  var triggerUndyingPassive = () => {
+    const g = loadUndyingGauge();
+    if (!g.passiveReady || g.passiveUsedThisCycle) return false;
+    g.passiveUsedThisCycle = true;
+    g.passiveReady = false;
+    g.gauge = 0;
+    saveUndyingGauge(g);
+    return true;
+  };
+  var resetUndyingGaugeCycle = () => {
+    const g = loadUndyingGauge();
+    g.passiveUsedThisCycle = false;
+    saveUndyingGauge(g);
+  };
+  var getUndyingGaugeStatus = () => loadUndyingGauge();
+  var LANGUAGE_UNLOCK_KEY = "taleforge-languages";
+  var loadLanguages = () => {
+    const r = lsGet(LANGUAGE_UNLOCK_KEY);
+    return r ? JSON.parse(r) : [];
+  };
+  var saveLanguages = (l) => lsSet(LANGUAGE_UNLOCK_KEY, JSON.stringify(l));
+  var unlockLanguage = (languageId, bondLevel, scenario) => {
+    if (!languageId) return;
+    const langs = loadLanguages();
+    const def = LANGUAGE_DEFS.find((l) => l.id === languageId);
+    if (!def || bondLevel < def.minBond) return;
+    if (langs.find((l) => l.id === languageId)) return;
+    langs.push({ ...def, bondLevel, scenario: scenario || "", unlockedAt: (/* @__PURE__ */ new Date()).toISOString() });
+    saveLanguages(langs);
+  };
+  var getUnlockedLanguages = () => {
+    const cycle = loadCycleCount();
+    if (cycle < 1) return [];
+    return loadLanguages();
+  };
+  function getAncientLangBLS() {
+    try {
+      const langs = loadLanguages();
+      if (!langs.length) return "";
+      const lines = langs.map((l) => `${l.icon} ${l.name}: ${l.bonus}`);
+      return "\n\n[\u{1F5E3}\uFE0F \uC2B5\uB4DD\uD55C \uC5B8\uC5B4]\n" + lines.join("\n") + "\n\uD574\uB2F9 \uC5B8\uC5B4\uAC00 \uD544\uC694\uD55C \uC0C1\uD669(\uBE44\uBB38 \uD574\uB3C5, \uC885\uC871 NPC\uC640\uC758 \uAE4A\uC740 \uB300\uD654 \uB4F1)\uC5D0\uC11C \uC774 \uB2A5\uB825\uC744 \uD65C\uC6A9\uD55C \uC11C\uC0AC\uB97C \uC804\uAC1C\uD558\uB77C.";
+    } catch (e) {
+      return "";
+    }
+  }
+  window.getAncientLangBLS = getAncientLangBLS;
+  window.getAncientLangBLS = getAncientLangBLS;
+  function getDiplomacyBLS() {
+    try {
+      const d = typeof loadDemesne === "function" ? loadDemesne() : null;
+      if (!d || !d.established || !(d.vassals || []).length) return "";
+      const lines = d.vassals.map((v) => {
+        const bondLabel = (v.bond || 30) >= 70 ? "\uCDA9\uC131" : (v.bond || 30) >= 40 ? "\uC911\uB9BD" : "\uBD88\uB9CC";
+        return `${v.name || "\uBD09\uC2E0"}(${v.role || "\uAE30\uC0AC"}): \uC720\uB300 ${v.bond || 30} \u2014 ${bondLabel}`;
+      });
+      return "\n\n[\u{1F91D} \uBD09\uC2E0 \uC678\uAD50 \uD604\uD669]\n" + lines.join("\n");
+    } catch (e) {
+      return "";
+    }
+  }
+  window.getDiplomacyBLS = getDiplomacyBLS;
+  window.getDiplomacyBLS = getDiplomacyBLS;
+  function getLoopWorldBLS() {
+    try {
+      const cycle = typeof loadCycleCount === "function" ? loadCycleCount() : 0;
+      if (cycle < 1) return "";
+      return `
+
+[\u{1F504} \uB8E8\uD504 ${cycle}\uD68C\uCC28] \uC774 \uC138\uACC4\uB294 ${cycle}\uBC88\uC9F8 \uC21C\uD658\uC744 \uACAA\uACE0 \uC788\uB2E4. \uC8FC\uC778\uACF5\uC740 \uC804\uC0DD\uC758 \uAE30\uC5B5\uACFC \uB2A5\uB825 \uC77C\uBD80\uB97C \uAC04\uC9C1\uD558\uACE0 \uC788\uB2E4.`;
+    } catch (e) {
+      return "";
+    }
+  }
+  window.getLoopWorldBLS = getLoopWorldBLS;
+  window.getLoopWorldBLS = getLoopWorldBLS;
+  var BARD_LEGEND_KEY = "taleforge-bard-legend";
+  var loadBardLegend = () => {
+    const r = lsGet(BARD_LEGEND_KEY);
+    return r ? JSON.parse(r) : { verses: [], fame: 0, distortionLevel: 0 };
+  };
+  var saveBardLegend = (l) => lsSet(BARD_LEGEND_KEY, JSON.stringify(l));
+  var addBardVerse = (event, characterName, scenario) => {
+    if (!event) return;
+    const legend = loadBardLegend();
+    legend.fame = (legend.fame || 0) + 10;
+    legend.distortionLevel = Math.min(4, Math.floor((legend.fame || 0) / 30));
+    legend.verses = legend.verses || [];
+    const distortion = LEGEND_DISTORTION_LEVELS[legend.distortionLevel];
+    legend.verses.push({ event, characterName: characterName || "\uC804\uC0DD\uC758 \uC601\uC6C5", scenario: scenario || "", distortion: distortion.label, addedAt: (/* @__PURE__ */ new Date()).toISOString() });
+    saveBardLegend(legend);
+  };
+  var getBardLegendStatus = () => {
+    const cycle = loadCycleCount();
+    if (cycle < 2) return null;
+    const legend = loadBardLegend();
+    const distortion = LEGEND_DISTORTION_LEVELS[legend.distortionLevel || 0];
+    return { ...legend, distortionData: distortion };
+  };
+  var MYSTERY_PUZZLE_KEY = "taleforge-mystery-puzzle";
+  var loadMysteryPuzzle = () => {
+    const r = lsGet(MYSTERY_PUZZLE_KEY);
+    return r ? JSON.parse(r) : { pieces: [], totalPieces: 12, solved: false };
+  };
+  var saveMysteryPuzzle = (p) => lsSet(MYSTERY_PUZZLE_KEY, JSON.stringify(p));
+  var collectMysteryPiece = (cycle) => {
+    const puzzle = loadMysteryPuzzle();
+    const piece = MYSTERY_PIECES.find((p) => p.revealAt === cycle && !puzzle.pieces.find((pp) => pp.id === p.id));
+    if (piece) {
+      puzzle.pieces.push({ ...piece, collectedAt: (/* @__PURE__ */ new Date()).toISOString(), cycle });
+      puzzle.solved = puzzle.pieces.length >= puzzle.totalPieces;
+      saveMysteryPuzzle(puzzle);
+      return piece;
+    }
+    return null;
+  };
+  var getMysteryPuzzleStatus = () => {
+    const cycle = loadCycleCount();
+    if (cycle < 1) return null;
+    const puzzle = loadMysteryPuzzle();
+    return { ...puzzle, nextPiece: MYSTERY_PIECES.find((p) => p.revealAt === cycle + 1) };
+  };
+  var WATCHER_GAZE_KEY = "taleforge-watcher-gaze";
+  var loadWatcherGaze = () => {
+    const r = lsGet(WATCHER_GAZE_KEY);
+    return r ? JSON.parse(r) : { gazeCount: 0, revealed: false, stage: 0 };
+  };
+  var saveWatcherGaze = (w) => lsSet(WATCHER_GAZE_KEY, JSON.stringify(w));
+  var progressWatcherGaze = (cycle) => {
+    const gaze = loadWatcherGaze();
+    if (cycle < 6) return null;
+    const newStage = Math.min(5, Math.floor((cycle - 6) / 2));
+    if (newStage > (gaze.stage || 0)) {
+      gaze.stage = newStage;
+      gaze.gazeCount = (gaze.gazeCount || 0) + 1;
+      if (newStage >= 5) gaze.revealed = true;
+      saveWatcherGaze(gaze);
+    }
+    return { ...gaze, stageData: WATCHER_STAGES[gaze.stage || 0] };
+  };
+  var getWatcherGazeStatus = () => {
+    const cycle = loadCycleCount();
+    if (cycle < 6) return null;
+    const gaze = loadWatcherGaze();
+    return { ...gaze, stageData: WATCHER_STAGES[gaze.stage || 0] };
+  };
+  var FATE_CARD_KEY = "taleforge-fate-card";
+  var loadFateCard = () => {
+    const r = lsGet(FATE_CARD_KEY);
+    return r ? JSON.parse(r) : null;
+  };
+  var saveFateCard = (c) => lsSet(FATE_CARD_KEY, JSON.stringify(c));
+  var drawFateCards = () => {
+    const shuffled = [...FATE_CARD_POOL].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, 3);
+  };
+  var selectFateCard = (cardId) => {
+    const card = FATE_CARD_POOL.find((c) => c.id === cardId);
+    if (!card) return null;
+    saveFateCard({ ...card, selectedAt: (/* @__PURE__ */ new Date()).toISOString(), cycle: loadCycleCount() });
+    return card;
+  };
+  var getCurrentFateCard = () => {
+    return loadFateCard();
+  };
+  var HIDEOUT_KEY = "taleforge-hideout";
+  var loadHideout = () => {
+    const r = lsGet(HIDEOUT_KEY);
+    return r ? JSON.parse(r) : { facilities: [], level: 0, totalUpgrades: 0 };
+  };
+  var saveHideout = (h) => lsSet(HIDEOUT_KEY, JSON.stringify(h));
+  var upgradeHideout = (cycle) => {
+    const hideout = loadHideout();
+    const newFacilities = HIDEOUT_FACILITIES.filter((f) => f.unlockCycle <= cycle && !hideout.facilities.find((hf) => hf.id === f.id));
+    newFacilities.forEach((f) => {
+      hideout.facilities.push({ ...f, unlockedAt: (/* @__PURE__ */ new Date()).toISOString(), unlockedCycle: cycle });
+      hideout.totalUpgrades = (hideout.totalUpgrades || 0) + 1;
+    });
+    hideout.level = hideout.facilities.length;
+    saveHideout(hideout);
+    return { newFacilities, hideout };
+  };
+  var getHideoutStatus = () => {
+    const cycle = loadCycleCount();
+    if (cycle < 1) return null;
+    const hideout = loadHideout();
+    const nextFacility = HIDEOUT_FACILITIES.find((f) => f.unlockCycle > cycle && !hideout.facilities.find((hf) => hf.id === f.id));
+    return { ...hideout, nextFacility };
+  };
+  var EVIL_EYE_KEY = "taleforge-evil-eye";
+  var loadEvilEye = () => {
+    const r = lsGet(EVIL_EYE_KEY);
+    return r ? JSON.parse(r) : { killCount: 0, awakened: false, level: 0 };
+  };
+  var saveEvilEye = (e) => lsSet(EVIL_EYE_KEY, JSON.stringify(e));
+  var recordEvilEyeKill = (count) => {
+    const eye = loadEvilEye();
+    eye.killCount = (eye.killCount || 0) + (count || 1);
+    const newLevel = EVIL_EYE_LEVELS.reduce((acc, l) => eye.killCount >= l.killsRequired ? l.level : acc, 0);
+    const didAwaken = newLevel > (eye.level || 0);
+    eye.level = newLevel;
+    eye.awakened = newLevel > 0;
+    if (didAwaken) eye.awakenedAt = (/* @__PURE__ */ new Date()).toISOString();
+    saveEvilEye(eye);
+    return { ...eye, levelData: EVIL_EYE_LEVELS[eye.level], didAwaken };
+  };
+  var getEvilEyeStatus = () => {
+    const eye = loadEvilEye();
+    return { ...eye, levelData: EVIL_EYE_LEVELS[eye.level || 0], nextLevel: EVIL_EYE_LEVELS[(eye.level || 0) + 1] || null };
+  };
+  var MOON_PHASE_KEY = "taleforge-moon-phase";
+  var loadMoonPhase = () => {
+    const r = lsGet(MOON_PHASE_KEY);
+    return r ? JSON.parse(r) : null;
+  };
+  var saveMoonPhase = (m) => lsSet(MOON_PHASE_KEY, JSON.stringify(m));
+  var assignMoonPhase = (deathTimestamp) => {
+    const date = deathTimestamp ? new Date(deathTimestamp) : /* @__PURE__ */ new Date();
+    const day = date.getDate();
+    const phaseIdx = Math.floor(day / 30 * 8) % 8;
+    const phase = MOON_PHASES[phaseIdx];
+    saveMoonPhase({ ...phase, assignedAt: (/* @__PURE__ */ new Date()).toISOString(), deathDay: day });
+    return phase;
+  };
+  var getMoonPhase = () => {
+    const cycle = loadCycleCount();
+    if (cycle < 1) return null;
+    return loadMoonPhase();
+  };
+
+  // src/npc/211-8-로맨스-시스템.js
+  var ROMANCE_KEY = "tf-romance";
+  var ROMANCE_POINTS_KEY = "tf-romance-points";
+  var ROMANCE_EVENTS_KEY = "tf-romance-events";
+  window.ROMANCE_STAGES = ROMANCE_STAGES;
+  function loadRomance() {
+    try {
+      const pts = lsGet(ROMANCE_POINTS_KEY);
+      const evs = lsGet(ROMANCE_EVENTS_KEY);
+      if (pts) {
+        const pObj = JSON.parse(pts);
+        const eObj = evs ? JSON.parse(evs) : {};
+        const merged = {};
+        Object.keys(pObj).forEach((name) => {
+          merged[name] = { ...pObj[name], events: eObj[name] || [] };
+        });
+        return merged;
+      }
+      return JSON.parse(lsGet(ROMANCE_KEY) || "{}");
+    } catch (e) {
+      return {};
+    }
+  }
+  window.loadRomance = loadRomance;
+  function saveRomance(d) {
+    try {
+      const points = {};
+      const events = {};
+      Object.keys(d).forEach((name) => {
+        points[name] = { points: d[name].points || 0, stage: d[name].stage || 0 };
+        events[name] = d[name].events || [];
+      });
+      lsSet(ROMANCE_POINTS_KEY, JSON.stringify(points));
+      lsSet(ROMANCE_EVENTS_KEY, JSON.stringify(events));
+      lsSet(ROMANCE_KEY, JSON.stringify(d));
+    } catch (e) {
+    }
+  }
+  window.saveRomance = saveRomance;
+  function addRomancePoint(npcName, delta) {
+    try {
+      const rom = loadRomance();
+      if (!rom[npcName]) rom[npcName] = { points: 0, stage: 0, events: [] };
+      rom[npcName].points = Math.max(0, Math.min(100, (rom[npcName].points || 0) + delta));
+      checkRomanceStage(npcName, rom);
+      saveRomance(rom);
+    } catch (e) {
+    }
+  }
+  window.addRomancePoint = addRomancePoint;
+  function checkRomanceStage(npcName, rom) {
+    try {
+      rom = rom || loadRomance();
+      const r = rom[npcName];
+      if (!r) return;
+      const newStage = [...ROMANCE_STAGES].reverse().find((s) => r.points >= s.threshold);
+      if (newStage && newStage.level !== r.stage) {
+        const prev = ROMANCE_STAGES[r.stage];
+        r.stage = newStage.level;
+        toast(`${npcName}\uACFC\uC758 \uAD00\uACC4: ${prev?.name || ""} \u2192 ${newStage.name}`, 3e3, newStage);
+        if (newStage.level >= 4) {
+          unlockAchievement("romance_bloom");
+          triggerRomanceEvent(npcName, newStage);
+        }
+        if (newStage.level >= 5) {
+          unlockAchievement("romance_max");
+        }
+      }
+    } catch (e) {
+    }
+  }
+  window.checkRomanceStage = checkRomanceStage;
+  function triggerRomanceEvent(npcName, stage) {
+    try {
+      if (typeof addButterflyEffect === "function")
+        addButterflyEffect({ desc: `${npcName}\uC640 ${stage.name} \uAD00\uACC4 \uB3C4\uB2EC`, impact: 3, worldChange: "\uC778\uC5F0\uC774 \uAE4A\uC5B4\uC84C\uB2E4" });
+      if (typeof recordRomanceLegacy === "function") recordRomanceLegacy(npcName, stage.level, S.scenario?.id);
+      if (typeof setRedThread === "function") setRedThread(npcName, stage.level * 20, S.scenario?.id);
+    } catch (e) {
+    }
+  }
+  window.triggerRomanceEvent = triggerRomanceEvent;
+  function getRomanceStatus(npcName) {
+    try {
+      const rom = loadRomance();
+      const r = rom[npcName];
+      if (!r) return ROMANCE_STAGES[0];
+      return ROMANCE_STAGES[r.stage] || ROMANCE_STAGES[0];
+    } catch (e) {
+      return ROMANCE_STAGES[0];
+    }
+  }
+  window.getRomanceStatus = getRomanceStatus;
+  function getRomanceBLS() {
+    try {
+      const rom = typeof loadRomance === "function" ? loadRomance() : {};
+      const active = Object.entries(rom).filter(([, r]) => (r?.stage || 0) > 0);
+      if (!active.length) return "";
+      const lines = active.map(([name, r]) => {
+        const stage = ROMANCE_STAGES[r.stage] || ROMANCE_STAGES[0];
+        return `${name}: ${stage.icon}${stage.name}(${r.points || 0}pt)`;
+      });
+      return "\n\n[\u{1F495} \uB85C\uB9E8\uC2A4 \uAD00\uACC4] " + lines.join(", ") + "\n\uAC01 NPC\uC640\uC758 \uD604\uC7AC \uAD00\uACC4 \uB2E8\uACC4\uC5D0 \uB9DE\uB294 \uD0DC\uB3C4\uC640 \uC560\uC815 \uD45C\uD604\uC744 \uC11C\uC0AC\uC5D0 \uC77C\uAD00\uB418\uAC8C \uBC18\uC601\uD558\uB77C.";
+    } catch (e) {
+      return "";
+    }
+  }
+  window.getRomanceBLS = getRomanceBLS;
+  window.loadRomance = loadRomance;
+  window.addRomancePoint = addRomancePoint;
+  window.checkRomanceStage = checkRomanceStage;
+  window.triggerRomanceEvent = triggerRomanceEvent;
+  window.getRomanceStatus = getRomanceStatus;
+  function courtNpc(npcName) {
+    try {
+      const delta = 5 + Math.floor(Math.random() * 11);
+      addRomancePoint(npcName, delta);
+      toast(`\u{1F498} ${npcName}\uC5D0\uAC8C \uB9C8\uC74C\uC744 \uC804\uD588\uB2E4. \uD638\uAC10\uB3C4+${delta}`, 2500);
+    } catch (e) {
+    }
+  }
+  window.courtNpc = courtNpc;
+  var MARRIAGE_KEY = "tf-marriage";
+  function loadMarriage() {
+    try {
+      return JSON.parse(lsGet(MARRIAGE_KEY) || "null") || { spouseName: null, marriedAt: null, bonusGiven: false };
+    } catch (e) {
+      return { spouseName: null, marriedAt: null, bonusGiven: false };
+    }
+  }
+  window.loadMarriage = loadMarriage;
+  function saveMarriage(d) {
+    try {
+      lsSet(MARRIAGE_KEY, JSON.stringify(d));
+    } catch (e) {
+    }
+  }
+  window.saveMarriage = saveMarriage;
+  function proposeMarriage(npcName) {
+    try {
+      const status = getRomanceStatus(npcName);
+      if (status.level < 5) {
+        toast("\uC544\uC9C1 \uADF8 \uC815\uB3C4\uB85C \uAE4A\uC740 \uC0AC\uC774\uB294 \uC544\uB2C8\uB2E4.", 2500);
+        return;
+      }
+      const marriage = loadMarriage();
+      if (marriage.spouseName) {
+        toast(marriage.spouseName === npcName ? "\uC774\uBBF8 \uBC30\uC6B0\uC790\uB2E4." : `\uC774\uBBF8 ${marriage.spouseName}\uACFC(\uC640) \uD63C\uC778\uD55C \uC0C1\uD0DC\uB2E4.`, 2500);
+        return;
+      }
+      marriage.spouseName = npcName;
+      marriage.marriedAt = (/* @__PURE__ */ new Date()).toISOString();
+      if (!marriage.bonusGiven) {
+        S.stats.wil = Math.min(999, (S.stats.wil || 50) + 15);
+        S.stats.cha = Math.min(999, (S.stats.cha || 50) + 10);
+        marriage.bonusGiven = true;
+        if (typeof window.updateHeader === "function") window.updateHeader();
+      }
+      saveMarriage(marriage);
+      toast(`\u{1F48D} ${npcName}\uACFC(\uC640) \uC601\uC6D0\uD55C \uC778\uC5F0\uC744 \uB9FA\uC5C8\uB2E4. \uD3C9\uC0DD\uC758 \uB3D9\uBC18\uC790\uAC00 \uC0DD\uACBC\uB2E4! WIL+15, CHA+10`, 4e3);
+    } catch (e) {
+    }
+  }
+  window.proposeMarriage = proposeMarriage;
+
   // src/data/052-동대륙-추가-장소-4.js
   var SPECIAL_LOCATIONS = [
     {
@@ -39965,6 +40807,18 @@ ${lines.join("\n")}
         <button class="btn btn-gold" style="padding:4px 10px;font-size:8px" onclick="startConversationWithResident('${esc2(npc.name)}','${esc2(npc.role)}','${esc2(npc.personality)}','${esc2(loc.id || loc.name)}')">\u{1F4AC} \uB300\uD654\uD558\uAE30</button>
         ${known && rel >= 40 ? `<button class="btn btn-dark" style="padding:4px 8px;font-size:8px;border-color:#3a6a2a;color:#80c040" onclick="openNpcQuestDialog('${esc2(npc.name)}')">\u{1F4DC} \uC758\uB8B0</button>` : ""}
         ${known && rel >= 50 ? `<button class="btn btn-dark" style="padding:4px 8px;font-size:8px" onclick="giftNpc('${esc2(npc.name)}')">\u{1F381} \uC120\uBB3C</button>` : ""}
+        ${(() => {
+        if (!(known && rel >= 40)) return "";
+        const marriage = typeof loadMarriage === "function" ? loadMarriage() : { spouseName: null };
+        const romStatus = typeof getRomanceStatus === "function" ? getRomanceStatus(npc.name) : { level: 0 };
+        let html2 = `<button class="btn btn-dark" style="padding:4px 8px;font-size:8px;border-color:#6a2a4a;color:#e07aa0" onclick="courtNpc('${esc2(npc.name)}')">\u{1F498} \uAD6C\uC560\uD558\uAE30</button>`;
+        if (marriage.spouseName === npc.name) {
+          html2 += `<span style="font-size:8px;padding:3px 7px;background:#1a0a10;border:1px solid #8a2a5a;color:#e07aa0;border-radius:2px">\u{1F48D} \uBC30\uC6B0\uC790</span>`;
+        } else if (romStatus.level >= 5 && !marriage.spouseName) {
+          html2 += `<button class="btn btn-dark" style="padding:4px 8px;font-size:8px;border-color:#8a6a2a;color:#d4a030" onclick="proposeMarriage('${esc2(npc.name)}')">\u{1F48D} \uCCAD\uD63C\uD558\uAE30</button>`;
+        }
+        return html2;
+      })()}
       </div>
     </div>`;
     });
@@ -40511,6 +41365,30 @@ ${lines.join("\n")}
       // 로직은 misc/334의 goFishing()에 그대로 위임.
       goFishing: () => {
         goFishing();
+      },
+      // [63번 섹션] "뒷골목 도박장"(int_gamble)이 실제로는 'checkBounty'
+      // (현상금 게시판)로 잘못 연결돼 있던 버그 수정 — 클릭하면 도박이
+      // 아니라 현상금 목록이 뜨던 상태였다. 자유 텍스트 트리거
+      // checkGamblingAction(quest/086)과 완전히 동일한 확률·판돈·빚
+      // 로직을 그대로 재사용해, 대화창에 특정 단어를 치지 않아도
+      // 버튼 클릭만으로 명확하게 도박할 수 있는 진입점을 신설한다
+      // ("뭐든 할 수 있는 생태계" — 서사 텍스트에 의존하지 않는 직접
+      // 행동 수단).
+      gambleAtDen: () => {
+        const won = Math.random() < 0.45;
+        const stake = 50 + Math.floor(Math.random() * 150);
+        if (won) {
+          if (typeof addGoldWithExchange === "function") addGoldWithExchange(stake, "\uB3C4\uBC15 \uC2B9\uB9AC");
+          else {
+            S.gold += stake;
+            saveGold(S.gold);
+          }
+          window.updateHeader();
+          toastHTML(`\u{1F3B2} \uB3C4\uBC15\uC5D0\uC11C \uC2B9\uB9AC! \uACE8\uB4DC+${stake}`, 3e3);
+        } else {
+          if (typeof recordGamblingDebt === "function") recordGamblingDebt(stake, S.scenario?.id);
+          toastHTML(`\u{1F3B2} \uB3C4\uBC15\uC5D0\uC11C \uD328\uBC30... ${stake}G\uC758 \uBE5A\uC744 \uC9C0\uACE0 \uB9D0\uC558\uB2E4. \uB098\uC911\uC5D0 \uAC1A\uC544\uC57C \uD55C\uB2E4.`, 3e3);
+        }
       },
       buyInfo: () => {
         updateReputation(10);
@@ -51594,167 +52472,6 @@ ${lines.join("\n")}
     window.tickNearDeathPenalty = tickNearDeathPenalty;
   }
 
-  // src/data/018-5170번-환생-누적-시스템.js
-  var STAR_SIGNS = [
-    { id: "aries", icon: "\u2648", name: "\uC591\uC790\uB9AC", trait: "\uC804\uC0AC", bonus: "\uC804\uD22C \uD310\uC815 +10, \uC120\uC81C \uACF5\uACA9 \uC6B0\uC704", penalty: "\uC678\uAD50 \uD611\uC0C1 -10" },
-    { id: "taurus", icon: "\u2649", name: "\uD669\uC18C\uC790\uB9AC", trait: "\uC218\uD638\uC790", bonus: "HP \uCD5C\uB300\uCE58 +20, \uBC29\uC5B4 \uD310\uC815 +10", penalty: "\uBBFC\uCCA9 \uAD00\uB828 \uD310\uC815 -5" },
-    { id: "gemini", icon: "\u264A", name: "\uC30D\uB465\uC774\uC790\uB9AC", trait: "\uBCC0\uC2E0\uC790", bonus: "\uC704\uC7A5\xB7\uBCC0\uC7A5 \uD310\uC815 +15, \uC5B8\uC5B4 \uC7AC\uB2A5", penalty: "\uC758\uC9C0\uB825 \uD310\uC815 -10" },
-    { id: "cancer", icon: "\u264B", name: "\uAC8C\uC790\uB9AC", trait: "\uCE58\uC720\uC0AC", bonus: "\uD68C\uBCF5 \uC544\uC774\uD15C \uD6A8\uACFC +30%, NPC \uC2E0\uB8B0", penalty: "\uC9C1\uC811 \uC804\uD22C \uD310\uC815 -5" },
-    { id: "leo", icon: "\u264C", name: "\uC0AC\uC790\uC790\uB9AC", trait: "\uC9C0\uB3C4\uC790", bonus: "\uCE74\uB9AC\uC2A4\uB9C8 \uD310\uC815 +15, \uB3D9\uB8CC \uC0AC\uAE30 \uC0C1\uC2B9", penalty: "\uB2E8\uB3C5 \uC740\uC2E0 \uD310\uC815 -10" },
-    { id: "virgo", icon: "\u264D", name: "\uCC98\uB140\uC790\uB9AC", trait: "\uBD84\uC11D\uAC00", bonus: "\uC815\uBCF4 \uC218\uC9D1\xB7\uBD84\uC11D \uD310\uC815 +15", penalty: "\uCDA9\uB3D9\uC801 \uD310\uC815 +5 (\uBD88\uB9AC)" },
-    { id: "libra", icon: "\u264E", name: "\uCC9C\uCE6D\uC790\uB9AC", trait: "\uC911\uC7AC\uC790", bonus: "\uD611\uC0C1\xB7\uC911\uC7AC \uD310\uC815 +15, \uADE0\uD615\uC758 \uAE38", penalty: "\uADF9\uB2E8\uC801 \uC120\uD0DD \uC2DC \uD398\uB110\uD2F0" },
-    { id: "scorpio", icon: "\u264F", name: "\uC804\uAC08\uC790\uB9AC", trait: "\uC554\uC0B4\uC790", bonus: "\uB3C5\xB7\uD568\uC815 \uD310\uC815 +15, \uBE44\uBC00 \uD0D0\uC9C0", penalty: "\uBE5B\uC758 \uC7A5\uC18C\uC5D0\uC11C \uD310\uC815 -5" },
-    { id: "sagittarius", icon: "\u2650", name: "\uC0AC\uC218\uC790\uB9AC", trait: "\uD0D0\uD5D8\uAC00", bonus: "\uBBF8\uC9C0 \uD0D0\uD5D8 \uD310\uC815 +15, \uC774\uB3D9 \uC18D\uB3C4", penalty: "\uD55C \uACF3\uC5D0 \uC624\uB798 \uC788\uC73C\uBA74 -5" },
-    { id: "capricorn", icon: "\u2651", name: "\uC5FC\uC18C\uC790\uB9AC", trait: "\uC7A5\uC778", bonus: "\uC81C\uC791\xB7\uAC74\uC124 \uD310\uC815 +15, \uCCB4\uB825 \uC9C0\uC18D\uB825", penalty: "\uC9C1\uAD00 \uD310\uC815 -10" },
-    { id: "aquarius", icon: "\u2652", name: "\uBB3C\uBCD1\uC790\uB9AC", trait: "\uD601\uC2E0\uAC00", bonus: "\uB9C8\uBC95\xB7\uAE30\uC220 \uD310\uC815 +15, \uCC3D\uC758\uC801 \uD574\uACB0", penalty: "\uC804\uD1B5\uC801 \uBC29\uC2DD \uD310\uC815 -5" },
-    { id: "pisces", icon: "\u2653", name: "\uBB3C\uACE0\uAE30\uC790\uB9AC", trait: "\uC608\uC5B8\uC790", bonus: "\uC608\uC9C0\xB7\uC9C1\uAD00 \uD310\uC815 +15, \uAFC8 \uC774\uBCA4\uD2B8 \uAC15\uD654", penalty: "\uD604\uC2E4 \uC778\uC2DD \uD310\uC815 -5" }
-  ];
-  var PAST_LANGUAGE_PHRASES = [
-    { level: 3, phrase: "\uC544\uB178\uC2A4 \uD2F0\uB974", meaning: "\uB098\uB294 \uC774\uACF3\uC744 \uC548\uB2E4", trigger: "\uACE0\uB300 \uC720\uC801\xB7\uC2E0\uC804 NPC\uC5D0\uAC8C \uC0AC\uC6A9 \uC2DC \uD788\uB4E0 \uD018\uC2A4\uD2B8" },
-    { level: 4, phrase: "\uBA5C\uB9AC\uC544 \uC18C\uB860", meaning: "\uC6B0\uB9AC\uB294 \uC774\uC804\uC5D0 \uB9CC\uB0AC\uB2E4", trigger: "\uC804\uC0DD \uC778\uC5F0 NPC \uC870\uC6B0 \uC2DC \uAE30\uC5B5 \uAC01\uC131" },
-    { level: 5, phrase: "\uCE74\uC774\uB85C\uC2A4 \uC5D4\uB4DC", meaning: "\uC2DC\uAC04\uC740 \uBC18\uBCF5\uB41C\uB2E4", trigger: "\uC2DC\uAC04 \uAD00\uB828 \uBCF4\uC2A4\xB7\uC774\uBCA4\uD2B8\uC5D0\uC11C \uC0AC\uC6A9 \uC2DC \uC57D\uC810 \uB178\uCD9C" },
-    { level: 6, phrase: "\uC5D0\uD14C\uB974 \uB098\uC2DC\uC628", meaning: "\uB098\uB294 \uD658\uC0DD\uC790\uB2E4", trigger: "\uB8E8\uD504 \uC790\uAC01\uC790 \uAE38\uB4DC \uC785\uC7A5 \uCF54\uB4DC" },
-    { level: 7, phrase: "\uC624\uBA54\uAC00 \uB9AC\uD23C", meaning: "\uC138\uACC4\uC758 \uB05D\uC744 \uBCF4\uC558\uB2E4", trigger: "\uCD5C\uC885 \uBCF4\uC2A4\uC5D0\uAC8C \uC0AC\uC6A9 \uC2DC \uD2B9\uC218 \uB300\uD654 \uB8E8\uD2B8" },
-    { level: 8, phrase: "\uC544\uD06C \uB514\uBE44\uB204\uC2A4", meaning: "\uC2E0\uC740 \uAC70\uC9D3\uC774\uB2E4", trigger: "\uC2E0\uD654 \uC138\uACC4\uAD00 \uC2DC\uB098\uB9AC\uC624 \uD788\uB4E0 \uB8E8\uD2B8 \uD574\uAE08" },
-    { level: 9, phrase: "\uB808\uBE44 \uC544\uC2A4\uCE7C", meaning: "\uB098\uB294 \uBAA8\uB4E0 \uAC83\uC744 \uAE30\uC5B5\uD55C\uB2E4", trigger: "\uBB34\uD55C \uD68C\uADC0 \uC790\uAC01 \uC774\uBCA4\uD2B8 \uD2B8\uB9AC\uAC70" },
-    { level: 10, phrase: "\uC194 \uC774\uD130\uB2C8\uC6C0", meaning: "\uC601\uC6D0\uD55C \uC601\uD63C", trigger: "\uD574\uD0C8 \uC5D4\uB529 \uB8E8\uD2B8 \uD574\uAE08 \uD0A4" }
-  ];
-  var IDENTITY_ARCHETYPES = [
-    { id: "noble", icon: "\u{1F451}", label: "\uADC0\uC871 \uC2E0\uBD84", desc: "\uC0C1\uB958\uCE35 \uC811\uADFC \uAC00\uB2A5, \uC758\uC2EC \uC5C6\uC774 \uC131\xB7\uC800\uD0DD \uCD9C\uC785", bonus: "\uC0AC\uAD50 \uD310\uC815 +20, \uADC0\uC871 NPC \uCD08\uAE30 \uD638\uAC10" },
-    { id: "merchant", icon: "\u{1F4B0}", label: "\uC0C1\uC778 \uC2E0\uBD84", desc: "\uC2DC\uC7A5\xB7\uD56D\uAD6C \uC790\uC720 \uC811\uADFC, \uAC70\uB798 \uC2DC \uC720\uB9AC\uD55C \uC704\uCE58", bonus: "\uAC70\uB798 \uD310\uC815 +15, \uC815\uBCF4 \uAD6C\uB9E4 \uD560\uC778" },
-    { id: "scholar", icon: "\u{1F4DA}", label: "\uD559\uC790 \uC2E0\uBD84", desc: "\uB3C4\uC11C\uAD00\xB7\uB9C8\uBC95\uD0D1 \uC811\uADFC, \uACE0\uB300 \uBB38\uD5CC \uC5F4\uB78C \uAD8C\uD55C", bonus: "\uC9C0\uC2DD \uD310\uC815 +15, \uBE44\uBC00 \uBB38\uC11C \uC811\uADFC" },
-    { id: "soldier", icon: "\u2694\uFE0F", label: "\uBCD1\uC0AC \uC2E0\uBD84", desc: "\uAD70\uC0AC \uC2DC\uC124 \uC811\uADFC, \uBB34\uAE30 \uC18C\uC9C0 \uD569\uBC95\uD654", bonus: "\uAD70\uC0AC NPC \uD611\uB825, \uC21C\uCC30 \uBB34\uC2DC" },
-    { id: "priest", icon: "\u26EA", label: "\uC0AC\uC81C \uC2E0\uBD84", desc: "\uC2E0\uC804\xB7\uC131\uC18C \uC811\uADFC, \uC77C\uBC18\uC778 \uC2E0\uB8B0 \uC790\uB3D9 \uD68D\uB4DD", bonus: "\uCE58\uC720 \uAD00\uB828 \uD310\uC815 +10, \uC545\uB839 \uD1F4\uCE58 \uAD8C\uD55C" },
-    { id: "assassin", icon: "\u{1F5E1}\uFE0F", label: "\uC554\uC0B4\uC790 \uC2E0\uBD84", desc: "\uC9C0\uD558\uC138\uACC4 \uC811\uADFC, \uC815\uBCF4 \uBE0C\uB85C\uCEE4\uC640 \uC5F0\uACB0", bonus: "\uC740\uC2E0 \uD310\uC815 +15, \uD0AC \uC758\uB8B0 \uC218\uB77D" },
-    { id: "wanderer", icon: "\u{1F30D}", label: "\uBC29\uB791\uC790 \uC2E0\uBD84", desc: "\uC5B4\uB290 \uC138\uB825\uC5D0\uB3C4 \uC18D\uD558\uC9C0 \uC54A\uC74C. \uC790\uC720\uB85C\uC6B4 \uC774\uB3D9", bonus: "\uC774\uB3D9 \uD310\uC815 +10, \uC911\uB9BD \uC9C0\uC5ED \uC5B4\uB514\uC11C\uB098 \uD658\uC601" },
-    { id: "bard", icon: "\u{1F3B5}", label: "\uC74C\uC720\uC2DC\uC778 \uC2E0\uBD84", desc: "\uAC01\uC9C0 \uC18C\uBB38 \uC218\uC9D1, \uACF5\uC5F0\uC73C\uB85C NPC \uC8FC\uC758 \uBD84\uC0B0", bonus: "\uC815\uBCF4 \uC218\uC9D1 +15, \uAD70\uC911 \uB9E4\uD639 \uD310\uC815" }
-  ];
-  var RIFT_SCENARIOS = [
-    { id: "medieval_bleed", icon: "\u{1F3F0}", label: "\uC911\uC138 \uADE0\uC5F4", desc: "\uAE30\uC0AC\uC640 \uC131\uBCBD\uC758 \uC794\uC0C1\uC774 \uD604\uC7AC \uC138\uACC4\uC5D0 \uD22C\uC601\uB41C\uB2E4.", loot: "\uB9C8\uBC95 \uAC80 \uD30C\uD3B8 / \uACE0\uB300 \uBB38\uC11C", npc: "\uBC29\uB791 \uAE30\uC0AC" },
-    { id: "fantasy_bleed", icon: "\u{1F9D9}", label: "\uB9C8\uBC95 \uC138\uACC4 \uADE0\uC5F4", desc: "\uC815\uB839\uC758 \uB178\uB798\uC640 \uB9C8\uBC95\uC9C4 \uC794\uAD11\uC774 \uD76C\uBBF8\uD558\uAC8C \uBCF4\uC778\uB2E4.", loot: "\uB9C8\uBC95\uC11D / \uD76C\uADC0 \uC57D\uCD08", npc: "\uB5A0\uB3C4\uB294 \uB9C8\uBC95\uC0AC" },
-    { id: "void_bleed", icon: "\u{1F30C}", label: "\uD5C8\uACF5 \uADE0\uC5F4", desc: "\uC644\uC804\uD55C \uC5B4\uB460 \uC18D\uC5D0\uC11C \uD615\uC5B8\uD560 \uC218 \uC5C6\uB294 \uC874\uC7AC\uC758 \uC228\uACB0.", loot: "\uD5C8\uACF5\uC758 \uACB0\uC815 / \uBD09\uC778 \uBB38\uC591", npc: "\uACF5\uD5C8\uC758 \uAC10\uC2DC\uC790" }
-  ];
-  var RECIPE_TIERS = [
-    { tier: 1, icon: "\u{1F9EA}", label: "\uC77C\uBC18 \uC81C\uC870\uBC95", minCycle: 1, recipes: ["\uCCB4\uB825 \uD3EC\uC158", "\uD574\uB3C5\uC81C", "\uD683\uBD88", "\uC2DD\uB7C9 \uC555\uCD95", "\uAE30\uCD08 \uB3C5\uC57D"] },
-    { tier: 2, icon: "\u2697\uFE0F", label: "\uACE0\uAE09 \uC81C\uC870\uBC95", minCycle: 3, recipes: ["\uAC15\uD654 \uD3EC\uC158", "\uC6D0\uC18C \uD0C4\uD658", "\uB9C8\uBC95 \uC789\uD06C", "\uC2DD\uBB3C \uCD09\uC9C4\uC81C", "\uBC29\uC5B4 \uBD80\uC801"] },
-    { tier: 3, icon: "\u{1F52E}", label: "\uD76C\uADC0 \uC81C\uC870\uBC95", minCycle: 5, recipes: ["\uC5D8\uB9AD\uC11C", "\uD658\uC601 \uD3ED\uD0C4", "\uC601\uD63C \uACB0\uC815 \uC870\uAC01", "\uC2DC\uAC04 \uC9C0\uC5F0 \uC57D", "\uC815\uC2E0 \uAC15\uD654\uC81C"] },
-    { tier: 4, icon: "\u{1F48E}", label: "\uC804\uC124 \uC81C\uC870\uBC95", minCycle: 8, recipes: ["\uBD88\uC0AC\uC758 \uC57D\uCD08", "\uCC28\uC6D0 \uC808\uB2E8\uAE30", "\uC6B4\uBA85 \uBCC0\uD658\uC81C", "\uC2E0\uC758 \uBD84\uB178 \uACB0\uC815", "\uAE30\uC5B5 \uACB0\uC815"] },
-    { tier: 5, icon: "\u{1F31F}", label: "\uC2E0\uD654 \uC81C\uC870\uBC95", minCycle: 12, recipes: ["\uC138\uACC4 \uC885\uB9D0 \uC5B5\uC81C\uC81C", "\uC601\uD63C \uBD80\uD65C\uC57D", "\uC2DC\uAC04 \uC5ED\uD589 \uCD09\uB9E4", "\uC2E0\uACA9\uD654 \uC5D8\uB9AD\uC11C", "\uACF5\uD5C8 \uBD09\uC778\uC7AC"] }
-  ];
-  var ROMANCE_FATES = [
-    { depth: 1, icon: "\u{1F338}", label: "\uC124\uB818", firstMeet: "\uCC98\uC74C \uB9CC\uB098\uB294\uB370\uB3C4 \uC5B4\uB518\uAC00 \uD3B8\uC548\uD55C \uB290\uB08C\uC744 \uBC1B\uB294\uB2E4.", bond: 15 },
-    { depth: 2, icon: "\u{1F490}", label: "\uC778\uC5F0", firstMeet: "\uB208\uC774 \uB9C8\uC8FC\uCE58\uB294 \uC21C\uAC04, \uC2EC\uC7A5\uC774 \uC774\uC0C1\uD558\uAC8C \uB6F4\uB2E4.", bond: 25 },
-    { depth: 3, icon: "\u{1F495}", label: "\uAE4A\uC740 \uC778\uC5F0", firstMeet: '"\uC5B4\uB514\uC120\uAC00 \uB2F9\uC2E0\uC744 \uBCF8 \uAC83 \uAC19\uC544\uC694"\uB77C\uACE0 \uB9D0\uC744 \uAC74\uB128\uB2E4.', bond: 40 },
-    { depth: 4, icon: "\u{1F49E}", label: "\uC6B4\uBA85", firstMeet: "\uC774 \uC0AC\uB78C\uACFC \uD568\uAED8\uB77C\uBA74 \uBB34\uC5C7\uC774\uB4E0 \uD560 \uC218 \uC788\uB2E4\uB294 \uD655\uC2E0\uC774 \uB4E0\uB2E4.", bond: 55 },
-    { depth: 5, icon: "\u{1F496}", label: "\uC601\uC6D0\uD55C \uC778\uC5F0", firstMeet: "\uC11C\uB85C\uAC00 \uC11C\uB85C\uB97C \uC54C\uC544\uBCF8\uB2E4. \uB9D0 \uC5C6\uC774\uB3C4 \uBAA8\uB4E0 \uAC8C \uC804\uB2EC\uB41C\uB2E4.", bond: 70 }
-  ];
-  var MERCHANT_HINTS = [
-    { id: "trap_location", icon: "\u26A0\uFE0F", label: "\uD568\uC815 \uC704\uCE58 \uD78C\uD2B8", cost: "\uAE30\uC5B5 \uD30C\uD3B8 1\uAC1C", desc: "\uC774\uBC88 \uC2DC\uB098\uB9AC\uC624 \uC8FC\uC694 \uD568\uC815 \uC704\uCE58\uB97C \uC54C\uB824\uC900\uB2E4." },
-    { id: "boss_weakness", icon: "\u2694\uFE0F", label: "\uBCF4\uC2A4 \uC57D\uC810 \uD78C\uD2B8", cost: "\uAE30\uC5B5 \uD30C\uD3B8 2\uAC1C", desc: "\uD604\uC7AC \uCD5C\uC885 \uBCF4\uC2A4\uC758 \uD575\uC2EC \uC57D\uC810\uC744 \uC54C\uB824\uC900\uB2E4." },
-    { id: "npc_secret", icon: "\u{1F5DD}\uFE0F", label: "NPC \uBE44\uBC00", cost: "\uAE30\uC5B5 \uD30C\uD3B8 1\uAC1C", desc: "\uC8FC\uC694 NPC\uC758 \uC228\uACA8\uC9C4 \uC815\uCCB4\uB098 \uB3D9\uAE30\uB97C \uC54C\uB824\uC900\uB2E4." },
-    { id: "hidden_path", icon: "\u{1F5FA}\uFE0F", label: "\uC228\uACA8\uC9C4 \uAE38", cost: "\uAE30\uC5B5 \uD30C\uD3B8 1\uAC1C", desc: "\uC77C\uBC18 \uD0D0\uC0C9\uC73C\uB85C\uB294 \uCC3E\uAE30 \uC5B4\uB824\uC6B4 \uC9C0\uB984\uAE38\uC744 \uC54C\uB824\uC900\uB2E4." },
-    { id: "item_location", icon: "\u{1F48E}", label: "\uD76C\uADC0 \uC544\uC774\uD15C \uC704\uCE58", cost: "\uAE30\uC5B5 \uD30C\uD3B8 2\uAC1C", desc: "\uC774\uBC88 \uD68C\uCC28 \uC228\uACA8\uC9C4 \uB808\uC5B4 \uC544\uC774\uD15C \uC704\uCE58\uB97C \uC54C\uB824\uC900\uB2E4." },
-    { id: "fate_preview", icon: "\u{1F52E}", label: "\uC6B4\uBA85\uC758 \uBBF8\uB9AC\uBCF4\uAE30", cost: "\uAE30\uC5B5 \uD30C\uD3B8 3\uAC1C", desc: "\uC774\uBC88 \uD68C\uCC28 \uC911\uC694 \uBD84\uAE30\uC810 \uC911 \uD558\uB098\uB97C \uBBF8\uB9AC \uC54C\uB824\uC900\uB2E4." },
-    { id: "ending_hint", icon: "\u{1F31F}", label: "\uC5D4\uB529 \uD78C\uD2B8", cost: "\uAE30\uC5B5 \uD30C\uD3B8 4\uAC1C", desc: "\uD788\uB4E0 \uC5D4\uB529 \uC870\uAC74 \uC911 \uD558\uB098\uB97C \uC54C\uB824\uC900\uB2E4." }
-  ];
-  var TIME_TOKEN_CONDITIONS = [
-    { id: "perfect_escape", label: "\uAE30\uC801\uC758 \uD0C8\uCD9C", desc: "\uC808\uCCB4\uC808\uBA85\uC758 \uC21C\uAC04\uC744 \uADF9\uC801\uC73C\uB85C \uB3CC\uD30C \uC2DC" },
-    { id: "tragic_sacrifice", label: "\uBE44\uADF9\uC801 \uD76C\uC0DD", desc: "\uC18C\uC911\uD55C NPC\uB97C \uC783\uB294 \uBE44\uADF9\uC801 \uC21C\uAC04\uC5D0" },
-    { id: "legendary_act", label: "\uC804\uC124\uC801 \uD589\uB3D9", desc: "\uC138\uACC4\uC0AC\uC5D0 \uB0A8\uC744 \uC704\uC5C5\uC744 \uB2EC\uC131 \uC2DC" },
-    { id: "cycle_milestone", label: "\uD68C\uCC28 \uB9C8\uC77C\uC2A4\uD1A4", desc: "\uD2B9\uC815 \uD68C\uCC28(5, 10, 20...) \uB3C4\uB2EC \uC2DC \uC790\uB3D9 \uC9C0\uAE09" }
-  ];
-  var COMPANION_MEMORY_STAGES = [
-    { stage: 0, label: "\uB0AF\uC775\uC740 \uC774\uBC29\uC778", firstMeet: "\uCC98\uC74C \uBCF4\uB294 \uC0AC\uB78C\uC778\uB370, \uC5B4\uB518\uAC00 \uB0AF\uC774 \uC775\uB2E4.", bond: 10 },
-    { stage: 1, label: "\uAE30\uC5B5\uC758 \uC870\uAC01", firstMeet: '\uB2F9\uC2E0\uC744 \uBCF4\uC790 \uC190\uC744 \uB5A0\uB294 \uB0AF\uC120 \uC774. "\uD639\uC2DC... \uC544\uB2CC\uAC00\uC694?"', bond: 20 },
-    { stage: 2, label: "\uD76C\uBBF8\uD55C \uAC01\uC131", firstMeet: '"\uB2F9\uC2E0\uC744 \uC5B4\uB518\uAC00\uC11C \uBCF8 \uAC83 \uAC19\uC544\uC694. \uAFC8\uC5D0\uC11C?" \uB208\uBE5B\uC774 \uD754\uB4E4\uB9B0\uB2E4.', bond: 35 },
-    { stage: 3, label: "\uAC15\uD55C \uAC01\uC131", firstMeet: '"...\uAE30\uC5B5\uB098\uC694. \uB2F9\uC2E0\uC774\uC796\uC544\uC694. \uB2E4\uC2DC \uB9CC\uB0AC\uB124\uC694." \uB208\uBB3C\uC774 \uACE0\uC778\uB2E4.', bond: 55 },
-    { stage: 4, label: "\uC644\uC804\uD55C \uAE30\uC5B5 \uAC01\uC131", firstMeet: '"\uBA87 \uBC88\uC758 \uC0DD\uC744 \uAC74\uB108\uB3C4 \uACB0\uAD6D \uB2E4\uC2DC \uB9CC\uB098\uB294\uAD70\uC694." \uD658\uD558\uAC8C \uC6C3\uB294\uB2E4.', bond: 75 }
-  ];
-  var LANGUAGE_DEFS = [
-    { id: "elvish", icon: "\u{1F33F}", name: "\uC5D8\uD504\uC5B4", race: "\uC5D8\uD504", minBond: 30, bonus: "\uC5D8\uD504 NPC\uC640 \uAE4A\uC740 \uB300\uD654, \uC232\xB7\uC790\uC5F0 \uAD00\uB828 \uD788\uB4E0 \uC815\uBCF4" },
-    { id: "dwarvish", icon: "\u2692\uFE0F", name: "\uB4DC\uC6CC\uD504\uC5B4", race: "\uB4DC\uC6CC\uD504", minBond: 30, bonus: "\uB4DC\uC6CC\uD504 \uC7A5\uC778\uACFC \uD2B9\uC218 \uC81C\uC791, \uC9C0\uD558 \uC9C0\uB3C4 \uC5F4\uB78C" },
-    { id: "draconic", icon: "\u{1F409}", name: "\uC6A9\uC5B4", race: "\uB4DC\uB798\uACE4\uD608", minBond: 40, bonus: "\uC6A9\uC871 NPC \uAD50\uC12D, \uACE0\uB300 \uB9C8\uBC95 \uC8FC\uBB38 \uBC1C\uB3D9" },
-    { id: "celestial", icon: "\u2728", name: "\uCC9C\uC0C1\uC5B4", race: "\uC2E0\uC871", minBond: 50, bonus: "\uC2E0\uC758 \uC804\uB839\uACFC \uB300\uD654, \uC131\uC18C \uD788\uB4E0 \uC758\uC2DD \uCC38\uC5EC" },
-    { id: "infernal", icon: "\u{1F525}", name: "\uC2EC\uC5F0\uC5B4", race: "\uC545\uB9C8\uC871", minBond: 40, bonus: "\uC545\uB9C8 \uACC4\uC57D \uC9C1\uC811 \uD611\uC0C1, \uAE08\uC9C0 \uC9C0\uC2DD \uC5F4\uB78C" },
-    { id: "ancient", icon: "\u{1F4DC}", name: "\uACE0\uB300\uC5B4", race: "\uC5C6\uC74C", minBond: 60, bonus: "\uACE0\uB300 \uC720\uC801 \uBE44\uBB38 \uB3C5\uD574, \uC2E0\uAE09 \uB9C8\uBC95 \uC8FC\uBB38 \uD574\uB3C5" },
-    { id: "beast", icon: "\u{1F43E}", name: "\uC57C\uC218\uC5B4", race: "\uC218\uC778\uC871", minBond: 25, bonus: "\uC57C\uC0DD \uB3D9\uBB3C \uB300\uD654, \uBE44\uACF5\uAC1C \uC0AC\uB0E5\uD130 \uC548\uB0B4" },
-    { id: "void", icon: "\u{1F30C}", name: "\uACF5\uD5C8\uC5B4", race: "\uACF5\uD5C8\uC874\uC7AC", minBond: 70, bonus: "\uACF5\uD5C8 \uCC28\uC6D0 NPC \uB300\uD654, \uCC28\uC6D0 \uADE0\uC5F4 \uC81C\uC5B4" }
-  ];
-  var LEGEND_DISTORTION_LEVELS = [
-    { level: 0, label: "\uC0AC\uC2E4\uC5D0 \uAC00\uAE4C\uC6B4 \uC18C\uBB38", multiplier: 1, desc: "\uBE44\uAD50\uC801 \uC815\uD655\uD55C \uC774\uC57C\uAE30\uAC00 \uD37C\uC9C4\uB2E4." },
-    { level: 1, label: "\uC57D\uAC04 \uACFC\uC7A5\uB41C \uC18C\uBB38", multiplier: 1.3, desc: "\uACF5\uC801\uC774 \uC870\uAE08 \uBD80\uD480\uB824\uC84C\uB2E4." },
-    { level: 2, label: "\uAF64 \uACFC\uC7A5\uB41C \uC804\uC124", multiplier: 1.8, desc: "\uC601\uC6C5\uC801 \uD589\uB3D9\uC774 \uC2E0\uD654\uCC98\uB7FC \uBB18\uC0AC\uB41C\uB2E4." },
-    { level: 3, label: "\uC2EC\uD558\uAC8C \uC65C\uACE1\uB41C \uC804\uC124", multiplier: 2.5, desc: "\uC2E4\uC81C\uC640 \uB2E4\uB978 \uB0B4\uC6A9\uC774 \uC808\uBC18 \uC774\uC0C1\uC744 \uCC28\uC9C0\uD55C\uB2E4." },
-    { level: 4, label: "\uC644\uC804\uD788 \uC2E0\uD654\uD654", multiplier: 4, desc: "\uB2F9\uC2E0\uC740 \uC774\uBBF8 \uC778\uAC04\uC744 \uCD08\uC6D4\uD55C \uC874\uC7AC\uB85C \uC54C\uB824\uC838 \uC788\uB2E4." }
-  ];
-  var MYSTERY_PIECES = [
-    { id: "origin", icon: "\u{1F30C}", title: "\uC138\uACC4\uC758 \uAE30\uC6D0", hint: "\uC774 \uC138\uACC4\uB294 \uC5B4\uB514\uC11C \uC654\uB294\uAC00?", revealAt: 1 },
-    { id: "first_death", icon: "\u{1F480}", title: "\uCD5C\uCD08\uC758 \uC8FD\uC74C", hint: "\uB204\uAC00 \uCC98\uC74C\uC73C\uB85C \uC774 \uC21C\uD658\uC744 \uC2DC\uC791\uD588\uB294\uAC00?", revealAt: 2 },
-    { id: "hidden_god", icon: "\u{1F441}\uFE0F", title: "\uC228\uACA8\uC9C4 \uC2E0", hint: "\uC9C4\uC9DC \uC138\uACC4\uB97C \uC9C0\uBC30\uD558\uB294 \uC874\uC7AC\uB294 \uB530\uB85C \uC788\uB2E4.", revealAt: 3 },
-    { id: "true_enemy", icon: "\u{1F534}", title: "\uC9C4\uC9DC \uC801", hint: "\uBAA8\uB4E0 \uBCF4\uC2A4 \uB4A4\uC5D0 \uC788\uB294 \uC9C4\uC815\uD55C \uC6D0\uC778.", revealAt: 4 },
-    { id: "loop_reason", icon: "\u{1F504}", title: "\uD658\uC0DD\uC758 \uC774\uC720", hint: "\uC65C \uC774 \uC601\uD63C\uC740 \uACC4\uC18D \uD658\uC0DD\uD558\uB294\uAC00?", revealAt: 5 },
-    { id: "key_npc", icon: "\u{1F5DD}\uFE0F", title: "\uC5F4\uC1E0\uB97C \uAC00\uC9C4 \uC790", hint: "\uC9C4\uC2E4\uC5D0 \uAC00\uC7A5 \uAC00\uAE4C\uC774 \uC788\uB294 NPC\uC758 \uC815\uCCB4.", revealAt: 6 },
-    { id: "forbidden", icon: "\u{1F6AB}", title: "\uAE08\uC9C0\uB41C \uC9C0\uC2DD", hint: "\uC54C\uBA74 \uC548 \uB418\uB294 \uAC83. \uD558\uC9C0\uB9CC \uBC18\uB4DC\uC2DC \uC54C\uC544\uC57C \uD55C\uB2E4.", revealAt: 7 },
-    { id: "world_curse", icon: "\u{1F49C}", title: "\uC138\uACC4\uC758 \uC800\uC8FC", hint: "\uC774 \uC138\uACC4 \uC804\uCCB4\uC5D0 \uAC78\uB9B0 \uACE0\uB300\uC758 \uC800\uC8FC.", revealAt: 8 },
-    { id: "true_power", icon: "\u26A1", title: "\uC9C4\uC815\uD55C \uD798\uC758 \uC6D0\uCC9C", hint: "\uBAA8\uB4E0 \uD798\uC740 \uC5B4\uB514\uC11C \uC624\uB294\uAC00?", revealAt: 9 },
-    { id: "sacrifice", icon: "\u{1F339}", title: "\uCD5C\uCD08\uC758 \uD76C\uC0DD", hint: "\uC774 \uBAA8\uB4E0 \uAC83\uC758 \uB300\uAC00\uB85C \uBB34\uC5C7\uC774 \uC0AC\uB77C\uC84C\uB294\uAC00?", revealAt: 10 },
-    { id: "salvation", icon: "\u{1F31F}", title: "\uAD6C\uC6D0\uC758 \uC870\uAC74", hint: "\uC774 \uBAA8\uB4E0 \uC21C\uD658\uC744 \uB05D\uB0BC \uC218 \uC788\uB294 \uB2E8 \uD558\uB098\uC758 \uBC29\uBC95.", revealAt: 11 },
-    { id: "truth", icon: "\u{1F308}", title: "\uAD81\uADF9\uC758 \uC9C4\uC2E4", hint: "\uBAA8\uB4E0 \uAC83\uC758 \uB2F5. \uC138\uACC4\uC758 \uC644\uC804\uD55C \uC9C4\uC2E4.", revealAt: 12 }
-  ];
-  var WATCHER_STAGES = [
-    { stage: 0, desc: "\uC544\uC9C1 \uC544\uBB34\uAC83\uB3C4 \uB290\uB07C\uC9C0 \uBABB\uD55C\uB2E4.", hint: null },
-    { stage: 1, desc: "\uB54C\uB54C\uB85C \uB204\uAD70\uAC00\uC758 \uC2DC\uC120\uC774 \uB290\uAEF4\uC9C4\uB2E4.", hint: "\uACE0\uC694\uD55C \uC21C\uAC04, \uB4F1 \uB4A4\uAC00 \uC11C\uB298\uD574\uC9C4\uB2E4." },
-    { stage: 2, desc: "\uBD84\uBA85\uD788 \uBB34\uC5B8\uAC00\uAC00 \uB098\uB97C \uAD00\uCC30\uD558\uACE0 \uC788\uB2E4.", hint: "\uAFC8 \uC18D\uC5D0\uC11C \uC218\uB9CE\uC740 \uB208\uB3D9\uC790\uAC00 \uB098\uB97C \uBC14\uB77C\uBCF8\uB2E4." },
-    { stage: 3, desc: "\uADF8\uAC83\uC774 \uB098\uC758 \uBAA8\uB4E0 \uD68C\uCC28\uB97C \uC9C0\uCF1C\uBD10 \uC654\uB2E4\uB294 \uAC78 \uC548\uB2E4.", hint: "\uAC70\uC6B8\uC5D0 \uBE44\uCE5C \uB0B4 \uB208\uC774 \uC7A0\uAE50 \uB2E4\uB978 \uC0C9\uC73C\uB85C \uBE5B\uB09C\uB2E4." },
-    { stage: 4, desc: "\uADF8\uAC83\uC758 \uC815\uCCB4\uB97C \uAC70\uC758 \uC54C \uAC83 \uAC19\uB2E4. \uACE7 \uB9CC\uB0A0 \uC218 \uC788\uB2E4.", hint: "\uC138\uACC4\uC758 \uB05D \uC5B4\uB518\uAC00\uC5D0\uC11C \uBAA9\uC18C\uB9AC\uAC00 \uB4E4\uB9B0\uB2E4. '\uC774\uC81C \uB54C\uAC00 \uB418\uC5C8\uB2E4.'" },
-    { stage: 5, desc: "\uAC10\uC2DC\uC790\uC758 \uC815\uCCB4\uAC00 \uBC1D\uD600\uC84C\uB2E4. \uBA54\uD0C0 \uC2A4\uD1A0\uB9AC\uAC00 \uC2DC\uC791\uB41C\uB2E4.", hint: "\uBAA8\uB4E0 \uAC83\uC774 \uC5F0\uACB0\uB41C\uB2E4." }
-  ];
-  var FATE_CARD_POOL = [
-    { id: "tower", icon: "\u{1F5FC}", name: "\uD0D1", theme: "\uBD95\uAD34\uC640 \uC7AC\uAC74", effect: "\uC774\uBC88 \uD68C\uCC28 \uBAA8\uB4E0 \uAC83\uC774 \uBB34\uB108\uC9C0\uACE0 \uB2E4\uC2DC \uC138\uC6CC\uC9C4\uB2E4. \uC704\uAE30\uAC00 \uB9CE\uC9C0\uB9CC \uBCF4\uC0C1\uB3C4 \uD06C\uB2E4.", bonus: "\uC704\uAE30 \uADF9\uBCF5 \uC2DC \uC2A4\uD0EF +5", penalty: "\uCD08\uBC18 \uC5ED\uACBD \uC99D\uAC00" },
-    { id: "star", icon: "\u2B50", name: "\uBCC4", theme: "\uD76C\uB9DD\uACFC \uC778\uB3C4", effect: "\uC5B4\uB450\uC6B4 \uC21C\uAC04\uB9C8\uB2E4 \uAE38\uC744 \uBE44\uCD94\uB294 \uBE5B\uC774 \uB098\uD0C0\uB09C\uB2E4. \uD78C\uD2B8\uC640 \uC870\uB825\uC790\uAC00 \uD48D\uBD80\uD558\uB2E4.", bonus: "NPC \uD638\uAC10 +20% \uC804\uCCB4", penalty: "\uB3C4\uC804 \uBCF4\uC0C1 \uC18C\uD3ED \uAC10\uC18C" },
-    { id: "moon", icon: "\u{1F319}", name: "\uB2EC", theme: "\uD658\uC0C1\uACFC \uC9C1\uAD00", effect: "\uAFC8\uACFC \uD604\uC2E4\uC774 \uB4A4\uC11E\uC778\uB2E4. \uC9C1\uAD00\uC774 \uAC15\uD574\uC9C0\uC9C0\uB9CC \uD604\uC2E4 \uC778\uC2DD\uC774 \uD750\uB824\uC9C4\uB2E4.", bonus: "\uC608\uC9C0 \uD310\uC815 +20", penalty: "\uD604\uC2E4 \uD310\uC815 -10" },
-    { id: "sun", icon: "\u2600\uFE0F", name: "\uD0DC\uC591", theme: "\uC2B9\uB9AC\uC640 \uC601\uAD11", effect: "\uC774\uBC88 \uD68C\uCC28 \uC601\uC6C5\uC801 \uACB0\uB9D0\uC5D0 \uAC00\uAE4C\uC6CC\uC9C4\uB2E4. \uBAA8\uB4E0 \uD589\uB3D9\uC774 \uBE5B\uB09C\uB2E4.", bonus: "\uBAA8\uB4E0 \uD310\uC815 +5", penalty: "\uC740\uC2E0\xB7\uC704\uC7A5 \uBD88\uB9AC" },
-    { id: "death", icon: "\u{1F480}", name: "\uC8FD\uC74C", theme: "\uBCC0\uD654\uC640 \uC885\uB9D0", effect: "\uC774\uBC88 \uD68C\uCC28 \uD070 \uBCC0\uD654\uC640 \uC0C1\uC2E4\uC774 \uCC3E\uC544\uC628\uB2E4. \uD558\uC9C0\uB9CC \uB05D\uC740 \uC0C8 \uC2DC\uC791\uC774\uB2E4.", bonus: "\uCD5C\uC885 \uBCF4\uC0C1 2\uBC30", penalty: "\uB3D9\uB8CC \uD76C\uC0DD \uAC00\uB2A5\uC131 \uC99D\uAC00" },
-    { id: "wheel", icon: "\u2699\uFE0F", name: "\uC6B4\uBA85\uC758 \uBC14\uD034", theme: "\uC21C\uD658\uACFC \uC804\uD658", effect: "\uC6B4\uBA85\uC774 \uBE60\uB974\uAC8C \uB3CC\uC544\uAC04\uB2E4. \uC0C1\uD669\uC774 \uADF9\uC801\uC73C\uB85C \uB4A4\uBC14\uB00C\uB294 \uC21C\uAC04\uB4E4\uC774 \uCC3E\uC544\uC628\uB2E4.", bonus: "\uC5ED\uC804 \uD310\uC815 +15", penalty: "\uC548\uC815\uC801 \uC9C4\uD589 \uBD88\uAC00" },
-    { id: "hermit", icon: "\u{1F56F}\uFE0F", name: "\uC740\uB454\uC790", theme: "\uACE0\uB3C5\uACFC \uC9C0\uD61C", effect: "\uD63C\uC790\uC11C \uAC77\uB294 \uAE38. \uB3D9\uB8CC\uBCF4\uB2E4 \uB0B4\uBA74\uC758 \uD798\uC744 \uD0A4\uC6B0\uB294 \uD68C\uCC28.", bonus: "\uB2E8\uB3C5 \uD310\uC815 +20", penalty: "\uB3D9\uB8CC \uD611\uB825 \uBCF4\uB108\uC2A4 \uAC10\uC18C" },
-    { id: "emperor", icon: "\u{1F451}", name: "\uD669\uC81C", theme: "\uC9C0\uBC30\uC640 \uC9C8\uC11C", effect: "\uC774\uBC88 \uD68C\uCC28 \uAD8C\uB825\uACFC \uC870\uC9C1\uC744 \uB2E4\uB8E8\uB294 \uC774\uC57C\uAE30\uAC00 \uC911\uC2EC\uC774 \uB41C\uB2E4.", bonus: "\uB9AC\uB354\uC2ED \uD310\uC815 +15", penalty: "\uAC1C\uC778 \uC804\uD22C \uBD88\uB9AC" },
-    { id: "lovers", icon: "\u{1F495}", name: "\uC5F0\uC778", theme: "\uC120\uD0DD\uACFC \uC778\uC5F0", effect: "\uC911\uC694\uD55C \uC778\uC5F0\uACFC\uC758 \uB9CC\uB0A8\uC774 \uD575\uC2EC\uC774 \uB41C\uB2E4. \uC120\uD0DD\uC774 \uAD00\uACC4\uB97C \uC88C\uC6B0\uD55C\uB2E4.", bonus: "\uB85C\uB9E8\uC2A4 \uD310\uC815 +25", penalty: "\uC804\uD22C \uC9D1\uC911\uB825 -5" },
-    { id: "strength", icon: "\u{1F4AA}", name: "\uD798", theme: "\uC778\uB0B4\uC640 \uADF9\uBCF5", effect: "\uC774\uBC88 \uD68C\uCC28 \uC721\uCCB4\uC640 \uC758\uC9C0\uC758 \uD55C\uACC4\uC5D0 \uB3C4\uC804\uD55C\uB2E4. \uBC84\uD2F8\uC218\uB85D \uAC15\uD574\uC9C4\uB2E4.", bonus: "\uCCB4\uB825 \uD310\uC815 +15", penalty: "\uC815\uC2E0\uB825 \uD310\uC815 -5" },
-    { id: "magician", icon: "\u{1FA84}", name: "\uB9C8\uBC95\uC0AC", theme: "\uC758\uC9C0\uC640 \uCC3D\uC870", effect: "\uC774\uBC88 \uD68C\uCC28 \uCC3D\uC758\uC801 \uD574\uACB0\uCC45\uACFC \uB9C8\uBC95\uC774 \uD575\uC2EC\uC774 \uB41C\uB2E4.", bonus: "\uB9C8\uBC95\xB7\uAE30\uC220 \uD310\uC815 +15", penalty: "\uC815\uBA74 \uB3CC\uD30C \uBD88\uB9AC" },
-    { id: "justice", icon: "\u2696\uFE0F", name: "\uC815\uC758", theme: "\uADE0\uD615\uACFC \uC2EC\uD310", effect: "\uC774\uBC88 \uD68C\uCC28 \uC120\uC545\uC758 \uADE0\uD615\uC774 \uC2DC\uD5D8\uB41C\uB2E4. \uACF5\uC815\uD55C \uD310\uB2E8\uC774 \uBCF4\uC0C1\uC744 \uBD80\uB978\uB2E4.", bonus: "\uB3C4\uB355\uC801 \uC120\uD0DD \uC2DC \uD310\uC815 +10", penalty: "\uBD88\uC758\uD55C \uD589\uB3D9 \uD398\uB110\uD2F0 \uC99D\uAC00" }
-  ];
-  var HIDEOUT_FACILITIES = [
-    { id: "campfire", icon: "\u{1F525}", name: "\uC57C\uC601\uC9C0", unlockCycle: 1, bonus: "\uD68C\uCC28 \uC2DC\uC791 \uC2DC HP +20% \uD68C\uBCF5", desc: "\uC5B4\uB514\uC11C\uB098 \uC274 \uC218 \uC788\uB294 \uC791\uC740 \uBD88\uC528." },
-    { id: "library", icon: "\u{1F4DA}", name: "\uB3C4\uC11C\uAD00", unlockCycle: 2, bonus: "\uC9C0\uC2DD \uD310\uC815 +10, \uC804\uC0DD \uD78C\uD2B8 1\uAC1C \uCD94\uAC00", desc: "\uC804\uC0DD\uC758 \uAE30\uC5B5\uC774 \uCC45\uC73C\uB85C \uC313\uC778\uB2E4." },
-    { id: "forge", icon: "\u2692\uFE0F", name: "\uB2E8\uB828\uC7A5", unlockCycle: 3, bonus: "\uC804\uD22C \uD310\uC815 +8, \uBB34\uAE30 \uB0B4\uAD6C\uB3C4 +30%", desc: "\uBAB8\uACFC \uC7A5\uBE44\uB97C \uB2E8\uB828\uD558\uB294 \uACF5\uAC04." },
-    { id: "alchemy", icon: "\u2697\uFE0F", name: "\uC5F0\uAE08\uC220\uC2E4", unlockCycle: 4, bonus: "\uD3EC\uC158 \uD6A8\uACFC +20%, \uB808\uC2DC\uD53C 1\uAC1C \uCD94\uAC00", desc: "\uC57D\uCD08\uC640 \uAD11\uC11D\uC73C\uB85C \uAE30\uC801\uC744 \uB9CC\uB4E0\uB2E4." },
-    { id: "infirmary", icon: "\u{1F3E5}", name: "\uCE58\uB8CC\uC18C", unlockCycle: 5, bonus: "\uBD80\uC0C1 \uD68C\uBCF5 \uC18D\uB3C4 +50%, HP \uCD5C\uB300\uCE58 +10", desc: "\uC0C1\uCC98\uB97C \uCE58\uC720\uD558\uB294 \uC2E0\uC131\uD55C \uACF5\uAC04." },
-    { id: "shrine", icon: "\u26E9\uFE0F", name: "\uC2E0\uC804", unlockCycle: 6, bonus: "\uCE74\uB974\uB9C8 \uD310\uC815 +10, \uC2E0\uC559 NPC \uD638\uAC10 \uC0C1\uC2B9", desc: "\uC804\uC0DD\uC758 \uC601\uD63C\uC744 \uAE30\uB9AC\uB294 \uC131\uC18C." },
-    { id: "shop", icon: "\u{1F3EA}", name: "\uBE44\uBC00 \uC0C1\uC810", unlockCycle: 7, bonus: "\uC544\uC774\uD15C \uAD6C\uB9E4\uAC00 -20%, \uD76C\uADC0 \uC544\uC774\uD15C \uB4F1\uC7A5", desc: "\uC804\uC0DD\uC758 \uC778\uC5F0\uC774 \uC6B4\uC601\uD558\uB294 \uC0C1\uC810." },
-    { id: "watchtower", icon: "\u{1F5FC}", name: "\uB9DD\uB8E8", unlockCycle: 8, bonus: "\uD0D0\uC0C9 \uD310\uC815 +15, \uAE30\uC2B5 \uBC29\uC5B4\uC728 +30%", desc: "\uC138\uACC4\uB97C \uB0B4\uB824\uB2E4\uBCF4\uB294 \uB192\uC740 \uD0D1." },
-    { id: "dungeon", icon: "\u{1F3DA}\uFE0F", name: "\uC9C0\uD558 \uAC10\uC625", unlockCycle: 10, bonus: "\uC2EC\uBB38 \uD310\uC815 +20, \uD3EC\uB85C \uC815\uBCF4 \uCD94\uCD9C", desc: "\uBE44\uBC00\uC744 \uCE90\uB0B4\uB294 \uC5B4\uB450\uC6B4 \uC7A5\uC18C." },
-    { id: "portal", icon: "\u{1F300}", name: "\uCC28\uC6D0\uBB38", unlockCycle: 12, bonus: "\uCC28\uC6D0 \uADE0\uC5F4 \uC774\uBCA4\uD2B8 \uBC1C\uC0DD\uB960 +50%", desc: "\uB2E4\uB978 \uC138\uACC4\uB85C \uD1B5\uD558\uB294 \uADE0\uC5F4." },
-    { id: "throne", icon: "\u{1F451}", name: "\uC655\uC88C", unlockCycle: 15, bonus: "\uB9AC\uB354\uC2ED \uD310\uC815 +20, NPC \uCDA9\uC131\uB3C4 +20", desc: "\uC804\uC124\uC774 \uC549\uB294 \uAD8C\uC88C." },
-    { id: "fortress", icon: "\u{1F3F0}", name: "\uC694\uC0C8", unlockCycle: 20, bonus: "\uBAA8\uB4E0 \uD310\uC815 +5, \uC804\uC0DD \uBCF8\uAC70\uC9C0 \uC644\uC131", desc: "\uD68C\uCC28\uB97C \uAC70\uCCD0 \uC138\uC6CC\uC9C4 \uC644\uC804\uD55C \uC694\uC0C8." }
-  ];
-  var EVIL_EYE_LEVELS = [
-    { level: 0, killsRequired: 0, label: "\uBD09\uC778\uB428", ability: "\uC5C6\uC74C", desc: "\uC544\uC9C1 \uAC01\uC131\uD558\uC9C0 \uC54A\uC558\uB2E4." },
-    { level: 1, killsRequired: 10, label: "\uBBF8\uC57D\uD55C \uC545\uC548", ability: "\uC0C1\uB300 HP \uB300\uB7B5 \uD30C\uC545 (\uB9CE\uC74C/\uBCF4\uD1B5/\uC801\uC74C)", desc: "\uB208\uC774 \uAC00\uB054 \uBD89\uAC8C \uBE5B\uB09C\uB2E4." },
-    { level: 2, killsRequired: 25, label: "\uC131\uC7A5\uD558\uB294 \uC545\uC548", ability: "\uC0C1\uB300 HP \uD37C\uC13C\uD2B8 \uD30C\uC545, \uC8FC\uC694 \uC57D\uC810 1\uAC1C \uAC10\uC9C0", desc: "\uB208 \uD770\uC790\uC704\uC5D0 \uD54F\uC904\uC774 \uC120\uB2E4." },
-    { level: 3, killsRequired: 50, label: "\uC644\uC131\uB41C \uC545\uC548", ability: "\uC0C1\uB300 HP \uC218\uCE58, \uBAA8\uB4E0 \uC57D\uC810, \uB2E4\uC74C \uD589\uB3D9 \uD328\uD134 \uC608\uCE21", desc: "\uD55C\uCABD \uB208\uC774 \uD56D\uC0C1 \uBD89\uB2E4." },
-    { level: 4, killsRequired: 100, label: "\uC800\uC8FC\uBC1B\uC740 \uC545\uC548", ability: "\uC989\uC0AC \uACF5\uACA9 \uC870\uAC74 \uD30C\uC545, \uC0C1\uB300 \uC6B4\uBA85\uAE4C\uC9C0 \uC5B4\uB834\uD48B\uC774 \uAC10\uC9C0", desc: "\uB450 \uB208 \uBAA8\uB450 \uAE4A\uC740 \uBD89\uC740\uC0C9. \uBCF4\uB294 \uC790\uB4E4\uC774 \uB450\uB824\uC6CC\uD55C\uB2E4." }
-  ];
-  var MOON_PHASES = [
-    { id: "new", icon: "\u{1F311}", name: "\uCD08\uC2B9\uB2EC (\uC0AD)", effect: "\uC5B4\uB460 \uC18D \uD589\uB3D9 +10, \uC740\uC2E0\xB7\uC7A0\uC785 \uBCF4\uB108\uC2A4", specialEvent: "\uADF8\uB9BC\uC790 \uC815\uB839 \uCD9C\uBAB0 \uD655\uB960 \uC0C1\uC2B9" },
-    { id: "crescent", icon: "\u{1F312}", name: "\uCD08\uC0DD\uB2EC", effect: "\uC0C8 \uC2DC\uC791 \uD310\uC815 +5, \uCCAB \uB9CC\uB0A8 NPC \uBC18\uC751 \uD638\uC758\uC801", specialEvent: "\uBC29\uB791\uC790\uC640\uC758 \uD2B9\uBCC4 \uB9CC\uB0A8" },
-    { id: "quarter1", icon: "\u{1F313}", name: "\uC0C1\uD604\uB2EC", effect: "\uC131\uC7A5 \uD310\uC815 +8, \uD559\uC2B5\xB7\uD6C8\uB828 \uD6A8\uACFC +20%", specialEvent: "\uC2A4\uC2B9 NPC \uB4F1\uC7A5 \uD655\uB960 \uC0C1\uC2B9" },
-    { id: "gibbous1", icon: "\u{1F314}", name: "\uC0C1\uD604\uB9DD\uAC04\uB2EC", effect: "\uC804\uD22C\uB825 \uC131\uC7A5 +10, \uAC15\uD574\uC9C0\uB294 \uB290\uB08C", specialEvent: "\uAC15\uC801\uACFC\uC758 \uC870\uC6B0 \uC99D\uAC00" },
-    { id: "full", icon: "\u{1F315}", name: "\uBCF4\uB984\uB2EC", effect: "\uBAA8\uB4E0 \uB2A5\uB825\uCE58 \uCD5C\uACE0\uC870, \uD558\uC9C0\uB9CC \uC57C\uC0DD\uC758 \uAE30\uC6B4 \uCDA9\uB9CC", specialEvent: "\uB291\uB300\uC778\uAC04\xB7\uC57C\uC218 \uC774\uBCA4\uD2B8 \uD655\uB960 \uB300\uD3ED \uC0C1\uC2B9" },
-    { id: "gibbous2", icon: "\u{1F316}", name: "\uD558\uD604\uB9DD\uAC04\uB2EC", effect: "\uC9C1\uAD00 +10, \uC228\uACA8\uC9C4 \uAC83\uB4E4\uC774 \uBCF4\uC778\uB2E4", specialEvent: "\uBE44\uBC00\xB7\uC74C\uBAA8 \uAD00\uB828 \uC774\uBCA4\uD2B8 \uC99D\uAC00" },
-    { id: "quarter2", icon: "\u{1F317}", name: "\uD558\uD604\uB2EC", effect: "\uC9C0\uD61C \uD310\uC815 +8, \uACFC\uAC70 \uAE30\uC5B5 \uC811\uADFC\uC131 \uD5A5\uC0C1", specialEvent: "\uC804\uC0DD \uAE30\uC5B5 \uC774\uBCA4\uD2B8 \uBC1C\uC0DD\uB960 \uC0C1\uC2B9" },
-    { id: "crescent2", icon: "\u{1F318}", name: "\uADF8\uBBD0\uB2EC", effect: "\uB9C8\uC9C0\uB9C9 \uAE30\uD68C \uD310\uC815 +15, \uC5ED\uC804 \uAC00\uB2A5\uC131 \uC99D\uAC00", specialEvent: "\uCD5C\uD6C4\uC758 \uC77C\uC804 \uC774\uBCA4\uD2B8 \uAC15\uD654" }
-  ];
-
   // src/data/065-NPC퀘스트-완성도-강화.js
   var NPC_EMOTIONS = {
     trust: { icon: "\u{1F49B}", label: "\uC2E0\uB8B0", threshold: 80, bonus: { neg: 10, spk: 8 } },
@@ -51886,512 +52603,6 @@ ${lines.join("\n")}
       });
     });
     return allSkills;
-  };
-
-  // src/progression/018-5170번-환생-누적-시스템.js
-  var STAR_SIGN_KEY = "taleforge-star-sign";
-  var loadStarSign = () => {
-    const r = lsGet(STAR_SIGN_KEY);
-    return r ? JSON.parse(r) : null;
-  };
-  var saveStarSign = (s) => lsSet(STAR_SIGN_KEY, JSON.stringify(s));
-  var assignStarSign = (deathMonth) => {
-    let month = deathMonth !== void 0 ? deathMonth : (/* @__PURE__ */ new Date()).getMonth();
-    if (month >= 12) month = month - 1;
-    if (month < 0) month = 0;
-    const idx = month % STAR_SIGNS.length;
-    const sign = STAR_SIGNS[idx];
-    saveStarSign({ ...sign, assignedAt: (/* @__PURE__ */ new Date()).toISOString() });
-    return sign;
-  };
-  var getStarSign = () => {
-    const cycle = loadCycleCount();
-    if (cycle < 1) return null;
-    return loadStarSign();
-  };
-  var PAST_LANGUAGE_KEY = "taleforge-past-language";
-  var loadPastLanguage = () => {
-    const r = lsGet(PAST_LANGUAGE_KEY);
-    return r ? JSON.parse(r) : { level: 0, phrases: [], unlockedAt: null };
-  };
-  var savePastLanguage = (l) => lsSet(PAST_LANGUAGE_KEY, JSON.stringify(l));
-  var growPastLanguage = (cycle) => {
-    const lang = loadPastLanguage();
-    const newLevel = Math.min(10, Math.floor(cycle / 2));
-    if (newLevel > (lang.level || 0)) {
-      lang.level = newLevel;
-      lang.unlockedAt = (/* @__PURE__ */ new Date()).toISOString();
-      const newPhrases = PAST_LANGUAGE_PHRASES.filter((p) => p.level <= newLevel);
-      lang.phrases = newPhrases;
-      savePastLanguage(lang);
-    }
-    return lang;
-  };
-  var getPastLanguage = () => {
-    const cycle = loadCycleCount();
-    if (cycle < 3) return null;
-    return loadPastLanguage();
-  };
-  var IDENTITY_VAULT_KEY = "taleforge-identity-vault";
-  var loadIdentityVault = () => {
-    const r = lsGet(IDENTITY_VAULT_KEY);
-    return r ? JSON.parse(r) : [];
-  };
-  var saveIdentityVault = (v) => lsSet(IDENTITY_VAULT_KEY, JSON.stringify(v));
-  var recordIdentity = (identityType, alias, scenario) => {
-    if (!identityType) return;
-    const vault = loadIdentityVault();
-    const archetype = IDENTITY_ARCHETYPES.find((a) => a.id === identityType);
-    if (!archetype) return;
-    const existing = vault.find((v) => v.id === identityType);
-    if (existing) {
-      existing.useCount = (existing.useCount || 1) + 1;
-      existing.polished = existing.useCount >= 3;
-    } else {
-      vault.push({ ...archetype, alias: alias || archetype.label, useCount: 1, polished: false, scenario: scenario || "", recordedAt: (/* @__PURE__ */ new Date()).toISOString() });
-    }
-    saveIdentityVault(vault);
-  };
-  var getIdentityVault = () => {
-    const cycle = loadCycleCount();
-    if (cycle < 1) return [];
-    return loadIdentityVault();
-  };
-  var RIFT_KEY = "taleforge-dimensional-rift";
-  var loadRifts = () => {
-    const r = lsGet(RIFT_KEY);
-    return r ? JSON.parse(r) : { totalRifts: 0, encounters: [] };
-  };
-  var saveRifts = (r) => lsSet(RIFT_KEY, JSON.stringify(r));
-  var recordRiftEncounter = (scenarioId, cycle) => {
-    const rifts = loadRifts();
-    rifts.totalRifts = (rifts.totalRifts || 0) + 1;
-    const scenario = RIFT_SCENARIOS.find((s) => s.id === scenarioId) || RIFT_SCENARIOS[rifts.totalRifts % RIFT_SCENARIOS.length];
-    rifts.encounters = rifts.encounters || [];
-    rifts.encounters.push({ ...scenario, cycle: cycle || loadCycleCount(), encounteredAt: (/* @__PURE__ */ new Date()).toISOString() });
-    saveRifts(rifts);
-  };
-  var getRiftStatus = () => {
-    const cycle = loadCycleCount();
-    if (cycle < 5) return null;
-    const rifts = loadRifts();
-    const nextRift = RIFT_SCENARIOS[rifts.totalRifts % RIFT_SCENARIOS.length];
-    return { ...rifts, nextRift, available: cycle >= 5 };
-  };
-  var RECIPE_BOOK_KEY = "taleforge-recipe-book";
-  var loadRecipeBook = () => {
-    const r = lsGet(RECIPE_BOOK_KEY);
-    return r ? JSON.parse(r) : [];
-  };
-  var saveRecipeBook = (b) => lsSet(RECIPE_BOOK_KEY, JSON.stringify(b));
-  var updateRecipeBook = (cycle) => {
-    const book = loadRecipeBook();
-    const newTiers = RECIPE_TIERS.filter((t) => t.minCycle <= cycle && !book.find((b) => b.tier === t.tier));
-    newTiers.forEach((t) => book.push({ ...t, unlockedAt: (/* @__PURE__ */ new Date()).toISOString(), discoveredCycle: cycle }));
-    saveRecipeBook(book);
-    return book;
-  };
-  var getRecipeBook = () => {
-    const cycle = loadCycleCount();
-    if (cycle < 1) return [];
-    return loadRecipeBook();
-  };
-  var ACHIEVEMENT_RATE_KEY = "taleforge-achievement-rate";
-  var loadAchievementRates = () => {
-    const r = lsGet(ACHIEVEMENT_RATE_KEY);
-    return r ? JSON.parse(r) : [];
-  };
-  var saveAchievementRates = (a) => lsSet(ACHIEVEMENT_RATE_KEY, JSON.stringify(a));
-  var getAchievementBonus = (rate) => {
-    if (rate >= 90) return { icon: "\u{1F3C6}", label: "\uC644\uC804 \uB2EC\uC131", bonus: "\uB2E4\uC74C \uD68C\uCC28 \uC2DC\uC791 \uC2A4\uD0EF +5 \uC804\uCCB4, \uACE8\uB4DC +200", penalty: null };
-    if (rate >= 70) return { icon: "\u2B50", label: "\uC6B0\uC218 \uB2EC\uC131", bonus: "\uB2E4\uC74C \uD68C\uCC28 \uC2DC\uC791 \uC2A4\uD0EF +3 \uC804\uCCB4", penalty: null };
-    if (rate >= 50) return { icon: "\u2705", label: "\uBCF4\uD1B5 \uB2EC\uC131", bonus: "\uB2E4\uC74C \uD68C\uCC28 \uC2DC\uC791 \uC2A4\uD0EF +1 \uC804\uCCB4", penalty: null };
-    if (rate >= 30) return { icon: "\u26A0\uFE0F", label: "\uBD80\uC9C4 \uB2EC\uC131", bonus: null, penalty: "\uB2E4\uC74C \uD68C\uCC28 \uC2DC\uC791 \uC2A4\uD0EF -2 \uC804\uCCB4" };
-    return { icon: "\u{1F480}", label: "\uC2E4\uD328", bonus: null, penalty: "\uB2E4\uC74C \uD68C\uCC28 \uC2DC\uC791 \uC2A4\uD0EF -5, NPC \uC2E0\uB8B0\uB3C4 \uD558\uB77D" };
-  };
-  var recordAchievementRate = (rate, scenario) => {
-    const rates = loadAchievementRates();
-    rates.push({ rate: Math.round(rate), scenario: scenario || "", recordedAt: (/* @__PURE__ */ new Date()).toISOString(), bonus: getAchievementBonus(rate) });
-    saveAchievementRates(rates);
-  };
-  var getLastAchievementBonus = () => {
-    const cycle = loadCycleCount();
-    if (cycle < 1) return null;
-    const rates = loadAchievementRates();
-    if (!rates.length) return null;
-    const last = rates[rates.length - 1];
-    return { ...last, ...getAchievementBonus(last.rate) };
-  };
-  var ROMANCE_LEGACY_KEY = "taleforge-romance-legacy";
-  var loadRomanceLegacy = () => {
-    const r = lsGet(ROMANCE_LEGACY_KEY);
-    return r ? JSON.parse(r) : [];
-  };
-  var saveRomanceLegacy = (l) => lsSet(ROMANCE_LEGACY_KEY, JSON.stringify(l));
-  var recordRomanceLegacy = (npcName, depth, scenario) => {
-    if (!npcName || depth < 1) return;
-    const legacy = loadRomanceLegacy();
-    const existing = legacy.find((l) => l.npcName === npcName);
-    if (existing) {
-      existing.depth = Math.min(5, (existing.depth || 1) + 1);
-      existing.encounters = (existing.encounters || 1) + 1;
-    } else {
-      const fate = ROMANCE_FATES[Math.min(4, Math.max(0, depth - 1))];
-      legacy.push({ npcName, depth: Math.min(5, depth), encounters: 1, scenario: scenario || "", fate, recordedAt: (/* @__PURE__ */ new Date()).toISOString() });
-    }
-    saveRomanceLegacy(legacy);
-  };
-  var getRomanceLegacy = () => {
-    const cycle = loadCycleCount();
-    if (cycle < 1) return [];
-    return loadRomanceLegacy().map((l) => ({ ...l, fate: ROMANCE_FATES[Math.min(4, (l.depth || 1) - 1)] }));
-  };
-  var BESTIARY_KEY = "taleforge-bestiary";
-  var loadBestiary = () => {
-    const r = lsGet(BESTIARY_KEY);
-    return r ? JSON.parse(r) : {};
-  };
-  var saveBestiary = (b) => lsSet(BESTIARY_KEY, JSON.stringify(b));
-  var getBestiaryInsight = (killCount) => {
-    if (killCount >= 20) return { level: "\uC804\uBB38\uAC00", icon: "\u{1F480}", desc: "\uC774 \uBAAC\uC2A4\uD130\uC758 \uBAA8\uB4E0 \uC57D\uC810\uACFC \uD328\uD134\uC744 \uAFF0\uB6AB\uACE0 \uC788\uB2E4.", bonus: "\uD574\uB2F9 \uBAAC\uC2A4\uD130 \uC804\uD22C \uD310\uC815 +25" };
-    if (killCount >= 10) return { level: "\uC219\uB828", icon: "\u2694\uFE0F", desc: "\uC8FC\uC694 \uC57D\uC810\uC744 \uD30C\uC545\uD558\uACE0 \uC788\uB2E4.", bonus: "\uD574\uB2F9 \uBAAC\uC2A4\uD130 \uC804\uD22C \uD310\uC815 +15" };
-    if (killCount >= 5) return { level: "\uC775\uC219", icon: "\u{1F5E1}\uFE0F", desc: "\uAE30\uBCF8 \uD328\uD134 \uC815\uB3C4\uB294 \uC54C\uACE0 \uC788\uB2E4.", bonus: "\uD574\uB2F9 \uBAAC\uC2A4\uD130 \uC804\uD22C \uD310\uC815 +8" };
-    if (killCount >= 2) return { level: "\uACBD\uD5D8", icon: "\u{1F441}\uFE0F", desc: "\uC774 \uBAAC\uC2A4\uD130\uB97C \uBCF8 \uC801\uC774 \uC788\uB2E4.", bonus: "\uAE30\uC2B5 \uD53C\uD574 \uD655\uB960 \uAC10\uC18C" };
-    return { level: "\uCD08\uBA74", icon: "\u2753", desc: "\uCC98\uC74C \uBCF4\uB294 \uBAAC\uC2A4\uD130\uB2E4.", bonus: "\uC5C6\uC74C" };
-  };
-  var recordMonsterKill = (monsterName, monsterType) => {
-    if (!monsterName) return;
-    const bestiary = loadBestiary();
-    if (!bestiary[monsterName]) {
-      bestiary[monsterName] = { name: monsterName, type: monsterType || "\uC77C\uBC18", killCount: 0, firstKill: (/* @__PURE__ */ new Date()).toISOString() };
-    }
-    bestiary[monsterName].killCount = (bestiary[monsterName].killCount || 0) + 1;
-    bestiary[monsterName].lastKill = (/* @__PURE__ */ new Date()).toISOString();
-    saveBestiary(bestiary);
-  };
-  var getBestiaryStatus = (monsterName) => {
-    if (!monsterName) return null;
-    const bestiary = loadBestiary();
-    const entry = bestiary[monsterName];
-    if (!entry) return { name: monsterName, killCount: 0, insight: getBestiaryInsight(0) };
-    return { ...entry, insight: getBestiaryInsight(entry.killCount) };
-  };
-  var getFullBestiary = () => {
-    const cycle = loadCycleCount();
-    if (cycle < 1) return {};
-    const bestiary = loadBestiary();
-    const total = Object.keys(bestiary).length;
-    const totalKills = Object.values(bestiary).reduce((sum, e) => sum + (e.killCount || 0), 0);
-    return { entries: bestiary, total, totalKills, completionBonus: total >= 20 ? "\uB3C4\uAC10 \uC644\uC131: \uBAA8\uB4E0 \uBAAC\uC2A4\uD130 \uC804\uD22C \uD310\uC815 +5" : null };
-  };
-  var MEMORY_MERCHANT_KEY = "taleforge-memory-merchant";
-  var loadMemoryMerchant = () => {
-    const r = lsGet(MEMORY_MERCHANT_KEY);
-    return r ? JSON.parse(r) : { visits: 0, purchasedHints: [] };
-  };
-  var getMemoryMerchantStatus = () => {
-    const cycle = loadCycleCount();
-    if (cycle < 4) return null;
-    const merchant = loadMemoryMerchant();
-    return { ...merchant, availableHints: MERCHANT_HINTS, appears: cycle >= 4 };
-  };
-  var TIME_TOKEN_KEY = "taleforge-time-token";
-  var loadTimeTokens = () => {
-    const r = lsGet(TIME_TOKEN_KEY);
-    return r ? JSON.parse(r) : { tokens: 0, used: 0, totalEarned: 0 };
-  };
-  var saveTimeTokens = (t) => lsSet(TIME_TOKEN_KEY, JSON.stringify(t));
-  var earnTimeToken = (conditionId) => {
-    const tokens = loadTimeTokens();
-    if ((tokens.tokens || 0) >= 10) return false;
-    tokens.tokens = (tokens.tokens || 0) + 1;
-    tokens.totalEarned = (tokens.totalEarned || 0) + 1;
-    tokens.lastEarned = { conditionId, earnedAt: (/* @__PURE__ */ new Date()).toISOString() };
-    saveTimeTokens(tokens);
-    return true;
-  };
-  var useTimeToken = () => {
-    const tokens = loadTimeTokens();
-    if ((tokens.tokens || 0) <= 0) return false;
-    tokens.tokens -= 1;
-    tokens.used = (tokens.used || 0) + 1;
-    tokens.lastUsed = (/* @__PURE__ */ new Date()).toISOString();
-    saveTimeTokens(tokens);
-    return true;
-  };
-  var resetTimeTokens = () => {
-    const tokens = loadTimeTokens();
-    tokens.tokens = 0;
-    saveTimeTokens(tokens);
-  };
-  var getTimeTokenStatus = () => {
-    return loadTimeTokens();
-  };
-  var SURVIVOR_COMPANIONS_KEY = "taleforge-survivor-companions";
-  var loadSurvivorCompanions = () => {
-    const r = lsGet(SURVIVOR_COMPANIONS_KEY);
-    return r ? JSON.parse(r) : [];
-  };
-  var saveSurvivorCompanions = (c) => lsSet(SURVIVOR_COMPANIONS_KEY, JSON.stringify(c));
-  var recordSurvivorCompanion = (npcName, bond, survived, scenario) => {
-    if (!npcName || !survived) return;
-    const companions = loadSurvivorCompanions();
-    const existing = companions.find((c) => c.npcName === npcName);
-    if (existing) {
-      existing.encounters = (existing.encounters || 1) + 1;
-      existing.stage = Math.min(4, (existing.stage || 0) + 1);
-      existing.bond = Math.min(100, (existing.bond || bond) + 10);
-    } else {
-      companions.push({ npcName, bond: bond || 30, survived: true, encounters: 1, stage: 0, scenario: scenario || "", recordedAt: (/* @__PURE__ */ new Date()).toISOString() });
-    }
-    saveSurvivorCompanions(companions);
-  };
-  var getSurvivorCompanions = () => {
-    const cycle = loadCycleCount();
-    if (cycle < 1) return [];
-    return loadSurvivorCompanions().map((c) => ({ ...c, memoryStage: COMPANION_MEMORY_STAGES[Math.min(4, c.stage || 0)] }));
-  };
-  var UNDYING_GAUGE_KEY = "taleforge-undying-gauge";
-  var loadUndyingGauge = () => {
-    const r = lsGet(UNDYING_GAUGE_KEY);
-    return r ? JSON.parse(r) : { gauge: 0, maxGauge: 10, passiveReady: false, passiveUsedThisCycle: false, totalNearDeaths: 0 };
-  };
-  var saveUndyingGauge = (g) => lsSet(UNDYING_GAUGE_KEY, JSON.stringify(g));
-  var fillUndyingGauge = (amount) => {
-    const g = loadUndyingGauge();
-    g.gauge = Math.min(g.maxGauge || 10, (g.gauge || 0) + (amount || 1));
-    g.totalNearDeaths = (g.totalNearDeaths || 0) + 1;
-    g.passiveReady = g.gauge >= (g.maxGauge || 10);
-    saveUndyingGauge(g);
-    return g;
-  };
-  var triggerUndyingPassive = () => {
-    const g = loadUndyingGauge();
-    if (!g.passiveReady || g.passiveUsedThisCycle) return false;
-    g.passiveUsedThisCycle = true;
-    g.passiveReady = false;
-    g.gauge = 0;
-    saveUndyingGauge(g);
-    return true;
-  };
-  var resetUndyingGaugeCycle = () => {
-    const g = loadUndyingGauge();
-    g.passiveUsedThisCycle = false;
-    saveUndyingGauge(g);
-  };
-  var getUndyingGaugeStatus = () => loadUndyingGauge();
-  var LANGUAGE_UNLOCK_KEY = "taleforge-languages";
-  var loadLanguages = () => {
-    const r = lsGet(LANGUAGE_UNLOCK_KEY);
-    return r ? JSON.parse(r) : [];
-  };
-  var saveLanguages = (l) => lsSet(LANGUAGE_UNLOCK_KEY, JSON.stringify(l));
-  var unlockLanguage = (languageId, bondLevel, scenario) => {
-    if (!languageId) return;
-    const langs = loadLanguages();
-    const def = LANGUAGE_DEFS.find((l) => l.id === languageId);
-    if (!def || bondLevel < def.minBond) return;
-    if (langs.find((l) => l.id === languageId)) return;
-    langs.push({ ...def, bondLevel, scenario: scenario || "", unlockedAt: (/* @__PURE__ */ new Date()).toISOString() });
-    saveLanguages(langs);
-  };
-  var getUnlockedLanguages = () => {
-    const cycle = loadCycleCount();
-    if (cycle < 1) return [];
-    return loadLanguages();
-  };
-  function getAncientLangBLS() {
-    try {
-      const langs = loadLanguages();
-      if (!langs.length) return "";
-      const lines = langs.map((l) => `${l.icon} ${l.name}: ${l.bonus}`);
-      return "\n\n[\u{1F5E3}\uFE0F \uC2B5\uB4DD\uD55C \uC5B8\uC5B4]\n" + lines.join("\n") + "\n\uD574\uB2F9 \uC5B8\uC5B4\uAC00 \uD544\uC694\uD55C \uC0C1\uD669(\uBE44\uBB38 \uD574\uB3C5, \uC885\uC871 NPC\uC640\uC758 \uAE4A\uC740 \uB300\uD654 \uB4F1)\uC5D0\uC11C \uC774 \uB2A5\uB825\uC744 \uD65C\uC6A9\uD55C \uC11C\uC0AC\uB97C \uC804\uAC1C\uD558\uB77C.";
-    } catch (e) {
-      return "";
-    }
-  }
-  window.getAncientLangBLS = getAncientLangBLS;
-  window.getAncientLangBLS = getAncientLangBLS;
-  function getDiplomacyBLS() {
-    try {
-      const d = typeof loadDemesne === "function" ? loadDemesne() : null;
-      if (!d || !d.established || !(d.vassals || []).length) return "";
-      const lines = d.vassals.map((v) => {
-        const bondLabel = (v.bond || 30) >= 70 ? "\uCDA9\uC131" : (v.bond || 30) >= 40 ? "\uC911\uB9BD" : "\uBD88\uB9CC";
-        return `${v.name || "\uBD09\uC2E0"}(${v.role || "\uAE30\uC0AC"}): \uC720\uB300 ${v.bond || 30} \u2014 ${bondLabel}`;
-      });
-      return "\n\n[\u{1F91D} \uBD09\uC2E0 \uC678\uAD50 \uD604\uD669]\n" + lines.join("\n");
-    } catch (e) {
-      return "";
-    }
-  }
-  window.getDiplomacyBLS = getDiplomacyBLS;
-  window.getDiplomacyBLS = getDiplomacyBLS;
-  function getLoopWorldBLS() {
-    try {
-      const cycle = typeof loadCycleCount === "function" ? loadCycleCount() : 0;
-      if (cycle < 1) return "";
-      return `
-
-[\u{1F504} \uB8E8\uD504 ${cycle}\uD68C\uCC28] \uC774 \uC138\uACC4\uB294 ${cycle}\uBC88\uC9F8 \uC21C\uD658\uC744 \uACAA\uACE0 \uC788\uB2E4. \uC8FC\uC778\uACF5\uC740 \uC804\uC0DD\uC758 \uAE30\uC5B5\uACFC \uB2A5\uB825 \uC77C\uBD80\uB97C \uAC04\uC9C1\uD558\uACE0 \uC788\uB2E4.`;
-    } catch (e) {
-      return "";
-    }
-  }
-  window.getLoopWorldBLS = getLoopWorldBLS;
-  window.getLoopWorldBLS = getLoopWorldBLS;
-  var BARD_LEGEND_KEY = "taleforge-bard-legend";
-  var loadBardLegend = () => {
-    const r = lsGet(BARD_LEGEND_KEY);
-    return r ? JSON.parse(r) : { verses: [], fame: 0, distortionLevel: 0 };
-  };
-  var saveBardLegend = (l) => lsSet(BARD_LEGEND_KEY, JSON.stringify(l));
-  var addBardVerse = (event, characterName, scenario) => {
-    if (!event) return;
-    const legend = loadBardLegend();
-    legend.fame = (legend.fame || 0) + 10;
-    legend.distortionLevel = Math.min(4, Math.floor((legend.fame || 0) / 30));
-    legend.verses = legend.verses || [];
-    const distortion = LEGEND_DISTORTION_LEVELS[legend.distortionLevel];
-    legend.verses.push({ event, characterName: characterName || "\uC804\uC0DD\uC758 \uC601\uC6C5", scenario: scenario || "", distortion: distortion.label, addedAt: (/* @__PURE__ */ new Date()).toISOString() });
-    saveBardLegend(legend);
-  };
-  var getBardLegendStatus = () => {
-    const cycle = loadCycleCount();
-    if (cycle < 2) return null;
-    const legend = loadBardLegend();
-    const distortion = LEGEND_DISTORTION_LEVELS[legend.distortionLevel || 0];
-    return { ...legend, distortionData: distortion };
-  };
-  var MYSTERY_PUZZLE_KEY = "taleforge-mystery-puzzle";
-  var loadMysteryPuzzle = () => {
-    const r = lsGet(MYSTERY_PUZZLE_KEY);
-    return r ? JSON.parse(r) : { pieces: [], totalPieces: 12, solved: false };
-  };
-  var saveMysteryPuzzle = (p) => lsSet(MYSTERY_PUZZLE_KEY, JSON.stringify(p));
-  var collectMysteryPiece = (cycle) => {
-    const puzzle = loadMysteryPuzzle();
-    const piece = MYSTERY_PIECES.find((p) => p.revealAt === cycle && !puzzle.pieces.find((pp) => pp.id === p.id));
-    if (piece) {
-      puzzle.pieces.push({ ...piece, collectedAt: (/* @__PURE__ */ new Date()).toISOString(), cycle });
-      puzzle.solved = puzzle.pieces.length >= puzzle.totalPieces;
-      saveMysteryPuzzle(puzzle);
-      return piece;
-    }
-    return null;
-  };
-  var getMysteryPuzzleStatus = () => {
-    const cycle = loadCycleCount();
-    if (cycle < 1) return null;
-    const puzzle = loadMysteryPuzzle();
-    return { ...puzzle, nextPiece: MYSTERY_PIECES.find((p) => p.revealAt === cycle + 1) };
-  };
-  var WATCHER_GAZE_KEY = "taleforge-watcher-gaze";
-  var loadWatcherGaze = () => {
-    const r = lsGet(WATCHER_GAZE_KEY);
-    return r ? JSON.parse(r) : { gazeCount: 0, revealed: false, stage: 0 };
-  };
-  var saveWatcherGaze = (w) => lsSet(WATCHER_GAZE_KEY, JSON.stringify(w));
-  var progressWatcherGaze = (cycle) => {
-    const gaze = loadWatcherGaze();
-    if (cycle < 6) return null;
-    const newStage = Math.min(5, Math.floor((cycle - 6) / 2));
-    if (newStage > (gaze.stage || 0)) {
-      gaze.stage = newStage;
-      gaze.gazeCount = (gaze.gazeCount || 0) + 1;
-      if (newStage >= 5) gaze.revealed = true;
-      saveWatcherGaze(gaze);
-    }
-    return { ...gaze, stageData: WATCHER_STAGES[gaze.stage || 0] };
-  };
-  var getWatcherGazeStatus = () => {
-    const cycle = loadCycleCount();
-    if (cycle < 6) return null;
-    const gaze = loadWatcherGaze();
-    return { ...gaze, stageData: WATCHER_STAGES[gaze.stage || 0] };
-  };
-  var FATE_CARD_KEY = "taleforge-fate-card";
-  var loadFateCard = () => {
-    const r = lsGet(FATE_CARD_KEY);
-    return r ? JSON.parse(r) : null;
-  };
-  var saveFateCard = (c) => lsSet(FATE_CARD_KEY, JSON.stringify(c));
-  var drawFateCards = () => {
-    const shuffled = [...FATE_CARD_POOL].sort(() => Math.random() - 0.5);
-    return shuffled.slice(0, 3);
-  };
-  var selectFateCard = (cardId) => {
-    const card = FATE_CARD_POOL.find((c) => c.id === cardId);
-    if (!card) return null;
-    saveFateCard({ ...card, selectedAt: (/* @__PURE__ */ new Date()).toISOString(), cycle: loadCycleCount() });
-    return card;
-  };
-  var getCurrentFateCard = () => {
-    return loadFateCard();
-  };
-  var HIDEOUT_KEY = "taleforge-hideout";
-  var loadHideout = () => {
-    const r = lsGet(HIDEOUT_KEY);
-    return r ? JSON.parse(r) : { facilities: [], level: 0, totalUpgrades: 0 };
-  };
-  var saveHideout = (h) => lsSet(HIDEOUT_KEY, JSON.stringify(h));
-  var upgradeHideout = (cycle) => {
-    const hideout = loadHideout();
-    const newFacilities = HIDEOUT_FACILITIES.filter((f) => f.unlockCycle <= cycle && !hideout.facilities.find((hf) => hf.id === f.id));
-    newFacilities.forEach((f) => {
-      hideout.facilities.push({ ...f, unlockedAt: (/* @__PURE__ */ new Date()).toISOString(), unlockedCycle: cycle });
-      hideout.totalUpgrades = (hideout.totalUpgrades || 0) + 1;
-    });
-    hideout.level = hideout.facilities.length;
-    saveHideout(hideout);
-    return { newFacilities, hideout };
-  };
-  var getHideoutStatus = () => {
-    const cycle = loadCycleCount();
-    if (cycle < 1) return null;
-    const hideout = loadHideout();
-    const nextFacility = HIDEOUT_FACILITIES.find((f) => f.unlockCycle > cycle && !hideout.facilities.find((hf) => hf.id === f.id));
-    return { ...hideout, nextFacility };
-  };
-  var EVIL_EYE_KEY = "taleforge-evil-eye";
-  var loadEvilEye = () => {
-    const r = lsGet(EVIL_EYE_KEY);
-    return r ? JSON.parse(r) : { killCount: 0, awakened: false, level: 0 };
-  };
-  var saveEvilEye = (e) => lsSet(EVIL_EYE_KEY, JSON.stringify(e));
-  var recordEvilEyeKill = (count) => {
-    const eye = loadEvilEye();
-    eye.killCount = (eye.killCount || 0) + (count || 1);
-    const newLevel = EVIL_EYE_LEVELS.reduce((acc, l) => eye.killCount >= l.killsRequired ? l.level : acc, 0);
-    const didAwaken = newLevel > (eye.level || 0);
-    eye.level = newLevel;
-    eye.awakened = newLevel > 0;
-    if (didAwaken) eye.awakenedAt = (/* @__PURE__ */ new Date()).toISOString();
-    saveEvilEye(eye);
-    return { ...eye, levelData: EVIL_EYE_LEVELS[eye.level], didAwaken };
-  };
-  var getEvilEyeStatus = () => {
-    const eye = loadEvilEye();
-    return { ...eye, levelData: EVIL_EYE_LEVELS[eye.level || 0], nextLevel: EVIL_EYE_LEVELS[(eye.level || 0) + 1] || null };
-  };
-  var MOON_PHASE_KEY = "taleforge-moon-phase";
-  var loadMoonPhase = () => {
-    const r = lsGet(MOON_PHASE_KEY);
-    return r ? JSON.parse(r) : null;
-  };
-  var saveMoonPhase = (m) => lsSet(MOON_PHASE_KEY, JSON.stringify(m));
-  var assignMoonPhase = (deathTimestamp) => {
-    const date = deathTimestamp ? new Date(deathTimestamp) : /* @__PURE__ */ new Date();
-    const day = date.getDate();
-    const phaseIdx = Math.floor(day / 30 * 8) % 8;
-    const phase = MOON_PHASES[phaseIdx];
-    saveMoonPhase({ ...phase, assignedAt: (/* @__PURE__ */ new Date()).toISOString(), deathDay: day });
-    return phase;
-  };
-  var getMoonPhase = () => {
-    const cycle = loadCycleCount();
-    if (cycle < 1) return null;
-    return loadMoonPhase();
   };
 
   // src/data/028-악마족-진명-시스템-Demon-True-Name.js
@@ -84172,127 +84383,6 @@ ${esc2(sk.desc || "")}">
     }, 300);
   }
   window.resolveRandomEvent = resolveRandomEvent;
-
-  // src/data/211-8-로맨스-시스템.js
-  var ROMANCE_STAGES = [
-    { level: 0, name: "\uBAA8\uB984", threshold: 0, icon: "\u{1F464}", desc: "\uC544\uC9C1 \uC778\uC5F0\uC774 \uC5C6\uB2E4" },
-    { level: 1, name: "\uC548\uBA74", threshold: 20, icon: "\u{1F91D}", desc: "\uC11C\uB85C\uB97C \uC54C\uAE30 \uC2DC\uC791\uD588\uB2E4" },
-    { level: 2, name: "\uCE5C\uAD6C", threshold: 40, icon: "\u{1F60A}", desc: "\uBBFF\uC744 \uC218 \uC788\uB294 \uC0AC\uC774" },
-    { level: 3, name: "\uD638\uAC10", threshold: 60, icon: "\u{1F499}", desc: "\uB9C8\uC74C\uC18D\uC5D0 \uD2B9\uBCC4\uD55C \uC790\uB9AC" },
-    { level: 4, name: "\uC5F0\uC778", threshold: 80, icon: "\u{1F495}", desc: "\uC11C\uB85C\uC758 \uACC1\uC5D0 \uC788\uACE0 \uC2F6\uB2E4" },
-    { level: 5, name: "\uC601\uC6D0\uD55C \uC778\uC5F0", threshold: 100, icon: "\u{1F48D}", desc: "\uC774 \uC0DD\uC774 \uB05D\uB098\uB3C4 \uCC3E\uC544\uC62C \uAC83\uC774\uB2E4" }
-  ];
-
-  // src/npc/211-8-로맨스-시스템.js
-  var ROMANCE_KEY = "tf-romance";
-  var ROMANCE_POINTS_KEY = "tf-romance-points";
-  var ROMANCE_EVENTS_KEY = "tf-romance-events";
-  window.ROMANCE_STAGES = ROMANCE_STAGES;
-  function loadRomance() {
-    try {
-      const pts = lsGet(ROMANCE_POINTS_KEY);
-      const evs = lsGet(ROMANCE_EVENTS_KEY);
-      if (pts) {
-        const pObj = JSON.parse(pts);
-        const eObj = evs ? JSON.parse(evs) : {};
-        const merged = {};
-        Object.keys(pObj).forEach((name) => {
-          merged[name] = { ...pObj[name], events: eObj[name] || [] };
-        });
-        return merged;
-      }
-      return JSON.parse(lsGet(ROMANCE_KEY) || "{}");
-    } catch (e) {
-      return {};
-    }
-  }
-  window.loadRomance = loadRomance;
-  function saveRomance(d) {
-    try {
-      const points = {};
-      const events = {};
-      Object.keys(d).forEach((name) => {
-        points[name] = { points: d[name].points || 0, stage: d[name].stage || 0 };
-        events[name] = d[name].events || [];
-      });
-      lsSet(ROMANCE_POINTS_KEY, JSON.stringify(points));
-      lsSet(ROMANCE_EVENTS_KEY, JSON.stringify(events));
-      lsSet(ROMANCE_KEY, JSON.stringify(d));
-    } catch (e) {
-    }
-  }
-  window.saveRomance = saveRomance;
-  function addRomancePoint(npcName, delta) {
-    try {
-      const rom = loadRomance();
-      if (!rom[npcName]) rom[npcName] = { points: 0, stage: 0, events: [] };
-      rom[npcName].points = Math.max(0, Math.min(100, (rom[npcName].points || 0) + delta));
-      checkRomanceStage(npcName, rom);
-      saveRomance(rom);
-    } catch (e) {
-    }
-  }
-  window.addRomancePoint = addRomancePoint;
-  function checkRomanceStage(npcName, rom) {
-    try {
-      rom = rom || loadRomance();
-      const r = rom[npcName];
-      if (!r) return;
-      const newStage = [...ROMANCE_STAGES].reverse().find((s) => r.points >= s.threshold);
-      if (newStage && newStage.level !== r.stage) {
-        const prev = ROMANCE_STAGES[r.stage];
-        r.stage = newStage.level;
-        toast(`${npcName}\uACFC\uC758 \uAD00\uACC4: ${prev?.name || ""} \u2192 ${newStage.name}`, 3e3, newStage);
-        if (newStage.level >= 4) {
-          unlockAchievement("romance_bloom");
-          triggerRomanceEvent(npcName, newStage);
-        }
-      }
-    } catch (e) {
-    }
-  }
-  window.checkRomanceStage = checkRomanceStage;
-  function triggerRomanceEvent(npcName, stage) {
-    try {
-      if (typeof addButterflyEffect === "function")
-        addButterflyEffect({ desc: `${npcName}\uC640 ${stage.name} \uAD00\uACC4 \uB3C4\uB2EC`, impact: 3, worldChange: "\uC778\uC5F0\uC774 \uAE4A\uC5B4\uC84C\uB2E4" });
-      if (typeof recordRomanceLegacy === "function") recordRomanceLegacy(npcName, stage.level, S.scenario?.id);
-      if (typeof setRedThread === "function") setRedThread(npcName, stage.level * 20, S.scenario?.id);
-    } catch (e) {
-    }
-  }
-  window.triggerRomanceEvent = triggerRomanceEvent;
-  function getRomanceStatus(npcName) {
-    try {
-      const rom = loadRomance();
-      const r = rom[npcName];
-      if (!r) return ROMANCE_STAGES[0];
-      return ROMANCE_STAGES[r.stage] || ROMANCE_STAGES[0];
-    } catch (e) {
-      return ROMANCE_STAGES[0];
-    }
-  }
-  window.getRomanceStatus = getRomanceStatus;
-  function getRomanceBLS() {
-    try {
-      const rom = typeof loadRomance === "function" ? loadRomance() : {};
-      const active = Object.entries(rom).filter(([, r]) => (r?.stage || 0) > 0);
-      if (!active.length) return "";
-      const lines = active.map(([name, r]) => {
-        const stage = ROMANCE_STAGES[r.stage] || ROMANCE_STAGES[0];
-        return `${name}: ${stage.icon}${stage.name}(${r.points || 0}pt)`;
-      });
-      return "\n\n[\u{1F495} \uB85C\uB9E8\uC2A4 \uAD00\uACC4] " + lines.join(", ") + "\n\uAC01 NPC\uC640\uC758 \uD604\uC7AC \uAD00\uACC4 \uB2E8\uACC4\uC5D0 \uB9DE\uB294 \uD0DC\uB3C4\uC640 \uC560\uC815 \uD45C\uD604\uC744 \uC11C\uC0AC\uC5D0 \uC77C\uAD00\uB418\uAC8C \uBC18\uC601\uD558\uB77C.";
-    } catch (e) {
-      return "";
-    }
-  }
-  window.getRomanceBLS = getRomanceBLS;
-  window.loadRomance = loadRomance;
-  window.addRomancePoint = addRomancePoint;
-  window.checkRomanceStage = checkRomanceStage;
-  window.triggerRomanceEvent = triggerRomanceEvent;
-  window.getRomanceStatus = getRomanceStatus;
 
   // src/data/220-18-회차루프-시스템.js
   var DEATH_DEAL_HP_RATIO = { memory: 0.5, skill: 0.3, bond: 0.7, lifespan: 1 };
@@ -132965,7 +133055,7 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
             atk: 58,
             def: 34,
             desc: "\uBE59\uACB0 \uC0B0\uB9E5 \uAE4A\uC740 \uACF3\uC5D0\uC11C \uAC70\uC778 \uC655\uC774 \uBD80\uC871\uC744 \uC774\uB04C\uACE0 \uB0A8\uD558\uD558\uAE30 \uC2DC\uC791\uD588\uB2E4.",
-            rewardPool: ["frost_axe_c"]
+            rewardPool: ["frost_axe_c", "frost_giant_pauldron_c"]
           }
         ],
         east: [
@@ -132979,7 +133069,7 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
             atk: 66,
             def: 24,
             desc: "\uD654\uC0B0\uB9E5 \uC2EC\uC5F0\uC5D0\uC11C \uAC70\uB300\uD55C \uC6A9\uC554 \uC9D0\uC2B9\uC774 \uAE30\uC5B4\uB098\uC640 \uB9C8\uC744\uB4E4\uC744 \uBD88\uD0DC\uC6B0\uACE0 \uC788\uB2E4.",
-            rewardPool: ["flame_greatsword_c"]
+            rewardPool: ["flame_greatsword_c", "magma_behemoth_plate_c"]
           }
         ],
         west: [
@@ -132993,7 +133083,7 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
             atk: 60,
             def: 22,
             desc: "\uBB34\uC5ED\uD56D \uC778\uADFC \uD574\uC5ED\uC5D0 \uAC70\uB300\uD55C \uD06C\uB77C\uCF04\uC774 \uCD9C\uBAB0\uD574 \uC120\uBC15\uB4E4\uC744 \uCE68\uBAB0\uC2DC\uD0A4\uACE0 \uC788\uB2E4.",
-            rewardPool: ["leviathan_trident_c"]
+            rewardPool: ["leviathan_trident_c", "kraken_ink_cloak_c"]
           }
         ],
         south: [
@@ -133007,7 +133097,7 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
             atk: 60,
             def: 30,
             desc: "\uBD09\uC778\uB41C \uACE0\uB300 \uC2E0\uC804\uC774 \uBB34\uB108\uC9C0\uBA70 \uBBF8\uB77C \uD30C\uB77C\uC624\uAC00 \uAD70\uC138\uB97C \uC77C\uC73C\uCF1C \uBD80\uD65C\uD588\uB2E4.",
-            rewardPool: ["sun_scepter_c"]
+            rewardPool: ["sun_scepter_c", "pharaoh_greaves_c"]
           }
         ],
         northeast: [
@@ -133021,7 +133111,7 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
             atk: 56,
             def: 32,
             desc: "\uC138\uACC4\uC218 \uBFCC\uB9AC \uAE4A\uC740 \uACF3\uC774 \uBCD1\uB4E4\uC5B4 \uC815\uB839\uC774 \uD0C0\uB77D\uD55C \uCC44\uB85C \uC232\uC744 \uD729\uC4F8\uACE0 \uC788\uB2E4.",
-            rewardPool: ["worldroot_staff_c"]
+            rewardPool: ["worldroot_staff_c", "purified_bark_armor_c"]
           }
         ],
         southeast: [
@@ -133035,7 +133125,7 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
             atk: 64,
             def: 26,
             desc: "\uBD09\uC778\uC774 \uD754\uB4E4\uB9AC\uBA70 \uC2EC\uC5F0\uC5D0\uC11C \uD0DC\uACE0\uC758 \uAD34\uC218\uAC00 \uC218\uBA74 \uC704\uB85C \uB5A0\uC624\uB974\uACE0 \uC788\uB2E4.",
-            rewardPool: ["abyssal_harpoon_c"]
+            rewardPool: ["abyssal_harpoon_c", "abyssal_scale_armor_c"]
           }
         ],
         northwest: [
@@ -133049,7 +133139,7 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
             atk: 68,
             def: 36,
             desc: "\uC9C0\uD558 \uC655\uAD6D \uC2EC\uCE35\uBD80\uC758 \uACE0\uB300 \uAE30\uACC4 \uC2E0\uC804\uC5D0\uC11C \uAC70\uB300 \uACE8\uB818\uC774 \uD3ED\uC8FC\uD558\uBA70 \uAE68\uC5B4\uB0AC\uB2E4.",
-            rewardPool: ["gearheart_hammer_c"]
+            rewardPool: ["gearheart_hammer_c", "colossus_gauntlet_c"]
           }
         ]
       };
@@ -133062,7 +133152,19 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
         sun_scepter_c: { id: "sun_scepter_c", name: "\uD0DC\uC591\uC655\uC758 \uD640", icon: "\u2600\uFE0F", type: "equip", slot: "weapon", rarity: "legendary", effects: { mgc: 42, wil: 22, fath: 18, hp: 30 }, desc: "\uD30C\uB77C\uC624\uC758 \uAD8C\uB2A5\uC774 \uAE43\uB4E0 \uC9C0\uD321\uC774. \uD0DC\uC591 \uB9C8\uBC95\uC744 \uC99D\uD3ED\uD55C\uB2E4." },
         worldroot_staff_c: { id: "worldroot_staff_c", name: "\uC138\uACC4\uC218 \uBFCC\uB9AC \uC9C0\uD321\uC774", icon: "\u{1F33F}", type: "equip", slot: "weapon", rarity: "epic", effects: { mgc: 32, wil: 18, mp: 40 }, desc: "\uC815\uB839\uC744 \uC815\uD654\uD558\uACE0 \uB0A8\uC740 \uC138\uACC4\uC218\uC758 \uD798\uC774 \uAE43\uB4E4\uC5C8\uB2E4." },
         abyssal_harpoon_c: { id: "abyssal_harpoon_c", name: "\uC2EC\uC5F0\uC758 \uC791\uC0B4", icon: "\u{1F311}", type: "equip", slot: "weapon", rarity: "legendary", effects: { str: 36, fear: 20, crit: 24 }, desc: "\uC2EC\uC5F0\uAD34\uC218\uC758 \uBF08\uB97C \uBCBC\uB9B0 \uC791\uC0B4. \uB2FF\uB294 \uAC83\uC744 \uC5BC\uC5B4\uBD99\uAC8C \uD55C\uB2E4." },
-        gearheart_hammer_c: { id: "gearheart_hammer_c", name: "\uAE30\uC5B4\uD558\uD2B8\uC758 \uB9DD\uCE58", icon: "\u2699\uFE0F", type: "equip", slot: "weapon", rarity: "legendary", effects: { str: 44, end: 20, crit: 16, hp: 40 }, desc: "\uD3ED\uC8FC\uD55C \uAC70\uC2E0\uC758 \uD575\uC744 \uBD80\uC218\uACE0 \uC5BB\uC740 \uC804\uB9AC\uD488. \uD30C\uAD34\uB825\uC774 \uC555\uB3C4\uC801\uC774\uB2E4." }
+        gearheart_hammer_c: { id: "gearheart_hammer_c", name: "\uAE30\uC5B4\uD558\uD2B8\uC758 \uB9DD\uCE58", icon: "\u2699\uFE0F", type: "equip", slot: "weapon", rarity: "legendary", effects: { str: 44, end: 20, crit: 16, hp: 40 }, desc: "\uD3ED\uC8FC\uD55C \uAC70\uC2E0\uC758 \uD575\uC744 \uBD80\uC218\uACE0 \uC5BB\uC740 \uC804\uB9AC\uD488. \uD30C\uAD34\uB825\uC774 \uC555\uB3C4\uC801\uC774\uB2E4." },
+        // [63번 섹션] 보스 8종 중 7종이 rewardPool에 아이템 1개뿐이라
+        // Math.random() 추첨이 사실상 늘 같은 결과만 내던 공백을 메우려
+        // 추가한 2번째 보상 — 중앙 보스(룬 블레이드+드래곤 갑옷)처럼
+        // "무기 또는 방어구" 중 하나를 뽑는 기존 구조를 나머지 7개 보스에도
+        // 동일하게 적용(새 보상 등급·슬롯 체계를 지어내지 않고 그대로 재사용).
+        frost_giant_pauldron_c: { id: "frost_giant_pauldron_c", name: "\uC11C\uB9AC\uAC70\uC778\uC758 \uC5B4\uAE68 \uAC11\uC8FC", icon: "\u{1F9CA}", type: "equip", slot: "armor", rarity: "epic", effects: { end: 28, str: 15, hp: 45 }, desc: "\uAC70\uC778 \uC655\uC758 \uAC11\uC8FC \uC870\uAC01. \uD55C\uAE30\uAC00 \uBF1B\uC18D\uAE4C\uC9C0 \uC2A4\uBA70\uB4E0\uB2E4." },
+        magma_behemoth_plate_c: { id: "magma_behemoth_plate_c", name: "\uC6A9\uC554 \uBCA0\uD788\uBAA8\uC2A4\uC758 \uBE44\uB298 \uD749\uAC11", icon: "\u{1F30B}", type: "equip", slot: "armor", rarity: "epic", effects: { end: 30, str: 12, hp: 50 }, desc: "\uBCA0\uD788\uBAA8\uC2A4\uC758 \uBE44\uB298\uC744 \uACB9\uACB9\uC774 \uC5EE\uC740 \uD749\uAC11. \uB728\uAC70\uC6B4 \uC5F4\uAE30\uAC00 \uB0A8\uC544\uC788\uB2E4." },
+        kraken_ink_cloak_c: { id: "kraken_ink_cloak_c", name: "\uD06C\uB77C\uCF04\uC758 \uBA39\uBB3C \uB9DD\uD1A0", icon: "\u{1F5A4}", type: "equip", slot: "armor", rarity: "epic", effects: { agi: 25, per: 18, hp: 35 }, desc: "\uD06C\uB77C\uCF04\uC758 \uBA39\uBB3C\uB85C \uC5FC\uC0C9\uD55C \uB9DD\uD1A0. \uC5B4\uB460 \uC18D\uC5D0\uC11C \uAE30\uCC99\uC744 \uC9C0\uC6B4\uB2E4." },
+        pharaoh_greaves_c: { id: "pharaoh_greaves_c", name: "\uD30C\uB77C\uC624\uC758 \uC131\uC2A4\uB7EC\uC6B4 \uAC01\uBC18", icon: "\u2600\uFE0F", type: "equip", slot: "armor", rarity: "epic", effects: { wil: 20, fath: 15, hp: 40 }, desc: "\uD30C\uB77C\uC624\uC758 \uBB34\uB364\uC744 \uC9C0\uD0A4\uB358 \uC131\uC2A4\uB7EC\uC6B4 \uAC01\uBC18." },
+        purified_bark_armor_c: { id: "purified_bark_armor_c", name: "\uC815\uD654\uB41C \uC218\uD53C \uAC11\uC637", icon: "\u{1F333}", type: "equip", slot: "armor", rarity: "epic", effects: { wil: 22, mgc: 15, hp: 45 }, desc: "\uD0C0\uB77D\uC5D0\uC11C \uC815\uD654\uB41C \uC138\uACC4\uC218 \uC218\uD53C\uB85C \uC9E0 \uAC11\uC637." },
+        abyssal_scale_armor_c: { id: "abyssal_scale_armor_c", name: "\uC2EC\uC5F0\uC758 \uBE44\uB298 \uAC11\uC637", icon: "\u{1F30A}", type: "equip", slot: "armor", rarity: "epic", effects: { end: 28, str: 14, hp: 50 }, desc: "\uC2EC\uC5F0\uAD34\uC218\uC758 \uBE44\uB298\uB85C \uBCBC\uB9B0 \uAC11\uC637. \uC218\uC555\uC744 \uACAC\uB518\uB2E4." },
+        colossus_gauntlet_c: { id: "colossus_gauntlet_c", name: "\uAC70\uC2E0\uC758 \uC7A5\uAC11\uD310", icon: "\u2699\uFE0F", type: "equip", slot: "armor", rarity: "epic", effects: { end: 34, str: 10, hp: 55 }, desc: "\uD3ED\uC8FC\uD55C \uAC70\uC2E0\uC758 \uC190\uC5D0\uC11C \uB72F\uC5B4\uB0B8 \uC7A5\uAC11\uD310." }
       };
       window.RAID_REWARD_ITEMS = RAID_REWARD_ITEMS;
       const RAID_MIN_FAME_INDEX = 2;

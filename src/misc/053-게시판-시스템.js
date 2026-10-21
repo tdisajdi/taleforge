@@ -9,7 +9,9 @@ import { getOrCreateEnemyMaterials, rollDynamicScavenge, rollEventReward, saveGo
 import { saveSkillSP } from '../job/002-스킬-시스템.js';
 import { loadPlayerLevel } from '../job/008-클리어-보상-시스템-시나리오-클리어-시-영구-아이템스킬.js';
 import { getStatInfo } from '../job/010-스킬-강화-시스템.js';
+import { getRomanceStatus, loadMarriage } from '../npc/211-8-로맨스-시스템.js';
 import { loadFactionNewsQueue, renderFactionNewsBulletin } from '../npc/067-③-NPC-관계망-시스템.js';
+import { recordGamblingDebt } from '../progression/019-71100번-환생-누적-시스템.js';
 import { unlockAchievement } from '../progression/187-2-업적-시스템.js';
 import { closeP, grantTitle, huntBountyTarget, loadJailState, refreshBountyBoard, returnFromJail, saveJailState, showQuestAcceptPopup, updateQuestBadge } from '../quest/086-퀘스트임무-수락-팝업-시스템.js';
 import { maybeGenerateQuestLocation } from '../quest/229-NPC-대화-퀘스트-시스템-AI-생성.js';
@@ -260,6 +262,21 @@ export function renderLocationNpcs(loc){
         <button class="btn btn-gold" style="padding:4px 10px;font-size:8px" onclick="startConversationWithResident('${esc(npc.name)}','${esc(npc.role)}','${esc(npc.personality)}','${esc((loc.id||loc.name))}')">💬 대화하기</button>
         ${known && rel>=40 ? `<button class="btn btn-dark" style="padding:4px 8px;font-size:8px;border-color:#3a6a2a;color:#80c040" onclick="openNpcQuestDialog('${esc(npc.name)}')">📜 의뢰</button>` : ''}
         ${known && rel>=50 ? `<button class="btn btn-dark" style="padding:4px 8px;font-size:8px" onclick="giftNpc('${esc(npc.name)}')">🎁 선물</button>` : ''}
+        ${(()=>{
+          // [63번 섹션] 로맨스 호감도를 올릴 수 있는 유일한 로컬 경로.
+          // 기존엔 AI가 생성한 서사의 gs.romance 태그뿐이라 완전 무-API
+          // 모드에서는 영원히 못 올릴 수 있었던 공백을 메움.
+          if(!(known && rel>=40)) return '';
+          const marriage = (typeof loadMarriage==='function') ? loadMarriage() : { spouseName:null };
+          const romStatus = (typeof getRomanceStatus==='function') ? getRomanceStatus(npc.name) : { level:0 };
+          let html = `<button class="btn btn-dark" style="padding:4px 8px;font-size:8px;border-color:#6a2a4a;color:#e07aa0" onclick="courtNpc('${esc(npc.name)}')">💘 구애하기</button>`;
+          if(marriage.spouseName===npc.name){
+            html += `<span style="font-size:8px;padding:3px 7px;background:#1a0a10;border:1px solid #8a2a5a;color:#e07aa0;border-radius:2px">💍 배우자</span>`;
+          } else if(romStatus.level>=5 && !marriage.spouseName){
+            html += `<button class="btn btn-dark" style="padding:4px 8px;font-size:8px;border-color:#8a6a2a;color:#d4a030" onclick="proposeMarriage('${esc(npc.name)}')">💍 청혼하기</button>`;
+          }
+          return html;
+        })()}
       </div>
     </div>`;
   });
@@ -649,6 +666,26 @@ export function doInteraction(action, cost=0, transportType='walk'){
     // 동적으로 끼워 넣는 "낚시하기" 버튼의 핸들러. 실제 추첨/인벤토리
     // 로직은 misc/334의 goFishing()에 그대로 위임.
     goFishing: ()=>{ goFishing(); },
+    // [63번 섹션] "뒷골목 도박장"(int_gamble)이 실제로는 'checkBounty'
+    // (현상금 게시판)로 잘못 연결돼 있던 버그 수정 — 클릭하면 도박이
+    // 아니라 현상금 목록이 뜨던 상태였다. 자유 텍스트 트리거
+    // checkGamblingAction(quest/086)과 완전히 동일한 확률·판돈·빚
+    // 로직을 그대로 재사용해, 대화창에 특정 단어를 치지 않아도
+    // 버튼 클릭만으로 명확하게 도박할 수 있는 진입점을 신설한다
+    // ("뭐든 할 수 있는 생태계" — 서사 텍스트에 의존하지 않는 직접
+    // 행동 수단).
+    gambleAtDen: ()=>{
+      const won = Math.random() < 0.45;
+      const stake = 50 + Math.floor(Math.random()*150);
+      if(won){
+        if(typeof addGoldWithExchange==='function') addGoldWithExchange(stake, '도박 승리'); else { S.gold+=stake; saveGold(S.gold); }
+        window.updateHeader();
+        toastHTML(`🎲 도박에서 승리! 골드+${stake}`, 3000);
+      } else {
+        if(typeof recordGamblingDebt==='function') recordGamblingDebt(stake, S.scenario?.id);
+        toastHTML(`🎲 도박에서 패배... ${stake}G의 빚을 지고 말았다. 나중에 갚아야 한다.`, 3000);
+      }
+    },
     buyInfo: ()=>{ updateReputation(10); toast('💬 귀한 정보를 얻었다. 평판+10', 2000); },
     joinSect: ()=>{ toast('🐉 문파 가입 조건을 확인하세요. 강한 스탯과 명성이 필요합니다.', 3000); },
     hideout: ()=>{ updateReputation(-2); toast('🌲 은신 중... 추격자를 따돌렸다. 3턴간 안전', 2500); S._hideoutTurns=3; },

@@ -2664,7 +2664,7 @@ export const LOCATION_DATA = {
       ],
       interactions:[
         { id:'int_dock_work', name:'부두 하역 일', icon:'📦', desc:'짐을 나르며 골드 획득. STR+2.', action:'farmWork' },
-        { id:'int_gamble', name:'뒷골목 도박장', icon:'🎲', desc:'골드를 걸고 도박. 큰돈을 벌거나 잃는다.', action:'checkBounty' },
+        { id:'int_gamble', name:'뒷골목 도박장', icon:'🎲', desc:'골드를 걸고 도박. 큰돈을 벌거나 빚을 진다.', action:'gambleAtDen' },
       ],
       priceModifier: 1.0,
     },

@@ -36727,6 +36727,14 @@ ${lines.join("\n")}
     ]
   };
   var SCENARIO_NPC_EXTRA = {};
+  var ARENA_RANKS = [
+    { rank: 0, name: "\uCD08\uC2EC\uC790\uC758 \uACB0\uD22C", opponent: "\uB5A0\uB3CC\uC774 \uAC80\uAC1D", icon: "\u{1F5E1}\uFE0F", power: 35, rewardGold: 20, rewardRep: 15 },
+    { rank: 1, name: "\uC219\uB828\uC790\uC758 \uACB0\uD22C", opponent: "\uB178\uB828\uD55C \uC6A9\uBCD1", icon: "\u2694\uFE0F", power: 60, rewardGold: 45, rewardRep: 25 },
+    { rank: 2, name: "\uBCA0\uD14C\uB791\uC758 \uACB0\uD22C", opponent: "\uC804\uC7A5\uC758 \uC0DD\uC874\uC790", icon: "\u{1F6E1}\uFE0F", power: 90, rewardGold: 80, rewardRep: 40 },
+    { rank: 3, name: "\uC601\uC6C5\uC758 \uACB0\uD22C", opponent: "\uD22C\uAE30\uC7A5\uC758 \uC601\uC6C5 \uAC00\uB85D", icon: "\u{1F3C6}", power: 125, rewardGold: 150, rewardRep: 70 },
+    { rank: 4, name: "\uCC54\uD53C\uC5B8\uC758 \uACB0\uD22C", opponent: "\uBB34\uC1E0\uD314 \uCC54\uD53C\uC5B8 \uB3CC\uD63C", icon: "\u{1F451}", power: 160, rewardGold: 300, rewardRep: 120, championBonus: { str: 10 } }
+  ];
+  var INFERNAL_ARENA_OPPONENT = { name: "\uC9C0\uC625\uC758 \uD22C\uC0AC \uBC1C\uB85C\uB974", icon: "\u{1F479}", power: 200, rewardGold: 250, rewardRep: 0 };
 
   // src/data/032-NEW-날씨계절-판정-연동-시스템.js
   var WEATHER_EFFECTS = {
@@ -40028,12 +40036,18 @@ ${lines.join("\n")}
       const isTransport = int.action === "useTransport";
       const btnCall = isTransport ? `doInteraction('useTransport',${int.cost || 0},'${int.transportType || "walk"}')` : `doInteraction('${int.action}',${int.cost || 0})`;
       const transportBadge = isTransport ? `<span style="font-size:8px;padding:2px 5px;background:#1a2a1a;border:1px solid #3a6a3a;color:#6aca6a;border-radius:2px;margin-left:4px">\u{1F680} \uC774\uB3D9\uC218\uB2E8</span>` : "";
+      const arenaBadge = int.action === "jianghuDuel" ? (() => {
+        const rec = loadArenaRecord();
+        const idx = Math.min(rec.rank, ARENA_RANKS.length - 1);
+        const def = ARENA_RANKS[idx];
+        return `<span style="font-size:8px;padding:2px 5px;background:#1a1500;border:1px solid #8a6a2a;color:#d4a030;border-radius:2px;margin-left:4px">${def.icon} ${esc2(def.name)}</span>`;
+      })() : "";
       return `
     <div style="padding:10px 11px;background:#0d0800;border:1px solid var(--border);margin-bottom:6px">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
         <span style="font-size:18px">${typeof getEntityIconHTML === "function" ? getEntityIconHTML(int, { size: 18 }) : int.icon}</span>
         <div style="flex:1">
-          <div style="font-family:Cinzel,serif;font-size:10px;color:var(--gold)">${esc2(int.name)}${transportBadge}</div>
+          <div style="font-family:Cinzel,serif;font-size:10px;color:var(--gold)">${esc2(int.name)}${transportBadge}${arenaBadge}</div>
           <div style="font-size:10px;color:var(--dim)">${esc2(int.desc)}</div>
         </div>
         ${int.cost ? `<div style="font-size:10px;color:#f1c40f;flex-shrink:0">\u{1F4B0}${int.cost}</div>` : ""}
@@ -40057,6 +40071,27 @@ ${lines.join("\n")}
     renderLocationPanel();
   }
   window.buyLocItem = buyLocItem;
+  var ARENA_KEY = "tf-arena";
+  function loadArenaRecord() {
+    try {
+      return JSON.parse(lsGet(ARENA_KEY) || "null") || { rank: 0, wins: 0, losses: 0, championBonusGiven: false };
+    } catch (e) {
+      return { rank: 0, wins: 0, losses: 0, championBonusGiven: false };
+    }
+  }
+  window.loadArenaRecord = loadArenaRecord;
+  function saveArenaRecord(d) {
+    try {
+      lsSet(ARENA_KEY, JSON.stringify(d));
+    } catch (e) {
+    }
+  }
+  window.saveArenaRecord = saveArenaRecord;
+  function arenaWinChance(power) {
+    const playerPower = ((S?.stats?.str || 10) + (S?.stats?.agi || 10) + (S?.stats?.end || 10)) / 3;
+    const chance = 1 / (1 + Math.exp(-(playerPower - power) / 17.5));
+    return Math.max(0.05, Math.min(0.95, chance));
+  }
   function doInteraction(action, cost = 0, transportType = "walk") {
     if (cost > 0 && S.gold < cost) {
       toast("\uACE8\uB4DC\uAC00 \uBD80\uC871\uD569\uB2C8\uB2E4");
@@ -40369,14 +40404,63 @@ ${lines.join("\n")}
           toastHTML(`\u23F3 \uC608\uC5B8\uC790\uAC00 \uB0A1\uC740 \uBAA8\uB798\uC2DC\uACC4\uB97C \uAC74\uB138\uB2E4! \u300C\uC2DC\uAC04\uC758 \uBAA8\uB798\uC2DC\uACC4\u300D \uD68D\uB4DD`, 3e3);
         }
       },
+      // [62-2번 섹션] 고정 50% 동전던지기를 ARENA_RANKS 랭크 사다리로
+      // 교체 — 7개 장소 상호작용(훈련장/명예의 대련/투기장 참가 등)이
+      // 전부 이 공용 함수를 쓰므로, 이 한 곳만 고치면 전체가 업그레이드됨.
       jianghuDuel: () => {
-        if (Math.random() < 0.5) {
-          updateReputation(20);
-          toast("\u2694\uFE0F \uB300\uB828 \uC2B9\uB9AC! \uBA85\uC131+20", 2500);
+        const rec = loadArenaRecord();
+        const idx = Math.min(rec.rank, ARENA_RANKS.length - 1);
+        const def = ARENA_RANKS[idx];
+        if (Math.random() < arenaWinChance(def.power)) {
+          if (typeof addGoldWithExchange === "function") addGoldWithExchange(def.rewardGold, `${def.name} \uC2B9\uB9AC`);
+          else {
+            S.gold += def.rewardGold;
+            saveGold(S.gold);
+          }
+          updateReputation(def.rewardRep);
+          window.updateHeader();
+          let bonusMsg = "";
+          if (idx === ARENA_RANKS.length - 1) {
+            rec.rank = idx;
+            if (!rec.championBonusGiven && def.championBonus) {
+              Object.entries(def.championBonus).forEach(([k, v]) => {
+                if (S.stats[k] !== void 0) S.stats[k] = Math.min(999, (S.stats[k] || 0) + v);
+              });
+              rec.championBonusGiven = true;
+              bonusMsg = " \u{1F3C6} \uD22C\uAE30\uC7A5 \uCC54\uD53C\uC5B8 \uB4F1\uADF9! \uC601\uAD6C STR+10";
+            }
+          } else {
+            rec.rank = idx + 1;
+          }
+          rec.wins = (rec.wins || 0) + 1;
+          saveArenaRecord(rec);
+          toastHTML(`\u2694\uFE0F [${esc2(def.name)}] ${esc2(def.opponent)} \uC2B9\uB9AC! \uACE8\uB4DC+${def.rewardGold} \uBA85\uC131+${def.rewardRep}${bonusMsg}`, 3e3);
         } else {
+          rec.losses = (rec.losses || 0) + 1;
+          saveArenaRecord(rec);
           S.stats.hp = Math.max(1, (S.stats.hp || 100) - 15);
           window.updateHeader();
-          toast("\u2694\uFE0F \uB300\uB828 \uD328\uBC30... HP-15", 2e3);
+          toastHTML(`\u2694\uFE0F [${esc2(def.name)}] ${esc2(def.opponent)}\uC5D0\uAC8C \uD328\uBC30... HP-15`, 2500);
+        }
+      },
+      // [62-2번 섹션] "마계 투기장"(int_infernal_arena)이 참조하던
+      // infernalArena 핸들러가 doInteraction의 actions 맵에 아예 없어서
+      // 클릭해도 "상호작용 준비 중..." 안내만 뜨던 완전히 죽은 상호작용
+      // — 랭크 사다리에 안 묶인 고정 고난도 반복 도전으로 신설.
+      infernalArena: () => {
+        const def = INFERNAL_ARENA_OPPONENT;
+        if (Math.random() < arenaWinChance(def.power)) {
+          if (typeof addGoldWithExchange === "function") addGoldWithExchange(def.rewardGold, "\uB9C8\uACC4 \uD22C\uAE30\uC7A5 \uC2B9\uB9AC");
+          else {
+            S.gold += def.rewardGold;
+            saveGold(S.gold);
+          }
+          window.updateHeader();
+          toastHTML(`\u{1F479} [\uB9C8\uACC4 \uD22C\uAE30\uC7A5] ${esc2(def.name)} \uACA9\uD30C! \uB9C8\uACC4 \uBA85\uC131\uC744 \uC5BB\uC5C8\uB2E4. \uACE8\uB4DC+${def.rewardGold}`, 3e3);
+        } else {
+          S.stats.hp = Math.max(1, (S.stats.hp || 100) - 25);
+          window.updateHeader();
+          toastHTML(`\u{1F479} [\uB9C8\uACC4 \uD22C\uAE30\uC7A5] ${esc2(def.name)}\uC5D0\uAC8C \uD328\uBC30... HP-25`, 2500);
         }
       },
       buyInfo: () => {

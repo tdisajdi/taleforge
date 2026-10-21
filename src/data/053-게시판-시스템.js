@@ -197,3 +197,21 @@ export const LOC_MONSTER_POOL = {
 // (원래도 medieval 키가 없어 SCENARIO_NPC_EXTRA[scenarioId]||[] 폴백으로
 // 항상 빈 배열이 되던, 실질적으로 도달 불가능한 데이터였다).
 export const SCENARIO_NPC_EXTRA = {};
+
+// 🏟️ 투기장 랭크전 (62-2번 섹션 신설) — 기존 jianghuDuel()이 모든
+// 대련/투기장 상호작용(훈련장/명예의 대련/검투장 대련/맹수와 대련 등
+// 7곳)에 공용으로 쓰이던 고정 50% 동전던지기를 랭크 사다리로 교체.
+// 상대 전투력(power)은 calcTameSuccessChance(economy/255)와 동일한
+// 시그모이드 공식의 기준값으로 쓰인다 — 새 판정 공식을 지어내지 않음.
+export const ARENA_RANKS = [
+  { rank:0, name:'초심자의 결투', opponent:'떠돌이 검객', icon:'🗡️', power:35, rewardGold:20, rewardRep:15 },
+  { rank:1, name:'숙련자의 결투', opponent:'노련한 용병', icon:'⚔️', power:60, rewardGold:45, rewardRep:25 },
+  { rank:2, name:'베테랑의 결투', opponent:'전장의 생존자', icon:'🛡️', power:90, rewardGold:80, rewardRep:40 },
+  { rank:3, name:'영웅의 결투', opponent:'투기장의 영웅 가록', icon:'🏆', power:125, rewardGold:150, rewardRep:70 },
+  { rank:4, name:'챔피언의 결투', opponent:'무쇠팔 챔피언 돌혼', icon:'👑', power:160, rewardGold:300, rewardRep:120, championBonus:{str:10} },
+];
+
+// 마계 투기장 전용 상대 — 랭크 사다리에 안 묶인 별도의 고정 고난도
+// 상대(죽은 상호작용 infernalArena를 실제로 채우는 용도). 랭크를
+// 올리지 않고 반복 도전 가능한 보너스 콘텐츠로 설계.
+export const INFERNAL_ARENA_OPPONENT = { name:'지옥의 투사 발로르', icon:'👹', power:200, rewardGold:250, rewardRep:0 };

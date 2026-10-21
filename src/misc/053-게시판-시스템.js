@@ -1,7 +1,7 @@
 // 📋 게시판 시스템
 // Auto-extracted from taleforge.html (original section banner preserved above).
 import { startAIDungeonExplore } from '../combat/257-renderMiniMap-던전-미니맵-일반-미니맵.js';
-import { BULLETIN_INFO_POOL, BULLETIN_QUEST_POOL, BULLETIN_SIZE_CONFIG, LOC_NPC_POOL, SCENARIO_NPC_EXTRA } from '../data/053-게시판-시스템.js';
+import { ARENA_RANKS, BULLETIN_INFO_POOL, BULLETIN_QUEST_POOL, BULLETIN_SIZE_CONFIG, INFERNAL_ARENA_OPPONENT, LOC_NPC_POOL, SCENARIO_NPC_EXTRA } from '../data/053-게시판-시스템.js';
 import { MATERIALS } from '../data/075-파트2-C-크래프팅-시스템.js';
 import { S } from '../data/084-TaleForge-순수-JS-엔진.js';
 import { calcTameSuccessChance, getAllLandLocations, getLocationCoord, loadHunterTameLog, loadHunterTrophies, saveHunterTameLog, saveHunterTrophies } from '../economy/255-상인-거래소-교역-지부-확장.js';
@@ -376,12 +376,17 @@ export function renderLocationInteractions(loc){
       : `doInteraction('${int.action}',${int.cost||0})`;
     const transportBadge = isTransport
       ? `<span style="font-size:8px;padding:2px 5px;background:#1a2a1a;border:1px solid #3a6a3a;color:#6aca6a;border-radius:2px;margin-left:4px">🚀 이동수단</span>` : '';
+    // [62-2번 섹션] 대련/투기장 상호작용에 현재 랭크를 노출 — 랭크
+    // 사다리가 생겼다는 걸 플레이어가 실제로 체감할 수 있게.
+    const arenaBadge = int.action === 'jianghuDuel'
+      ? (()=>{ const rec = loadArenaRecord(); const idx = Math.min(rec.rank, ARENA_RANKS.length-1); const def = ARENA_RANKS[idx]; return `<span style="font-size:8px;padding:2px 5px;background:#1a1500;border:1px solid #8a6a2a;color:#d4a030;border-radius:2px;margin-left:4px">${def.icon} ${esc(def.name)}</span>`; })()
+      : '';
     return `
     <div style="padding:10px 11px;background:#0d0800;border:1px solid var(--border);margin-bottom:6px">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
         <span style="font-size:18px">${typeof getEntityIconHTML==='function'?getEntityIconHTML(int,{size:18}):(int.icon)}</span>
         <div style="flex:1">
-          <div style="font-family:Cinzel,serif;font-size:10px;color:var(--gold)">${esc(int.name)}${transportBadge}</div>
+          <div style="font-family:Cinzel,serif;font-size:10px;color:var(--gold)">${esc(int.name)}${transportBadge}${arenaBadge}</div>
           <div style="font-size:10px;color:var(--dim)">${esc(int.desc)}</div>
         </div>
         ${int.cost?`<div style="font-size:10px;color:#f1c40f;flex-shrink:0">💰${int.cost}</div>`:''}
@@ -399,6 +404,21 @@ export function buyLocItem(item, price){
   toastHTML(`✅ ${typeof getEntityIconHTML==='function'?getEntityIconHTML(item,{size:14}):(item.icon)} ${esc(item.name)} 구매!`); renderLocationPanel();
 }
 window.buyLocItem = buyLocItem;
+
+// 🏟️ 투기장 랭크전 (62-2번 섹션) — ARENA_RANKS 저장 상태
+export const ARENA_KEY = 'tf-arena';
+export function loadArenaRecord(){ try{ return JSON.parse(lsGet(ARENA_KEY)||'null') || { rank:0, wins:0, losses:0, championBonusGiven:false }; }catch(e){ return { rank:0, wins:0, losses:0, championBonusGiven:false }; } }
+window.loadArenaRecord = loadArenaRecord;
+export function saveArenaRecord(d){ try{ lsSet(ARENA_KEY, JSON.stringify(d)); }catch(e){} }
+window.saveArenaRecord = saveArenaRecord;
+
+// 상대 전투력(power) 대비 승률 — calcTameSuccessChance(economy/255)와
+// 똑같은 시그모이드 공식을 그대로 재사용(새 판정 공식을 지어내지 않음).
+function arenaWinChance(power){
+  const playerPower = ((S?.stats?.str||10) + (S?.stats?.agi||10) + (S?.stats?.end||10)) / 3;
+  const chance = 1 / (1 + Math.exp(-(playerPower-power)/17.5));
+  return Math.max(0.05, Math.min(0.95, chance));
+}
 
 export function doInteraction(action, cost=0, transportType='walk'){
   if(cost > 0 && S.gold < cost){ toast('골드가 부족합니다'); return; }
@@ -570,7 +590,53 @@ export function doInteraction(action, cost=0, transportType='walk'){
         toastHTML(`⏳ 예언자가 낡은 모래시계를 건넸다! 「시간의 모래시계」 획득`, 3000);
       }
     },
-    jianghuDuel: ()=>{ if(Math.random()<0.5){ updateReputation(20); toast('⚔️ 대련 승리! 명성+20', 2500); } else { S.stats.hp=Math.max(1,(S.stats.hp||100)-15); window.updateHeader(); toast('⚔️ 대련 패배... HP-15', 2000); } },
+    // [62-2번 섹션] 고정 50% 동전던지기를 ARENA_RANKS 랭크 사다리로
+    // 교체 — 7개 장소 상호작용(훈련장/명예의 대련/투기장 참가 등)이
+    // 전부 이 공용 함수를 쓰므로, 이 한 곳만 고치면 전체가 업그레이드됨.
+    jianghuDuel: ()=>{
+      const rec = loadArenaRecord();
+      const idx = Math.min(rec.rank, ARENA_RANKS.length-1);
+      const def = ARENA_RANKS[idx];
+      if(Math.random() < arenaWinChance(def.power)){
+        if(typeof addGoldWithExchange==='function') addGoldWithExchange(def.rewardGold, `${def.name} 승리`); else { S.gold+=def.rewardGold; saveGold(S.gold); }
+        updateReputation(def.rewardRep);
+        window.updateHeader();
+        let bonusMsg = '';
+        if(idx===ARENA_RANKS.length-1){
+          rec.rank = idx;
+          if(!rec.championBonusGiven && def.championBonus){
+            Object.entries(def.championBonus).forEach(([k,v])=>{ if(S.stats[k]!==undefined) S.stats[k]=Math.min(999,(S.stats[k]||0)+v); });
+            rec.championBonusGiven = true;
+            bonusMsg = ' 🏆 투기장 챔피언 등극! 영구 STR+10';
+          }
+        } else {
+          rec.rank = idx + 1;
+        }
+        rec.wins = (rec.wins||0) + 1;
+        saveArenaRecord(rec);
+        toastHTML(`⚔️ [${esc(def.name)}] ${esc(def.opponent)} 승리! 골드+${def.rewardGold} 명성+${def.rewardRep}${bonusMsg}`, 3000);
+      } else {
+        rec.losses = (rec.losses||0) + 1;
+        saveArenaRecord(rec);
+        S.stats.hp=Math.max(1,(S.stats.hp||100)-15); window.updateHeader();
+        toastHTML(`⚔️ [${esc(def.name)}] ${esc(def.opponent)}에게 패배... HP-15`, 2500);
+      }
+    },
+    // [62-2번 섹션] "마계 투기장"(int_infernal_arena)이 참조하던
+    // infernalArena 핸들러가 doInteraction의 actions 맵에 아예 없어서
+    // 클릭해도 "상호작용 준비 중..." 안내만 뜨던 완전히 죽은 상호작용
+    // — 랭크 사다리에 안 묶인 고정 고난도 반복 도전으로 신설.
+    infernalArena: ()=>{
+      const def = INFERNAL_ARENA_OPPONENT;
+      if(Math.random() < arenaWinChance(def.power)){
+        if(typeof addGoldWithExchange==='function') addGoldWithExchange(def.rewardGold, '마계 투기장 승리'); else { S.gold+=def.rewardGold; saveGold(S.gold); }
+        window.updateHeader();
+        toastHTML(`👹 [마계 투기장] ${esc(def.name)} 격파! 마계 명성을 얻었다. 골드+${def.rewardGold}`, 3000);
+      } else {
+        S.stats.hp=Math.max(1,(S.stats.hp||100)-25); window.updateHeader();
+        toastHTML(`👹 [마계 투기장] ${esc(def.name)}에게 패배... HP-25`, 2500);
+      }
+    },
     buyInfo: ()=>{ updateReputation(10); toast('💬 귀한 정보를 얻었다. 평판+10', 2000); },
     joinSect: ()=>{ toast('🐉 문파 가입 조건을 확인하세요. 강한 스탯과 명성이 필요합니다.', 3000); },
     hideout: ()=>{ updateReputation(-2); toast('🌲 은신 중... 추격자를 따돌렸다. 3턴간 안전', 2500); S._hideoutTurns=3; },

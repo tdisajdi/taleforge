@@ -24,6 +24,8 @@ import { loadBulletin, loadNPCs, loadQuests, saveBulletin, saveNPCs, saveQuests,
 import { getPlayerMaxHp, getPlayerMaxMp, loadLocations, loadParty, openTransportPanel, saveLocations, saveParty, updateReputation } from './054-이동수단-시스템.js';
 import { loadMaterials, saveMaterials } from './075-파트2-C-크래프팅-시스템.js';
 import { goFishing } from './334-낚시-시스템.js';
+import { DEAD_INTERACTION_DEFS } from '../data/335-죽은-상호작용-전수-복구.js';
+import { resolveDeadInteraction } from './335-죽은-상호작용-전수-복구.js';
 
 // [19번 라운드, [대기] #15 — 퀘스트 위치 표시, 새 시스템] 사용자 확정
 // 지시("기워붙이지 말고 새 시스템을 만들자"): 의뢰 텍스트에서 장소
@@ -990,6 +992,17 @@ export function doInteraction(action, cost=0, transportType='walk'){
       }
     },
   };
+
+  // [63번 섹션 후속] data/042+data/052에 정의된 action 문자열 131개 중
+  // 83개가 여기까지 핸들러가 전혀 없어 "상호작용 준비 중..." 토스트만
+  // 뜨던 죽은 버튼이었다(엔드게임 클라이맥스 트리거 다수 포함) — 83개를
+  // 개별로 손으로 등록하는 대신 DEAD_INTERACTION_DEFS에 정의된 action id
+  // 전부를 한 번에 돌며 misc/335의 범용 판정기로 위임한다. 이미 위에서
+  // 직접 구현된 action(예: goFishing)과 겹치지 않게 `actions[id]`가 아직
+  // 없는 경우에만 등록.
+  Object.keys(DEAD_INTERACTION_DEFS).forEach(id=>{
+    if(!actions[id]) actions[id] = ()=>resolveDeadInteraction(id);
+  });
 
   const fn = actions[action];
   if(fn) fn();

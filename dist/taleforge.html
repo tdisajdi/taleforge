@@ -13,6 +13,30 @@
 -->
 <!--
 ╔══════════════════════════════════════════════════════════════════════════════╗
+║  🧭  이 게임의 최상위 설계 철학 — 모든 신규 시스템/콘텐츠 판단 기준        ║
+║  ─────────────────────────────────────────────────────────────────────────  ║
+║  "뭐든 할 수 있는 생태계"가 목표다. 퀘스트도 있고 메인 스토리도 있지만,   ║
+║  플레이어가 그걸 꼭 따라가야 할 이유는 없다 — 서사가 강제하는 경로 없이   ║
+║  하고 싶은 걸 자유롭게 할 수 있는 샌드박스가 1순위다.                      ║
+║                                                                              ║
+║  실무 적용 기준:                                                            ║
+║  · 새 콘텐츠/상호작용을 설계할 때 "AI가 서사를 그렇게 풀어줘야만 가능한   ║
+║    길"보다 "플레이어가 버튼 한 번으로 직접 선택해서 할 수 있는 길"을       ║
+║    우선한다. 서사 의존 경로(자유 텍스트 트리거, AI 생성 텍스트 파싱)는    ║
+║    반드시 로컬 대체 경로가 함께 있어야 한다 — 완전 무-API 전제와 직결     ║
+║    (클라우드가 꺼져 있으면 서사 전용 경로는 영원히 도달 불가능해진다).    ║
+║  · 퀘스트/스토리를 벗어난 플레이가 패널티를 받아선 안 된다 — 다른 길로    ║
+║    가도 그 나름의 메커닉과 보상이 있어야 한다.                            ║
+║  · 실제 사례: 로맨스 호감도를 올리는 유일한 경로가 AI 생성 서사의 태그    ║
+║    파싱뿐이라 완전 무-API 빌드에서는 영원히 진전 불가능했던 근본 버그를   ║
+║    "구애하기" 버튼(로컬 다이스굴림)으로 해결. 결혼도 서사가 자동으로      ║
+║    발생시키지 않고 플레이어가 직접 "청혼하기"를 눌러야만 성립하도록 설계. ║
+║                                                                              ║
+║  상세 경위는 작업메모장.md의 58번/63번 섹션 참고.                          ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+-->
+<!--
+╔══════════════════════════════════════════════════════════════════════════════╗
 ║  📑  외부 목차 파일 — 매번 대규모 수정 후 반드시 재생성/갱신할 것           ║
 ║  ─────────────────────────────────────────────────────────────────────────  ║
 ║  이 파일이 너무 커져서(11만 줄+) 별도 마크다운 목차 파일 1개를 만들었다.    ║
@@ -40580,6 +40604,207 @@ ${lines.join("\n")}
   }
   window.goFishing = goFishing;
 
+  // src/data/335-죽은-상호작용-전수-복구.js
+  var DEAD_INTERACTION_DEFS = {
+    // ── 변신/오인된 액션 (이름과 설명이 전혀 다른 샘플) ──────────────
+    hireHacker: { r: { t: "stat", mods: { str: 8, agi: 8 }, once: false } },
+    // "용병 동료 고용" — 전투 훈련 수혜로 치환(완전한 동료 합류 시스템 연동은 범위 밖)
+    // ── 탐험/채집형(여러 장소가 공유하는 범용 액션) ──────────────────
+    caveExplore: { s: ["wil", "end"], r: { t: "item", tier: "quest" }, fhp: 15 },
+    mineCrystal: { s: ["str", "per"], r: { t: "item", tier: "quest" }, fhp: 10 },
+    senseLava: { s: ["per"], r: { t: "item", tier: "quest" } },
+    navigateMaze: { s: ["agi", "per", "int"], r: { t: "item", tier: "quest" }, fhp: 20 },
+    // ── 천계(S등급) ────────────────────────────────────────────────
+    celestialPray: { restoreToo: true, r: { t: "stat", mods: { fath: 5 }, once: true } },
+    celestialTrial: { s: ["fath"], thr: 65, r: { t: "item", tier: "mainQuest" }, fhp: 20 },
+    divineBlessing: { s: ["fath"], thr: 60, r: { t: "stat", mods: { str: 5, agi: 5, end: 5, int: 5, wil: 5, per: 5, luk: 5, cha: 5, mgc: 5, fath: 5 }, once: true } },
+    celestialArchive: { s: ["int"], r: { t: "item", tier: "mainQuest" } },
+    angelSummon: { r: { t: "stat", mods: { wil: 10, fath: 10 }, once: true } },
+    divineJudgment: { s: ["krma"], thr: 60, r: { t: "item", tier: "secretEnding" }, fhp: 25 },
+    celestialMission: { r: { t: "item", tier: "mainQuest" } },
+    fallenAngelBoss: { s: ["str", "mgc", "wil"], thr: 75, r: { t: "item", tier: "secretEnding" }, fhp: 35 },
+    // ── 마계/타락 ────────────────────────────────────────────────────
+    infernalPact: { r: { t: "stat", mods: { str: 12, mgc: 12, krma: -10 } } },
+    infernalTrial: { s: ["wil", "end"], thr: 65, r: { t: "item", tier: "mainQuest" }, fhp: 25 },
+    demonLordAudience: { r: { t: "stat", mods: { fear: 15, ldr: 10 }, once: true }, fhp: 0 },
+    darkArchive: { s: ["int"], r: { t: "item", tier: "mainQuest" } },
+    chaosCovenantSign: { s: ["wil"], thr: 70, r: { t: "stat", mods: { str: 15, agi: 15, mgc: 15, wil: 15, luk: -10 }, once: true }, fhp: 30 },
+    overthrowDemonLord: { s: ["str", "mgc", "wil"], thr: 80, r: { t: "item", tier: "secretEnding" }, fhp: 40 },
+    freeInfernalPrisoner: { r: { t: "rep", amount: 15 } },
+    infernalDungeonBoss: { s: ["str", "end"], thr: 75, r: { t: "item", tier: "secretEnding" }, fhp: 35 },
+    demonPact: { r: { t: "stat", mods: { str: 10, mgc: 10, krma: -8 } } },
+    // ── 세계수/봉인석 (실제 진엔딩 카운터는 건드리지 않음, 위 주석 참고) ──
+    worldTreeMemory: { s: ["wil", "fath"], thr: 65, r: { t: "item", tier: "mainQuest" } },
+    purifySealShard: { s: ["mgc", "fath"], thr: 65, r: { t: "rep", amount: 20 } },
+    guardianSpirit: { s: ["fath", "spk"], thr: 65, r: { t: "rep", amount: 15 } },
+    watcherConfront: { s: ["wil", "int", "fath"], thr: 75, r: { t: "ending" } },
+    loopBreak: { s: ["wil", "mgc"], thr: 70, r: { t: "ending" } },
+    watcherBargain: { s: ["int", "neg"], thr: 65, r: { t: "item", tier: "mainQuest" } },
+    sealReunite: { r: { t: "ending" } },
+    nexusMemory: { s: ["wil", "int"], thr: 65, r: { t: "item", tier: "secretEnding" } },
+    guardianFinal: { s: ["str", "mgc", "wil"], thr: 80, r: { t: "item", tier: "secretEnding" }, fhp: 40 },
+    sealShard: { s: ["int", "mgc"], r: { t: "item", tier: "quest" } },
+    sealMap: { s: ["agi", "int"], r: { t: "item", tier: "quest" }, fhp: 15 },
+    sealReinforce: { s: ["mgc", "fath"], thr: 65, r: { t: "rep", amount: 20 } },
+    sealCrack: { s: ["mgc", "fath"], r: { t: "item", tier: "mainQuest" } },
+    abyssContract: { s: ["wil"], thr: 70, r: { t: "stat", mods: { mgc: 20, wil: -10 }, once: true }, fhp: 30 },
+    // ── 수정/광산/기계 지역 ─────────────────────────────────────────
+    manaBathe: { restoreToo: true, r: { t: "stat", mods: { mgc: 5 }, once: true } },
+    readCrystalMap: { s: ["int"], r: { t: "item", tier: "quest" } },
+    machineGodInterface: { s: ["int", "mgc"], thr: 65, r: { t: "rep", amount: 20 } },
+    overrideCore: { s: ["int"], thr: 60, r: { t: "item", tier: "mainQuest" } },
+    powerSourceCut: { s: ["mgc", "wil"], thr: 65, r: { t: "rep", amount: 15 } },
+    deepMine: { s: ["str", "end"], r: { t: "item", tier: "mainQuest" } },
+    dwarvenLore: { s: ["int"], r: { t: "stat", mods: { str: 3, end: 3 } } },
+    minecartRide: { s: ["agi"], r: { t: "item", tier: "quest" }, fhp: 15 },
+    bypassGolem: { s: ["agi", "disg"], r: { t: "item", tier: "quest" }, fhp: 20 },
+    giantPuzzle: { s: ["int", "str"], r: { t: "item", tier: "quest" } },
+    giantRelicHunt: { s: ["luk"], thr: 45, r: { t: "item", tier: "mainQuest" } },
+    sitGiantThrone: { r: { t: "stat", mods: { fear: 10, ldr: 5 }, once: true } },
+    // ── 묘지/유령/저택 ───────────────────────────────────────────────
+    robTomb: { s: ["luk", "agi"], r: { t: "item", tier: "mainQuest" }, fhp: 20 },
+    talkGhostKing: { s: ["spk", "neg"], r: { t: "item", tier: "mainQuest" } },
+    undeadRitual: { s: ["fath"], r: { t: "item", tier: "quest" }, fhp: 15 },
+    ghostLore: { s: ["per", "cha"], r: { t: "stat", mods: { wil: 5, fath: 5 } } },
+    exorcism: { s: ["fath", "mgc"], r: { t: "item", tier: "mainQuest" }, fhp: 20 },
+    findHiddenRoom: { s: ["per"], r: { t: "gold", min: 200, max: 500 } },
+    ghostDialog: { s: ["per", "fath"], r: { t: "rep", amount: 15 } },
+    massGrave: { s: ["int"], r: { t: "rep", amount: 10 } },
+    ghostKnight: { s: ["str"], thr: 60, r: { t: "item", tier: "mainQuest" }, fhp: 25 },
+    // ── 화염/번개/하늘 ───────────────────────────────────────────────
+    lavaForge: { r: { t: "stat", mods: { str: 5, crit: 5 }, once: true } },
+    talkSalamander: { s: ["cha", "neg"], r: { t: "stat", mods: { mgc: 8 } } },
+    rideWindCurrent: { s: ["agi"], r: { t: "gold", min: 30, max: 100 } },
+    talkSkyGuardian: { s: ["wil"], r: { t: "item", tier: "mainQuest" } },
+    cloudForge: { r: { t: "stat", mods: { agi: 5, crit: 5 }, once: true } },
+    // ── 심해/요정/숲 ─────────────────────────────────────────────────
+    divDeep: { s: ["end"], r: { t: "item", tier: "quest" }, fhp: 15 },
+    talkSeaSerpent: { s: ["fath", "spk"], r: { t: "item", tier: "mainQuest" } },
+    seaAltar: { r: { t: "stat", mods: { agi: 5, end: 5 }, once: true } },
+    decipherIce: { s: ["int"], r: { t: "item", tier: "quest" } },
+    thawTreasure: { s: ["mgc", "str"], r: { t: "item", tier: "mainQuest" } },
+    fairyDeal: { s: ["luk"], thr: 50, r: { t: "gold", min: 50, max: 300 }, fhp: 10 },
+    talkForestSpirit: { s: ["fath"], r: { t: "item", tier: "quest" } },
+    breakHex: { s: ["mgc"], r: { t: "stat", mods: { luk: 5 } } },
+    shadowBargain: { s: ["neg"], r: { t: "item", tier: "mainQuest" } },
+    lightBeacon: { r: { t: "rep", amount: 10 } },
+    // ── 드래곤/연금술/도서관 ─────────────────────────────────────────
+    talkDragon: { s: ["int", "cha"], thr: 75, r: { t: "item", tier: "secretEnding" } },
+    dragonPact: { s: ["wil", "mgc"], thr: 70, r: { t: "stat", mods: { mgc: 15 }, once: true } },
+    doExperiment: { s: ["int"], r: { t: "item", tier: "quest" } },
+    studyMutant: { s: ["int", "per"], r: { t: "rep", amount: 15 } },
+    recoverFormula: { s: ["int"], r: { t: "item", tier: "quest" } },
+    findContract: { s: ["int", "disg"], thr: 70, r: { t: "item", tier: "secretEnding" } },
+    negotiateSecret: { s: ["spk", "neg"], r: { t: "rep", amount: 15 } },
+    loopTruth: { s: ["int", "wil"], r: { t: "item", tier: "mainQuest" } },
+    arcanuAI: { s: ["mgc", "int"], r: { t: "rep", amount: 15 } },
+    ancientGodVoice: { s: ["wil", "fath"], thr: 75, r: { t: "item", tier: "secretEnding" }, fhp: 30 },
+    dimensionScout: { s: ["per", "int"], r: { t: "item", tier: "quest" } }
+  };
+  window.DEAD_INTERACTION_DEFS = DEAD_INTERACTION_DEFS;
+
+  // src/misc/335-죽은-상호작용-전수-복구.js
+  var ONCE_KEY = "tf-dead-interaction-once";
+  function loadOnceFlags() {
+    try {
+      return JSON.parse(lsGet(ONCE_KEY) || "{}");
+    } catch (e) {
+      return {};
+    }
+  }
+  function saveOnceFlags(d) {
+    try {
+      lsSet(ONCE_KEY, JSON.stringify(d));
+    } catch (e) {
+    }
+  }
+  function rollCheck(statKeys, threshold) {
+    if (!statKeys || !statKeys.length) return true;
+    const avg = statKeys.reduce((sum, k) => sum + (S.stats[k] || 50), 0) / statKeys.length;
+    const thr = threshold || (statKeys.length === 1 ? 55 : statKeys.length === 2 ? 65 : 75);
+    const diff = avg - thr;
+    const chance = Math.max(0.05, Math.min(0.95, 1 / (1 + Math.exp(-diff / 17.5))));
+    return Math.random() < chance;
+  }
+  function applyReward(actionId, r) {
+    if (!r) return;
+    switch (r.t) {
+      case "item": {
+        const item = rollEventReward(r.tier || "quest");
+        if (item) {
+          S.inventory.push(item);
+          saveInventory(S.inventory);
+          toastHTML(`\u{1F381} ${typeof getEntityIconHTML === "function" ? getEntityIconHTML(item, { size: 14 }) : item.icon || ""} ${esc2(item.name)} \uD68D\uB4DD!`, 3e3);
+        }
+        break;
+      }
+      case "stat": {
+        if (r.once) {
+          const flags = loadOnceFlags();
+          if (flags[actionId]) {
+            toast("\uC774\uBBF8 \uC5BB\uC740 \uD6A8\uACFC\uB2E4.", 1800);
+            return;
+          }
+          flags[actionId] = true;
+          saveOnceFlags(flags);
+        }
+        const parts = [];
+        Object.entries(r.mods || {}).forEach(([k, v]) => {
+          if (S.stats[k] === void 0) return;
+          S.stats[k] = Math.max(0, Math.min(999, S.stats[k] + v));
+          parts.push(`${k.toUpperCase()}${v >= 0 ? "+" : ""}${v}`);
+        });
+        if (typeof window.updateHeader === "function") window.updateHeader();
+        toast(`\u2728 ${parts.join(" ")}`, 2500);
+        break;
+      }
+      case "gold": {
+        const amt = r.min + Math.floor(Math.random() * (r.max - r.min + 1));
+        if (typeof addGoldWithExchange === "function") addGoldWithExchange(amt, "\uC0C1\uD638\uC791\uC6A9 \uBCF4\uC0C1");
+        else {
+          S.gold += amt;
+          saveGold(S.gold);
+        }
+        if (typeof window.updateHeader === "function") window.updateHeader();
+        toast(`\u{1F4B0} \uACE8\uB4DC+${amt}`, 2e3);
+        break;
+      }
+      case "rep": {
+        updateReputation(r.amount || 10);
+        toast(`\u{1F4DC} \uD3C9\uD310+${r.amount || 10}`, 2e3);
+        break;
+      }
+      case "ending": {
+        if (typeof window.checkTrueEndingCondition === "function") window.checkTrueEndingCondition();
+        else toast("\uC544\uC9C1 \uC544\uBB34 \uBC18\uC751\uC774 \uC5C6\uB2E4...", 2e3);
+        break;
+      }
+    }
+  }
+  function resolveDeadInteraction(actionId) {
+    const def = DEAD_INTERACTION_DEFS[actionId];
+    if (!def) return;
+    const ok = rollCheck(def.s, def.thr);
+    if (ok) {
+      applyReward(actionId, def.r);
+      if (def.restoreToo) {
+        S.stats.hp = S.stats.maxHp || S.stats.hp;
+        S.stats.mp = S.stats.maxMp || S.stats.mp;
+        if (typeof window.updateHeader === "function") window.updateHeader();
+      }
+    } else {
+      const dmg = def.fhp || 0;
+      if (dmg > 0) {
+        S.stats.hp = Math.max(1, (S.stats.hp || 100) - dmg);
+        if (typeof window.updateHeader === "function") window.updateHeader();
+        toast(`\u274C \uD310\uC815 \uC2E4\uD328... HP-${dmg}`, 2500);
+      } else {
+        toast("\u274C \uC131\uACFC \uC5C6\uC774 \uB05D\uB0AC\uB2E4.", 2e3);
+      }
+    }
+  }
+  window.resolveDeadInteraction = resolveDeadInteraction;
+
   // src/misc/053-게시판-시스템.js
   function pickQuestTargetLocation(boardLoc, seedStr) {
     try {
@@ -41769,6 +41994,9 @@ ${lines.join("\n")}
         }
       }
     };
+    Object.keys(DEAD_INTERACTION_DEFS).forEach((id) => {
+      if (!actions[id]) actions[id] = () => resolveDeadInteraction(id);
+    });
     const fn = actions[action];
     if (fn) fn();
     else toast("\uC0C1\uD638\uC791\uC6A9 \uC900\uBE44 \uC911...", 1500);

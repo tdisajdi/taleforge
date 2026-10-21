@@ -39697,6 +39697,47 @@ ${lines.join("\n")}
   }
   window._drainQueue = _drainQueue;
 
+  // src/data/334-낚시-시스템.js
+  var FISH_DEFS = [
+    { id: "fish_silver_minnow", name: "\uC740\uBE5B \uD53C\uB77C\uBBF8", icon: "\u{1F41F}", rarity: "common", weight: 30 },
+    { id: "fish_river_carp", name: "\uC789\uC5B4", icon: "\u{1F420}", rarity: "common", weight: 25 },
+    { id: "fish_blue_mackerel", name: "\uCCAD\uC0C9 \uACE0\uB4F1\uC5B4", icon: "\u{1F41F}", rarity: "uncommon", weight: 18 },
+    { id: "fish_crimson_bass", name: "\uC9C4\uD64D \uB18D\uC5B4", icon: "\u{1F421}", rarity: "uncommon", weight: 14 },
+    { id: "fish_pearl_eel", name: "\uC9C4\uC8FC \uBC40\uC7A5\uC5B4", icon: "\u{1F991}", rarity: "rare", weight: 7 },
+    { id: "fish_shark_pup", name: "\uC0C8\uB07C \uC0C1\uC5B4", icon: "\u{1F988}", rarity: "rare", weight: 4 },
+    { id: "fish_golden_koi", name: "\uD669\uAE08 \uC789\uC5B4", icon: "\u{1F38F}", rarity: "epic", weight: 1.5 },
+    { id: "fish_kraken_spawn", name: "\uD06C\uB77C\uCF04\uC758 \uC0C8\uB07C", icon: "\u{1F419}", rarity: "legendary", weight: 0.5 }
+  ];
+
+  // src/misc/334-낚시-시스템.js
+  function pickWeightedFish() {
+    const totalWeight = FISH_DEFS.reduce((s, f) => s + f.weight, 0);
+    let roll = Math.random() * totalWeight;
+    let picked = FISH_DEFS[0];
+    for (const f of FISH_DEFS) {
+      if (roll < f.weight) {
+        picked = f;
+        break;
+      }
+      roll -= f.weight;
+    }
+    return picked;
+  }
+  window.pickWeightedFish = pickWeightedFish;
+  function goFishing() {
+    if (Math.random() < 0.15) {
+      toast("\u{1F3A3} \uD55C\uCC38\uC744 \uAE30\uB2E4\uB838\uC9C0\uB9CC \uC785\uC9C8\uC774 \uC5C6\uC5C8\uB2E4...", 2e3);
+      return;
+    }
+    const fish = pickWeightedFish();
+    const item = { id: fish.id, name: fish.name, icon: fish.icon, rarity: fish.rarity, type: "material", desc: `\uB09A\uC2DC\uB85C \uAC74\uC9C4 ${fish.name}. \uD314\uAC70\uB098 \uC694\uB9AC \uC7AC\uB8CC\uB85C \uC4F8 \uC218 \uC788\uB2E4.` };
+    S.inventory.push(item);
+    saveInventory(S.inventory);
+    if (typeof window.updateStats === "function") window.updateStats("fishCaught", 1);
+    toastHTML(`\u{1F3A3} \uB09A\uC2DC \uC131\uACF5! ${typeof getEntityIconHTML === "function" ? getEntityIconHTML(item, { size: 14 }) : item.icon} ${esc2(item.name)} \uD68D\uB4DD!`, 2500);
+  }
+  window.goFishing = goFishing;
+
   // src/misc/053-게시판-시스템.js
   function pickQuestTargetLocation(boardLoc, seedStr) {
     try {
@@ -40031,8 +40072,9 @@ ${lines.join("\n")}
   }
   window.renderLocationShops = renderLocationShops;
   function renderLocationInteractions(loc) {
-    if (!loc.interactions || !loc.interactions.length) return '<div style="color:var(--dim);font-size:11px;padding:10px 0">\uC774 \uC7A5\uC18C\uC5D0\uC11C \uAC00\uB2A5\uD55C \uC0C1\uD638\uC791\uC6A9\uC774 \uC5C6\uC2B5\uB2C8\uB2E4</div>';
-    return loc.interactions.map((int) => {
+    const list = loc.coastal ? [...loc.interactions || [], { action: "goFishing", name: "\uB09A\uC2DC\uD558\uAE30", desc: "\uBB3C\uAC00\uC5D0 \uB09A\uC2EF\uB300\uB97C \uB4DC\uB9AC\uC6B4\uB2E4. \uC6B4\uC774 \uC88B\uC73C\uBA74 \uADC0\uD55C \uBB3C\uACE0\uAE30\uB97C \uAC74\uC9C8 \uC218 \uC788\uB2E4.", icon: "\u{1F3A3}", cost: 0 }] : loc.interactions || [];
+    if (!list.length) return '<div style="color:var(--dim);font-size:11px;padding:10px 0">\uC774 \uC7A5\uC18C\uC5D0\uC11C \uAC00\uB2A5\uD55C \uC0C1\uD638\uC791\uC6A9\uC774 \uC5C6\uC2B5\uB2C8\uB2E4</div>';
+    return list.map((int) => {
       const isTransport = int.action === "useTransport";
       const btnCall = isTransport ? `doInteraction('useTransport',${int.cost || 0},'${int.transportType || "walk"}')` : `doInteraction('${int.action}',${int.cost || 0})`;
       const transportBadge = isTransport ? `<span style="font-size:8px;padding:2px 5px;background:#1a2a1a;border:1px solid #3a6a3a;color:#6aca6a;border-radius:2px;margin-left:4px">\u{1F680} \uC774\uB3D9\uC218\uB2E8</span>` : "";
@@ -40462,6 +40504,13 @@ ${lines.join("\n")}
           window.updateHeader();
           toastHTML(`\u{1F479} [\uB9C8\uACC4 \uD22C\uAE30\uC7A5] ${esc2(def.name)}\uC5D0\uAC8C \uD328\uBC30... HP-25`, 2500);
         }
+      },
+      // [62-3번 섹션] 낚시 시스템 신설 — data/042의 개별 장소 데이터를
+      // 건드리지 않고 renderLocationInteractions가 coastal:true 장소에
+      // 동적으로 끼워 넣는 "낚시하기" 버튼의 핸들러. 실제 추첨/인벤토리
+      // 로직은 misc/334의 goFishing()에 그대로 위임.
+      goFishing: () => {
+        goFishing();
       },
       buyInfo: () => {
         updateReputation(10);

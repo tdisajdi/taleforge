@@ -21,6 +21,7 @@ import { enqueueAITask } from '../world/085-대륙-스타팅-시스템.js';
 import { loadBulletin, loadNPCs, loadQuests, saveBulletin, saveNPCs, saveQuests, saveSession } from './001-block0-preamble.js';
 import { getPlayerMaxHp, getPlayerMaxMp, loadLocations, loadParty, openTransportPanel, saveLocations, saveParty, updateReputation } from './054-이동수단-시스템.js';
 import { loadMaterials, saveMaterials } from './075-파트2-C-크래프팅-시스템.js';
+import { goFishing } from './334-낚시-시스템.js';
 
 // [19번 라운드, [대기] #15 — 퀘스트 위치 표시, 새 시스템] 사용자 확정
 // 지시("기워붙이지 말고 새 시스템을 만들자"): 의뢰 텍스트에서 장소
@@ -368,8 +369,14 @@ export function renderLocationShops(loc){
 window.renderLocationShops = renderLocationShops;
 
 export function renderLocationInteractions(loc){
-  if(!loc.interactions||!loc.interactions.length) return '<div style="color:var(--dim);font-size:11px;padding:10px 0">이 장소에서 가능한 상호작용이 없습니다</div>';
-  return loc.interactions.map(int=>{
+  // [62-3번 섹션] 낚시 시스템 신설 — data/042의 23개 coastal:true
+  // 장소 데이터를 일일이 편집하는 대신, 62-2번 섹션의 투기장 랭크
+  // 배지와 같은 "렌더 시점 동적 합성" 패턴으로 "낚시하기" 상호작용을
+  // 끼워 넣는다. 그 장소가 정의한 interactions 배열은 그대로 두고
+  // 화면에 보여줄 목록에만 추가한다.
+  const list = loc.coastal ? [...(loc.interactions||[]), { action:'goFishing', name:'낚시하기', desc:'물가에 낚싯대를 드리운다. 운이 좋으면 귀한 물고기를 건질 수 있다.', icon:'🎣', cost:0 }] : (loc.interactions||[]);
+  if(!list.length) return '<div style="color:var(--dim);font-size:11px;padding:10px 0">이 장소에서 가능한 상호작용이 없습니다</div>';
+  return list.map(int=>{
     const isTransport = int.action === 'useTransport';
     const btnCall = isTransport
       ? `doInteraction('useTransport',${int.cost||0},'${int.transportType||'walk'}')`
@@ -637,6 +644,11 @@ export function doInteraction(action, cost=0, transportType='walk'){
         toastHTML(`👹 [마계 투기장] ${esc(def.name)}에게 패배... HP-25`, 2500);
       }
     },
+    // [62-3번 섹션] 낚시 시스템 신설 — data/042의 개별 장소 데이터를
+    // 건드리지 않고 renderLocationInteractions가 coastal:true 장소에
+    // 동적으로 끼워 넣는 "낚시하기" 버튼의 핸들러. 실제 추첨/인벤토리
+    // 로직은 misc/334의 goFishing()에 그대로 위임.
+    goFishing: ()=>{ goFishing(); },
     buyInfo: ()=>{ updateReputation(10); toast('💬 귀한 정보를 얻었다. 평판+10', 2000); },
     joinSect: ()=>{ toast('🐉 문파 가입 조건을 확인하세요. 강한 스탯과 명성이 필요합니다.', 3000); },
     hideout: ()=>{ updateReputation(-2); toast('🌲 은신 중... 추격자를 따돌렸다. 3턴간 안전', 2500); S._hideoutTurns=3; },

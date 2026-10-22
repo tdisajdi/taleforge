@@ -89880,6 +89880,60 @@ ${lines.join("\n")}
       ]
     }
   };
+  var IDENTITY_FLAVOR_TEMPLATES = {
+    move: {
+      slave: [
+        "\uC0AC\uC2AC\uC774 \uB290\uC2A8\uD574\uC9C4 \uD2C8\uC744 \uD0C0 \uD0C8\uCD9C\uC744 \uC2DC\uB3C4\uD55C\uB2E4",
+        "\uAC10\uC2DC\uAC00 \uC18C\uD640\uD55C \uC21C\uAC04, \uC9C0\uCCB4 \uC5C6\uC774 \uD0C8\uCD9C\uD55C\uB2E4",
+        "\uB354\uB294 \uBABB \uCC38\uACE0 \uD0C8\uCD9C\uC744 \uAC10\uD589\uD55C\uB2E4"
+      ]
+    },
+    stealth: {
+      slave: [
+        "\uC8FC\uC778\uC758 \uC2DC\uC120\uC744 \uD53C\uD574 \uC544\uBB34\uAC83\uB3C4 \uBAA8\uB974\uB294 \uCC99 \uC704\uC7A5\uD55C\uB2E4",
+        "\uB9DE\uC744\uAE4C \uBD10 \uAC10\uC815\uC744 \uC228\uAE30\uACE0 \uACE0\uBD84\uACE0\uBD84\uD55C \uCC99 \uC5F0\uAE30\uD55C\uB2E4",
+        "\uB208\uC5D0 \uB744\uC9C0 \uC54A\uB3C4\uB85D \uADF8\uB9BC\uC790\uCC98\uB7FC \uC6C0\uC9C1\uC778\uB2E4"
+      ],
+      outlaw: [
+        "\uC218\uBC30 \uC804\uB2E8\uACFC \uC5BC\uAD74\uC774 \uACB9\uCE58\uC9C0 \uC54A\uB3C4\uB85D \uACE0\uAC1C\uB97C \uC219\uC774\uACE0 \uC704\uC7A5\uD55C\uB2E4",
+        "\uB0AF\uC120 \uC0AC\uB78C\uC778 \uCC99 \uC2DC\uCE58\uBBF8\uB97C \uB5BC\uBA70 \uC2DC\uC120\uC744 \uD53C\uD574 \uC9C0\uB098\uAC04\uB2E4",
+        "\uAD00\uC6D0\uC758 \uB208\uC744 \uD53C\uD574 \uADF8\uB9BC\uC790\uCC98\uB7FC \uBAB8\uC744 \uC228\uAE34\uB2E4"
+      ]
+    },
+    persuade: {
+      royal: [
+        "\uC655\uC871\uC758 \uC774\uB984\uC744 \uAC78\uACE0 \uC124\uB4DD\uD55C\uB2E4",
+        "\uD0C0\uACE0\uB09C \uAD8C\uC704\uB85C \uC870\uAC74\uC744 \uB0B4\uAC78\uBA70 \uD611\uC0C1\uD55C\uB2E4",
+        "\uC655\uC2E4\uC758 \uAD8C\uC704\uB97C \uC55E\uC138\uC6CC \uC815\uC911\uD788 \uBD80\uD0C1\uD55C\uB2E4"
+      ],
+      noble: [
+        "\uAC00\uBB38\uC758 \uBA85\uC608\uB97C \uAC78\uACE0 \uC124\uB4DD\uD55C\uB2E4",
+        "\uADC0\uC871\uB2E4\uC6B4 \uC5B4\uC870\uB85C \uC870\uAC74\uC744 \uB0B4\uAC78\uBA70 \uD611\uC0C1\uD55C\uB2E4",
+        "\uD488\uC704\uB97C \uC9C0\uD0A4\uBA70 \uC815\uC911\uD788 \uBD80\uD0C1\uD55C\uB2E4"
+      ]
+    },
+    social: {
+      royal: [
+        "\uBA3C\uC800 \uB2E4\uAC00\uAC00 \uB9D0\uC744 \uAC78\uBA70 \uB10C\uC9C0\uC2DC \uC2E0\uBD84\uC744 \uBC1D\uD78C\uB2E4",
+        "\uC655\uC871\uC758 \uD488\uC704\uB97C \uB4DC\uB7EC\uB0B4\uBA70 \uC778\uC0AC\uB97C \uAC74\uB128\uB2E4",
+        "\uB2E4\uAC00\uAC00 \uB10C\uC9C0\uC2DC \uC815\uCCB4\uB97C \uBC1D\uD78C\uB2E4"
+      ],
+      noble: [
+        "\uAC00\uBB38\uC744 \uC18C\uAC1C\uD558\uBA70 \uC811\uADFC\uD55C\uB2E4",
+        "\uACA9\uC2DD\uC744 \uAC16\uCDB0 \uBA3C\uC800 \uB2E4\uAC00\uAC00 \uC778\uC0AC\uB97C \uAC74\uB128\uB2E4",
+        "\uD488\uC704\uB97C \uC9C0\uD0A4\uBA70 \uB2E4\uAC00\uAC00 \uC774\uB984\uC744 \uBC1D\uD78C\uB2E4"
+      ]
+    }
+  };
+  function _playerIdentityVariants(category) {
+    try {
+      const rankId = S.character?.socialRankId;
+      if (!rankId) return [];
+      return IDENTITY_FLAVOR_TEMPLATES[category]?.[rankId] || [];
+    } catch (e) {
+      return [];
+    }
+  }
   function _localFlavorPickTarget(category, history) {
     try {
       const mentioned = _sceneMentionedTarget(history);
@@ -89926,8 +89980,10 @@ ${lines.join("\n")}
       const cat = categories[i];
       const target = _localFlavorPickTarget(cat, h);
       const tier = cat === "persuade" || cat === "social" ? _npcRelTier2(target) : null;
-      const templates = tier && tier !== "neutral" && LOCAL_FLAVOR_TONE_TEMPLATES[cat]?.[tier] ? LOCAL_FLAVOR_TONE_TEMPLATES[cat][tier] : LOCAL_FLAVOR_TEMPLATES[cat];
-      const tpl = _pickFreshVariant("flavor:" + cat + (tier ? ":" + tier : ""), templates);
+      const baseTemplates = tier && tier !== "neutral" && LOCAL_FLAVOR_TONE_TEMPLATES[cat]?.[tier] ? LOCAL_FLAVOR_TONE_TEMPLATES[cat][tier] : LOCAL_FLAVOR_TEMPLATES[cat];
+      const identityVariants = _playerIdentityVariants(cat);
+      const templates = identityVariants.length ? baseTemplates.concat(identityVariants) : baseTemplates;
+      const tpl = _pickFreshVariant("flavor:" + cat + (tier ? ":" + tier : "") + (identityVariants.length ? ":id" : ""), templates);
       const text = _fillTargetSlots(tpl, target);
       out.push(text);
     }
@@ -90131,17 +90187,21 @@ ${lines.join("\n")}
     const race = char.race ? RACE_DEFS.find((r) => r.name === char.race) : null;
     const raceLoreFull = race ? race.lore || race.desc || "" : "";
     const raceLore = raceLoreFull ? raceLoreFull.split(/(?<=[.!?])\s/)[0] : "";
+    const job = char.role ? BASE_JOBS.find((j) => j.name === char.role) : null;
+    const jobLoreFull = job ? job.lore || job.desc || "" : "";
+    const jobLore = jobLoreFull ? jobLoreFull.split(/(?<=[.!?])\s/)[0] : "";
     const nameWord = char.name || "\uC8FC\uC778\uACF5";
     const josa = nameWord + _josa(nameWord, "\uC740\uB294");
     const contLabel = cont ? cont.label : "\uB0AF\uC120 \uB545";
     const contDesc = cont ? cont.desc : "";
     const rankLore = rank ? rank.lore : "\uD3C9\uBC94\uD55C \uD0DC\uC0DD\uC73C\uB85C \uD558\uB8E8\uD558\uB8E8\uB97C \uC0B4\uC544\uC654\uB2E4.";
-    if (!rank && !cont && !raceLore) return null;
+    if (!rank && !cont && !raceLore && !jobLore) return null;
     const raceClause = raceLore ? ` ${char.race} \uD2B9\uC720\uC758 \uAE30\uC9C8\uB3C4 \uC228\uAE38 \uC218 \uC5C6\uB2E4 \u2014 ${raceLore}` : "";
+    const jobClause = jobLore ? ` ${char.role}${_josa(char.role, "\uB85C")}\uC11C \uAC77\uB294 \uAE38\uB3C4 \uC774\uBBF8 \uC815\uD574\uC838 \uC788\uB2E4 \u2014 ${jobLore}` : "";
     const templates = [
-      `${contLabel}. ${contDesc} \uADF8 \uC18D\uC5D0\uC11C ${josa} \uC9C0\uAE08\uAECF \uC774\uB807\uAC8C \uC0B4\uC544\uC654\uB2E4 \u2014 ${rankLore}${raceClause}`,
-      `${josa} ${contLabel}\uC5D0\uC11C \uB208\uC744 \uB5B4\uB2E4. ${contDesc} ${rankLore}${raceClause}`,
-      `${contDesc} \uC774\uACF3 ${contLabel}, ${josa} ${rankLore}${raceClause}`
+      `${contLabel}. ${contDesc} \uADF8 \uC18D\uC5D0\uC11C ${josa} \uC9C0\uAE08\uAECF \uC774\uB807\uAC8C \uC0B4\uC544\uC654\uB2E4 \u2014 ${rankLore}${raceClause}${jobClause}`,
+      `${josa} ${contLabel}\uC5D0\uC11C \uB208\uC744 \uB5B4\uB2E4. ${contDesc} ${rankLore}${raceClause}${jobClause}`,
+      `${contDesc} \uC774\uACF3 ${contLabel}, ${josa} ${rankLore}${raceClause}${jobClause}`
     ];
     return templates[Math.floor(Math.random() * templates.length)];
   }
@@ -111152,6 +111212,7 @@ ${isCivilianJob ? `
     lsDel(CHAT_KEY);
     lsDel(META_KEY);
     lsDel(SCENARIO_SAVE_KEY);
+    lsDel("tf-current-location");
     lsDel(CHAT_MESSAGES_KEY);
     lsDel(CHAT_FULL_KEY);
     lsDel(CHAT_TURN_KEY);

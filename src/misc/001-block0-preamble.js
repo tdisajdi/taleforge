@@ -176,6 +176,16 @@ export const clearSession = () => {
   lsDel(STORAGE_KEY);
   lsDel(CHAR_KEY); lsDel(STATS_SAVE_KEY); lsDel(CHAT_KEY);
   lsDel(META_KEY); lsDel(SCENARIO_SAVE_KEY);
+  // [2026-10-22 버그 수정] "현재 위치"(world/052의 CURRENT_LOC_KEY,
+  // 순환 import를 피하려 리터럴 그대로 씀 — 이 파일의 다른 lsDel도
+  // 같은 패턴)는 환생(doReincarnate) 때만 지워지고 새 게임 시작
+  // (clearSession) 때는 안 지워졌다 — 그래서 과거에 아무 위치든 한 번
+  // 가본 적이 있으면, 완전히 새로 만든 캐릭터도 그 낡은 위치가 남아있어
+  // composeRankContinentOpening(신분·대륙·종족을 반영한 오프닝, loc이
+  // 없을 때만 작동)이 발동을 못 하고 장소 이름만 쓰는 범용 오프닝으로
+  // 떨어지는 버그였다(실사용자 신고: 신분/종족을 뭘 골라도 오프닝이
+  // 똑같다는 지적).
+  lsDel('tf-current-location');
   // [CRITICAL BUG FIX] 분리 저장 키들이 누락돼서 새 게임/환생 시 이전 생의
   // 채팅 내역(tf-chat-messages/full/turn/choices)과 감정·피로·전투 메타
   // (tf-meta-emotion/fatigue/combat/status)가 그대로 남아있던 버그.

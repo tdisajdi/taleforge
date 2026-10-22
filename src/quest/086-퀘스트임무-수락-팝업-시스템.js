@@ -92,6 +92,7 @@ import { triggerLoopIfDead } from '../progression/220-18-회차루프-시스템.
 import { GEMINI_FALLBACK_MODELS } from '../data/229-NPC-대화-퀘스트-시스템-AI-생성.js';
 import { callLocalModel, callLocalModelJSON, logLocalModelEvent, tryCloudThenLocalModelThenBank } from '../quest/331-로컬-AI-모델-엔진.js';
 import { callGeminiDirect } from '../quest/229-NPC-대화-퀘스트-시스템-AI-생성.js';
+import { BASE_JOBS } from '../data/042-직업-시스템-무한-파생-도감.js';
 import { RACE_DEFS, clearRace, loadApiKeys, loadKeyIndex } from '../race/013-종족-시스템.js';
 import { clearShadowPact } from '../race/024-4-그림자-협약-시스템-다크링-핵심-협상-도구.js';
 import { applyDemonContractStats, renderDemonContractPanel } from '../race/027-악마족-계약-장부-시스템-Demon-Contract-Ledger.js';
@@ -543,6 +544,76 @@ const LOCAL_FLAVOR_TONE_TEMPLATES = {
   },
 };
 
+// [2026-10-22 버그 수정] 플레이어 신분(socialRankId)도 선택지에 전혀
+// 반영되지 않았다 — 실사용자 지적("노예로 시작했는데 탈출/복종 같은
+// 선택지는 왜 없냐"). 사실 이 반영 자체는 이미 설계돼 있었다 —
+// `doStartChat()`의 `_openingRankHints`(신분별 "탈출·저항·복종 등
+// 노예 처지에 맞게 제시하라" 같은 지시문)가 그 증거인데, 이건 AI
+// 프롬프트 텍스트일 뿐이라 클라우드가 꺼진 로컬 전용 빌드에서는 그
+// 지시문을 읽는 코드 자체가 없어 영원히 적용되지 않았다. 새 신분
+// 체계를 만들지 않고, 그 지시문이 가리키던 의도(탈출→move, 숨기/
+// 위장→stealth, 권위로 설득·접근→persuade/social)를 regex가 실제로
+// 요구하는 리터럴 단어(moveRe의 "탈출", stealthRe의 "위장"/"시선을
+// 피해"/"그림자처럼" 등, persuadeRe의 "설득한다"/"협상한다",
+// socialActionRe의 "인사를 건넨다"/"신분을 밝힌다" 등)를 그대로 포함해
+// 구체적인 선택지 문구로 옮겼다 — 기존 카테고리별 템플릿 풀에 신분별
+// 변형을 추가하는 방식이라(완전 대체가 아님) 새 카테고리/새 판정
+// 로직이 필요 없다. 신분별 전용 안내가 이미 쓰여 있는 4개 신분
+// (노예/무법자/왕족/귀족)만 대상 — 평민 등 나머지는 기존 범용 템플릿
+// 그대로.
+const IDENTITY_FLAVOR_TEMPLATES = {
+  move: {
+    slave: [
+      '사슬이 느슨해진 틈을 타 탈출을 시도한다',
+      '감시가 소홀한 순간, 지체 없이 탈출한다',
+      '더는 못 참고 탈출을 감행한다',
+    ],
+  },
+  stealth: {
+    slave: [
+      '주인의 시선을 피해 아무것도 모르는 척 위장한다',
+      '맞을까 봐 감정을 숨기고 고분고분한 척 연기한다',
+      '눈에 띄지 않도록 그림자처럼 움직인다',
+    ],
+    outlaw: [
+      '수배 전단과 얼굴이 겹치지 않도록 고개를 숙이고 위장한다',
+      '낯선 사람인 척 시치미를 떼며 시선을 피해 지나간다',
+      '관원의 눈을 피해 그림자처럼 몸을 숨긴다',
+    ],
+  },
+  persuade: {
+    royal: [
+      '왕족의 이름을 걸고 설득한다',
+      '타고난 권위로 조건을 내걸며 협상한다',
+      '왕실의 권위를 앞세워 정중히 부탁한다',
+    ],
+    noble: [
+      '가문의 명예를 걸고 설득한다',
+      '귀족다운 어조로 조건을 내걸며 협상한다',
+      '품위를 지키며 정중히 부탁한다',
+    ],
+  },
+  social: {
+    royal: [
+      '먼저 다가가 말을 걸며 넌지시 신분을 밝힌다',
+      '왕족의 품위를 드러내며 인사를 건넨다',
+      '다가가 넌지시 정체를 밝힌다',
+    ],
+    noble: [
+      '가문을 소개하며 접근한다',
+      '격식을 갖춰 먼저 다가가 인사를 건넨다',
+      '품위를 지키며 다가가 이름을 밝힌다',
+    ],
+  },
+};
+function _playerIdentityVariants(category){
+  try{
+    const rankId = S.character?.socialRankId;
+    if(!rankId) return [];
+    return IDENTITY_FLAVOR_TEMPLATES[category]?.[rankId] || [];
+  }catch(e){ return []; }
+}
+
 // [2026-10-22, 70번 섹션] 직전 서술에 실제로 이름이 언급된 상대가
 // 있으면(_sceneMentionedTarget, 69번 섹션에서 _turnPickTarget용으로
 // 만든 것과 같은 공용 헬퍼) 모든 카테고리에서 그쪽을 최우선으로 쓴다 —
@@ -611,9 +682,11 @@ export function generateLocalFlavorChoices(count, history){
     const cat = categories[i];
     const target = _localFlavorPickTarget(cat, h);
     const tier = (cat==='persuade' || cat==='social') ? _npcRelTier(target) : null;
-    const templates = (tier && tier!=='neutral' && LOCAL_FLAVOR_TONE_TEMPLATES[cat]?.[tier])
+    const baseTemplates = (tier && tier!=='neutral' && LOCAL_FLAVOR_TONE_TEMPLATES[cat]?.[tier])
       ? LOCAL_FLAVOR_TONE_TEMPLATES[cat][tier] : LOCAL_FLAVOR_TEMPLATES[cat];
-    const tpl = _pickFreshVariant('flavor:'+cat+(tier?':'+tier:''), templates);
+    const identityVariants = _playerIdentityVariants(cat);
+    const templates = identityVariants.length ? baseTemplates.concat(identityVariants) : baseTemplates;
+    const tpl = _pickFreshVariant('flavor:'+cat+(tier?':'+tier:'')+(identityVariants.length?':id':''), templates);
     const text = _fillTargetSlots(tpl, target);
     out.push(text);
   }
@@ -910,17 +983,29 @@ function composeRankContinentOpening(char){
   const race = char.race ? RACE_DEFS.find(r => r.name === char.race) : null;
   const raceLoreFull = race ? (race.lore || race.desc || '') : '';
   const raceLore = raceLoreFull ? raceLoreFull.split(/(?<=[.!?])\s/)[0] : '';
+  // [2026-10-22 버그 수정] 신분·대륙·종족은 반영되는데 직업(char.role)만
+  // 여기서 빠져 있었다 — 실사용자 지적("직업 설정에 따라 이야기가
+  // 진행되는 게 왜 없냐"). BASE_JOBS(`data/042`, 캐릭터 생성 6직업이
+  // 전부 lore 필드를 이미 갖고 있음, job/042의 `findJob()`/
+  // `getAllBaseJobs()`가 참조하는 바로 그 데이터)를 그대로 재사용 —
+  // 새 직업 설정 텍스트를 따로 쓰지 않음. 방랑자처럼 BASE_JOBS에 없는
+  // 이름(전생의 기억으로 고른 상위 직업 등)이면 find가 조용히 실패해
+  // 기존처럼 직업 절 없이 폴백한다.
+  const job = char.role ? BASE_JOBS.find(j => j.name === char.role) : null;
+  const jobLoreFull = job ? (job.lore || job.desc || '') : '';
+  const jobLore = jobLoreFull ? jobLoreFull.split(/(?<=[.!?])\s/)[0] : '';
   const nameWord = char.name || '주인공';
   const josa = nameWord + _josa(nameWord, '은는');
   const contLabel = cont ? cont.label : '낯선 땅';
   const contDesc = cont ? cont.desc : '';
   const rankLore = rank ? rank.lore : '평범한 태생으로 하루하루를 살아왔다.';
-  if(!rank && !cont && !raceLore) return null; // 셋 다 정보가 없으면 기존 범용 템플릿에 맡긴다
+  if(!rank && !cont && !raceLore && !jobLore) return null; // 넷 다 정보가 없으면 기존 범용 템플릿에 맡긴다
   const raceClause = raceLore ? ` ${char.race} 특유의 기질도 숨길 수 없다 — ${raceLore}` : '';
+  const jobClause = jobLore ? ` ${char.role}${_josa(char.role,'로')}서 걷는 길도 이미 정해져 있다 — ${jobLore}` : '';
   const templates = [
-    `${contLabel}. ${contDesc} 그 속에서 ${josa} 지금껏 이렇게 살아왔다 — ${rankLore}${raceClause}`,
-    `${josa} ${contLabel}에서 눈을 떴다. ${contDesc} ${rankLore}${raceClause}`,
-    `${contDesc} 이곳 ${contLabel}, ${josa} ${rankLore}${raceClause}`,
+    `${contLabel}. ${contDesc} 그 속에서 ${josa} 지금껏 이렇게 살아왔다 — ${rankLore}${raceClause}${jobClause}`,
+    `${josa} ${contLabel}에서 눈을 떴다. ${contDesc} ${rankLore}${raceClause}${jobClause}`,
+    `${contDesc} 이곳 ${contLabel}, ${josa} ${rankLore}${raceClause}${jobClause}`,
   ];
   return templates[Math.floor(Math.random()*templates.length)];
 }

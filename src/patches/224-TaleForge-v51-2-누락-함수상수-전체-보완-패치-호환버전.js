@@ -1,6 +1,6 @@
 // TaleForge v51-2 누락 함수/상수 전체 보완 패치 (호환버전)
 // Auto-extracted from taleforge.html (original section banner preserved above).
-import { renderKeys, showScreen } from '../core/084-TaleForge-순수-JS-엔진.js';
+import { showScreen } from '../core/084-TaleForge-순수-JS-엔진.js';
 import { S } from '../data/084-TaleForge-순수-JS-엔진.js';
 import { loadApiKeys } from '../race/013-종족-시스템.js';
 
@@ -131,7 +131,8 @@ export function _taleforgeInit(){
     if(el) el.textContent='v74';
     var savedKeys=(typeof loadApiKeys==='function')?loadApiKeys():[];
     if(typeof S!=='undefined') S.apiKeys=savedKeys;
-    if(typeof renderKeys==='function') renderKeys();
+    // [66-2번 섹션] renderKeys() 호출 삭제 — 그 함수가 채우던 #key-list
+    // 자체를 UI에서 없앴다(API 키 입력칸 전부 제거).
     if(typeof renderLocalModelSetting==='function') renderLocalModelSetting();
     if(typeof showScreen==='function') showScreen('apikey');
     else{

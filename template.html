@@ -464,7 +464,6 @@
 ║  · 정령족: p-elemental-system                                               ║
 ║                                                                              ║
 ║  【시스템】                                                                  ║
-║  · API 키 관리 — p-keys                                                     ║
 ║  · 세이브/로드 — p-saves                                                    ║
 ║  · 데이터 수집 설정 — p-datacollect                                         ║
 ║  · AI 설정 — p-aisettings                                                   ║
@@ -1552,13 +1551,6 @@ body.light-mode #custom-era-input{background:#e8d8b8!important;border-color:#c0a
 body.light-mode #screen-apikey::before,
 body.light-mode .title-orn{display:none}
 body.light-mode .logo{color:var(--gold);text-shadow:none}
-.key-list{margin-bottom:12px}
-.key-item{display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--bg-input);border:1px solid var(--border);margin-bottom:3px;font-size:11px;color:var(--dim)}
-.key-item span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.key-del{background:none;border:none;color:#5a3a2a;cursor:pointer;font-size:15px;padding:0 2px;line-height:1}
-.key-input{width:100%;padding:11px 13px;background:var(--bg-input);border:1px solid var(--border);color:var(--gold);font-family:'Crimson Text',serif;font-size:14px;outline:none;margin-bottom:9px}
-.key-input:focus{border-color:var(--gold)}
-
 /* ── 시나리오 ── */
 #screen-scenario{background:var(--bg-screen)}
 .sc-header{padding:13px 16px 10px;text-align:center;border-bottom:1px solid var(--border);flex-shrink:0}
@@ -1995,13 +1987,14 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
   <div class="apikey-wrap pixel-box">
     <div class="logo"><svg viewBox="0 0 18 18" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px"><path d="M14 2 L16 4 L5 15 L3 13 Z"/><path d="M3 3 L5 5"/><path d="M13 13 L15 15"/><path d="M9 6 L6 9"/></svg> TaleForge</div>
     <div id="app-version-display" style="text-align:center;font-family:'Cinzel',serif;font-size:10px;color:var(--dim);letter-spacing:2px;margin-bottom:4px"></div>
-    <div class="logo-sub">키 없이 바로 시작할 수 있습니다.<br>(선택) Gemini API 키를 넣으면 아이템·퀘스트·장소 등 생성 콘텐츠 품질이 올라갑니다.</div>
-    <div id="key-list" class="key-list"></div>
-    <input id="key-input" class="key-input" type="password" placeholder="(선택) AIza... 또는 AQ.Ab8R... (Gemini API Key)" onkeydown="if(event.key==='Enter')addKey()">
-    <button class="btn btn-dark" style="width:100%;margin-bottom:8px" onclick="addKey()">+ 키 추가 (선택)</button>
+    <!-- [66-2번 섹션] API 키 입력칸/관리 패널 제거 — CLOUD_TIER_ENABLED가
+         false로 고정돼 있어(quest/331) 키를 넣어도 실제로는 아무 효과가
+         없었다(완전 무-API 판매 제품에 거짓 안내 문구만 남아있던 상태).
+         키 저장/조회 계층(loadApiKeys 등)과 CLOUD_TIER_ENABLED 스위치
+         자체는 코드에 그대로 남겨둔다(향후 되돌릴 수 있게) — 이번엔
+         사용자에게 보이는 UI만 치운다. -->
+    <div class="logo-sub">키 없이 바로 시작할 수 있습니다.</div>
     <button class="btn btn-gold" id="start-btn" style="width:100%;letter-spacing:2px;margin-bottom:8px" onclick="confirmKey()">시작하기 ▶</button>
-    <div id="key-hint" style="display:none;font-size:10px;color:#60a060;text-align:center;margin-bottom:8px">✅ 저장된 키로 바로 시작할 수 있어요</div>
-    <button class="btn btn-dark" style="width:100%;margin-bottom:12px;font-size:10px;padding:8px;border-color:#4a7a2a;color:#80c060" onclick="_downloadWithKeys()">💾 키 포함 저장 — 다음부터 입력 생략</button>
     <div style="border-top:1px solid var(--border);padding-top:10px;display:flex;gap:6px">
       <button class="btn btn-dark" style="flex:1;font-size:9px;padding:7px 6px" onclick="exportAllData()">✦ 기록 봉인</button>
       <button class="btn btn-dark" style="flex:1;font-size:9px;padding:7px 6px" onclick="importAllData()">✦ 봉인 해제</button>
@@ -2659,11 +2652,6 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
   <div class="p-body scrollable" id="pb-worldfigures"></div>
 </div></div>
 
-<!-- 키 관리 패널 -->
-<div class="panel-ov" id="p-keys"><div class="panel">
-  <div class="p-hdr"><span class="p-title">🔑 API 키 관리</span><button class="p-close" onclick="closeP('keys')">✕</button></div>
-  <div class="p-body scrollable" id="pb-keys"></div>
-</div></div>
 
 <!-- AI 설정 패널 -->
 <div class="panel-ov" id="p-aisettings"><div class="panel">

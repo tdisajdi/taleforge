@@ -312,29 +312,11 @@ export const loadApiKeys = () => {
   return window._embeddedKeys;
 };
 
-window._keySaveHintShown = false;
-
-export function _scheduleKeySaveHint(){
-  if(window._keySaveHintShown) return; window._keySaveHintShown=true;
-  setTimeout(()=>{
-    if(confirm('⚠️ 이 환경에서는 API 키가 앱을 닫으면 사라질 수 있습니다.\n\n키를 파일에 저장하려면 확인을 누르세요.\n(저장된 키가 포함된 HTML 파일을 다운로드합니다)'))
-      _downloadWithKeys();
-  }, 2000);
-}
-window._scheduleKeySaveHint = _scheduleKeySaveHint;
-
-export function _downloadWithKeys(){
-  const keys = window._embeddedKeys;
-  if(!keys.length){ alert('저장된 키가 없습니다.'); return; }
-  const blob = new Blob([document.documentElement.outerHTML
-    .replace('let _embeddedKeys = [];', 'let _embeddedKeys = '+JSON.stringify(keys)+';')
-  ], {type:'text/html'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'taleforge_saved.html';
-  a.click();
-}
-window._downloadWithKeys = _downloadWithKeys;
+// [66-2번 섹션] _scheduleKeySaveHint/_downloadWithKeys 삭제 — 둘 다
+// "키를 입력했는데 환경 특성상 사라질 수 있으니 키 포함 파일로 저장해
+// 두라"는 API 키 입력 UI 전용 안내였다. 그 UI(입력칸·"키 포함 저장"
+// 버튼)를 전부 치웠으니 호출부가 하나도 안 남는다 — 저장 계층
+// (saveApiKeys/loadApiKeys/window._embeddedKeys)은 그대로 둠.
 
 export const saveKeyIndex = (i) => lsSet(API_KEY_INDEX_STORAGE, String(i));
 

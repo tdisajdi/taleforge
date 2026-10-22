@@ -20,7 +20,7 @@ import { applyPartyBonus, getPlayerMaxHp, getPlayerMaxMp, loadParty } from '../m
 import { saveStats } from '../patches/299-플레이-통계-성향-분석-시스템-v57-완전판.js';
 import { loadCycleCount } from '../progression/014-환생-누적-시스템-110번.js';
 import { applyAllPassiveSkills, checkOfflineCatchUp, checkStaleCollectedData, doStartChat, renderMsgs, restoreTitleBenefits, updateCharHeader, updateEmotionDisplay, updateMenuVisibility, updateQuestBadge } from '../quest/086-퀘스트임무-수락-팝업-시스템.js';
-import { RACE_DEFS, _scheduleKeySaveHint, loadApiKeys, loadKeyIndex, saveApiKeys } from '../race/013-종족-시스템.js';
+import { RACE_DEFS, loadApiKeys } from '../race/013-종족-시스템.js';
 import { FIVE_CONTINENTS, loadContinentRep, saveContinentRep } from '../race/064-아에테른-종족간-전쟁-역사-종족-선택-시-배경.js';
 import { $, esc, lsGet, lsSet, toast } from '../utils.js';
 import { loadCurrentLocation } from '../world/052-동대륙-추가-장소-4.js';
@@ -121,46 +121,11 @@ export function showScreen(name){
 }
 window.showScreen = showScreen;
 
-export function addKey(){
-  const inp=$('key-input'), k=(inp.value||'').trim().replace(/[\s\n\r]/g,'');
-  if(!k||(!k.startsWith('AIza')&&!k.startsWith('AQ.'))){ toast('올바른 API 키가 아닙니다'); return; }
-  if(k.length < 30){ toast('키가 너무 짧습니다. 전체 키를 복사하세요.'); return; }
-  const keys=loadApiKeys(); if(keys.includes(k)){ toast('이미 등록된 키입니다'); return; }
-  keys.push(k); saveApiKeys(keys); S.apiKeys=keys; inp.value='';
-  renderKeys(); toast('✅ API 키 추가됨');
-  if(typeof _scheduleKeySaveHint==='function') _scheduleKeySaveHint();
-}
-window.addKey = addKey;
-
-export function removeKey(i){
-  const keys=loadApiKeys(); keys.splice(i,1); saveApiKeys(keys); S.apiKeys=keys; renderKeys();
-}
-window.removeKey = removeKey;
-
-export function renderKeys(){
-  const keys=loadApiKeys();
-  const curIdx = loadKeyIndex() % Math.max(1, keys.length);
-  $('key-list').innerHTML=keys.map((k,i)=>`
-    <div class="key-item" style="border-left:2px solid ${i===curIdx?'var(--gold)':'transparent'}">
-      <span>${i===curIdx?'▶ ':'  '}🔑 ${esc(k.slice(0,8))}...${esc(k.slice(-4))} ${i===curIdx?'<span style="color:#60a060;font-size:9px">(사용중)</span>':''}</span>
-      <button class="key-del" onclick="removeKey(${i})">✕</button>
-    </div>`).join('') || '<div style="color:var(--dim);font-size:11px;padding:5px">등록된 키 없음</div>';
-  // 키 있으면 시작하기 버튼 강조 + 안내
-  const startBtn = $('start-btn');
-  const keyHint = $('key-hint');
-  if(startBtn){
-    if(keys.length > 0){
-      startBtn.style.animation = 'none';
-      startBtn.textContent = '시작하기 ▶  (키 ' + keys.length + '개 등록됨)';
-    } else {
-      startBtn.textContent = '시작하기 ▶';
-    }
-  }
-  if(keyHint){
-    keyHint.style.display = keys.length > 0 ? 'block' : 'none';
-  }
-}
-window.renderKeys = renderKeys;
+// [66-2번 섹션] addKey/removeKey/renderKeys 삭제 — 첫 화면의 API 키
+// 입력칸·"API 키 관리" 패널을 걷어내면서 그 UI만 조작하던 함수들이라
+// 전부 같이 삭제한다(CLOUD_TIER_ENABLED가 false라 키가 있어도 실제
+// 효과는 없었음, 저장 계층인 loadApiKeys/saveApiKeys 자체는 그대로
+// 유지 — confirmKey()가 여전히 읽는다).
 
 export function confirmKey(){
   // [복원] API 키는 이제 필수가 아니라 선택 — 키 없이도 로컬 조합으로

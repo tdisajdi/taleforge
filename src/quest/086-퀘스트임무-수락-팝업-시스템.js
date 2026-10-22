@@ -3,7 +3,7 @@
 import { BATTLE_LOG_KEY, TIMELINE_KEY, _addTimelineOnDeath, addBattleLogEntry, addTimelineEvent, renderBattleLogPanel, renderTimelinePanel } from '../combat/188-UI-1-타임라인-전투로그-데이터-시스템.js';
 import { getCombatInjuryBonus } from '../combat/247-③-부상-흔적-현재-전투-페널티-연결.js';
 import { clearUndeadBorrowedTime, detectUndeadActionFromText, renderMiniMap } from '../combat/257-renderMiniMap-던전-미니맵-일반-미니맵.js';
-import { SOCIAL_RANKS, START_CONTINENTS, getSocialRankMechanics, renderKeys, renderScenarios, showScreen } from '../core/084-TaleForge-순수-JS-엔진.js';
+import { SOCIAL_RANKS, START_CONTINENTS, getSocialRankMechanics, renderScenarios, showScreen } from '../core/084-TaleForge-순수-JS-엔진.js';
 import { pmClearAll, pmLoad } from '../core/267-저장로드초기화.js';
 import { EMOTION_DEFS, _dirty, _memStore } from '../data/001-block0-preamble.js';
 import { SKILL_ENHANCE_TIERS, TITLE_DEFS } from '../data/010-스킬-강화-시스템.js';
@@ -6009,7 +6009,6 @@ window.skTab = skTab;
 
 export function renderPanel(name){
   switch(name){
-    case 'keys': renderKeys?.(); break;
     case 'stats': window.renderStats(); break;
     case 'skills': renderSkills(); break;
     case 'inventory': renderInventory(); break;

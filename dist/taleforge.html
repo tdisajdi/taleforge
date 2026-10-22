@@ -89820,8 +89820,10 @@ ${lines.join("\n")}
     search: ["\uC8FC\uBCC0 \uBB3C\uAC74", "\uBC14\uB2E5\uC5D0 \uB5A8\uC5B4\uC9C4 \uAC83", "\uADFC\uCC98\uC758 \uBB34\uC5B8\uAC00"],
     social: ["\uAC00\uAE4C\uC774 \uC788\uB294 \uC0AC\uB78C", "\uC9C0\uB098\uAC00\uB358 \uC774", "\uC8FC\uBCC0 \uC0AC\uB78C"]
   };
-  function _localFlavorPickTarget(category) {
+  function _localFlavorPickTarget(category, history) {
     try {
+      const mentioned = _sceneMentionedTarget(history);
+      if (mentioned) return mentioned;
       const monsters = typeof loadMonsters === "function" ? (loadMonsters() || []).filter((m) => m.status === "alive") : [];
       if (category === "attack" || category === "defend" || category === "fear") {
         if (monsters.length) return monsters[0].name;
@@ -89844,14 +89846,27 @@ ${lines.join("\n")}
     const fb = LOCAL_FLAVOR_FALLBACK_TARGETS[category] || ["\uC0C1\uD669"];
     return fb[Math.floor(Math.random() * fb.length)];
   }
-  function generateLocalFlavorChoices(count) {
-    const categories = Object.keys(LOCAL_FLAVOR_TEMPLATES).sort(() => Math.random() - 0.5);
+  function _availableFlavorCategories() {
+    const all = Object.keys(LOCAL_FLAVOR_TEMPLATES);
+    try {
+      const monsters = typeof loadMonsters === "function" ? (loadMonsters() || []).filter((m) => m.status === "alive") : [];
+      if (monsters.length) return all;
+      const npcs = typeof loadNPCs === "function" ? loadNPCs() || [] : [];
+      if (npcs.some((n) => n.relationship < 30)) return all;
+    } catch (e) {
+      return all;
+    }
+    return all.filter((c) => c !== "attack" && c !== "defend" && c !== "fear");
+  }
+  function generateLocalFlavorChoices(count, history) {
+    const h = history || (typeof S !== "undefined" ? S.messages : null);
+    const categories = _availableFlavorCategories().sort(() => Math.random() - 0.5);
     const out = [];
     for (let i = 0; i < Math.min(count, categories.length); i++) {
       const cat = categories[i];
       const templates = LOCAL_FLAVOR_TEMPLATES[cat];
       const tpl = templates[Math.floor(Math.random() * templates.length)];
-      const text = _fillTargetSlots(tpl, _localFlavorPickTarget(cat));
+      const text = _fillTargetSlots(tpl, _localFlavorPickTarget(cat, h));
       out.push(text);
     }
     return out;
@@ -90066,15 +90081,22 @@ ${lines.join("\n")}
     if (!m) return null;
     return { stat: m[1].toLowerCase(), verdict: m[2] };
   }
-  function _turnPickTarget(history) {
+  function _sceneMentionedTarget(history) {
     try {
       const lastNarr = history && [...history].reverse().find((m) => m.role === "assistant")?.content;
-      if (lastNarr) {
-        const monsters0 = typeof loadMonsters === "function" ? (loadMonsters() || []).filter((m) => m.status === "alive") : [];
-        const npcs0 = typeof loadNPCs === "function" ? loadNPCs() || [] : [];
-        const mentioned = [...monsters0, ...npcs0].map((e) => e.name).filter(Boolean).filter((name) => lastNarr.includes(name)).sort((a, b) => b.length - a.length);
-        if (mentioned.length) return mentioned[0];
-      }
+      if (!lastNarr) return null;
+      const monsters0 = typeof loadMonsters === "function" ? (loadMonsters() || []).filter((m) => m.status === "alive") : [];
+      const npcs0 = typeof loadNPCs === "function" ? loadNPCs() || [] : [];
+      const mentioned = [...monsters0, ...npcs0].map((e) => e.name).filter(Boolean).filter((name) => lastNarr.includes(name)).sort((a, b) => b.length - a.length);
+      return mentioned.length ? mentioned[0] : null;
+    } catch (e) {
+      return null;
+    }
+  }
+  function _turnPickTarget(history) {
+    try {
+      const mentioned = _sceneMentionedTarget(history);
+      if (mentioned) return mentioned;
       const monsters = typeof loadMonsters === "function" ? (loadMonsters() || []).filter((m) => m.status === "alive") : [];
       if (monsters.length) return monsters[0].name;
       const npcs = typeof loadNPCs === "function" ? loadNPCs() || [] : [];
@@ -90119,7 +90141,7 @@ ${lines.join("\n")}
       const nameWord = char.name || "\uC8FC\uC778\uACF5";
       const rankContOpening = !loc ? composeRankContinentOpening(char) : null;
       const prose2 = learned || rankContOpening || tpl.replace(/\{name(?::([^}]+))?\}/g, (_, type) => type ? nameWord + _josa(nameWord, type) : nameWord).replace(/\{loc\}/g, loc?.name || "\uB0AF\uC120 \uB545");
-      const choices2 = generateLocalFlavorChoices(4);
+      const choices2 = generateLocalFlavorChoices(4, history);
       return prose2 + "\n[\uC120\uD0DD\uC9C0]" + choices2.map((c, i) => "\u2460\u2461\u2462\u2463\u2464"[i] + c).join("") + "[/\uC120\uD0DD\uC9C0]";
     }
     const dice = _turnParseDice(injectedContext);
@@ -90158,7 +90180,7 @@ ${lines.join("\n")}
     } else {
       prose = learned || identityFrag + TURN_CASUAL_BANK[Math.floor(Math.random() * TURN_CASUAL_BANK.length)];
     }
-    const choices = generateLocalFlavorChoices(4);
+    const choices = generateLocalFlavorChoices(4, history);
     return prose + "\n[\uC120\uD0DD\uC9C0]" + choices.map((c, i) => "\u2460\u2461\u2462\u2463\u2464"[i] + c).join("") + "[/\uC120\uD0DD\uC9C0]";
   }
   window.composeLocalTurnText = composeLocalTurnText;

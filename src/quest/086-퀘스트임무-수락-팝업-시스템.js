@@ -461,8 +461,16 @@ const LOCAL_FLAVOR_FALLBACK_TARGETS = {
   social: ['가까이 있는 사람', '지나가던 이', '주변 사람'],
 };
 
-function _localFlavorPickTarget(category){
+// [2026-10-22, 70번 섹션] 직전 서술에 실제로 이름이 언급된 상대가
+// 있으면(_sceneMentionedTarget, 69번 섹션에서 _turnPickTarget용으로
+// 만든 것과 같은 공용 헬퍼) 모든 카테고리에서 그쪽을 최우선으로 쓴다 —
+// 지금 장면과 무관한 완전 무작위 NPC가 선택지 문구에 등장하던 버그
+// (69번 섹션에서 서사 쪽은 고쳤지만 선택지 생성 쪽엔 남아있던 것)를
+// 해결. 못 찾을 때만 기존 폴백 순서로 내려간다.
+function _localFlavorPickTarget(category, history){
   try{
+    const mentioned = _sceneMentionedTarget(history);
+    if(mentioned) return mentioned;
     const monsters = (typeof loadMonsters==='function') ? (loadMonsters()||[]).filter(m=>m.status==='alive') : [];
     if(category==='attack' || category==='defend' || category==='fear'){
       if(monsters.length) return monsters[0].name;
@@ -491,17 +499,37 @@ function _localFlavorPickTarget(category){
   return fb[Math.floor(Math.random()*fb.length)];
 }
 
+// [2026-10-22, 70번 섹션 ①] 기존엔 지금 전투 중인지/위험 상황인지
+// 전혀 안 보고 9개 카테고리를 전부 무작위로 섞어서 보여줬다 — 평화로운
+// 장면에서도 "공격한다"/"위협한다"/"막아낸다" 선택지가 뜰 수 있던
+// 개연성 문제(실사용자 지적). 공격/방어/위협 3개는 실제로 싸울 대상
+// (살아있는 몬스터 또는 69번 섹션과 동일한 relationship<30 기준의
+// 적대 NPC)이 있을 때만 후보에 넣는다 — 새 "위험 상태" 플래그를
+// 따로 만들지 않고 이미 있는 데이터만으로 판단.
+function _availableFlavorCategories(){
+  const all = Object.keys(LOCAL_FLAVOR_TEMPLATES);
+  try{
+    const monsters = (typeof loadMonsters==='function') ? (loadMonsters()||[]).filter(m=>m.status==='alive') : [];
+    if(monsters.length) return all;
+    const npcs = (typeof loadNPCs==='function') ? (loadNPCs()||[]) : [];
+    if(npcs.some(n=>n.relationship<30)) return all;
+  }catch(e){ return all; }
+  return all.filter(c => c!=='attack' && c!=='defend' && c!=='fear');
+}
+
 // count개의 로컬 선택지를 서로 다른 카테고리에서 뽑아 반환한다 —
 // AI 호출도, 이 상황을 예전에 몇 번 겪었는지도 전혀 상관없이 매번 즉석
-// 조합이라 항상 신선하다.
-export function generateLocalFlavorChoices(count){
-  const categories = Object.keys(LOCAL_FLAVOR_TEMPLATES).sort(()=>Math.random()-0.5);
+// 조합이라 항상 신선하다. history는 "지금 장면에 누가 있는지" 판단에만
+// 쓰고, 생략하면 S.messages로 폴백(외부 호출부가 넘기지 않아도 안전).
+export function generateLocalFlavorChoices(count, history){
+  const h = history || (typeof S!=='undefined' ? S.messages : null);
+  const categories = _availableFlavorCategories().sort(()=>Math.random()-0.5);
   const out = [];
   for(let i=0; i<Math.min(count, categories.length); i++){
     const cat = categories[i];
     const templates = LOCAL_FLAVOR_TEMPLATES[cat];
     const tpl = templates[Math.floor(Math.random()*templates.length)];
-    const text = _fillTargetSlots(tpl, _localFlavorPickTarget(cat));
+    const text = _fillTargetSlots(tpl, _localFlavorPickTarget(cat, h));
     out.push(text);
   }
   return out;
@@ -803,18 +831,28 @@ function _turnParseDice(ctx){
 // 신고: 기사단장과의 판정 바로 다음 줄에 전혀 다른 연구소장이 등장).
 // 직전 서술(가장 최근 assistant 메시지)에 실제로 이름이 언급된 상대를
 // 최우선으로 찾아 쓰고, 못 찾을 때만 기존 폴백 순서로 내려간다.
-function _turnPickTarget(history){
+// [2026-10-22, 70번 섹션] `_turnPickTarget`(턴 서사)과
+// `_localFlavorPickTarget`(선택지 생성)이 둘 다 "지금 장면에 실제로
+// 누가 있는지"를 똑같은 방식(직전 assistant 서술에 이름이 언급됐는지)
+// 으로 추정해야 해서 공용 헬퍼로 뽑았다 — 가장 최근 서술에 실제로
+// 이름이 등장한 몬스터/NPC가 있으면 그 이름을, 없으면 null을 반환한다.
+function _sceneMentionedTarget(history){
   try{
     const lastNarr = history && [...history].reverse().find(m=>m.role==='assistant')?.content;
-    if(lastNarr){
-      const monsters0 = (typeof loadMonsters==='function') ? (loadMonsters()||[]).filter(m=>m.status==='alive') : [];
-      const npcs0 = (typeof loadNPCs==='function') ? (loadNPCs()||[]) : [];
-      const mentioned = [...monsters0, ...npcs0]
-        .map(e=>e.name).filter(Boolean)
-        .filter(name=>lastNarr.includes(name))
-        .sort((a,b)=>b.length-a.length); // 이름이 서로 겹쳐 포함되는 경우 더 구체적인(긴) 쪽 우선
-      if(mentioned.length) return mentioned[0];
-    }
+    if(!lastNarr) return null;
+    const monsters0 = (typeof loadMonsters==='function') ? (loadMonsters()||[]).filter(m=>m.status==='alive') : [];
+    const npcs0 = (typeof loadNPCs==='function') ? (loadNPCs()||[]) : [];
+    const mentioned = [...monsters0, ...npcs0]
+      .map(e=>e.name).filter(Boolean)
+      .filter(name=>lastNarr.includes(name))
+      .sort((a,b)=>b.length-a.length); // 이름이 서로 겹쳐 포함되는 경우 더 구체적인(긴) 쪽 우선
+    return mentioned.length ? mentioned[0] : null;
+  }catch(e){ return null; }
+}
+function _turnPickTarget(history){
+  try{
+    const mentioned = _sceneMentionedTarget(history);
+    if(mentioned) return mentioned;
     const monsters = (typeof loadMonsters==='function') ? (loadMonsters()||[]).filter(m=>m.status==='alive') : [];
     if(monsters.length) return monsters[0].name;
     const npcs = (typeof loadNPCs==='function') ? (loadNPCs()||[]) : [];
@@ -879,7 +917,7 @@ export function composeLocalTurnText(history, injectedContext){
     const prose = learned || rankContOpening || tpl
       .replace(/\{name(?::([^}]+))?\}/g, (_, type) => type ? nameWord+_josa(nameWord,type) : nameWord)
       .replace(/\{loc\}/g, loc?.name||'낯선 땅');
-    const choices = generateLocalFlavorChoices(4);
+    const choices = generateLocalFlavorChoices(4, history);
     return prose+'\n[선택지]'+choices.map((c,i)=>'①②③④⑤'[i]+c).join('')+'[/선택지]';
   }
   const dice = _turnParseDice(injectedContext);
@@ -941,7 +979,7 @@ export function composeLocalTurnText(history, injectedContext){
   } else {
     prose = learned || (identityFrag + TURN_CASUAL_BANK[Math.floor(Math.random()*TURN_CASUAL_BANK.length)]);
   }
-  const choices = generateLocalFlavorChoices(4);
+  const choices = generateLocalFlavorChoices(4, history);
   return prose+'\n[선택지]'+choices.map((c,i)=>'①②③④⑤'[i]+c).join('')+'[/선택지]';
 }
 window.composeLocalTurnText = composeLocalTurnText;

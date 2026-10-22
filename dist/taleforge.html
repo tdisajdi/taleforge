@@ -89826,7 +89826,7 @@ ${lines.join("\n")}
       if (category === "attack" || category === "defend" || category === "fear") {
         if (monsters.length) return monsters[0].name;
         const npcs0 = typeof loadNPCs === "function" ? loadNPCs() || [] : [];
-        const hostile = npcs0.find((n) => n.relation === "hostile" || n.relation === "enemy");
+        const hostile = npcs0.find((n) => n.relationship < 30);
         if (hostile) return hostile.name;
       }
       const npcs = typeof loadNPCs === "function" ? loadNPCs() || [] : [];
@@ -90078,7 +90078,7 @@ ${lines.join("\n")}
       const monsters = typeof loadMonsters === "function" ? (loadMonsters() || []).filter((m) => m.status === "alive") : [];
       if (monsters.length) return monsters[0].name;
       const npcs = typeof loadNPCs === "function" ? loadNPCs() || [] : [];
-      const hostile = npcs.find((n) => n.relation === "hostile" || n.relation === "enemy");
+      const hostile = npcs.find((n) => n.relationship < 30);
       if (hostile) return hostile.name;
       if (npcs.length) return npcs[Math.floor(Math.random() * npcs.length)].name;
     } catch (e) {
@@ -90881,7 +90881,7 @@ ${lines.join("\n")}
     const magicRe = /(?:마법|주문|시전|시전했|시전한다|소환|소환했|소환한다|봉인|봉인했|봉인한다|결계|결계를 쳤|결계를 펼쳤|마나|마력을 쏟|마력을 담아|마법진|마법진을 그려|주술|주술을 걸었|주술을 건다|저주|저주를 걸었|저주를 건다|치유|치유했|치유한다|회복|회복시켰|회복시킨다|힐링|힐링했)/;
     const socialActionRe = /(?:접근|접근했|접근한다|말을 걸었|말을 건다|대화를 시작|대화를 시작했|먼저 말|먼저 다가가 말|손을 내밀었|손을 내민다|인사를 건넸|인사를 건넨다|소개했|소개한다|이름을 밝혔|이름을 밝힌다|정체를 밝혔|정체를 밝힌다|신분을 밝혔|신분을 밝힌다|거짓 신분|가짜 신분|다른 이름으로 소개|정보를 캐냈|정보를 캐낸다|정보를 얻어냈|정보를 얻어낸다|술을 권했|술을 권한다|음식을 건넸|선물을 건넸|돈을 건넸|돈을 줬|돈을 준다|뇌물을 건넸)/;
     const isInCombat = typeof loadMonsters === "function" && (loadMonsters() || []).some((m) => m.status === "alive");
-    const isHostileNPC = (S.npcs || []).some((n) => n.relation === "hostile" || n.relation === "enemy");
+    const isHostileNPC = (S.npcs || []).some((n) => n.relationship < 30);
     const isDangerousContext = isInCombat || isHostileNPC;
     const contextualRe = isDangerousContext ? /(?:말을 건|말을 걸|다가가|다가갔|다가간다|뒤로 물러|뒤로 물러났|물러선다|등을 돌|등을 돌렸|자리를 피해|자리를 피했|고개를 숙여|고개를 숙였|손을 들어|손을 들었|무릎을 꿇|무릎을 꿇었|항복|항복했|항복한다|버텼|버텨냈|버텨낸다|저항|저항했|저항한다)/ : null;
     const pureReactionRe = /^(안녕|반가워|고마워|감사|미안|죄송|잘자|잘 자|ㅋ+|ㅎ+|ㅠ+|ㅜ+|응|네|아니|그래|알겠|알았|맞아|좋아|싫어|흠|으음|글쎄|헐|오|와|아|어|음)[\s!?,.]*$/;
@@ -92109,7 +92109,7 @@ ${lines.join("\n")}
     const _execEnd = /(?:한다|했다|하겠|할게|하자|해버린|해냈|냈다|쳤다|꽂았|달렸|뛰었|탈출|잠입|도망|뛰쳐|빠져나|휘둘렀|내리친|집어든|낚아챈)/;
     if (_noRoll.test(t) && !_execEnd.test(t)) return null;
     const _inCombat = typeof loadMonsters === "function" && (loadMonsters() || []).some((m) => m.status === "alive");
-    const _hostile = (S.npcs || []).some((n) => n.relation === "hostile" || n.relation === "enemy");
+    const _hostile = (S.npcs || []).some((n) => n.relationship < 30);
     const _danger = _inCombat || _hostile;
     const _combat = /(?:공격|베어|찌르|때려|가격|강타|일격|급습|기습|암살|독살|제압|결박|방어|막아|반격|패링|회피|피해낸|구르며|도약|뛰어오른)(?:해|하고|하며|했|한다|할게|하겠|냈|낸다|버린|친다|쳤|꽂)/;
     const _stealth = /(?:몰래|살금|기척을 죽|그림자처럼|어둠 속으로|벽에 붙어|엎드려|포복|위장|변장|모르는 척|표정을 숨기|내색하지|들키지 않게|눈치채지 못하게|추적을 따돌)/;

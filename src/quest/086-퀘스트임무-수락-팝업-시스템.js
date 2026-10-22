@@ -466,8 +466,14 @@ function _localFlavorPickTarget(category){
     const monsters = (typeof loadMonsters==='function') ? (loadMonsters()||[]).filter(m=>m.status==='alive') : [];
     if(category==='attack' || category==='defend' || category==='fear'){
       if(monsters.length) return monsters[0].name;
+      // [2026-10-22 버그 수정] 예전엔 n.relation==='hostile'|'enemy'로 비교했는데,
+      // loadNPCs()/S.npcs가 반환하는 NPC 객체엔 relation이라는 필드 자체가
+      // 없고 relationship(0~100 숫자, 호감도)만 있어 이 비교가 영원히 거짓인
+      // 죽은 코드였다(69번 섹션에서 발견, 4곳 전부 동일 패턴). 이 게임 다른
+      // 곳(job/042 minEnemyNpc 등)에서 이미 쓰는 "적대 NPC = relationship<30"
+      // 임계값을 그대로 재사용 — 새 기준을 지어내지 않음.
       const npcs0 = (typeof loadNPCs==='function') ? (loadNPCs()||[]) : [];
-      const hostile = npcs0.find(n=>n.relation==='hostile'||n.relation==='enemy');
+      const hostile = npcs0.find(n=>n.relationship<30);
       if(hostile) return hostile.name;
     }
     const npcs = (typeof loadNPCs==='function') ? (loadNPCs()||[]) : [];
@@ -812,7 +818,7 @@ function _turnPickTarget(history){
     const monsters = (typeof loadMonsters==='function') ? (loadMonsters()||[]).filter(m=>m.status==='alive') : [];
     if(monsters.length) return monsters[0].name;
     const npcs = (typeof loadNPCs==='function') ? (loadNPCs()||[]) : [];
-    const hostile = npcs.find(n=>n.relation==='hostile'||n.relation==='enemy');
+    const hostile = npcs.find(n=>n.relationship<30);
     if(hostile) return hostile.name;
     if(npcs.length) return npcs[Math.floor(Math.random()*npcs.length)].name;
   }catch(e){}
@@ -1822,7 +1828,7 @@ export async function sendMsg(userMsg, isChoice=false){
 
   // [문맥 기반] 전투/위험 상황에서의 평범한 행동도 판정
   const isInCombat = (typeof loadMonsters==='function') && (loadMonsters()||[]).some(m=>m.status==='alive');
-  const isHostileNPC = (S.npcs||[]).some(n=>n.relation==='hostile'||n.relation==='enemy');
+  const isHostileNPC = (S.npcs||[]).some(n=>n.relationship<30);
   const isDangerousContext = isInCombat || isHostileNPC;
 
   // 위험 상황에서 추가로 판정 붙는 패턴
@@ -3411,7 +3417,7 @@ export function getChoiceDiceHint(text){
 
   // 문맥: 전투/적대 상황
   const _inCombat = (typeof loadMonsters==='function') && (loadMonsters()||[]).some(m=>m.status==='alive');
-  const _hostile  = (S.npcs||[]).some(n=>n.relation==='hostile'||n.relation==='enemy');
+  const _hostile  = (S.npcs||[]).some(n=>n.relationship<30);
   const _danger   = _inCombat || _hostile;
 
   // 카테고리별 패턴 (sendMsg와 동일 기준)

@@ -321,6 +321,31 @@ function _fillTargetSlots(tpl, word){
   return tpl.replace(/\{t(?::([^}]+))?\}/g, (_, type) => type ? word+_josa(word,type) : word);
 }
 
+// [2026-10-22, 70-2번 섹션] 선택지(카테고리당 10개)/판정 서사(카테고리·
+// 결과당 3~4개) 풀이 작아, 순수 무작위 추첨만으로는 같은 문장이 금방
+// 다시 나오는 "체감 반복"이 실제로 있었다(사용자 지적). 풀 자체를
+// 늘리지 않고, 풀마다(poolKey별) 최근에 고른 인덱스 몇 개를 기억해뒀다가
+// 그걸 피해서 뽑는 방식만 추가 — 풀이 작으면(4개 이하) 자연스럽게
+// "다 나올 때까지 안 겹치는" 셔플백처럼 동작하고, 풀이 크면(10개) 최근
+// 몇 개만 피해 적당한 신선함+무작위성을 유지한다. 세이브에 저장하지
+// 않는 세션 한정 상태(새로고침하면 리셋) — "방금 본 문장을 피한다"는
+// 목적상 영속성이 필요 없다.
+const _recentVariantPicks = {};
+function _pickFreshVariant(poolKey, arr){
+  if(!arr || !arr.length) return undefined;
+  if(arr.length === 1) return arr[0];
+  const recent = _recentVariantPicks[poolKey] || [];
+  const avoidN = Math.min(recent.length, arr.length - 1);
+  const avoid = new Set(recent.slice(recent.length - avoidN));
+  let idx, tries = 0;
+  do{
+    idx = Math.floor(Math.random()*arr.length);
+    tries++;
+  }while(avoid.has(idx) && tries < 20);
+  _recentVariantPicks[poolKey] = [...recent, idx].slice(-3);
+  return arr[idx];
+}
+
 // [14번 라운드 재설계] 예전엔 대화/실리/대담/경계 4개 카테고리였는데,
 // 이 라벨들은 sendMsg()/getChoiceDiceHint()의 실제 판정 정규식
 // (combatRe/stealthRe/persuadeRe/intimidateRe/searchRe/moveRe/magicRe/
@@ -528,7 +553,7 @@ export function generateLocalFlavorChoices(count, history){
   for(let i=0; i<Math.min(count, categories.length); i++){
     const cat = categories[i];
     const templates = LOCAL_FLAVOR_TEMPLATES[cat];
-    const tpl = templates[Math.floor(Math.random()*templates.length)];
+    const tpl = _pickFreshVariant('flavor:'+cat, templates);
     const text = _fillTargetSlots(tpl, _localFlavorPickTarget(cat, h));
     out.push(text);
   }
@@ -907,7 +932,7 @@ export function composeLocalTurnText(history, injectedContext){
   if(!history || !history.length){
     const char = S.character||{};
     const loc = (typeof loadCurrentLocation==='function') ? loadCurrentLocation() : null;
-    const tpl = TURN_OPENING_BANK[Math.floor(Math.random()*TURN_OPENING_BANK.length)];
+    const tpl = _pickFreshVariant('opening', TURN_OPENING_BANK);
     const nameWord = char.name||'주인공';
     // [신규] 아직 구체적인 장소(loc)가 정해지지 않은 상태(거의 항상 그런
     // 첫 턴)에는 신분·시작 대륙 기반 오프닝을 우선 사용 — 이미 구체적인
@@ -951,7 +976,7 @@ export function composeLocalTurnText(history, injectedContext){
     // 조합이 항상 같은 문구 풀을 쓴다 — dice.stat까지 넘겨서 서브뱅크가
     // 있으면 그쪽을 쓰고, 없으면 기존 카테고리 뱅크로 조용히 폴백한다.
     const bank = _turnPickReactBank(cat, vk, dice.stat);
-    const tpl = bank[Math.floor(Math.random()*bank.length)];
+    const tpl = _pickFreshVariant('react:'+cat+':'+vk+':'+(dice.stat||''), bank);
     // [21번 라운드, 시스템 업그레이드 ①] applyTurnRelationEffect 호출은
     // sendMsg로 옮겼다(AI 유무와 무관하게 항상 동작하도록) — 여기서 또
     // 부르면 이중 적용된다. target은 서사 템플릿 채우기용으로만 남긴다.
@@ -974,10 +999,13 @@ export function composeLocalTurnText(history, injectedContext){
       else if(raid && raid.state==='resolved' && (raid.outcome==='damaged'||raid.outcome==='destroyed')) arrivalBank = LOC_ARRIVAL_DAMAGED_BANK;
       else if(econ && (econ.prosLabel==='피폐'||econ.prosLabel==='침체')) arrivalBank = LOC_ARRIVAL_DEPRESSED_BANK;
     }catch(e){}
-    const tpl = arrivalBank[Math.floor(Math.random()*arrivalBank.length)];
+    const arrivalBankKey = arrivalBank===LOC_ARRIVAL_THREATENED_BANK ? 'threatened'
+      : arrivalBank===LOC_ARRIVAL_DAMAGED_BANK ? 'damaged'
+      : arrivalBank===LOC_ARRIVAL_DEPRESSED_BANK ? 'depressed' : 'normal';
+    const tpl = _pickFreshVariant('arrival:'+arrivalBankKey, arrivalBank);
     prose = identityFrag + tpl.replace(/\{icon\}/g, loc?.icon||'📍').replace(/\{loc\}/g, loc?.name||'낯선 곳');
   } else {
-    prose = learned || (identityFrag + TURN_CASUAL_BANK[Math.floor(Math.random()*TURN_CASUAL_BANK.length)]);
+    prose = learned || (identityFrag + _pickFreshVariant('casual', TURN_CASUAL_BANK));
   }
   const choices = generateLocalFlavorChoices(4, history);
   return prose+'\n[선택지]'+choices.map((c,i)=>'①②③④⑤'[i]+c).join('')+'[/선택지]';

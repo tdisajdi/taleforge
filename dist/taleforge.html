@@ -89699,6 +89699,21 @@ ${lines.join("\n")}
   function _fillTargetSlots(tpl, word) {
     return tpl.replace(/\{t(?::([^}]+))?\}/g, (_, type) => type ? word + _josa(word, type) : word);
   }
+  var _recentVariantPicks = {};
+  function _pickFreshVariant(poolKey, arr) {
+    if (!arr || !arr.length) return void 0;
+    if (arr.length === 1) return arr[0];
+    const recent = _recentVariantPicks[poolKey] || [];
+    const avoidN = Math.min(recent.length, arr.length - 1);
+    const avoid = new Set(recent.slice(recent.length - avoidN));
+    let idx, tries = 0;
+    do {
+      idx = Math.floor(Math.random() * arr.length);
+      tries++;
+    } while (avoid.has(idx) && tries < 20);
+    _recentVariantPicks[poolKey] = [...recent, idx].slice(-3);
+    return arr[idx];
+  }
   var LOCAL_FLAVOR_TEMPLATES = {
     attack: [
       "{t}\uC5D0\uAC8C \uB2EC\uB824\uB4E4\uC5B4 \uACE7\uC7A5 \uACF5\uACA9\uD55C\uB2E4",
@@ -89865,7 +89880,7 @@ ${lines.join("\n")}
     for (let i = 0; i < Math.min(count, categories.length); i++) {
       const cat = categories[i];
       const templates = LOCAL_FLAVOR_TEMPLATES[cat];
-      const tpl = templates[Math.floor(Math.random() * templates.length)];
+      const tpl = _pickFreshVariant("flavor:" + cat, templates);
       const text = _fillTargetSlots(tpl, _localFlavorPickTarget(cat, h));
       out.push(text);
     }
@@ -90137,7 +90152,7 @@ ${lines.join("\n")}
     if (!history || !history.length) {
       const char = S.character || {};
       const loc = typeof loadCurrentLocation === "function" ? loadCurrentLocation() : null;
-      const tpl = TURN_OPENING_BANK[Math.floor(Math.random() * TURN_OPENING_BANK.length)];
+      const tpl = _pickFreshVariant("opening", TURN_OPENING_BANK);
       const nameWord = char.name || "\uC8FC\uC778\uACF5";
       const rankContOpening = !loc ? composeRankContinentOpening(char) : null;
       const prose2 = learned || rankContOpening || tpl.replace(/\{name(?::([^}]+))?\}/g, (_, type) => type ? nameWord + _josa(nameWord, type) : nameWord).replace(/\{loc\}/g, loc?.name || "\uB0AF\uC120 \uB545");
@@ -90160,7 +90175,7 @@ ${lines.join("\n")}
       const cat = _turnStatToCategory(dice.stat);
       const vk = _turnVerdictKey(dice.verdict);
       const bank = _turnPickReactBank(cat, vk, dice.stat);
-      const tpl = bank[Math.floor(Math.random() * bank.length)];
+      const tpl = _pickFreshVariant("react:" + cat + ":" + vk + ":" + (dice.stat || ""), bank);
       const target = S._pendingTurnNarrativeTarget != null ? S._pendingTurnNarrativeTarget : _turnPickTarget(history);
       S._pendingTurnNarrativeTarget = null;
       prose = learned || identityFrag + _fillTargetSlots(tpl, target);
@@ -90175,10 +90190,11 @@ ${lines.join("\n")}
         else if (econ && (econ.prosLabel === "\uD53C\uD3D0" || econ.prosLabel === "\uCE68\uCCB4")) arrivalBank = LOC_ARRIVAL_DEPRESSED_BANK;
       } catch (e) {
       }
-      const tpl = arrivalBank[Math.floor(Math.random() * arrivalBank.length)];
+      const arrivalBankKey = arrivalBank === LOC_ARRIVAL_THREATENED_BANK ? "threatened" : arrivalBank === LOC_ARRIVAL_DAMAGED_BANK ? "damaged" : arrivalBank === LOC_ARRIVAL_DEPRESSED_BANK ? "depressed" : "normal";
+      const tpl = _pickFreshVariant("arrival:" + arrivalBankKey, arrivalBank);
       prose = identityFrag + tpl.replace(/\{icon\}/g, loc?.icon || "\u{1F4CD}").replace(/\{loc\}/g, loc?.name || "\uB0AF\uC120 \uACF3");
     } else {
-      prose = learned || identityFrag + TURN_CASUAL_BANK[Math.floor(Math.random() * TURN_CASUAL_BANK.length)];
+      prose = learned || identityFrag + _pickFreshVariant("casual", TURN_CASUAL_BANK);
     }
     const choices = generateLocalFlavorChoices(4, history);
     return prose + "\n[\uC120\uD0DD\uC9C0]" + choices.map((c, i) => "\u2460\u2461\u2462\u2463\u2464"[i] + c).join("") + "[/\uC120\uD0DD\uC9C0]";

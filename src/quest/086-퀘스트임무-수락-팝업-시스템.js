@@ -788,8 +788,27 @@ function _turnParseDice(ctx){
   if(!m) return null;
   return { stat: m[1].toLowerCase(), verdict: m[2] };
 }
-function _turnPickTarget(){
+// [2026-10-22 버그 수정] 기존엔 지금 장면에 누가 실제로 등장했는지와
+// 전혀 무관하게, 세이브 전체에서 "살아있는 몬스터 0번째 → 적대 NPC →
+// 랜덤 NPC" 순으로 하나를 뽑아 그걸 ①판정 서사({t} 채우기)와 ②실제
+// NPC 호감도 반영(applyTurnRelationEffect) 둘 다에 썼다 — 플레이어가
+// 지금 NPC A와 대화 중이어도, 과거에 만났던 전혀 상관없는 NPC B가
+// 뽑혀 다음 턴 서사에 등장하거나 호감도가 바뀌는 사고가 났다(실사용자
+// 신고: 기사단장과의 판정 바로 다음 줄에 전혀 다른 연구소장이 등장).
+// 직전 서술(가장 최근 assistant 메시지)에 실제로 이름이 언급된 상대를
+// 최우선으로 찾아 쓰고, 못 찾을 때만 기존 폴백 순서로 내려간다.
+function _turnPickTarget(history){
   try{
+    const lastNarr = history && [...history].reverse().find(m=>m.role==='assistant')?.content;
+    if(lastNarr){
+      const monsters0 = (typeof loadMonsters==='function') ? (loadMonsters()||[]).filter(m=>m.status==='alive') : [];
+      const npcs0 = (typeof loadNPCs==='function') ? (loadNPCs()||[]) : [];
+      const mentioned = [...monsters0, ...npcs0]
+        .map(e=>e.name).filter(Boolean)
+        .filter(name=>lastNarr.includes(name))
+        .sort((a,b)=>b.length-a.length); // 이름이 서로 겹쳐 포함되는 경우 더 구체적인(긴) 쪽 우선
+      if(mentioned.length) return mentioned[0];
+    }
     const monsters = (typeof loadMonsters==='function') ? (loadMonsters()||[]).filter(m=>m.status==='alive') : [];
     if(monsters.length) return monsters[0].name;
     const npcs = (typeof loadNPCs==='function') ? (loadNPCs()||[]) : [];
@@ -898,7 +917,7 @@ export function composeLocalTurnText(history, injectedContext){
     // "호감도가 오른 NPC"와 "서사에 이름이 나온 NPC"가 항상 같게 한다
     // (그 값이 없는 다른 호출 경로 — 예: 오프닝 — 에서는 그대로 독립 호출로
     // 안전하게 폴백).
-    const target = (S._pendingTurnNarrativeTarget != null) ? S._pendingTurnNarrativeTarget : _turnPickTarget();
+    const target = (S._pendingTurnNarrativeTarget != null) ? S._pendingTurnNarrativeTarget : _turnPickTarget(history);
     S._pendingTurnNarrativeTarget = null;
     prose = learned || (identityFrag + _fillTargetSlots(tpl, target));
   } else if(!learned && _isLocArrivalMsg(lastUserMsg?.content)){
@@ -2123,7 +2142,7 @@ export async function sendMsg(userMsg, isChoice=false){
     // 남겨두고, composeLocalTurnText(아래, bank tier 전용)가 같은 턴에
     // 그 값을 그대로 이어받아 쓰게 한다(새 저장소 없음, 이 턴이 끝나면
     // callAI 호출 직후 바로 비움 — 다음 턴에 안 새게).
-    const _turnTarget = _turnPickTarget();
+    const _turnTarget = _turnPickTarget(S.messages);
     S._pendingTurnNarrativeTarget = _turnTarget;
     applyTurnRelationEffect(_turnCat, _turnVk, _turnTarget);
   }

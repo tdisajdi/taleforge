@@ -3256,7 +3256,9 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
   }
   window.esc = esc2;
   function getEntityIconHTML2(entity, opts) {
-    const fallback = esc2(entity && entity.icon || "\u2754");
+    const rawIcon = entity && entity.icon || "\u2754";
+    if (typeof rawIcon === "string" && rawIcon.trim().startsWith("<")) return rawIcon;
+    const fallback = esc2(rawIcon);
     const size = opts && opts.size || 28;
     const cls = opts && opts.className || "pixel-icon";
     try {
@@ -90064,8 +90066,15 @@ ${lines.join("\n")}
     if (!m) return null;
     return { stat: m[1].toLowerCase(), verdict: m[2] };
   }
-  function _turnPickTarget() {
+  function _turnPickTarget(history) {
     try {
+      const lastNarr = history && [...history].reverse().find((m) => m.role === "assistant")?.content;
+      if (lastNarr) {
+        const monsters0 = typeof loadMonsters === "function" ? (loadMonsters() || []).filter((m) => m.status === "alive") : [];
+        const npcs0 = typeof loadNPCs === "function" ? loadNPCs() || [] : [];
+        const mentioned = [...monsters0, ...npcs0].map((e) => e.name).filter(Boolean).filter((name) => lastNarr.includes(name)).sort((a, b) => b.length - a.length);
+        if (mentioned.length) return mentioned[0];
+      }
       const monsters = typeof loadMonsters === "function" ? (loadMonsters() || []).filter((m) => m.status === "alive") : [];
       if (monsters.length) return monsters[0].name;
       const npcs = typeof loadNPCs === "function" ? loadNPCs() || [] : [];
@@ -90130,7 +90139,7 @@ ${lines.join("\n")}
       const vk = _turnVerdictKey(dice.verdict);
       const bank = _turnPickReactBank(cat, vk, dice.stat);
       const tpl = bank[Math.floor(Math.random() * bank.length)];
-      const target = S._pendingTurnNarrativeTarget != null ? S._pendingTurnNarrativeTarget : _turnPickTarget();
+      const target = S._pendingTurnNarrativeTarget != null ? S._pendingTurnNarrativeTarget : _turnPickTarget(history);
       S._pendingTurnNarrativeTarget = null;
       prose = learned || identityFrag + _fillTargetSlots(tpl, target);
     } else if (!learned && _isLocArrivalMsg(lastUserMsg?.content)) {
@@ -91092,7 +91101,7 @@ ${lines.join("\n")}
         const FIELD_ENTRY_WINDOW_MS = 3 * 60 * 1e3;
         S._fieldEntryWindowUntil = Date.now() + FIELD_ENTRY_WINDOW_MS;
       }
-      const _turnTarget = _turnPickTarget();
+      const _turnTarget = _turnPickTarget(S.messages);
       S._pendingTurnNarrativeTarget = _turnTarget;
       applyTurnRelationEffect(_turnCat, _turnVk, _turnTarget);
     }

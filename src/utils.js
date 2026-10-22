@@ -54,7 +54,19 @@ window.esc = esc;
 // 파일 자체가 배포 시 누락됐을 때도 onerror로 다시 이모지로 폴백하므로
 // 절대 빈 아이콘이 뜨지 않는다.
 export function getEntityIconHTML(entity, opts){
-  const fallback = esc((entity && entity.icon) || '❔');
+  const rawIcon = (entity && entity.icon) || '❔';
+  // [2026-10-22 버그 수정] RACE_DEFS(종족)/BASE_4(직업) 등 icon 필드
+  // 자체가 신뢰 가능한 손그림 SVG 마크업인 엔티티는 픽셀아트 매니페스트
+  // 조회 대상이 아니다 — 매니페스트는 "이모지밖에 없는 엔티티를 도트로
+  // 업그레이드"하기 위한 것이지, 이미 전용 벡터 아이콘이 있는 엔티티를
+  // 대체하기 위한 게 아니다. 이 분기 없이 매니페스트를 조회하면
+  // ①같은 표시 이름을 가진 전혀 무관한 다른 엔티티(예: "인간" 종족 vs
+  // "인간" 환생 뱃지)와 이름이 우연히 겹쳐 엉뚱한 아이콘이 뜨거나
+  // ②그 이미지가 로드 실패하면 폴백이 esc()로 SVG 원본 문자열을 그대로
+  // 이스케이프해 화면에 코드 텍스트로 노출되는 버그(실사용자 신고로
+  // 발견, 캐릭터 생성 종족/직업 카드 전수 재현 확인)가 생긴다.
+  if(typeof rawIcon === 'string' && rawIcon.trim().startsWith('<')) return rawIcon;
+  const fallback = esc(rawIcon);
   const size = (opts && opts.size) || 28;
   const cls = (opts && opts.className) || 'pixel-icon';
   try{

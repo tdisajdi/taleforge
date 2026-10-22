@@ -29,7 +29,7 @@ import { renderHunterGroundsPanel } from '../economy/255-상인-거래소-교역
 import { EQUIP_SLOTS } from '../items/004-장비-슬롯-시스템-12종.js';
 import { renderSetBonusPanel, saveSetBonuses } from '../items/006-세트-아이템-시스템.js';
 import { DYN_BP_KEY, DYN_ENCOUNTER_KEY, DYN_ENEMY_KEY, DYN_MAT_KEY, DYN_NPC_KEY, calcReincCraftPoints, checkSaveVersion, clearEquipped, clearGold, clearInventory, detectItemDrop, extractDefeatedEnemyName, getLocationMonsterPool, loadGold, loadInventory, loadRCPoints, registerLocationMonster, renderItemCodex, renderRCShopPanel, restoreDynamicBlueprints, restoreDynamicEnemies, restoreDynamicMaterials, rollDynamicLoot, rollDynamicMaterialDrop, rollLoot, saveEquipped, saveGold, saveInventory, saveRCPoints, shouldGenerateNewMonster } from '../items/007-동적-아이템-생성-시스템-무제한-영구-캐시.js';
-import { NPC_MEMORY_KEY, NPC_QUEST_STATE_KEY, QUEST_CHOICES_KEY, checkNpcQuestCompletion, checkNpcQuests, detectNpcRelationshipChange, renderNpcs } from '../items/065-NPC퀘스트-완성도-강화.js';
+import { NPC_MEMORY_KEY, NPC_QUEST_STATE_KEY, QUEST_CHOICES_KEY, checkNpcQuestCompletion, checkNpcQuests, detectNpcRelationshipChange, getNpcEmotion, renderNpcs } from '../items/065-NPC퀘스트-완성도-강화.js';
 import { clearSkillSP, clearSkills, loadSkills, saveSkillSP, saveSkills } from '../job/002-스킬-시스템.js';
 import { clearPlayerLevel, loadPlayerLevel } from '../job/008-클리어-보상-시스템-시나리오-클리어-시-영구-아이템스킬.js';
 import { clearMemory, clearSecrets, clearSkillEnhance, getSkillEnhanceCost, getSkillEnhanceDesc, getSkillEnhanceLevel, getStatInfo, loadHighlights, loadMemory, loadTitles, saveHighlights, saveMemory } from '../job/010-스킬-강화-시스템.js';
@@ -486,6 +486,63 @@ const LOCAL_FLAVOR_FALLBACK_TARGETS = {
   social: ['가까이 있는 사람', '지나가던 이', '주변 사람'],
 };
 
+// [2026-10-22, 70-3번 섹션] "설득한다"/"말을 건다" 선택지·서사가 상대가
+// 누구든 똑같은 문구로 나오는 문제 — persuade/social은 이미
+// TURN_NPC_RELATION_DELTA로 NPC 호감도에 실제로 영향을 주는 카테고리인데,
+// 그 호감도 자체는 문구에 전혀 반영되지 않았다. 새 관계 등급 체계를
+// 만들지 않고, 이 게임이 이미 쓰는 `getNpcEmotion()`(`items/065`,
+// NPC 관계도 패널에서도 쓰는 5단계 신뢰/우호적/중립/경계/적대적 등급)을
+// 그대로 재사용해, 콘텐츠 작성 범위를 줄이기 위해 신뢰·우호적→'warm',
+// 중립·경계→'neutral'(기존 문구 그대로), 적대적→'cold' 3단계로만
+// 묶는다. 대상이 세이브에 실제로 존재하는 NPC가 아니면(예: 폴백 제네릭
+// 문구, 아직 안 만난 대상) 등급을 매길 근거가 없으므로 null을 반환해
+// 항상 안전하게 기존 중립 문구로 떨어진다.
+function _npcRelTier(targetName){
+  try{
+    if(!targetName) return null;
+    const npcs = (typeof loadNPCs==='function') ? (loadNPCs()||[]) : [];
+    const npc = npcs.find(n=>n.name===targetName);
+    if(!npc) return null;
+    const emo = (typeof getNpcEmotion==='function') ? getNpcEmotion(npc.relationship) : null;
+    if(!emo) return null;
+    if(emo.label==='신뢰' || emo.label==='우호적') return 'warm';
+    if(emo.label==='적대적') return 'cold';
+    return 'neutral';
+  }catch(e){ return null; }
+}
+// warm/cold 전용 문구만 신설(neutral은 기존 LOCAL_FLAVOR_TEMPLATES/
+// TURN_REACT_BANK 문구를 그대로 재사용 — 중복 작성 불필요).
+const LOCAL_FLAVOR_TONE_TEMPLATES = {
+  persuade: {
+    warm: [
+      '믿는 사이니 솔직하게 {t:을를} 설득한다',
+      '{t}라면 들어줄 거라 믿고 편하게 부탁한다',
+      '가까운 사이답게 격식 없이 {t:을를} 설득한다',
+      '{t}와 쌓은 믿음을 걸고 솔직히 말을 꺼낸다',
+    ],
+    cold: [
+      '경계하는 기색이 느껴지지만 조심스레 {t:을를} 설득한다',
+      '{t}의 싸늘한 시선에도 차분히 말을 건다',
+      '거리를 둔 채 말을 고르며 {t:을를} 설득해본다',
+      '쉽게 믿지 않을 걸 알면서도 {t:을를} 설득한다',
+    ],
+  },
+  social: {
+    warm: [
+      '편한 사이답게 가벼운 농담부터 건넨다',
+      '반가운 얼굴로 {t}에게 다가가 인사를 건넨다',
+      '오래 알고 지낸 사이답게 {t:과와} 편하게 말을 섞는다',
+      '{t}가 반겨줄 걸 알고 밝게 말을 건다',
+    ],
+    cold: [
+      '{t}의 경계하는 눈빛에 조심스레 말을 건다',
+      '서먹한 분위기 속에서도 {t}에게 먼저 다가간다',
+      '반기지 않을 걸 알면서도 {t}에게 인사를 건넨다',
+      '어색함을 무릅쓰고 {t}에게 먼저 말을 건다',
+    ],
+  },
+};
+
 // [2026-10-22, 70번 섹션] 직전 서술에 실제로 이름이 언급된 상대가
 // 있으면(_sceneMentionedTarget, 69번 섹션에서 _turnPickTarget용으로
 // 만든 것과 같은 공용 헬퍼) 모든 카테고리에서 그쪽을 최우선으로 쓴다 —
@@ -552,9 +609,12 @@ export function generateLocalFlavorChoices(count, history){
   const out = [];
   for(let i=0; i<Math.min(count, categories.length); i++){
     const cat = categories[i];
-    const templates = LOCAL_FLAVOR_TEMPLATES[cat];
-    const tpl = _pickFreshVariant('flavor:'+cat, templates);
-    const text = _fillTargetSlots(tpl, _localFlavorPickTarget(cat, h));
+    const target = _localFlavorPickTarget(cat, h);
+    const tier = (cat==='persuade' || cat==='social') ? _npcRelTier(target) : null;
+    const templates = (tier && tier!=='neutral' && LOCAL_FLAVOR_TONE_TEMPLATES[cat]?.[tier])
+      ? LOCAL_FLAVOR_TONE_TEMPLATES[cat][tier] : LOCAL_FLAVOR_TEMPLATES[cat];
+    const tpl = _pickFreshVariant('flavor:'+cat+(tier?':'+tier:''), templates);
+    const text = _fillTargetSlots(tpl, target);
     out.push(text);
   }
   return out;
@@ -725,14 +785,59 @@ const TURN_REACT_SUBBANK = {
 function _turnSubFlavor(stat){
   return stat==='rng' ? 'ranged' : stat==='int' ? 'intuition' : stat==='fath' ? 'faith' : null;
 }
+// [2026-10-22, 70-3번 섹션] 선택지 쪽(LOCAL_FLAVOR_TONE_TEMPLATES)과
+// 같은 이유로, 판정 서사 쪽도 persuade/social 결과 문구가 상대와의
+// 관계와 무관하게 항상 같았다 — 같은 `_npcRelTier()`를 재사용해
+// warm/cold 전용 문구만 추가(neutral은 기존 TURN_REACT_BANK 그대로).
+const TURN_REACT_TONE_BANK = {
+  persuade: {
+    warm: {
+      crit: ['오랜 믿음이 쌓인 덕분인지, {t}의 마음이 단숨에 움직인다 — 더 설명할 필요도 없었다.', '{t:은는} 이미 믿고 있었다는 듯, 한마디에 바로 고개를 끄덕인다.', '가까운 사이기에 통하는 말이 있다 — {t}의 표정이 환하게 풀린다.'],
+      success: ['믿는 사이답게, {t:이가} 어렵지 않게 이야기를 받아들인다.', '{t:은는} 평소의 믿음대로 순순히 귀를 기울인다.', '가까운 사이인 만큼 설득이 수월하게 통한다.'],
+      fail: ['평소와 달리 {t:이가} 쉽게 동의하지 않는다 — 뭔가 걸리는 게 있는 모양이다.', '믿는 사이인데도 {t}의 표정이 좀처럼 풀리지 않는다.', '{t:이가} 고민하는 기색을 보이며 바로 답을 주지 않는다.'],
+      critfail: ['가까운 사이라 더 당황스럽다 — {t}의 얼굴에 서운함이 스친다.', '믿었던 만큼 {t}의 반응이 더 차갑게 느껴진다.', '{t}와의 사이에 작은 균열이 생긴 듯하다.'],
+    },
+    cold: {
+      crit: ['경계가 가득했던 {t}의 눈빛이 놀랍게도 완전히 풀린다 — 예상 못한 결과다.', '믿지 않을 거라 생각했던 {t:이가} 의외로 순순히 마음을 연다.', '싸늘했던 {t}의 태도가 믿기 힘들 만큼 부드러워진다.'],
+      success: ['경계하던 {t:이가} 그래도 한 걸음 물러나 이야기를 들어준다.', '{t}의 의심이 완전히 풀리진 않았지만, 일단 받아들이는 듯하다.', '쉽지 않은 상대였지만 {t:이가} 마지못해 고개를 끄덕인다.'],
+      fail: ['{t:은는} 여전히 날카로운 눈으로 의심을 거두지 않는다.', '경계심이 워낙 깊어 {t}에게 말이 전혀 와닿지 않는다.', '{t:이가} 팔짱을 낀 채 끝까지 믿지 않으려 한다.'],
+      critfail: ['{t}의 의심이 오히려 더 깊어진다 — 괜한 말을 꺼낸 셈이 됐다.', '안 그래도 날카롭던 {t}의 시선이 더욱 사나워진다.', '{t:이가} 더 이상 말을 들을 필요도 없다는 듯 돌아선다.'],
+    },
+  },
+  social: {
+    warm: {
+      crit: ['오랜 친근함이 그대로 드러나며, {t}와의 대화가 더없이 즐겁게 흘러간다.', '편한 사이답게 {t:이가} 금세 웃음을 터뜨리며 마음을 연다.', '서로 잘 아는 사이라 대화가 물 흐르듯 매끄럽게 이어진다.'],
+      success: ['편한 사이답게 {t:과와} 자연스럽게 이야기가 오간다.', '{t:이가} 반갑게 맞아주며 대화를 이어간다.', '익숙한 사이라 큰 어려움 없이 분위기가 풀린다.'],
+      fail: ['평소와 달리 {t}의 반응이 어딘가 데면데면하다.', '{t:이가} 오늘따라 말수가 적어 대화가 겉돈다.', '편한 사이인데도 묘하게 분위기가 가라앉는다.'],
+      critfail: ['가까운 사이라 더 어색하다 — 말실수에 {t}의 표정이 굳는다.', '{t}와의 편한 분위기가 순식간에 얼어붙는다.', '늘 웃어주던 {t}의 얼굴에서 웃음기가 사라진다.'],
+    },
+    cold: {
+      crit: ['경계하던 {t:이가} 뜻밖에도 마음을 열며 조금씩 말을 섞기 시작한다.', '쉽게 다가오지 않을 것 같던 {t:이가} 의외로 대화에 응한다.', '싸늘하던 {t}의 태도가 놀랄 만큼 누그러진다.'],
+      success: ['{t:이가} 여전히 조심스럽지만 짧게라도 대답을 해준다.', '경계는 남아 있지만 {t:이가} 대화를 완전히 끊지는 않는다.', '{t:이가} 마지못해서라도 몇 마디 받아준다.'],
+      fail: ['{t:은는} 거리를 둔 채 대화에 좀처럼 응하지 않는다.', '{t}의 차가운 태도에 대화가 금방 끊긴다.', '서먹한 분위기만 남긴 채 대화가 흐지부지된다.'],
+      critfail: ['{t:이가} 더는 들을 필요 없다는 듯 자리를 피한다.', '안 그래도 멀었던 {t}와의 거리가 더 벌어진다.', '{t}의 표정이 완전히 차갑게 식어버린다.'],
+    },
+  },
+};
 // cat/vk는 기존과 동일하게 카테고리 단위로 쓰되(관계 훅·기존 로직에
 // 영향 없음), 실제 문구를 고를 때만 더 구체적인 stat이 있으면 그
 // 쪽을 우선한다 — 서브뱅크가 없는 카테고리/스탯 조합은 항상 기존
-// TURN_REACT_BANK로 조용히 폴백한다(회귀 위험 없음).
-function _turnPickReactBank(cat, vk, stat){
+// TURN_REACT_BANK로 조용히 폴백한다(회귀 위험 없음). target이 실존
+// NPC이고(persuade/social만) 관계 등급이 warm/cold면 그 톤 전용
+// 문구를 서브뱅크보다도 우선한다 — 서브뱅크(원거리/직감/신앙)는 "같은
+// 판정인데 스탯이 다른" 분기, 톤뱅크는 "같은 판정인데 상대가 다른"
+// 분기라 서로 겹치지 않는 독립적인 관심사(persuade/social은 서브뱅크
+// 자체가 없어 실제로 충돌할 일도 없다).
+function _turnPickReactBank(cat, vk, stat, target){
   const sub = _turnSubFlavor(stat);
   const subBank = sub && TURN_REACT_SUBBANK[cat]?.[sub]?.[vk];
-  return (subBank && subBank.length) ? subBank : TURN_REACT_BANK[cat][vk];
+  if(subBank && subBank.length) return subBank;
+  if(cat==='persuade' || cat==='social'){
+    const tier = _npcRelTier(target);
+    const toneBank = tier && tier!=='neutral' && TURN_REACT_TONE_BANK[cat]?.[tier]?.[vk];
+    if(toneBank && toneBank.length) return toneBank;
+  }
+  return TURN_REACT_BANK[cat][vk];
 }
 const TURN_CASUAL_BANK = [
   '잠시 숨을 고르며 주변을 살핀다. 다음 행동을 정할 시간이다.',
@@ -971,12 +1076,6 @@ export function composeLocalTurnText(history, injectedContext){
   } else if(dice){
     const cat = _turnStatToCategory(dice.stat);
     const vk = _turnVerdictKey(dice.verdict);
-    // [21번 라운드, 시스템 업그레이드 ②] cat/vk만으로 고르면 근접/원거리·
-    // 관찰/직감·마법/신앙처럼 서로 다른 스탯인데 같은 카테고리로 뭉개진
-    // 조합이 항상 같은 문구 풀을 쓴다 — dice.stat까지 넘겨서 서브뱅크가
-    // 있으면 그쪽을 쓰고, 없으면 기존 카테고리 뱅크로 조용히 폴백한다.
-    const bank = _turnPickReactBank(cat, vk, dice.stat);
-    const tpl = _pickFreshVariant('react:'+cat+':'+vk+':'+(dice.stat||''), bank);
     // [21번 라운드, 시스템 업그레이드 ①] applyTurnRelationEffect 호출은
     // sendMsg로 옮겼다(AI 유무와 무관하게 항상 동작하도록) — 여기서 또
     // 부르면 이중 적용된다. target은 서사 템플릿 채우기용으로만 남긴다.
@@ -985,9 +1084,20 @@ export function composeLocalTurnText(history, injectedContext){
     // 남겨두므로, 여기서 또 독립적으로 뽑지 않고 그 값을 그대로 이어받아
     // "호감도가 오른 NPC"와 "서사에 이름이 나온 NPC"가 항상 같게 한다
     // (그 값이 없는 다른 호출 경로 — 예: 오프닝 — 에서는 그대로 독립 호출로
-    // 안전하게 폴백).
+    // 안전하게 폴백). [70-3번 섹션] target을 뱅크 선택보다 먼저 뽑도록
+    // 순서를 바꿨다 — persuade/social은 이제 "누구에게"에 따라 고르는
+    // 뱅크 자체가 달라지므로, 문구를 고르기 전에 상대를 먼저 알아야 한다.
     const target = (S._pendingTurnNarrativeTarget != null) ? S._pendingTurnNarrativeTarget : _turnPickTarget(history);
     S._pendingTurnNarrativeTarget = null;
+    // [21번 라운드, 시스템 업그레이드 ②] cat/vk만으로 고르면 근접/원거리·
+    // 관찰/직감·마법/신앙처럼 서로 다른 스탯인데 같은 카테고리로 뭉개진
+    // 조합이 항상 같은 문구 풀을 쓴다 — dice.stat까지 넘겨서 서브뱅크가
+    // 있으면 그쪽을 쓰고, 없으면 기존 카테고리 뱅크로 조용히 폴백한다.
+    // [70-3번 섹션] target도 같이 넘겨 persuade/social은 상대와의 관계
+    // 등급(warm/cold)에 맞는 톤뱅크가 있으면 그쪽을 쓰게 했다.
+    const bank = _turnPickReactBank(cat, vk, dice.stat, target);
+    const tier = (cat==='persuade' || cat==='social') ? _npcRelTier(target) : null;
+    const tpl = _pickFreshVariant('react:'+cat+':'+vk+':'+(dice.stat||'')+(tier?':'+tier:''), bank);
     prose = learned || (identityFrag + _fillTargetSlots(tpl, target));
   } else if(!learned && _isLocArrivalMsg(lastUserMsg?.content)){
     const loc = (typeof loadCurrentLocation==='function') ? loadCurrentLocation() : null;

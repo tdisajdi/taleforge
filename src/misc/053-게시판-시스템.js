@@ -590,6 +590,24 @@ export function doInteraction(action, cost=0, transportType='walk'){
         saveInventory(S.inventory);
         toastHTML(`📕 암흑 상인이 은밀히 금서를 건넸다! 「금서: 어둠의 계약」 획득`, 3000);
       }
+      // [65번 섹션] contactFixer가 쓰이는 나머지 장소 중 "밀수업자
+      // 접선"(희귀·금지 아이템 입수 가능)/"모피 상인 접촉"(희귀
+      // 북방 소재)/"해적 두목 접촉"(금지 아이템 입수)은 desc가
+      // 아이템을 명시적으로 약속하는데 실제로는 골드만 나가던 공백
+      // — loc_central_underground와 같은 "장소 id 가드 + 중복 방지"
+      // 패턴을 그대로 확장. 월광 부두/스모크헤이븐 2곳은 desc가
+      // 원래부터 "의뢰 완료 시 골드 획득"뿐이라 그대로 둠(버그 아님).
+      const itemByLoc = {
+        loc_port_city:        { id:'smuggled_trade_chart', name:'밀수 항해도', icon:'🗺️', rarity:'uncommon', type:'quest', desc:'밀수업자가 몰래 넘긴 항해도. 세관을 피하는 숨은 뱃길이 표시돼 있다.', chance:0.25 },
+        loc_north_frozen_city:{ id:'rare_northern_pelt', name:'희귀 북방 모피', icon:'🦊', rarity:'uncommon', type:'material', desc:'모피 상인만 구할 수 있는 희귀한 북방 짐승의 모피.', chance:0.25 },
+        loc_west_pirate_port: { id:'pirate_lord_relic', name:'해적왕의 유품', icon:'🏴‍☠️', rarity:'rare', type:'quest', desc:'해적 두목이 큰돈을 받고 넘긴 옛 해적왕의 유품. 내력이 심상치 않다.', chance:0.3 },
+      };
+      const def = itemByLoc[_locBook?.id];
+      if(def && !S.inventory.some(it=>it&&it.id===def.id) && Math.random()<def.chance){
+        S.inventory.push({ id:def.id, name:def.name, icon:def.icon, rarity:def.rarity, type:def.type, desc:def.desc });
+        saveInventory(S.inventory);
+        toastHTML(`${def.icon} 「${esc(def.name)}」을 입수했다!`, 3000);
+      }
     },
     guardDuty: ()=>{ if(typeof addGoldWithExchange==='function') addGoldWithExchange(20, '경비 완료'); else { S.gold+=20; saveGold(S.gold); } updateReputation(8); window.updateHeader(); toast('🛡️ 경비 완료! 골드+20, 평판+8', 2000); },
     barterTrade: ()=>{ toast('🔄 물물교환: 인벤토리 패널에서 아이템을 선택하세요', 2500); window.openP('inventory'); },
@@ -688,7 +706,30 @@ export function doInteraction(action, cost=0, transportType='walk'){
         toastHTML(`🎲 도박에서 패배... ${stake}G의 빚을 지고 말았다. 나중에 갚아야 한다.`, 3000);
       }
     },
-    buyInfo: ()=>{ updateReputation(10); toast('💬 귀한 정보를 얻었다. 평판+10', 2000); },
+    // [65번 섹션] buyInfo는 7개 장소("왕실 기밀"/"사막 비밀 경로"/
+    // "밀림 비밀 지식" 등 전혀 다른 서사+40~100G의 다른 비용)가 공유
+    // 하는 범용 액션인데, 실제로는 전부 똑같이 평판+10만 지급하던
+    // "장소별 서사와 보상이 분리된" 공백 — contactFixer가 이미
+    // loc_central_underground 하나만 장소 가드로 차별화해둔 것과
+    // 같은 패턴을 7곳 전체로 확장한다. 비용이 비쌀수록 보상도 크게.
+    buyInfo: ()=>{
+      const loc = (typeof loadCurrentLocation==='function') ? loadCurrentLocation() : null;
+      const repByLoc = {
+        loc_merchant_city: 20, loc_south_jungle_city: 15, loc_south_desert_town: 12,
+        loc_central_underground: 25, loc_central_noble_district: 35,
+        loc_south_town_sandgate: 10, loc_ne_silverleaf_city: 15,
+      };
+      const rep = repByLoc[loc?.id] ?? 10;
+      updateReputation(rep);
+      toast(`💬 귀한 정보를 얻었다. 평판+${rep}`, 2000);
+      // 가장 비싼 "왕실 기밀"(귀족 구역, 100G)만 중복 없는 전설급
+      // 문서 아이템도 함께 — 다른 6곳보다 훨씬 비싼 비용에 맞춤.
+      if(loc?.id==='loc_central_noble_district' && !S.inventory.some(it=>it&&it.id==='royal_secret_letter')){
+        S.inventory.push({ id:'royal_secret_letter', name:'왕실 밀서', icon:'📜', rarity:'rare', type:'quest', desc:'귀족 정보상이 큰돈을 받고 건넨 왕실 밀서. 왕국의 민감한 비밀이 담겨 있다.' });
+        saveInventory(S.inventory);
+        toastHTML(`📜 귀족 정보상이 「왕실 밀서」를 건넸다!`, 3000);
+      }
+    },
     joinSect: ()=>{ toast('🐉 문파 가입 조건을 확인하세요. 강한 스탯과 명성이 필요합니다.', 3000); },
     hideout: ()=>{ updateReputation(-2); toast('🌲 은신 중... 추격자를 따돌렸다. 3턴간 안전', 2500); S._hideoutTurns=3; },
     gatherGossip: ()=>{ updateReputation(5); const items=['새로운 퀘스트 힌트','위험 지역 경고','숨겨진 루트 정보','세력 동향 정보']; toast(`💬 소문 수집: ${items[Math.floor(Math.random()*items.length)]}`, 2500); },

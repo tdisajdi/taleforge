@@ -41473,6 +41473,17 @@ ${lines.join("\n")}
           saveInventory(S.inventory);
           toastHTML(`\u{1F4D5} \uC554\uD751 \uC0C1\uC778\uC774 \uC740\uBC00\uD788 \uAE08\uC11C\uB97C \uAC74\uB138\uB2E4! \u300C\uAE08\uC11C: \uC5B4\uB460\uC758 \uACC4\uC57D\u300D \uD68D\uB4DD`, 3e3);
         }
+        const itemByLoc = {
+          loc_port_city: { id: "smuggled_trade_chart", name: "\uBC00\uC218 \uD56D\uD574\uB3C4", icon: "\u{1F5FA}\uFE0F", rarity: "uncommon", type: "quest", desc: "\uBC00\uC218\uC5C5\uC790\uAC00 \uBAB0\uB798 \uB118\uAE34 \uD56D\uD574\uB3C4. \uC138\uAD00\uC744 \uD53C\uD558\uB294 \uC228\uC740 \uBC43\uAE38\uC774 \uD45C\uC2DC\uB3FC \uC788\uB2E4.", chance: 0.25 },
+          loc_north_frozen_city: { id: "rare_northern_pelt", name: "\uD76C\uADC0 \uBD81\uBC29 \uBAA8\uD53C", icon: "\u{1F98A}", rarity: "uncommon", type: "material", desc: "\uBAA8\uD53C \uC0C1\uC778\uB9CC \uAD6C\uD560 \uC218 \uC788\uB294 \uD76C\uADC0\uD55C \uBD81\uBC29 \uC9D0\uC2B9\uC758 \uBAA8\uD53C.", chance: 0.25 },
+          loc_west_pirate_port: { id: "pirate_lord_relic", name: "\uD574\uC801\uC655\uC758 \uC720\uD488", icon: "\u{1F3F4}\u200D\u2620\uFE0F", rarity: "rare", type: "quest", desc: "\uD574\uC801 \uB450\uBAA9\uC774 \uD070\uB3C8\uC744 \uBC1B\uACE0 \uB118\uAE34 \uC61B \uD574\uC801\uC655\uC758 \uC720\uD488. \uB0B4\uB825\uC774 \uC2EC\uC0C1\uCE58 \uC54A\uB2E4.", chance: 0.3 }
+        };
+        const def = itemByLoc[_locBook?.id];
+        if (def && !S.inventory.some((it) => it && it.id === def.id) && Math.random() < def.chance) {
+          S.inventory.push({ id: def.id, name: def.name, icon: def.icon, rarity: def.rarity, type: def.type, desc: def.desc });
+          saveInventory(S.inventory);
+          toastHTML(`${def.icon} \u300C${esc2(def.name)}\u300D\uC744 \uC785\uC218\uD588\uB2E4!`, 3e3);
+        }
       },
       guardDuty: () => {
         if (typeof addGoldWithExchange === "function") addGoldWithExchange(20, "\uACBD\uBE44 \uC644\uB8CC");
@@ -41615,9 +41626,31 @@ ${lines.join("\n")}
           toastHTML(`\u{1F3B2} \uB3C4\uBC15\uC5D0\uC11C \uD328\uBC30... ${stake}G\uC758 \uBE5A\uC744 \uC9C0\uACE0 \uB9D0\uC558\uB2E4. \uB098\uC911\uC5D0 \uAC1A\uC544\uC57C \uD55C\uB2E4.`, 3e3);
         }
       },
+      // [65번 섹션] buyInfo는 7개 장소("왕실 기밀"/"사막 비밀 경로"/
+      // "밀림 비밀 지식" 등 전혀 다른 서사+40~100G의 다른 비용)가 공유
+      // 하는 범용 액션인데, 실제로는 전부 똑같이 평판+10만 지급하던
+      // "장소별 서사와 보상이 분리된" 공백 — contactFixer가 이미
+      // loc_central_underground 하나만 장소 가드로 차별화해둔 것과
+      // 같은 패턴을 7곳 전체로 확장한다. 비용이 비쌀수록 보상도 크게.
       buyInfo: () => {
-        updateReputation(10);
-        toast("\u{1F4AC} \uADC0\uD55C \uC815\uBCF4\uB97C \uC5BB\uC5C8\uB2E4. \uD3C9\uD310+10", 2e3);
+        const loc = typeof loadCurrentLocation === "function" ? loadCurrentLocation() : null;
+        const repByLoc = {
+          loc_merchant_city: 20,
+          loc_south_jungle_city: 15,
+          loc_south_desert_town: 12,
+          loc_central_underground: 25,
+          loc_central_noble_district: 35,
+          loc_south_town_sandgate: 10,
+          loc_ne_silverleaf_city: 15
+        };
+        const rep = repByLoc[loc?.id] ?? 10;
+        updateReputation(rep);
+        toast(`\u{1F4AC} \uADC0\uD55C \uC815\uBCF4\uB97C \uC5BB\uC5C8\uB2E4. \uD3C9\uD310+${rep}`, 2e3);
+        if (loc?.id === "loc_central_noble_district" && !S.inventory.some((it) => it && it.id === "royal_secret_letter")) {
+          S.inventory.push({ id: "royal_secret_letter", name: "\uC655\uC2E4 \uBC00\uC11C", icon: "\u{1F4DC}", rarity: "rare", type: "quest", desc: "\uADC0\uC871 \uC815\uBCF4\uC0C1\uC774 \uD070\uB3C8\uC744 \uBC1B\uACE0 \uAC74\uB128 \uC655\uC2E4 \uBC00\uC11C. \uC655\uAD6D\uC758 \uBBFC\uAC10\uD55C \uBE44\uBC00\uC774 \uB2F4\uACA8 \uC788\uB2E4." });
+          saveInventory(S.inventory);
+          toastHTML(`\u{1F4DC} \uADC0\uC871 \uC815\uBCF4\uC0C1\uC774 \u300C\uC655\uC2E4 \uBC00\uC11C\u300D\uB97C \uAC74\uB138\uB2E4!`, 3e3);
+        }
       },
       joinSect: () => {
         toast("\u{1F409} \uBB38\uD30C \uAC00\uC785 \uC870\uAC74\uC744 \uD655\uC778\uD558\uC138\uC694. \uAC15\uD55C \uC2A4\uD0EF\uACFC \uBA85\uC131\uC774 \uD544\uC694\uD569\uB2C8\uB2E4.", 3e3);

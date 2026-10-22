@@ -157,10 +157,38 @@ export function renderAISettings() {
   const pb = document.getElementById('pb-aisettings');
   if (!pb) return;
   const erudaOn = isErudaEnabled();
+  // [66번 섹션] 필드 이동 조작 방식 — world/320이 localStorage에 직접
+  // 저장/조회하는 설정이라(getFieldControlMode/setFieldControlMode를
+  // window에 노출해둠), 여기서는 ES import 없이 그 전역 함수를 그대로
+  // 호출한다 — 이 파일의 다른 섹션들(자동플레이 등)도 같은 방식으로
+  // 서로 연결돼 있는 기존 관례를 그대로 따름.
+  const fieldMode = (typeof window.getFieldControlMode === 'function') ? window.getFieldControlMode() : 'keyboard_joystick';
   let html = `
     <div style="padding:12px 14px">
       <div style="font-family:'Cinzel',serif;font-size:10px;color:var(--gold);letter-spacing:1px;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)">
         ⚙️ 일반 설정
+      </div>
+
+      <!-- 필드 이동 조작 방식 -->
+      <div style="padding:10px 12px;background:var(--bg-input);border:1px solid var(--border);border-radius:2px;margin-bottom:8px">
+        <div style="font-family:'Cinzel',serif;font-size:10px;color:var(--gold)">🎮 필드 이동 조작 방식</div>
+        <div style="font-size:9px;color:var(--dim);margin-top:2px;margin-bottom:8px">실시간 필드에서 캐릭터를 움직이는 방식을 고른다</div>
+        <div style="display:flex;gap:6px">
+          <button onclick="setFieldControlMode('keyboard_joystick');renderAISettings()" style="
+            flex:1;padding:6px 8px;
+            background:${fieldMode==='keyboard_joystick' ? 'linear-gradient(135deg,#1a3a0d,#2a5a1a)' : 'var(--bg-screen)'};
+            border:1px solid ${fieldMode==='keyboard_joystick' ? '#4a9a2a' : 'var(--border)'};
+            color:${fieldMode==='keyboard_joystick' ? '#80c040' : 'var(--dim)'};
+            font-family:'Cinzel',serif;font-size:9px;cursor:pointer;border-radius:2px
+          ">⌨️ 키보드/조이스틱</button>
+          <button onclick="setFieldControlMode('point_click');renderAISettings()" style="
+            flex:1;padding:6px 8px;
+            background:${fieldMode==='point_click' ? 'linear-gradient(135deg,#1a3a0d,#2a5a1a)' : 'var(--bg-screen)'};
+            border:1px solid ${fieldMode==='point_click' ? '#4a9a2a' : 'var(--border)'};
+            color:${fieldMode==='point_click' ? '#80c040' : 'var(--dim)'};
+            font-family:'Cinzel',serif;font-size:9px;cursor:pointer;border-radius:2px
+          ">🖱️ 터치/마우스 포인트</button>
+        </div>
       </div>
 
       <!-- 개발 콘솔 토글 -->

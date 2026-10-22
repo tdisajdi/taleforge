@@ -464,7 +464,6 @@
 ║  · 정령족: p-elemental-system                                               ║
 ║                                                                              ║
 ║  【시스템】                                                                  ║
-║  · API 키 관리 — p-keys                                                     ║
 ║  · 세이브/로드 — p-saves                                                    ║
 ║  · 데이터 수집 설정 — p-datacollect                                         ║
 ║  · AI 설정 — p-aisettings                                                   ║
@@ -1552,13 +1551,6 @@ body.light-mode #custom-era-input{background:#e8d8b8!important;border-color:#c0a
 body.light-mode #screen-apikey::before,
 body.light-mode .title-orn{display:none}
 body.light-mode .logo{color:var(--gold);text-shadow:none}
-.key-list{margin-bottom:12px}
-.key-item{display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--bg-input);border:1px solid var(--border);margin-bottom:3px;font-size:11px;color:var(--dim)}
-.key-item span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.key-del{background:none;border:none;color:#5a3a2a;cursor:pointer;font-size:15px;padding:0 2px;line-height:1}
-.key-input{width:100%;padding:11px 13px;background:var(--bg-input);border:1px solid var(--border);color:var(--gold);font-family:'Crimson Text',serif;font-size:14px;outline:none;margin-bottom:9px}
-.key-input:focus{border-color:var(--gold)}
-
 /* ── 시나리오 ── */
 #screen-scenario{background:var(--bg-screen)}
 .sc-header{padding:13px 16px 10px;text-align:center;border-bottom:1px solid var(--border);flex-shrink:0}
@@ -1995,13 +1987,14 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
   <div class="apikey-wrap pixel-box">
     <div class="logo"><svg viewBox="0 0 18 18" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px"><path d="M14 2 L16 4 L5 15 L3 13 Z"/><path d="M3 3 L5 5"/><path d="M13 13 L15 15"/><path d="M9 6 L6 9"/></svg> TaleForge</div>
     <div id="app-version-display" style="text-align:center;font-family:'Cinzel',serif;font-size:10px;color:var(--dim);letter-spacing:2px;margin-bottom:4px"></div>
-    <div class="logo-sub">키 없이 바로 시작할 수 있습니다.<br>(선택) Gemini API 키를 넣으면 아이템·퀘스트·장소 등 생성 콘텐츠 품질이 올라갑니다.</div>
-    <div id="key-list" class="key-list"></div>
-    <input id="key-input" class="key-input" type="password" placeholder="(선택) AIza... 또는 AQ.Ab8R... (Gemini API Key)" onkeydown="if(event.key==='Enter')addKey()">
-    <button class="btn btn-dark" style="width:100%;margin-bottom:8px" onclick="addKey()">+ 키 추가 (선택)</button>
+    <!-- [66-2번 섹션] API 키 입력칸/관리 패널 제거 — CLOUD_TIER_ENABLED가
+         false로 고정돼 있어(quest/331) 키를 넣어도 실제로는 아무 효과가
+         없었다(완전 무-API 판매 제품에 거짓 안내 문구만 남아있던 상태).
+         키 저장/조회 계층(loadApiKeys 등)과 CLOUD_TIER_ENABLED 스위치
+         자체는 코드에 그대로 남겨둔다(향후 되돌릴 수 있게) — 이번엔
+         사용자에게 보이는 UI만 치운다. -->
+    <div class="logo-sub">키 없이 바로 시작할 수 있습니다.</div>
     <button class="btn btn-gold" id="start-btn" style="width:100%;letter-spacing:2px;margin-bottom:8px" onclick="confirmKey()">시작하기 ▶</button>
-    <div id="key-hint" style="display:none;font-size:10px;color:#60a060;text-align:center;margin-bottom:8px">✅ 저장된 키로 바로 시작할 수 있어요</div>
-    <button class="btn btn-dark" style="width:100%;margin-bottom:12px;font-size:10px;padding:8px;border-color:#4a7a2a;color:#80c060" onclick="_downloadWithKeys()">💾 키 포함 저장 — 다음부터 입력 생략</button>
     <div style="border-top:1px solid var(--border);padding-top:10px;display:flex;gap:6px">
       <button class="btn btn-dark" style="flex:1;font-size:9px;padding:7px 6px" onclick="exportAllData()">✦ 기록 봉인</button>
       <button class="btn btn-dark" style="flex:1;font-size:9px;padding:7px 6px" onclick="importAllData()">✦ 봉인 해제</button>
@@ -2659,11 +2652,6 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
   <div class="p-body scrollable" id="pb-worldfigures"></div>
 </div></div>
 
-<!-- 키 관리 패널 -->
-<div class="panel-ov" id="p-keys"><div class="panel">
-  <div class="p-hdr"><span class="p-title">🔑 API 키 관리</span><button class="p-close" onclick="closeP('keys')">✕</button></div>
-  <div class="p-body scrollable" id="pb-keys"></div>
-</div></div>
 
 <!-- AI 설정 패널 -->
 <div class="panel-ov" id="p-aisettings"><div class="panel">
@@ -16803,10 +16791,6 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
   var saveRace = (race) => lsSet(RACE_KEY, JSON.stringify(race));
   var clearRace = () => lsDel(RACE_KEY);
   window._embeddedKeys = [];
-  var saveApiKeys = (keys) => {
-    window._embeddedKeys = keys;
-    lsSet(API_KEYS_STORAGE, JSON.stringify(keys));
-  };
   var loadApiKeys = () => {
     const r = lsGet(API_KEYS_STORAGE);
     if (r) {
@@ -16821,31 +16805,6 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
     }
     return window._embeddedKeys;
   };
-  window._keySaveHintShown = false;
-  function _scheduleKeySaveHint() {
-    if (window._keySaveHintShown) return;
-    window._keySaveHintShown = true;
-    setTimeout(() => {
-      if (confirm("\u26A0\uFE0F \uC774 \uD658\uACBD\uC5D0\uC11C\uB294 API \uD0A4\uAC00 \uC571\uC744 \uB2EB\uC73C\uBA74 \uC0AC\uB77C\uC9C8 \uC218 \uC788\uC2B5\uB2C8\uB2E4.\n\n\uD0A4\uB97C \uD30C\uC77C\uC5D0 \uC800\uC7A5\uD558\uB824\uBA74 \uD655\uC778\uC744 \uB204\uB974\uC138\uC694.\n(\uC800\uC7A5\uB41C \uD0A4\uAC00 \uD3EC\uD568\uB41C HTML \uD30C\uC77C\uC744 \uB2E4\uC6B4\uB85C\uB4DC\uD569\uB2C8\uB2E4)"))
-        _downloadWithKeys();
-    }, 2e3);
-  }
-  window._scheduleKeySaveHint = _scheduleKeySaveHint;
-  function _downloadWithKeys() {
-    const keys = window._embeddedKeys;
-    if (!keys.length) {
-      alert("\uC800\uC7A5\uB41C \uD0A4\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4.");
-      return;
-    }
-    const blob = new Blob([
-      document.documentElement.outerHTML.replace("let _embeddedKeys = [];", "let _embeddedKeys = " + JSON.stringify(keys) + ";")
-    ], { type: "text/html" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "taleforge_saved.html";
-    a.click();
-  }
-  window._downloadWithKeys = _downloadWithKeys;
   var loadKeyIndex = () => {
     const r = lsGet(API_KEY_INDEX_STORAGE);
     return r ? parseInt(r, 10) : 0;
@@ -94702,9 +94661,6 @@ ${lines.join("\n")}
   window.skTab = skTab;
   function renderPanel(name) {
     switch (name) {
-      case "keys":
-        renderKeys?.();
-        break;
       case "stats":
         window.renderStats();
         break;
@@ -96542,10 +96498,33 @@ ${_monsterInfoLine}`;
     const pb = document.getElementById("pb-aisettings");
     if (!pb) return;
     const erudaOn = isErudaEnabled();
+    const fieldMode = typeof window.getFieldControlMode === "function" ? window.getFieldControlMode() : "keyboard_joystick";
     let html = `
     <div style="padding:12px 14px">
       <div style="font-family:'Cinzel',serif;font-size:10px;color:var(--gold);letter-spacing:1px;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)">
         \u2699\uFE0F \uC77C\uBC18 \uC124\uC815
+      </div>
+
+      <!-- \uD544\uB4DC \uC774\uB3D9 \uC870\uC791 \uBC29\uC2DD -->
+      <div style="padding:10px 12px;background:var(--bg-input);border:1px solid var(--border);border-radius:2px;margin-bottom:8px">
+        <div style="font-family:'Cinzel',serif;font-size:10px;color:var(--gold)">\u{1F3AE} \uD544\uB4DC \uC774\uB3D9 \uC870\uC791 \uBC29\uC2DD</div>
+        <div style="font-size:9px;color:var(--dim);margin-top:2px;margin-bottom:8px">\uC2E4\uC2DC\uAC04 \uD544\uB4DC\uC5D0\uC11C \uCE90\uB9AD\uD130\uB97C \uC6C0\uC9C1\uC774\uB294 \uBC29\uC2DD\uC744 \uACE0\uB978\uB2E4</div>
+        <div style="display:flex;gap:6px">
+          <button onclick="setFieldControlMode('keyboard_joystick');renderAISettings()" style="
+            flex:1;padding:6px 8px;
+            background:${fieldMode === "keyboard_joystick" ? "linear-gradient(135deg,#1a3a0d,#2a5a1a)" : "var(--bg-screen)"};
+            border:1px solid ${fieldMode === "keyboard_joystick" ? "#4a9a2a" : "var(--border)"};
+            color:${fieldMode === "keyboard_joystick" ? "#80c040" : "var(--dim)"};
+            font-family:'Cinzel',serif;font-size:9px;cursor:pointer;border-radius:2px
+          ">\u2328\uFE0F \uD0A4\uBCF4\uB4DC/\uC870\uC774\uC2A4\uD2F1</button>
+          <button onclick="setFieldControlMode('point_click');renderAISettings()" style="
+            flex:1;padding:6px 8px;
+            background:${fieldMode === "point_click" ? "linear-gradient(135deg,#1a3a0d,#2a5a1a)" : "var(--bg-screen)"};
+            border:1px solid ${fieldMode === "point_click" ? "#4a9a2a" : "var(--border)"};
+            color:${fieldMode === "point_click" ? "#80c040" : "var(--dim)"};
+            font-family:'Cinzel',serif;font-size:9px;cursor:pointer;border-radius:2px
+          ">\u{1F5B1}\uFE0F \uD130\uCE58/\uB9C8\uC6B0\uC2A4 \uD3EC\uC778\uD2B8</button>
+        </div>
       </div>
 
       <!-- \uAC1C\uBC1C \uCF58\uC194 \uD1A0\uAE00 -->
@@ -108979,61 +108958,6 @@ ${isCivilianJob ? `
     }
   }
   window.showScreen = showScreen;
-  function addKey() {
-    const inp = $("key-input"), k = (inp.value || "").trim().replace(/[\s\n\r]/g, "");
-    if (!k || !k.startsWith("AIza") && !k.startsWith("AQ.")) {
-      toast("\uC62C\uBC14\uB978 API \uD0A4\uAC00 \uC544\uB2D9\uB2C8\uB2E4");
-      return;
-    }
-    if (k.length < 30) {
-      toast("\uD0A4\uAC00 \uB108\uBB34 \uC9E7\uC2B5\uB2C8\uB2E4. \uC804\uCCB4 \uD0A4\uB97C \uBCF5\uC0AC\uD558\uC138\uC694.");
-      return;
-    }
-    const keys = loadApiKeys();
-    if (keys.includes(k)) {
-      toast("\uC774\uBBF8 \uB4F1\uB85D\uB41C \uD0A4\uC785\uB2C8\uB2E4");
-      return;
-    }
-    keys.push(k);
-    saveApiKeys(keys);
-    S.apiKeys = keys;
-    inp.value = "";
-    renderKeys();
-    toast("\u2705 API \uD0A4 \uCD94\uAC00\uB428");
-    if (typeof _scheduleKeySaveHint === "function") _scheduleKeySaveHint();
-  }
-  window.addKey = addKey;
-  function removeKey(i) {
-    const keys = loadApiKeys();
-    keys.splice(i, 1);
-    saveApiKeys(keys);
-    S.apiKeys = keys;
-    renderKeys();
-  }
-  window.removeKey = removeKey;
-  function renderKeys() {
-    const keys = loadApiKeys();
-    const curIdx = loadKeyIndex() % Math.max(1, keys.length);
-    $("key-list").innerHTML = keys.map((k, i) => `
-    <div class="key-item" style="border-left:2px solid ${i === curIdx ? "var(--gold)" : "transparent"}">
-      <span>${i === curIdx ? "\u25B6 " : "  "}\u{1F511} ${esc2(k.slice(0, 8))}...${esc2(k.slice(-4))} ${i === curIdx ? '<span style="color:#60a060;font-size:9px">(\uC0AC\uC6A9\uC911)</span>' : ""}</span>
-      <button class="key-del" onclick="removeKey(${i})">\u2715</button>
-    </div>`).join("") || '<div style="color:var(--dim);font-size:11px;padding:5px">\uB4F1\uB85D\uB41C \uD0A4 \uC5C6\uC74C</div>';
-    const startBtn = $("start-btn");
-    const keyHint = $("key-hint");
-    if (startBtn) {
-      if (keys.length > 0) {
-        startBtn.style.animation = "none";
-        startBtn.textContent = "\uC2DC\uC791\uD558\uAE30 \u25B6  (\uD0A4 " + keys.length + "\uAC1C \uB4F1\uB85D\uB428)";
-      } else {
-        startBtn.textContent = "\uC2DC\uC791\uD558\uAE30 \u25B6";
-      }
-    }
-    if (keyHint) {
-      keyHint.style.display = keys.length > 0 ? "block" : "none";
-    }
-  }
-  window.renderKeys = renderKeys;
   function confirmKey() {
     const keys = loadApiKeys();
     S.apiKeys = keys;
@@ -125968,7 +125892,6 @@ summon_add/summon_damage/summon_evolve \u2014 \uC18C\uD658\uC218 \uAD00\uB828`;
       if (el) el.textContent = "v74";
       var savedKeys = typeof loadApiKeys === "function" ? loadApiKeys() : [];
       if (typeof S !== "undefined") S.apiKeys = savedKeys;
-      if (typeof renderKeys === "function") renderKeys();
       if (typeof renderLocalModelSetting === "function") renderLocalModelSetting();
       if (typeof showScreen === "function") showScreen("apikey");
       else {
@@ -136771,6 +136694,9 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
       joyPointerId: null,
       joyOriginX: 0,
       joyOriginY: 0,
+      movePath: null,
+      moveTargetPx: null,
+      // [66번 섹션] point_click 조작 방식 전용
       currentZone: null,
       encounterActive: false,
       roadEvent: null,
@@ -136864,6 +136790,10 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
       if (["arrowup", "arrowdown", "arrowleft", "arrowright", "w", "a", "s", "d"].includes(k)) {
         RT.keys.add(k);
         e.preventDefault();
+        if (RT.movePath) {
+          RT.movePath = null;
+          RT.moveTargetPx = null;
+        }
       }
     };
     const ku = (e) => {
@@ -136885,7 +136815,39 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
       if (joyEl) joyEl.style.display = "none";
       joySetKnob(0, 0);
     }
+    const pdPointClick = (e) => {
+      if (!RT || e.pointerType === "mouse" && e.button !== 0) return;
+      const rect = canvas.getBoundingClientRect();
+      const { camX, camY } = fieldCameraOffset();
+      const wx = e.clientX - rect.left + camX, wy = e.clientY - rect.top + camY;
+      const gc = Math.floor(wx / TILE), gr = Math.floor(wy / TILE);
+      if (!RT.screen.inB(gc, gr)) {
+        e.preventDefault();
+        return;
+      }
+      if (!cellWalkable(gc, gr)) {
+        showFieldToast("\u274C \uADF8\uACF3\uC73C\uB85C\uB294 \uAC08 \uC218 \uC5C6\uB2E4");
+        e.preventDefault();
+        return;
+      }
+      const sc = Math.floor(RT.player.x / TILE), sr = Math.floor(RT.player.y / TILE);
+      const path = findFieldPath(sc, sr, gc, gr);
+      if (!path || !path.length) {
+        showFieldToast("\u274C \uAE38\uC744 \uCC3E\uC744 \uC218 \uC5C6\uB2E4");
+        e.preventDefault();
+        return;
+      }
+      RT.movePath = path.map((p) => ({ x: p.c * TILE + TILE / 2, y: p.r * TILE + TILE / 2 }));
+      RT.moveTargetPx = { x: gc * TILE + TILE / 2, y: gr * TILE + TILE / 2 };
+      RT.touchDir.x = 0;
+      RT.touchDir.y = 0;
+      e.preventDefault();
+    };
     const pd = (e) => {
+      if (getFieldControlMode() === "point_click") {
+        pdPointClick(e);
+        return;
+      }
       if (!RT || e.pointerType === "mouse" && e.button !== 0) return;
       RT.joyPointerId = e.pointerId;
       const rect = canvas.getBoundingClientRect();
@@ -136945,6 +136907,87 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
     const c = Math.floor(px / TILE), r = Math.floor(py / TILE);
     if (!screen.inB(c, r)) return true;
     return FT_BLOCKING.has(screen.grid[screen.idx(c, r)]);
+  }
+  var FIELD_CONTROL_MODE_KEY = "tf-field-control-mode";
+  function getFieldControlMode() {
+    try {
+      return lsGet(FIELD_CONTROL_MODE_KEY) === "point_click" ? "point_click" : "keyboard_joystick";
+    } catch (e) {
+      return "keyboard_joystick";
+    }
+  }
+  window.getFieldControlMode = getFieldControlMode;
+  function setFieldControlMode(mode) {
+    try {
+      lsSet(FIELD_CONTROL_MODE_KEY, mode === "point_click" ? "point_click" : "keyboard_joystick");
+    } catch (e) {
+    }
+    if (RT) {
+      RT.touchDir.x = 0;
+      RT.touchDir.y = 0;
+      RT.joyPointerId = null;
+      RT.movePath = null;
+      RT.moveTargetPx = null;
+      const joyEl = document.getElementById("tf-field-joystick");
+      if (joyEl) joyEl.style.display = "none";
+    }
+  }
+  window.setFieldControlMode = setFieldControlMode;
+  function fieldCameraOffset() {
+    const { canvas, screen, player } = RT;
+    const VIEW_W = canvas.width, VIEW_H = canvas.height;
+    const worldW = screen.COLS * TILE, worldH = screen.ROWS * TILE;
+    const camX = worldW <= VIEW_W ? -(VIEW_W - worldW) / 2 : Math.max(0, Math.min(worldW - VIEW_W, player.x - VIEW_W / 2));
+    const camY = worldH <= VIEW_H ? -(VIEW_H - worldH) / 2 : Math.max(0, Math.min(worldH - VIEW_H, player.y - VIEW_H / 2));
+    return { camX, camY };
+  }
+  function cellWalkable(c, r) {
+    const { screen } = RT;
+    if (!screen.inB(c, r)) return false;
+    if (currentTransportConfig().isAir) return true;
+    return !FT_BLOCKING.has(screen.grid[screen.idx(c, r)]);
+  }
+  function findFieldPath(sc, sr, gc, gr) {
+    if (!cellWalkable(gc, gr)) return null;
+    if (sc === gc && sr === gr) return [];
+    const key = (c, r) => r * SCREEN_COLS + c;
+    const DIRS = [[1, 0, 1], [-1, 0, 1], [0, 1, 1], [0, -1, 1], [1, 1, Math.SQRT2], [1, -1, Math.SQRT2], [-1, 1, Math.SQRT2], [-1, -1, Math.SQRT2]];
+    const gScore = /* @__PURE__ */ new Map([[key(sc, sr), 0]]);
+    const cameFrom = /* @__PURE__ */ new Map();
+    const open = [{ c: sc, r: sr, f: Math.hypot(gc - sc, gr - sr) }];
+    const visited = /* @__PURE__ */ new Set();
+    let steps = 0;
+    while (open.length && steps++ < 5e3) {
+      let bi = 0;
+      for (let i = 1; i < open.length; i++) if (open[i].f < open[bi].f) bi = i;
+      const cur = open.splice(bi, 1)[0];
+      const ck = key(cur.c, cur.r);
+      if (visited.has(ck)) continue;
+      visited.add(ck);
+      if (cur.c === gc && cur.r === gr) {
+        const path = [];
+        let k = ck;
+        while (cameFrom.has(k)) {
+          const rr = Math.floor(k / SCREEN_COLS), cc = k % SCREEN_COLS;
+          path.unshift({ c: cc, r: rr });
+          const [pc, pr] = cameFrom.get(k);
+          k = key(pc, pr);
+        }
+        return path;
+      }
+      for (const [dc, dr, cost] of DIRS) {
+        const nc = cur.c + dc, nr = cur.r + dr;
+        if (!cellWalkable(nc, nr)) continue;
+        if (dc !== 0 && dr !== 0 && (!cellWalkable(cur.c + dc, cur.r) || !cellWalkable(cur.c, cur.r + dr))) continue;
+        const ng = gScore.get(ck) + cost;
+        const nk = key(nc, nr);
+        if (gScore.has(nk) && gScore.get(nk) <= ng) continue;
+        gScore.set(nk, ng);
+        cameFrom.set(nk, [cur.c, cur.r]);
+        open.push({ c: nc, r: nr, f: ng + Math.hypot(gc - nc, gr - nr) });
+      }
+    }
+    return null;
   }
   function resolveClash(a, b) {
     const pa = a.power, pb = b.power;
@@ -137340,6 +137383,8 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
     if (!screen) return;
     RT.screen = screen;
     RT.currentZone = screen.node.kind === "location" ? screen.node.loc : null;
+    RT.movePath = null;
+    RT.moveTargetPx = null;
     let sc = Math.floor(screen.COLS / 2), sr = Math.floor(screen.ROWS / 2);
     const ex = fromNodeId ? screen.exits.find((e) => e.to === fromNodeId) : null;
     if (ex) {
@@ -137516,6 +137561,14 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
         dx = RT.touchDir.x;
         dy = RT.touchDir.y;
       }
+      if (!dx && !dy && RT.movePath && RT.movePath.length) {
+        const wp = RT.movePath[0];
+        const wdx = wp.x - player.x, wdy = wp.y - player.y, wd = Math.hypot(wdx, wdy);
+        if (wd > 0.01) {
+          dx = wdx / wd;
+          dy = wdy / wd;
+        }
+      }
       if (dx || dy) {
         const len = Math.hypot(dx, dy);
         const calSpeedMult = typeof getCalendarModifiers === "function" ? getCalendarModifiers().travelSpeedMult || 1 : 1;
@@ -137529,6 +137582,13 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
         if (canMoveTo(nx, player.y)) player.x = nx;
         const ny2 = player.y + dy;
         if (canMoveTo(player.x, ny2)) player.y = ny2;
+      }
+      if (RT.movePath && RT.movePath.length) {
+        const wp = RT.movePath[0];
+        if (Math.hypot(wp.x - player.x, wp.y - player.y) < 4) {
+          RT.movePath.shift();
+          if (!RT.movePath.length) RT.moveTargetPx = null;
+        }
       }
       player.x = Math.max(TILE, Math.min(screen.COLS * TILE - TILE, player.x));
       player.y = Math.max(TILE, Math.min(screen.ROWS * TILE - TILE, player.y));
@@ -137550,9 +137610,7 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
   function renderFieldCanvas() {
     const { ctx, canvas, screen, player } = RT;
     const VIEW_W = canvas.width, VIEW_H = canvas.height;
-    const worldW = screen.COLS * TILE, worldH = screen.ROWS * TILE;
-    const camX = worldW <= VIEW_W ? -(VIEW_W - worldW) / 2 : Math.max(0, Math.min(worldW - VIEW_W, player.x - VIEW_W / 2));
-    const camY = worldH <= VIEW_H ? -(VIEW_H - worldH) / 2 : Math.max(0, Math.min(worldH - VIEW_H, player.y - VIEW_H / 2));
+    const { camX, camY } = fieldCameraOffset();
     ctx.fillStyle = "#050403";
     ctx.fillRect(0, 0, VIEW_W, VIEW_H);
     const pc = Math.floor(player.x / TILE), pr = Math.floor(player.y / TILE);
@@ -137660,6 +137718,14 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
       });
     } catch (e) {
     }
+    if (RT.moveTargetPx) {
+      const mx = RT.moveTargetPx.x - camX, my = RT.moveTargetPx.y - camY;
+      if (mx > -20 && mx < VIEW_W + 20 && my > -20 && my < VIEW_H + 20) {
+        ctx.font = "16px serif";
+        ctx.fillStyle = "#e6cf82";
+        ctx.fillText("\u2715", mx, my);
+      }
+    }
     const ppx = player.x - camX, ppy = player.y - camY;
     ctx.fillStyle = tc.isAir ? "#a0c8e0" : "#cda746";
     ctx.beginPath();
@@ -137690,10 +137756,11 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
     if (!body) return;
     const continentKey = S._fieldModeContinent || loadCurrentLocation()?.continent || S._landMapSelectedContinent || "central";
     const kingdomName = CONTINENT_PROPER_NAME_ICON[continentKey] || continentKey;
+    const moveHint = getFieldControlMode() === "point_click" ? "\uD654\uBA74\uC744 \uD074\uB9AD/\uD0ED\uD55C \uC9C0\uC810\uAE4C\uC9C0 \uC790\uB3D9\uC73C\uB85C \uAC78\uC5B4\uAC10" : "\uD654\uBA74\uC744 \uB20C\uB7EC \uB4DC\uB798\uADF8\uB85C \uC774\uB3D9";
     body.innerHTML = `
     <div id="tf-field-wrap" style="position:relative;flex:1;min-height:0;display:flex;flex-direction:column">
       <div style="padding:6px 10px;background:#050a05;border-bottom:1px solid #1a2a14;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;gap:8px">
-        <div style="font-size:9px;color:#7aaa6a;line-height:1.5">\u{1F3AE} ${esc2(kingdomName)} \uC2E4\uC2DC\uAC04 \uD544\uB4DC \u2014 <b>WASD</b>/\uBC29\uD5A5\uD0A4 \uB610\uB294 \uD654\uBA74\uC744 \uB20C\uB7EC \uB4DC\uB798\uADF8\uB85C \uC774\uB3D9 \xB7 \uD654\uBA74 \uAC00\uC7A5\uC790\uB9AC \uD654\uC0B4\uD45C\uB85C \uB2E4\uC74C \uAD6C\uC5ED \uC774\uB3D9(\uAC08\uB9BC\uAE38 \uC788\uC74C) \xB7 <span style="color:#c0503a">!</span>=\uCD94\uACA9 \xB7 <span style="color:#8fb0c8">\u{1F4A8}</span>=\uB3C4\uC8FC \xB7 \u{1F512}=\uC9C0\uAE08 \uD0C4 \uC774\uB3D9\uC218\uB2E8\uC73C\uB85C\uB294 \uBABB \uAC74\uB108\uB294 \uAE38</div>
+        <div style="font-size:9px;color:#7aaa6a;line-height:1.5">\u{1F3AE} ${esc2(kingdomName)} \uC2E4\uC2DC\uAC04 \uD544\uB4DC \u2014 <b>WASD</b>/\uBC29\uD5A5\uD0A4 \uB610\uB294 ${moveHint} \xB7 \uD654\uBA74 \uAC00\uC7A5\uC790\uB9AC \uD654\uC0B4\uD45C\uB85C \uB2E4\uC74C \uAD6C\uC5ED \uC774\uB3D9(\uAC08\uB9BC\uAE38 \uC788\uC74C) \xB7 <span style="color:#c0503a">!</span>=\uCD94\uACA9 \xB7 <span style="color:#8fb0c8">\u{1F4A8}</span>=\uB3C4\uC8FC \xB7 \u{1F512}=\uC9C0\uAE08 \uD0C4 \uC774\uB3D9\uC218\uB2E8\uC73C\uB85C\uB294 \uBABB \uAC74\uB108\uB294 \uAE38</div>
         <button onclick="exitFieldMode()" style="flex-shrink:0;padding:5px 12px;background:#150505;border:1px solid #6a2a2a;color:#e08080;font-size:9px;cursor:pointer;border-radius:2px">\u2715 \uD544\uB4DC \uB098\uAC00\uAE30</button>
       </div>
       <div id="tf-field-transport" style="display:none;flex-wrap:wrap;gap:4px;padding:5px 10px;background:#0a0805;border-bottom:1px solid #1a1408;flex-shrink:0"></div>
@@ -137718,6 +137785,12 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
       locName: RT.screen.node.kind === "location" ? RT.screen.node.loc.name : null,
       exits: RT.screen.exits.map((e) => ({ to: e.to, edge: e.edge, crossing: e.crossing, gc: e.gc, gr: e.gr })),
       playerTile: { c: Math.floor(RT.player.x / TILE), r: Math.floor(RT.player.y / TILE) },
+      // [66번 섹션 검증용 추가] point_click 조작 방식 — 자동이동 경로가
+      // 실제로 생성/소진되는지 확인하려면 픽셀 좌표와 경로 큐가 필요하다.
+      // 기존 필드 전부와 같은 성격(판정 로직은 안 건드리고 상태만 노출).
+      playerPx: { x: RT.player.x, y: RT.player.y },
+      movePathLen: RT.movePath ? RT.movePath.length : 0,
+      moveTargetPx: RT.moveTargetPx ? { x: RT.moveTargetPx.x, y: RT.moveTargetPx.y } : null,
       packCount: RT.screen.packs.length,
       transportType: RT.transportType,
       encounterActive: RT.encounterActive,
@@ -137777,6 +137850,12 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
     if (!RT) return false;
     enterScreen(nodeId, null);
     return { nodeId: RT.screen.nodeId, kind: RT.screen.node.kind };
+  };
+  window.__tfForcePlayerPx = function(x, y) {
+    if (!RT) return false;
+    RT.player.x = x;
+    RT.player.y = y;
+    return true;
   };
   window.__tfDebugForceRaidStart = function(locId) {
     const st = loadRaidState2();

@@ -1436,6 +1436,7 @@ export function enterFieldMode(continentKey){
     graph, screen:null, ctx, canvas, transportType: startTransport,
     player: { x:0, y:0, r:6, facing:'down' },
     keys: new Set(), touchDir:{x:0,y:0}, joyPointerId:null, joyOriginX:0, joyOriginY:0,
+    movePath:null, moveTargetPx:null, // [66번 섹션] point_click 조작 방식 전용
     currentZone: null, encounterActive:false, roadEvent:null, raf:null, lastTs: performance.now(),
     listeners: [], _prevNodeId: null,
     // [16번 라운드, [대기] #13 착수] 플레이어 이동 궤적을 짧게 기록해서
@@ -1551,7 +1552,14 @@ function attachInput(){
   const kd = e=>{
     if(!RT) return;
     const k = e.key.toLowerCase();
-    if(['arrowup','arrowdown','arrowleft','arrowright','w','a','s','d'].includes(k)){ RT.keys.add(k); e.preventDefault(); }
+    if(['arrowup','arrowdown','arrowleft','arrowright','w','a','s','d'].includes(k)){
+      RT.keys.add(k); e.preventDefault();
+      // [66번 섹션] 키보드 입력은 조작 방식 설정과 무관하게 항상 먹힌다
+      // (point_click 모드에서도 그대로 — 손 안 대고 조용히 덧붙인 것).
+      // 단, 자동이동 경로를 밟던 중에 직접 키를 누르면 그게 우선이므로
+      // 경로를 취소한다.
+      if(RT.movePath){ RT.movePath=null; RT.moveTargetPx=null; }
+    }
   };
   const ku = e=>{ if(RT) RT.keys.delete(e.key.toLowerCase()); };
   window.addEventListener('keydown', kd); window.addEventListener('keyup', ku);
@@ -1561,7 +1569,27 @@ function attachInput(){
   const joyEl = document.getElementById('tf-field-joystick');
   function joySetKnob(dx,dy){ const knob=joyEl?.querySelector('.knob'); if(knob) knob.style.transform=`translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`; }
   function joyEnd(){ RT.joyPointerId=null; RT.touchDir.x=0; RT.touchDir.y=0; if(joyEl) joyEl.style.display='none'; joySetKnob(0,0); }
+  // [66번 섹션] point_click 모드 — 클릭/탭한 지점까지 길찾기로 자동
+  // 이동. PC 마우스 클릭과 모바일 터치 탭이 똑같은 핸들러를 공유한다
+  // (pointer 이벤트라 입력 소스 구분 없이 하나로 처리됨).
+  const pdPointClick = e=>{
+    if(!RT || (e.pointerType==='mouse' && e.button!==0)) return;
+    const rect = canvas.getBoundingClientRect();
+    const { camX, camY } = fieldCameraOffset();
+    const wx = e.clientX-rect.left+camX, wy = e.clientY-rect.top+camY;
+    const gc = Math.floor(wx/TILE), gr = Math.floor(wy/TILE);
+    if(!RT.screen.inB(gc,gr)){ e.preventDefault(); return; }
+    if(!cellWalkable(gc,gr)){ showFieldToast('❌ 그곳으로는 갈 수 없다'); e.preventDefault(); return; }
+    const sc = Math.floor(RT.player.x/TILE), sr = Math.floor(RT.player.y/TILE);
+    const path = findFieldPath(sc,sr,gc,gr);
+    if(!path || !path.length){ showFieldToast('❌ 길을 찾을 수 없다'); e.preventDefault(); return; }
+    RT.movePath = path.map(p=>({ x:p.c*TILE+TILE/2, y:p.r*TILE+TILE/2 }));
+    RT.moveTargetPx = { x: gc*TILE+TILE/2, y: gr*TILE+TILE/2 };
+    RT.touchDir.x=0; RT.touchDir.y=0;
+    e.preventDefault();
+  };
   const pd = e=>{
+    if(getFieldControlMode()==='point_click'){ pdPointClick(e); return; }
     if(!RT || (e.pointerType==='mouse' && e.button!==0)) return;
     RT.joyPointerId = e.pointerId;
     const rect = canvas.getBoundingClientRect();
@@ -1611,6 +1639,96 @@ function monsterBlockedAt(px,py){
   const c = Math.floor(px/TILE), r = Math.floor(py/TILE);
   if(!screen.inB(c,r)) return true;
   return FT_BLOCKING.has(screen.grid[screen.idx(c,r)]);
+}
+
+// [66번 섹션] 조작 방식 설정 — 설정 패널(misc/298 renderAISettings)에서
+// 선택한다. 'keyboard_joystick'(기본, 기존 그대로: 방향키/WASD + 화면을
+// 눌러 드래그하는 조이스틱) vs 'point_click'(신규: 클릭/탭한 지점까지
+// 길찾기로 자동 이동 — PC 마우스·모바일 터치 공통, 입력 소스만 다를 뿐
+// 걷는 로직 자체는 동일하다). localStorage에만 저장하고 모듈 내부 상태는
+// 안 둔다 — 필드 밖에서도(설정 패널만 열어도) 읽고 쓸 수 있어야 한다.
+const FIELD_CONTROL_MODE_KEY = 'tf-field-control-mode';
+export function getFieldControlMode(){
+  try{ return lsGet(FIELD_CONTROL_MODE_KEY)==='point_click' ? 'point_click' : 'keyboard_joystick'; }catch(e){ return 'keyboard_joystick'; }
+}
+window.getFieldControlMode = getFieldControlMode;
+export function setFieldControlMode(mode){
+  try{ lsSet(FIELD_CONTROL_MODE_KEY, mode==='point_click' ? 'point_click' : 'keyboard_joystick'); }catch(e){}
+  // 필드 진행 중에 전환하면 방식이 섞여 보이지 않게 잔류 상태(조이스틱
+  // 방향·자동이동 경로)를 즉시 정리한다.
+  if(RT){
+    RT.touchDir.x=0; RT.touchDir.y=0; RT.joyPointerId=null; RT.movePath=null; RT.moveTargetPx=null;
+    const joyEl = document.getElementById('tf-field-joystick');
+    if(joyEl) joyEl.style.display='none';
+  }
+}
+window.setFieldControlMode = setFieldControlMode;
+
+// renderFieldCanvas()의 카메라 계산과 attachInput()의 클릭→월드좌표
+// 변환이 똑같은 공식을 써야 해서(안 그러면 클릭 지점이 화면에 보이는
+// 곳과 다른 타일로 해석된다) 하나로 뽑아 공유한다.
+function fieldCameraOffset(){
+  const { canvas, screen, player } = RT;
+  const VIEW_W = canvas.width, VIEW_H = canvas.height;
+  const worldW = screen.COLS*TILE, worldH = screen.ROWS*TILE;
+  const camX = worldW<=VIEW_W ? -(VIEW_W-worldW)/2 : Math.max(0, Math.min(worldW-VIEW_W, player.x-VIEW_W/2));
+  const camY = worldH<=VIEW_H ? -(VIEW_H-worldH)/2 : Math.max(0, Math.min(worldH-VIEW_H, player.y-VIEW_H/2));
+  return { camX, camY };
+}
+
+// [66번 섹션] point_click 모드 전용 — tileBlockedAtPx와 완전히 같은
+// 통행 가능 판정(비행 탈것은 전부 통과, 그 외는 FT_BLOCKING)을 타일
+// 단위로 재사용한다. 새 통행 규칙을 따로 만들지 않음.
+function cellWalkable(c,r){
+  const { screen } = RT;
+  if(!screen.inB(c,r)) return false;
+  if(currentTransportConfig().isAir) return true;
+  return !FT_BLOCKING.has(screen.grid[screen.idx(c,r)]);
+}
+// 화면 하나가 44×28=1232칸뿐이라(SCREEN_COLS/SCREEN_ROWS) 클릭할 때마다
+// 다시 계산해도 비용이 무시할 만하다 — 매 프레임이 아니라 클릭 1회당
+// 1번만 호출됨. 8방向 A*, 대각선 이동은 양쪽 직교 타일이 모두 통행
+// 가능할 때만 허용해 산 모서리를 가로질러 지나가는 것처럼 보이는 걸
+// 막는다(코너 통과 방지, 그리드 길찾기의 표준 관례).
+function findFieldPath(sc,sr,gc,gr){
+  if(!cellWalkable(gc,gr)) return null;
+  if(sc===gc && sr===gr) return [];
+  const key = (c,r)=>r*SCREEN_COLS+c;
+  const DIRS = [[1,0,1],[-1,0,1],[0,1,1],[0,-1,1],[1,1,Math.SQRT2],[1,-1,Math.SQRT2],[-1,1,Math.SQRT2],[-1,-1,Math.SQRT2]];
+  const gScore = new Map([[key(sc,sr),0]]);
+  const cameFrom = new Map();
+  const open = [{c:sc,r:sr,f:Math.hypot(gc-sc,gr-sr)}];
+  const visited = new Set();
+  let steps = 0;
+  while(open.length && steps++ < 5000){
+    let bi=0; for(let i=1;i<open.length;i++) if(open[i].f<open[bi].f) bi=i;
+    const cur = open.splice(bi,1)[0];
+    const ck = key(cur.c,cur.r);
+    if(visited.has(ck)) continue;
+    visited.add(ck);
+    if(cur.c===gc && cur.r===gr){
+      const path=[]; let k=ck;
+      while(cameFrom.has(k)){
+        const rr=Math.floor(k/SCREEN_COLS), cc=k%SCREEN_COLS;
+        path.unshift({c:cc,r:rr});
+        const [pc,pr]=cameFrom.get(k);
+        k=key(pc,pr);
+      }
+      return path;
+    }
+    for(const [dc,dr,cost] of DIRS){
+      const nc=cur.c+dc, nr=cur.r+dr;
+      if(!cellWalkable(nc,nr)) continue;
+      if(dc!==0 && dr!==0 && (!cellWalkable(cur.c+dc,cur.r) || !cellWalkable(cur.c,cur.r+dr))) continue;
+      const ng = gScore.get(ck)+cost;
+      const nk = key(nc,nr);
+      if(gScore.has(nk) && gScore.get(nk)<=ng) continue;
+      gScore.set(nk, ng);
+      cameFrom.set(nk, [cur.c,cur.r]);
+      open.push({c:nc,r:nr,f:ng+Math.hypot(gc-nc,gr-nr)});
+    }
+  }
+  return null; // 도달 불가(또는 탐색 상한 초과)
 }
 
 function resolveClash(a,b){
@@ -2005,6 +2123,8 @@ function enterScreen(nodeId, fromNodeId){
   if(!screen) return;
   RT.screen = screen;
   RT.currentZone = screen.node.kind==='location' ? screen.node.loc : null;
+  // [66번 섹션] 화면이 바뀌면 이전 화면 좌표 기준 경로는 의미가 없어진다.
+  RT.movePath = null; RT.moveTargetPx = null;
 
   let sc = Math.floor(screen.COLS/2), sr = Math.floor(screen.ROWS/2);
   const ex = fromNodeId ? screen.exits.find(e=>e.to===fromNodeId) : null;
@@ -2213,6 +2333,15 @@ function fieldLoop(){
     if(RT.keys.has('arrowleft')||RT.keys.has('a')) dx-=1;
     if(RT.keys.has('arrowright')||RT.keys.has('d')) dx+=1;
     if(!dx && !dy && (RT.touchDir.x||RT.touchDir.y)){ dx=RT.touchDir.x; dy=RT.touchDir.y; }
+    // [66번 섹션] point_click 모드 — 키보드/조이스틱 입력이 전혀 없을
+    // 때만 자동이동 경로(RT.movePath)의 다음 경유점 방향을 단위벡터로
+    // 넘긴다. 이후 속도 스케일링·충돌 판정은 keys/touchDir과 완전히
+    // 동일한 코드를 그대로 탄다 — 입력 소스만 다를 뿐.
+    if(!dx && !dy && RT.movePath && RT.movePath.length){
+      const wp = RT.movePath[0];
+      const wdx=wp.x-player.x, wdy=wp.y-player.y, wd=Math.hypot(wdx,wdy);
+      if(wd>0.01){ dx=wdx/wd; dy=wdy/wd; }
+    }
     if(dx||dy){
       const len=Math.hypot(dx,dy);
       // [2026-09-25, 33번 섹션 — S1] 세계 달력 효과(겨울 등) — 실제 시각
@@ -2226,6 +2355,17 @@ function fieldLoop(){
       if(Math.abs(dx)>Math.abs(dy)) player.facing = dx>0?'right':'left'; else if(dy!==0) player.facing = dy>0?'down':'up';
       const nx=player.x+dx; if(canMoveTo(nx,player.y)) player.x=nx;
       const ny2=player.y+dy; if(canMoveTo(player.x,ny2)) player.y=ny2;
+    }
+    // [66번 섹션] 경유점 도착 판정 — 입력 소스 무관(키/조이스틱이 경로를
+    // 밟는 중간에 끊겨도 안전). 한 프레임 이동량이 타일 크기(20px)보다
+    // 훨씬 작아 오버슈트가 미미하므로 정밀 스냅 없이 근접 판정만으로
+    // 충분하다.
+    if(RT.movePath && RT.movePath.length){
+      const wp = RT.movePath[0];
+      if(Math.hypot(wp.x-player.x, wp.y-player.y) < 4){
+        RT.movePath.shift();
+        if(!RT.movePath.length) RT.moveTargetPx = null;
+      }
     }
     player.x = Math.max(TILE, Math.min(screen.COLS*TILE-TILE, player.x));
     player.y = Math.max(TILE, Math.min(screen.ROWS*TILE-TILE, player.y));
@@ -2250,9 +2390,7 @@ function fieldLoop(){
 function renderFieldCanvas(){
   const { ctx, canvas, screen, player } = RT;
   const VIEW_W = canvas.width, VIEW_H = canvas.height;
-  const worldW = screen.COLS*TILE, worldH = screen.ROWS*TILE;
-  const camX = worldW<=VIEW_W ? -(VIEW_W-worldW)/2 : Math.max(0, Math.min(worldW-VIEW_W, player.x-VIEW_W/2));
-  const camY = worldH<=VIEW_H ? -(VIEW_H-worldH)/2 : Math.max(0, Math.min(worldH-VIEW_H, player.y-VIEW_H/2));
+  const { camX, camY } = fieldCameraOffset(); // attachInput()의 클릭→월드좌표 변환과 공식을 공유(66번 섹션)
   ctx.fillStyle='#050403'; ctx.fillRect(0,0,VIEW_W,VIEW_H);
 
   // [2026-09-23, 25-3] fog of war — 지금 플레이어 반경 안(dc²+dr²≤반경²)이면
@@ -2361,6 +2499,15 @@ function renderFieldCanvas(){
     });
   }catch(e){}
 
+  // [66번 섹션] point_click 모드 자동이동 목적지 표식 — 지형/몬스터처럼
+  // 시야 가림 없이 항상 보인다(일시적 UI 피드백이라 안개 규칙과 무관).
+  if(RT.moveTargetPx){
+    const mx=RT.moveTargetPx.x-camX, my=RT.moveTargetPx.y-camY;
+    if(mx>-20&&mx<VIEW_W+20&&my>-20&&my<VIEW_H+20){
+      ctx.font='16px serif'; ctx.fillStyle='#e6cf82'; ctx.fillText('✕', mx, my);
+    }
+  }
+
   const ppx=player.x-camX, ppy=player.y-camY;
   ctx.fillStyle = tc.isAir ? '#a0c8e0' : '#cda746';
   ctx.beginPath(); ctx.arc(ppx,ppy,player.r,0,Math.PI*2); ctx.fill();
@@ -2383,10 +2530,15 @@ export function renderFieldPanel(){
   if(!body) return;
   const continentKey = S._fieldModeContinent || loadCurrentLocation()?.continent || S._landMapSelectedContinent || 'central';
   const kingdomName = CONTINENT_PROPER_NAME_ICON[continentKey] || continentKey;
+  // [66번 섹션] 조작 방식 설정(misc/298 renderAISettings)에 따라 안내
+  // 문구를 바꾼다 — 실제 입력 처리 분기(attachInput)와 같은 기준.
+  const moveHint = getFieldControlMode()==='point_click'
+    ? '화면을 클릭/탭한 지점까지 자동으로 걸어감'
+    : '화면을 눌러 드래그로 이동';
   body.innerHTML = `
     <div id="tf-field-wrap" style="position:relative;flex:1;min-height:0;display:flex;flex-direction:column">
       <div style="padding:6px 10px;background:#050a05;border-bottom:1px solid #1a2a14;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;gap:8px">
-        <div style="font-size:9px;color:#7aaa6a;line-height:1.5">🎮 ${esc(kingdomName)} 실시간 필드 — <b>WASD</b>/방향키 또는 화면을 눌러 드래그로 이동 · 화면 가장자리 화살표로 다음 구역 이동(갈림길 있음) · <span style="color:#c0503a">!</span>=추격 · <span style="color:#8fb0c8">💨</span>=도주 · 🔒=지금 탄 이동수단으로는 못 건너는 길</div>
+        <div style="font-size:9px;color:#7aaa6a;line-height:1.5">🎮 ${esc(kingdomName)} 실시간 필드 — <b>WASD</b>/방향키 또는 ${moveHint} · 화면 가장자리 화살표로 다음 구역 이동(갈림길 있음) · <span style="color:#c0503a">!</span>=추격 · <span style="color:#8fb0c8">💨</span>=도주 · 🔒=지금 탄 이동수단으로는 못 건너는 길</div>
         <button onclick="exitFieldMode()" style="flex-shrink:0;padding:5px 12px;background:#150505;border:1px solid #6a2a2a;color:#e08080;font-size:9px;cursor:pointer;border-radius:2px">✕ 필드 나가기</button>
       </div>
       <div id="tf-field-transport" style="display:none;flex-wrap:wrap;gap:4px;padding:5px 10px;background:#0a0805;border-bottom:1px solid #1a1408;flex-shrink:0"></div>
@@ -2416,6 +2568,12 @@ window.__tfFieldDebug = function(){
     locName: RT.screen.node.kind==='location' ? RT.screen.node.loc.name : null,
     exits: RT.screen.exits.map(e=>({ to:e.to, edge:e.edge, crossing:e.crossing, gc:e.gc, gr:e.gr })),
     playerTile: { c: Math.floor(RT.player.x/TILE), r: Math.floor(RT.player.y/TILE) },
+    // [66번 섹션 검증용 추가] point_click 조작 방식 — 자동이동 경로가
+    // 실제로 생성/소진되는지 확인하려면 픽셀 좌표와 경로 큐가 필요하다.
+    // 기존 필드 전부와 같은 성격(판정 로직은 안 건드리고 상태만 노출).
+    playerPx: { x: RT.player.x, y: RT.player.y },
+    movePathLen: RT.movePath ? RT.movePath.length : 0,
+    moveTargetPx: RT.moveTargetPx ? { x: RT.moveTargetPx.x, y: RT.moveTargetPx.y } : null,
     packCount: RT.screen.packs.length,
     transportType: RT.transportType,
     encounterActive: RT.encounterActive,
@@ -2493,6 +2651,15 @@ window.__tfDebugGotoNode = function(nodeId){
   if(!RT) return false;
   enterScreen(nodeId, null);
   return { nodeId: RT.screen.nodeId, kind: RT.screen.node.kind };
+};
+// [66번 섹션, 검증 전용] point_click 조작 방식 테스트용 — 매번 지형이
+// 절차적으로 달라지는 화면에서 "확실히 걸을 수 있는 좌표"를 고르는 게
+// 어려워서, 위의 __tfForcePackEncounter/__tfDebugAttemptExit과 같은
+// 성격으로 플레이어를 직접 옮겨둔다(판정 로직 자체는 그대로 둠).
+window.__tfForcePlayerPx = function(x,y){
+  if(!RT) return false;
+  RT.player.x = x; RT.player.y = y;
+  return true;
 };
 
 // ── [2026-09-18 습격 라운드, 검증 전용] ──────────────────────────────

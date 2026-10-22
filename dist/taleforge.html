@@ -110846,6 +110846,7 @@ ${isCivilianJob ? `
       } catch (e) {
       }
     }
+    lsDel("tf-current-location");
     doStartChat();
     if (typeof window.showLastSessionSummary === "function") setTimeout(() => window.showLastSessionSummary(), 1500);
     setTimeout(() => {

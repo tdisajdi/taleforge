@@ -22,7 +22,7 @@ import { loadCycleCount } from '../progression/014-환생-누적-시스템-110�
 import { applyAllPassiveSkills, checkOfflineCatchUp, checkStaleCollectedData, doStartChat, renderMsgs, restoreTitleBenefits, updateCharHeader, updateEmotionDisplay, updateMenuVisibility, updateQuestBadge } from '../quest/086-퀘스트임무-수락-팝업-시스템.js';
 import { RACE_DEFS, loadApiKeys } from '../race/013-종족-시스템.js';
 import { FIVE_CONTINENTS, loadContinentRep, saveContinentRep } from '../race/064-아에테른-종족간-전쟁-역사-종족-선택-시-배경.js';
-import { $, esc, lsGet, lsSet, toast } from '../utils.js';
+import { $, esc, lsDel, lsGet, lsSet, toast } from '../utils.js';
 import { loadCurrentLocation } from '../world/052-동대륙-추가-장소-4.js';
 
 export function tfGetSvgIcon(emoji){
@@ -1689,6 +1689,19 @@ export function startGame(){
       }
     }catch(e){}
   }
+  // [2026-10-22 버그 수정 — 71번 섹션 1차 수정이 불완전했던 부분]
+  // clearSession()에 'tf-current-location' 삭제를 추가했지만, 그건
+  // "이어하기 모달에서 새 게임을 고른" 경로(_doNewGame)에서만 실행된다
+  // — confirmKey()는 저장된 캐릭터가 아예 없으면(가장 흔한 테스트
+  // 경로: 매번 새로 열어서 바로 시작) clearSession()을 호출할 기회
+  // 자체가 없이 곧장 시나리오 화면으로 넘어간다. 그래서 과거 어느
+  // 시점에든 위치가 한 번이라도 저장된 적이 있으면, clearSession
+  // 수정 이후에도 신분/종족/직업 반영 오프닝(composeRankContinentOpening)
+  // 이 여전히 발동 안 하는 문제가 실사용자 재현으로 남아있었다. 여기
+  // (실제로 "새 회차가 시작되는" 시점, 바로 위 계승 보너스 적용 주석과
+  // 동일한 지점 — doStartChat 호출 직전)가 진입 경로와 무관하게 항상
+  // 거치는 유일한 지점이라, 여기서 직접 지워 근본적으로 해결한다.
+  lsDel('tf-current-location');
   doStartChat();
   // [버그 수정] showLastSessionSummary("이전 세션 요약" 모달)가 완성돼
   // 있었지만 실제로 호출하는 곳이 어디에도 없어, saveSessionSummary가

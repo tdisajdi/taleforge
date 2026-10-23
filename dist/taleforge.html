@@ -89934,27 +89934,42 @@ ${lines.join("\n")}
       return [];
     }
   }
+  function _npcsAtCurrentLocation() {
+    try {
+      const loc = typeof loadCurrentLocation === "function" ? loadCurrentLocation() : null;
+      if (!loc || typeof window.getPlayerNpcsAtLoc !== "function") return [];
+      return window.getPlayerNpcsAtLoc(loc) || [];
+    } catch (e) {
+      return [];
+    }
+  }
   function _localFlavorPickTarget(category, history) {
     try {
       const mentioned = _sceneMentionedTarget(history);
       if (mentioned) return mentioned;
       const monsters = typeof loadMonsters === "function" ? (loadMonsters() || []).filter((m) => m.status === "alive") : [];
+      const localNpcs = _npcsAtCurrentLocation();
       if (category === "attack" || category === "defend" || category === "fear") {
         if (monsters.length) return monsters[0].name;
+        const localHostile = localNpcs.find((n) => n.relationship < 30);
+        if (localHostile) return localHostile.name;
         const npcs0 = typeof loadNPCs === "function" ? loadNPCs() || [] : [];
         const hostile = npcs0.find((n) => n.relationship < 30);
         if (hostile) return hostile.name;
       }
-      const npcs = typeof loadNPCs === "function" ? loadNPCs() || [] : [];
-      if ((category === "social" || category === "persuade" || category === "stealth") && npcs.length) {
-        return npcs[Math.floor(Math.random() * npcs.length)].name;
+      if (category === "social" || category === "persuade" || category === "stealth") {
+        if (localNpcs.length) return localNpcs[Math.floor(Math.random() * localNpcs.length)].name;
+        const npcs = typeof loadNPCs === "function" ? loadNPCs() || [] : [];
+        if (npcs.length) return npcs[Math.floor(Math.random() * npcs.length)].name;
       }
       if (category === "search") {
         const loc = typeof loadCurrentLocation === "function" ? loadCurrentLocation() : null;
         if (loc?.name) return loc.name + "\uC758 \uBB3C\uAC74\uB4E4";
       }
       if (monsters.length) return monsters[0].name;
-      if (npcs.length) return npcs[Math.floor(Math.random() * npcs.length)].name;
+      if (localNpcs.length) return localNpcs[Math.floor(Math.random() * localNpcs.length)].name;
+      const npcsAny = typeof loadNPCs === "function" ? loadNPCs() || [] : [];
+      if (npcsAny.length) return npcsAny[Math.floor(Math.random() * npcsAny.length)].name;
     } catch (e) {
     }
     const fb = LOCAL_FLAVOR_FALLBACK_TARGETS[category] || ["\uC0C1\uD669"];
@@ -89965,12 +89980,12 @@ ${lines.join("\n")}
     try {
       const monsters = typeof loadMonsters === "function" ? (loadMonsters() || []).filter((m) => m.status === "alive") : [];
       if (monsters.length) return all;
-      const npcs = typeof loadNPCs === "function" ? loadNPCs() || [] : [];
-      if (npcs.some((n) => n.relationship < 30)) return all;
+      const localNpcs = _npcsAtCurrentLocation();
+      if (localNpcs.some((n) => n.relationship < 30)) return all;
     } catch (e) {
       return all;
     }
-    return all.filter((c) => c !== "attack" && c !== "defend" && c !== "fear");
+    return all.filter((c) => c !== "attack" && c !== "defend" && c !== "fear" && c !== "move");
   }
   function generateLocalFlavorChoices(count, history) {
     const h = history || (typeof S !== "undefined" ? S.messages : null);
@@ -90257,6 +90272,10 @@ ${lines.join("\n")}
       if (mentioned) return mentioned;
       const monsters = typeof loadMonsters === "function" ? (loadMonsters() || []).filter((m) => m.status === "alive") : [];
       if (monsters.length) return monsters[0].name;
+      const localNpcs = _npcsAtCurrentLocation();
+      const localHostile = localNpcs.find((n) => n.relationship < 30);
+      if (localHostile) return localHostile.name;
+      if (localNpcs.length) return localNpcs[Math.floor(Math.random() * localNpcs.length)].name;
       const npcs = typeof loadNPCs === "function" ? loadNPCs() || [] : [];
       const hostile = npcs.find((n) => n.relationship < 30);
       if (hostile) return hostile.name;

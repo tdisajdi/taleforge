@@ -620,11 +620,29 @@ function _playerIdentityVariants(category){
 // 지금 장면과 무관한 완전 무작위 NPC가 선택지 문구에 등장하던 버그
 // (69번 섹션에서 서사 쪽은 고쳤지만 선택지 생성 쪽엔 남아있던 것)를
 // 해결. 못 찾을 때만 기존 폴백 순서로 내려간다.
+// [2026-10-23 버그 수정, 73번 섹션] 직전 서술에 이름이 언급 안 됐을 때
+// 기존엔 곧장 "세이브 전체에서 완전 무작위 NPC"로 떨어졌다 — 완전히
+// 다른 대륙에서 한 번 만난 NPC가 지금 장면과 전혀 무관하게 선택지에
+// 섞여 나오는 "말도 안 되는" 경우의 진짜 원인(72번 섹션의 NPC 저장소
+// 초기화 누락과는 별개 문제 — 그건 "낡은 NPC가 남아있는 것" 자체의
+// 버그였고, 이건 그 NPC 목록이 정상이어도 "지금 있는 장소"를 전혀
+// 안 보고 고르는 로직 자체의 버그). misc/053의 getPlayerNpcsAtLoc
+// (이미 있는 "이 장소에서 만났거나 배치된 NPC" 조회, 장소 NPC 패널이
+// 이미 쓰는 함수)를 그대로 재사용해 장면 언급 다음 우선순위로 둔다 —
+// 새 위치 추적 시스템을 만들지 않음.
+function _npcsAtCurrentLocation(){
+  try{
+    const loc = (typeof loadCurrentLocation==='function') ? loadCurrentLocation() : null;
+    if(!loc || typeof window.getPlayerNpcsAtLoc!=='function') return [];
+    return window.getPlayerNpcsAtLoc(loc) || [];
+  }catch(e){ return []; }
+}
 function _localFlavorPickTarget(category, history){
   try{
     const mentioned = _sceneMentionedTarget(history);
     if(mentioned) return mentioned;
     const monsters = (typeof loadMonsters==='function') ? (loadMonsters()||[]).filter(m=>m.status==='alive') : [];
+    const localNpcs = _npcsAtCurrentLocation();
     if(category==='attack' || category==='defend' || category==='fear'){
       if(monsters.length) return monsters[0].name;
       // [2026-10-22 버그 수정] 예전엔 n.relation==='hostile'|'enemy'로 비교했는데,
@@ -633,20 +651,25 @@ function _localFlavorPickTarget(category, history){
       // 죽은 코드였다(69번 섹션에서 발견, 4곳 전부 동일 패턴). 이 게임 다른
       // 곳(job/042 minEnemyNpc 등)에서 이미 쓰는 "적대 NPC = relationship<30"
       // 임계값을 그대로 재사용 — 새 기준을 지어내지 않음.
+      const localHostile = localNpcs.find(n=>n.relationship<30);
+      if(localHostile) return localHostile.name;
       const npcs0 = (typeof loadNPCs==='function') ? (loadNPCs()||[]) : [];
       const hostile = npcs0.find(n=>n.relationship<30);
       if(hostile) return hostile.name;
     }
-    const npcs = (typeof loadNPCs==='function') ? (loadNPCs()||[]) : [];
-    if((category==='social' || category==='persuade' || category==='stealth') && npcs.length){
-      return npcs[Math.floor(Math.random()*npcs.length)].name;
+    if(category==='social' || category==='persuade' || category==='stealth'){
+      if(localNpcs.length) return localNpcs[Math.floor(Math.random()*localNpcs.length)].name;
+      const npcs = (typeof loadNPCs==='function') ? (loadNPCs()||[]) : [];
+      if(npcs.length) return npcs[Math.floor(Math.random()*npcs.length)].name;
     }
     if(category==='search'){
       const loc = (typeof loadCurrentLocation==='function') ? loadCurrentLocation() : null;
       if(loc?.name) return loc.name+'의 물건들';
     }
     if(monsters.length) return monsters[0].name;
-    if(npcs.length) return npcs[Math.floor(Math.random()*npcs.length)].name;
+    if(localNpcs.length) return localNpcs[Math.floor(Math.random()*localNpcs.length)].name;
+    const npcsAny = (typeof loadNPCs==='function') ? (loadNPCs()||[]) : [];
+    if(npcsAny.length) return npcsAny[Math.floor(Math.random()*npcsAny.length)].name;
   }catch(e){}
   const fb = LOCAL_FLAVOR_FALLBACK_TARGETS[category] || ['상황'];
   return fb[Math.floor(Math.random()*fb.length)];
@@ -664,10 +687,23 @@ function _availableFlavorCategories(){
   try{
     const monsters = (typeof loadMonsters==='function') ? (loadMonsters()||[]).filter(m=>m.status==='alive') : [];
     if(monsters.length) return all;
-    const npcs = (typeof loadNPCs==='function') ? (loadNPCs()||[]) : [];
-    if(npcs.some(n=>n.relationship<30)) return all;
+    // [2026-10-23 버그 수정, 73번 섹션] 이 판정도 세이브 전체에서 "적대
+    // NPC가 어딘가에 하나라도 있는지"만 봐서, 지금 있는 장소와 무관한
+    // 먼 대륙의 적대 NPC 때문에 평화로운 장면에서도 공격/방어/위협/
+    // 도주 선택지가 뜰 수 있었다 — _localFlavorPickTarget/_turnPickTarget
+    // 과 같은 "지금 장소 우선" 원칙으로 통일.
+    const localNpcs = _npcsAtCurrentLocation();
+    if(localNpcs.some(n=>n.relationship<30)) return all;
   }catch(e){ return all; }
-  return all.filter(c => c!=='attack' && c!=='defend' && c!=='fear');
+  // [2026-10-23 버그 수정, 73번 섹션] 70-1번에서 'move'를 "마법/탐색처럼
+  // 위험 여부와 무관하게 자연스러운 행동"으로 분류해 항상 후보에 남겨
+  // 뒀는데, 재검토 결과 LOCAL_FLAVOR_TEMPLATES.move의 10개 문구 전부와
+  // moveRe(도망/탈출/도주/후퇴 등)가 가리키는 리터럴이 전부 "도망친다"
+  // 계열뿐이라 — 평화로운 장면에서도 "지체 없이 몸을 돌려 도망친다"가
+  // 선택지로 뜰 수 있던 실제 개연성 버그였다(마법은 치유·탐색은 조사처럼
+  // 평화로운 의미가 실제로 있어 그대로 둠 — move만 잘못 분류돼 있었음).
+  // attack/defend/fear와 같은 조건(실제 위협 존재)으로 옮긴다.
+  return all.filter(c => c!=='attack' && c!=='defend' && c!=='fear' && c!=='move');
 }
 
 // count개의 로컬 선택지를 서로 다른 카테고리에서 뽑아 반환한다 —
@@ -1070,6 +1106,17 @@ function _turnPickTarget(history){
     if(mentioned) return mentioned;
     const monsters = (typeof loadMonsters==='function') ? (loadMonsters()||[]).filter(m=>m.status==='alive') : [];
     if(monsters.length) return monsters[0].name;
+    // [2026-10-23 버그 수정, 73번 섹션] 선택지 쪽(_localFlavorPickTarget)
+    // 과 완전히 같은 버그가 서사 쪽에도 있었다 — "지금 있는 장소"를
+    // 전혀 안 보고 세이브 전체에서 적대 NPC/무작위 NPC를 고르다 보니,
+    // 전혀 다른 대륙에서 만난 NPC가 서사에 등장하거나(applyTurnRelationEffect
+    // 로 그 NPC의 호감도까지 바뀌는 사고 포함) 하는 경우가 있었다. 같은
+    // 공용 헬퍼(_npcsAtCurrentLocation)로 "이 장소의 NPC" 우선순위를
+    // 추가 — 없을 때만 기존 전체-세이브 폴백으로 내려간다.
+    const localNpcs = _npcsAtCurrentLocation();
+    const localHostile = localNpcs.find(n=>n.relationship<30);
+    if(localHostile) return localHostile.name;
+    if(localNpcs.length) return localNpcs[Math.floor(Math.random()*localNpcs.length)].name;
     const npcs = (typeof loadNPCs==='function') ? (loadNPCs()||[]) : [];
     const hostile = npcs.find(n=>n.relationship<30);
     if(hostile) return hostile.name;

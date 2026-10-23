@@ -2236,6 +2236,18 @@ function checkScreenTransition(){
     if(Math.abs(c-ex.gc)>2 || Math.abs(r-ex.gr)>2) continue;
     const atBorder = (ex.edge==='N'&&r<=1)||(ex.edge==='S'&&r>=screen.ROWS-2)||(ex.edge==='W'&&c<=1)||(ex.edge==='E'&&c>=screen.COLS-2);
     if(!atBorder) continue;
+    // [2026-10-23 신설, 74번 섹션] moveToLocation/travelByTransport와
+    // 같은 노예 구속 게이팅 — 걸어서 화면 경계를 넘는 것도 막는다(화면
+    // 안에서는 그대로 자유롭게 돌아다닐 수 있음, 경계를 넘는 순간만 막힘).
+    // 매 프레임 호출되는 함수라 토스트는 3초에 한 번만 띄운다.
+    if(S.character?.slaveBound){
+      const now = Date.now();
+      if(!RT._lastSlaveBoundToastAt || now-RT._lastSlaveBoundToastAt>3000){
+        showFieldToast('⛓️ 구속된 상태로는 이 장소를 떠날 수 없다 — 탈출을 시도하라');
+        RT._lastSlaveBoundToastAt = now;
+      }
+      continue;
+    }
     const tc = currentTransportConfig();
     if(ex.crossing==='water' && !(tc.range==='water'||tc.range==='sea'||tc.isAir)){
       showFieldToast('🌊 이 길은 물을 건너야 합니다 — 선박이나 비행 탑승물이 필요합니다');

@@ -2449,6 +2449,15 @@ export async function sendMsg(userMsg, isChoice=false){
     if(_turnCat==='move' && (_turnVk==='success'||_turnVk==='crit')){
       const FIELD_ENTRY_WINDOW_MS = 3*60*1000; // 3분 — 추격자 포기(2분)/습격 threatened(60초)와 같은 성격의 실제 벽시계 타이머
       S._fieldEntryWindowUntil = Date.now() + FIELD_ENTRY_WINDOW_MS;
+      // [2026-10-23 신설, 74번 섹션] 노예 구속 해제 — "탈출을 시도한다"
+      // (move 카테고리) 판정이 성공/대성공하면 바로 이 move-성공 분기에서
+      // 해제한다(필드 진입 게이팅과 똑같은 지점·같은 조건을 재사용, 새
+      // 판정 로직 없음).
+      if(S.character?.slaveBound){
+        S.character.slaveBound = false;
+        if(typeof saveCharacter==='function') saveCharacter(true);
+        setTimeout(()=>toast('⛓️‍💥 사슬을 끊고 자유를 되찾았다!', 3500), 300);
+      }
     }
     // [47번 섹션 ④] 호감도가 바뀌는 그 대상과 서사에 이름이 실리는 대상이
     // 각자 독립적으로 _turnPickTarget()을 다시 호출해 이론상 서로 다른

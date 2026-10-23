@@ -125,6 +125,9 @@ export function openTransportPanel(transportType){
 window.openTransportPanel = openTransportPanel;
 
 export function travelByTransport(locName, transportType){
+  // [2026-10-23 신설, 74번 섹션] moveToLocation(misc/053)과 동일한
+  // 노예 구속 게이팅 — 교통수단을 통한 이동도 똑같이 막는다.
+  if(S.character?.slaveBound){ toast('⛓️ 구속된 상태로는 이 장소를 떠날 수 없다 — 탈출을 시도하라', 2500); return; }
   const allLocs = (typeof window.getAllTravelableLocations==='function') ? window.getAllTravelableLocations() : window.getAllLocations();
   const loc = allLocs.find(l=>l.name===locName);
   if(!loc) return;

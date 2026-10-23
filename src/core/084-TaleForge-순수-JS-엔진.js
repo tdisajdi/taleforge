@@ -1440,6 +1440,18 @@ export function startGame(){
   // 거듭해도 startRole은 바뀌지 않아, 환생 시 "이 생은 방랑자로
   // 시작해서 어떤 경로로 파생됐는가"를 정확히 판별할 수 있다.
   char.startRole = char.role;
+  // [2026-10-23 신설, 74번 섹션] 노예 신분 "구속 상태" — 실사용자 지적:
+  // API 시절 _openingRankHints/ai-prompt/077의 "신분 강제 규칙 — 노예"는
+  // AI에게 "자유로운 모험을 하려면 먼저 탈출/해방이 서사적으로 성립해야
+  // 한다"고 명시했지만, 그건 AI 프롬프트일 뿐 실제로 플레이어를 묶어두는
+  // 하드한 게임 상태는 그때도 존재한 적이 없었다(조사로 확인). 사용자가
+  // "이동 제한 + 탈출 판정으로 해제" 방식을 승인 — 노예로 시작하면 이
+  // 플래그가 켜져 장소 간 이동(misc/053 moveToLocation·misc/054
+  // travelByTransport·world/320 checkScreenTransition 3곳에서 게이팅)
+  // 이 막히고, 이미 71-3번 섹션에서 만든 "탈출을 시도한다"(move 카테고리,
+  // IDENTITY_FLAVOR_TEMPLATES.move.slave) 선택지의 판정이 성공/대성공하면
+  // sendMsg의 기존 move 성공 분기(필드 진입 게이팅과 같은 지점)에서 해제.
+  if(char.socialRankId === 'slave') char.slaveBound = true;
   // [F-BUG 수정] 새 캐릭터를 생성해도 이전 캐릭터가 해금했던 직업
   // 스킬(taleforge-skills)이 그대로 남아있던 버그. doReincarnate(환생)
   // 로직은 clearSkills() 등을 명시적으로 호출해 정리하지만, 이 함수

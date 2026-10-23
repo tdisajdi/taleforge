@@ -42015,6 +42015,10 @@ ${lines.join("\n")}
   window.checkDangerLevelWarning = checkDangerLevelWarning;
   window.checkDangerLevelWarning = checkDangerLevelWarning;
   function moveToLocation(locName, opts) {
+    if (S.character?.slaveBound) {
+      toast("\u26D3\uFE0F \uAD6C\uC18D\uB41C \uC0C1\uD0DC\uB85C\uB294 \uC774 \uC7A5\uC18C\uB97C \uB5A0\uB0A0 \uC218 \uC5C6\uB2E4 \u2014 \uD0C8\uCD9C\uC744 \uC2DC\uB3C4\uD558\uB77C", 2500);
+      return;
+    }
     const skipArrivalMsg = !!(opts && opts.skipArrivalMsg);
     const allLocs = typeof window.getAllTravelableLocations === "function" ? window.getAllTravelableLocations() : window.getAllLocations();
     const loc = allLocs.find((l) => l.name === locName);
@@ -91301,6 +91305,11 @@ ${lines.join("\n")}
       if (_turnCat === "move" && (_turnVk === "success" || _turnVk === "crit")) {
         const FIELD_ENTRY_WINDOW_MS = 3 * 60 * 1e3;
         S._fieldEntryWindowUntil = Date.now() + FIELD_ENTRY_WINDOW_MS;
+        if (S.character?.slaveBound) {
+          S.character.slaveBound = false;
+          if (typeof saveCharacter === "function") saveCharacter(true);
+          setTimeout(() => toast("\u26D3\uFE0F\u200D\u{1F4A5} \uC0AC\uC2AC\uC744 \uB04A\uACE0 \uC790\uC720\uB97C \uB418\uCC3E\uC558\uB2E4!", 3500), 300);
+        }
       }
       const _turnTarget = _turnPickTarget(S.messages);
       S._pendingTurnNarrativeTarget = _turnTarget;
@@ -103618,6 +103627,10 @@ GS: {"soul_evolve_candidates":{"soulId":"${soul.id}","candidates":[{"name":"\uC9
   }
   window.openTransportPanel = openTransportPanel;
   function travelByTransport(locName, transportType) {
+    if (S.character?.slaveBound) {
+      toast("\u26D3\uFE0F \uAD6C\uC18D\uB41C \uC0C1\uD0DC\uB85C\uB294 \uC774 \uC7A5\uC18C\uB97C \uB5A0\uB0A0 \uC218 \uC5C6\uB2E4 \u2014 \uD0C8\uCD9C\uC744 \uC2DC\uB3C4\uD558\uB77C", 2500);
+      return;
+    }
     const allLocs = typeof window.getAllTravelableLocations === "function" ? window.getAllTravelableLocations() : window.getAllLocations();
     const loc = allLocs.find((l) => l.name === locName);
     if (!loc) return;
@@ -110638,6 +110651,7 @@ ${isCivilianJob ? `
     }
     const char = { ...window.setupChar, scenario: S.scenario?.era || "", customWorldSetting: S.scenario?.customWorldSetting || "" };
     char.startRole = char.role;
+    if (char.socialRankId === "slave") char.slaveBound = true;
     if (typeof clearSkills === "function") clearSkills();
     if (typeof clearSkillSP === "function") clearSkillSP();
     if (typeof clearJobSkills === "function") clearJobSkills();
@@ -137681,6 +137695,14 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
       if (Math.abs(c - ex.gc) > 2 || Math.abs(r - ex.gr) > 2) continue;
       const atBorder = ex.edge === "N" && r <= 1 || ex.edge === "S" && r >= screen.ROWS - 2 || ex.edge === "W" && c <= 1 || ex.edge === "E" && c >= screen.COLS - 2;
       if (!atBorder) continue;
+      if (S.character?.slaveBound) {
+        const now = Date.now();
+        if (!RT._lastSlaveBoundToastAt || now - RT._lastSlaveBoundToastAt > 3e3) {
+          showFieldToast("\u26D3\uFE0F \uAD6C\uC18D\uB41C \uC0C1\uD0DC\uB85C\uB294 \uC774 \uC7A5\uC18C\uB97C \uB5A0\uB0A0 \uC218 \uC5C6\uB2E4 \u2014 \uD0C8\uCD9C\uC744 \uC2DC\uB3C4\uD558\uB77C");
+          RT._lastSlaveBoundToastAt = now;
+        }
+        continue;
+      }
       const tc = currentTransportConfig();
       if (ex.crossing === "water" && !(tc.range === "water" || tc.range === "sea" || tc.isAir)) {
         showFieldToast("\u{1F30A} \uC774 \uAE38\uC740 \uBB3C\uC744 \uAC74\uB108\uC57C \uD569\uB2C8\uB2E4 \u2014 \uC120\uBC15\uC774\uB098 \uBE44\uD589 \uD0D1\uC2B9\uBB3C\uC774 \uD544\uC694\uD569\uB2C8\uB2E4");

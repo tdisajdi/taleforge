@@ -1092,6 +1092,9 @@ window.checkDangerLevelWarning = checkDangerLevelWarning;
 // pendingHint가 없으므로 즉시 서술해주는 게 맞다 — 그 경로에서만
 // sendMsg를 쏜다.
 export function moveToLocation(locName, opts){
+  // [2026-10-23 신설, 74번 섹션] 노예 구속 상태에서는 지금 있는 장소를
+  // 뜰 수 없다 — "탈출을 시도한다" 선택지로 먼저 풀어야 한다.
+  if(S.character?.slaveBound){ toast('⛓️ 구속된 상태로는 이 장소를 떠날 수 없다 — 탈출을 시도하라', 2500); return; }
   const skipArrivalMsg = !!(opts && opts.skipArrivalMsg);
   const allLocs = (typeof window.getAllTravelableLocations==='function') ? window.getAllTravelableLocations() : window.getAllLocations();
   const loc = allLocs.find(l=>l.name===locName);

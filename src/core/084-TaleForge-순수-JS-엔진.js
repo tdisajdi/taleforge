@@ -13,7 +13,7 @@ import { loadAffinity } from '../job/035-NEW-직업-조합-시너지-시스템.j
 import { discoverJob, findJob, getJobIdFromName, loadJobMemory, loadMainQuestState, saveMainQuestState } from '../job/042-직업-시스템-무한-파생-도감.js';
 import { renderSkillQuickSlot } from '../job/071-파트1-A-스킬-실제-발동-시스템.js';
 import { initRaceJobDissonance } from '../job/208-5-직업-시스템.js';
-import { _markDirty, clearSession, loadAtmosphere, loadMetaState, loadNPCs, loadSession, loadStatsSplit, saveCharacter, saveNPCs, saveScenario, saveStatsSplit } from '../misc/001-block0-preamble.js';
+import { _markDirty, clearNPCs, clearSession, loadAtmosphere, loadMetaState, loadNPCs, loadSession, loadStatsSplit, saveCharacter, saveNPCs, saveScenario, saveStatsSplit } from '../misc/001-block0-preamble.js';
 import { clearJobSkills, loadJobSkills, saveJobSkills } from '../misc/009-레벨업-스탯-포인트-배분-시스템.js';
 import { loadPermStatBonus, recordRacePlayed } from '../misc/015-시스템-1120.js';
 import { applyPartyBonus, getPlayerMaxHp, getPlayerMaxMp, loadParty } from '../misc/054-이동수단-시스템.js';
@@ -1455,6 +1455,15 @@ export function startGame(){
   if(typeof clearSkills==='function') clearSkills();
   if(typeof clearSkillSP==='function') clearSkillSP();
   if(typeof clearJobSkills==='function') clearJobSkills();
+  // [2026-10-23 버그 수정] 71-1/71-4번과 완전히 같은 버그 클래스 — NPC
+  // 저장소(misc/001의 NPC_KEY)도 clearNPCs()가 doReincarnate(환생)에서만
+  // 호출되고, 이 함수(startGame — "진짜 처음부터" 새 캐릭터 생성)는 전혀
+  // 비우지 않았다. 그래서 아래 "③ 시작 대륙 NPC 2명 자동 등록" 로직이
+  // loadNPCs()로 읍는 게 매번 과거 생의 낡은 NPC 목록 그대로였고, 완전히
+  // 새로 만든 캐릭터(1턴차, history 0)의 선택지/서사에도 한 번도 만난 적
+  // 없는 과거 NPC(예: 실존하지 않는 인물이 선택지에 등장) 이름이 그대로
+  // 섞여 나오는 원인이었다 — 실사용자 재현 신고로 발견.
+  clearNPCs();
   // 성격으로 말투 자동 결정
   if(!char.speechStyle && char.personality){
     const p = char.personality;

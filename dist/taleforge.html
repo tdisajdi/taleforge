@@ -110622,6 +110622,7 @@ ${isCivilianJob ? `
     if (typeof clearSkills === "function") clearSkills();
     if (typeof clearSkillSP === "function") clearSkillSP();
     if (typeof clearJobSkills === "function") clearJobSkills();
+    clearNPCs();
     if (!char.speechStyle && char.personality) {
       const p = char.personality;
       if (/냉정|차갑|무뚝|쿨|침착|냉혹/.test(p)) char.speechStyle = "\uCC28\uAC11\uACE0 \uAC04\uACB0\uD558\uAC8C \uB9D0\uD55C\uB2E4. \uBD88\uD544\uC694\uD55C \uAC10\uC815 \uD45C\uD604\uC744 \uD53C\uD55C\uB2E4.";

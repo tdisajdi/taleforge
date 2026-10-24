@@ -4,6 +4,7 @@ import { startAIDungeonExplore } from '../combat/257-renderMiniMap-던전-미니
 import { ARENA_RANKS, BULLETIN_INFO_POOL, BULLETIN_QUEST_POOL, BULLETIN_SIZE_CONFIG, INFERNAL_ARENA_OPPONENT, LOC_NPC_POOL, SCENARIO_NPC_EXTRA } from '../data/053-게시판-시스템.js';
 import { MATERIALS } from '../data/075-파트2-C-크래프팅-시스템.js';
 import { S } from '../data/084-TaleForge-순수-JS-엔진.js';
+import { canAccessLocationType } from '../core/084-TaleForge-순수-JS-엔진.js';
 import { calcTameSuccessChance, getAllLandLocations, getLocationCoord, loadHunterTameLog, loadHunterTrophies, saveHunterTameLog, saveHunterTrophies } from '../economy/255-상인-거래소-교역-지부-확장.js';
 import { getOrCreateEnemyMaterials, rollDynamicScavenge, rollEventReward, saveGold, saveInventory } from '../items/007-동적-아이템-생성-시스템-무제한-영구-캐시.js';
 import { saveSkillSP } from '../job/002-스킬-시스템.js';
@@ -1099,6 +1100,27 @@ export function moveToLocation(locName, opts){
   const allLocs = (typeof window.getAllTravelableLocations==='function') ? window.getAllTravelableLocations() : window.getAllLocations();
   const loc = allLocs.find(l=>l.name===locName);
   if(!loc) return;
+  // [2026-10-24 신설, 75번 섹션] 신분별 accessLocations(core/084)가
+  // 정의돼 있었는데 참조하는 장소 서브타입이 실제 장소 데이터에 전혀
+  // 없어 100% 미완성이던 공백 — 유일하게 실제 장소 desc("돈과 인맥이
+  // 있어야 출입 가능")와 정확히 일치하는 귀족 구역 골드게이트(data/042
+  // `accessZone:'noble_quarter'`)에만 좁게 연결한다(신전/지하세계는
+  // 이미 일반 플레이어 콘텐츠(65번 섹션 등)가 연결돼 있어 손대지
+  // 않음 — 아래 "범위 밖" 참고). 특권 신분이 아니면 입장료(뇌물)를
+  // 낼 수 있으면 자동으로 들여보내고, 없으면 막는다 — 영구 차단이
+  // 아니라 "돈이 있으면 늘 뚫을 수 있는" 사교계식 장벽.
+  if(loc.accessZone && typeof canAccessLocationType==='function' && !canAccessLocationType(loc.accessZone)){
+    const NOBLE_BRIBE = 200;
+    if((S.gold||0) >= NOBLE_BRIBE){
+      S.gold -= NOBLE_BRIBE;
+      if(typeof saveGold==='function') saveGold(S.gold);
+      if(typeof window.updateHeader==='function') window.updateHeader();
+      toast(`💰 문지기에게 ${NOBLE_BRIBE}G를 쥐여주고 "${loc.name}"에 들어섰다`, 3000);
+    } else {
+      toast(`🚫 "${loc.name}" — 돈과 인맥이 있어야 출입할 수 있다 (뇌물 ${NOBLE_BRIBE}G 필요, 보유 ${S.gold||0}G)`, 3000);
+      return;
+    }
+  }
   if(!checkDangerLevelWarning(loc)) return; // 경고 후 취소하면 이동하지 않음
   const prevLoc = loadCurrentLocation();
   window.currentLocation = loc;

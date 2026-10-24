@@ -1996,7 +1996,7 @@ export const LOCATION_DATA = {
       priceModifier: 0.9,
     },
     {
-      id:'loc_central_noble_district', name:'귀족 구역 골드게이트', icon:'👑', type:'special', continent:'central',
+      id:'loc_central_noble_district', name:'귀족 구역 골드게이트', icon:'👑', type:'special', continent:'central', accessZone:'noble_quarter',
       desc:'왕도 내 귀족 저택들이 밀집한 구역. 돈과 인맥이 있어야 출입이 가능하다.',
       triggerKeywords:['골드게이트','귀족 구역','귀족 거리','귀족 저택가','상류층 구역'],
       shops:[

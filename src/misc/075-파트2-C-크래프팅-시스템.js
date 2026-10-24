@@ -2,6 +2,7 @@
 // Auto-extracted from taleforge.html (original section banner preserved above).
 import { BLUEPRINT_SHOP, COOK_RECIPES, CRAFT_RECIPES, MATERIALS } from '../data/075-파트2-C-크래프팅-시스템.js';
 import { S } from '../data/084-TaleForge-순수-JS-엔진.js';
+import { getSocialRankMechanics } from '../core/084-TaleForge-순수-JS-엔진.js';
 import { ALCHEMY_MATERIALS, REMEDY_MATERIALS } from '../data/253-SVG-타일-렌더링-작물-단계별-애니메이션.js';
 import { CROP_DEFS } from '../data/252-상단Caravan-UI-용병단-UI와-대칭-구조.js';
 import { INTEL_MATERIALS, TALE_MATERIALS } from '../data/255-상인-거래소-교역-지부-확장.js';
@@ -84,11 +85,17 @@ export function buyBlueprint(bpId){
   if(!bp) return;
   if(hasBlueprint(bpId)){ toast('이미 보유한 설계도입니다'); return; }
   if(bp.price<=0){ toast('이 설계도는 구매 불가 — 특수 보상으로만 획득 가능합니다'); return; }
-  if(!S||!S.gold||S.gold<bp.price){ toast(`골드 부족 (필요: ${bp.price}G)`); return; }
-  S.gold -= bp.price;
+  // [2026-10-24 신설, 75번 섹션] 신분별 mechanics.craftDiscount(장인
+  // 신분 전용 0.15)가 정의돼 있었는데 코드 어디서도 안 읽히던 죽은
+  // 데이터 — 제작은 재료만 쓰고 골드를 안 써서(craftItem) 할인이
+  // 적용될 실제 가격 지점이 설계도 구매뿐이라 여기 연결한다.
+  const mech = (typeof getSocialRankMechanics==='function') ? getSocialRankMechanics() : null;
+  const price = Math.max(0, Math.round(bp.price * (1 - (mech?.craftDiscount||0))));
+  if(!S||!S.gold||S.gold<price){ toast(`골드 부족 (필요: ${price}G)`); return; }
+  S.gold -= price;
   saveGold && saveGold(S.gold);
   unlockBlueprint(bpId);
-  toast(`📜 구매 완료! ${bp.name} (${bp.price}G 소모)`, 3000);
+  toast(`📜 구매 완료! ${bp.name} (${price}G 소모${mech?.craftDiscount?` — 장인 할인 ${Math.round(mech.craftDiscount*100)}%`:''})`, 3000);
   if(document.getElementById('p-craft')?.classList.contains('open')) renderCraftPanel();
   if(document.getElementById('p-shop')?.classList.contains('open')) renderShop&&renderShop();
 }

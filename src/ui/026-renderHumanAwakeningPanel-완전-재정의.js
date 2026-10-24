@@ -7,7 +7,7 @@ import { DEMON_PURIFY_METHODS, DEMON_SIN_GAIN } from '../data/020-101130번-환�
 import { AWAKENING_POWER_SKILLS, HUMAN_DEED_GAIN, HUMAN_FATE_PATHS, NPC_INSPIRE_STAGES } from '../data/025-통합-패널-공허-확장-탭-시스템.js';
 import { CORRUPTION_POWER_SKILLS, DOMINATION_METHODS, LEGACY_ACTIONS, LEGACY_PATHS, NPC_CORRUPTION_STAGES, NPC_CORRUPT_METHODS, STIGMA_TYPES, THRALL_RANKS, THRALL_RANK_DEFAULT, THRALL_RANK_TABLES } from '../data/026-renderHumanAwakeningPanel-완전-재정의.js';
 import { S } from '../data/084-TaleForge-순수-JS-엔진.js';
-import { registerDynNpcFromText } from '../items/007-동적-아이템-생성-시스템-무제한-영구-캐시.js';
+import { registerDynNpcFromText, saveGold } from '../items/007-동적-아이템-생성-시스템-무제한-영구-캐시.js';
 import { loadSkills, saveSkills } from '../job/002-스킬-시스템.js';
 import { loadPlayerLevel } from '../job/008-클리어-보상-시스템-시나리오-클리어-시-영구-아이템스킬.js';
 import { loadNPCs, saveNPCs } from '../misc/001-block0-preamble.js';
@@ -864,17 +864,28 @@ export const loadSocialRankLog  = () => { try { return JSON.parse(lsGet(SOCIAL_R
 
 export const saveSocialRankLog  = (d) => { try { lsSet(SOCIAL_RANK_LOG_KEY, JSON.stringify(d)); } catch(e) {} };
 
-export function changeSocialRank(newRankId, reason) {
+export function changeSocialRank(newRankId, reason, cost) {
   const c = S.character;
-  if (!c) return;
+  if (!c) return false;
   const oldRank = SOCIAL_RANKS.find(r => r.id === c.socialRankId);
   const newRank = SOCIAL_RANKS.find(r => r.id === newRankId);
-  if (!newRank) return;
+  if (!newRank) return false;
 
   // 확인 팝업
   const dir = newRank.tier > (oldRank?.tier || 1) ? '⬆️ 상승' : newRank.tier < (oldRank?.tier || 1) ? '⬇️ 하락' : '↔️ 변경';
-  const confirmMsg = `👑 신분 ${dir}\n\n${oldRank?.icon||''} ${oldRank?.name||'현재'} → ${newRank.icon} ${newRank.name}\n사유: ${reason||'직접 설정'}\n\n정말 변경하겠습니까?\n(AI 서사에 즉시 반영됩니다)`;
-  if (!confirm(confirmMsg)) return;
+  // [2026-10-24 수정, 75번 섹션] "AI 서사" 표현 제거(🔑 표준 규칙 —
+  // 이 프로젝트에서 "AI"라는 단어 자체를 쓰지 않는다) + cost(승급
+  // 게이트 골드)가 있으면 확인창에 비용을 명시.
+  const costLine = cost ? `\n비용: ${cost}G` : '';
+  const confirmMsg = `👑 신분 ${dir}\n\n${oldRank?.icon||''} ${oldRank?.name||'현재'} → ${newRank.icon} ${newRank.name}\n사유: ${reason||'직접 설정'}${costLine}\n\n정말 변경하겠습니까?\n(서사에 즉시 반영됩니다)`;
+  if (!confirm(confirmMsg)) return false;
+
+  if(cost){
+    if((S.gold||0) < cost){ toast(`⚠️ ${cost}G 필요 (보유 ${S.gold||0}G)`, 2500); return false; }
+    S.gold -= cost;
+    if(typeof saveGold==='function') saveGold(S.gold);
+    if(typeof window.updateHeader==='function') window.updateHeader();
+  }
 
   // 이전 신분 스탯 제거
   if (oldRank) {
@@ -910,10 +921,42 @@ export function changeSocialRank(newRankId, reason) {
   toastHTML(`👑 신분 ${esc(dir)}! ${esc(oldRank?.icon||'')} ${esc(oldRank?.name||'?')} → ${typeof getEntityIconHTML==='function'?getEntityIconHTML(newRank,{size:14}):(newRank.icon)} ${esc(newRank.name)}`, 4000);
 
   renderSocialRankPanel();
+  return true;
 }
 window.changeSocialRank = changeSocialRank;
 
 window.changeSocialRank = changeSocialRank;
+
+// [2026-10-24 신설, 75번 섹션] 신분 변경 패널이 비용·조건 전혀 없는
+// "버튼 클릭 한 번짜리 자유 변경"이라 "신분상승의 의미가 없다"는
+// 실사용자 지적 — 몰락/강등/파산 등 불운·자발적 하락 이벤트(레이블
+// 키워드로 식별, 새 분류 체계를 지어내지 않고 RANK_EVENTS 자체의
+// 기존 한글 설명을 그대로 재사용)는 그대로 무료로 두고, 그 외
+// "승급"에 해당하는 이벤트만 목표 신분의 SOCIAL_RANKS 배열 인덱스
+// (getSocialRankUnlockReq가 이미 쓰는 같은 난이도 축)에 비례한
+// 골드+레벨 게이트를 추가한다.
+const FREE_RANK_EVENT_RE = /몰락|강등|폐위|실각|붕괴|파산|추방|지명수배|전쟁 포로|빚|범죄에 가담|은퇴/;
+export function _rankEventGate(toRankId, label){
+  if(FREE_RANK_EVENT_RE.test(label||'')) return null;
+  const idx = SOCIAL_RANKS.findIndex(r => r.id === toRankId);
+  if(idx < 0) return null;
+  return { gold: 250*(idx+1), minLevel: 2*(idx+1)+3 };
+}
+window._rankEventGate = _rankEventGate;
+
+export function attemptRankChange(newRankId, reason){
+  const gate = _rankEventGate(newRankId, reason);
+  if(gate){
+    const lv = (typeof loadPlayerLevel==='function') ? (loadPlayerLevel()||1) : 1;
+    if(lv < gate.minLevel){ toast(`⚠️ 레벨 ${gate.minLevel} 필요 (현재 ${lv})`, 2500); return; }
+    if((S.gold||0) < gate.gold){ toast(`⚠️ ${gate.gold}G 필요 (보유 ${S.gold||0}G)`, 2500); return; }
+  }
+  // 골드 차감은 changeSocialRank 내부의 confirm() 통과 이후에만
+  // 일어나야 한다(여기서 먼저 차감하면 사용자가 확인창에서 취소해도
+  // 골드가 사라지는 사고가 난다) — cost만 넘기고 실제 차감은 그쪽에서.
+  changeSocialRank(newRankId, reason, gate?.gold||0);
+}
+window.attemptRankChange = attemptRankChange;
 
 export function renderSocialRankPanel() {
   const body = document.getElementById('pb-social-rank');
@@ -1047,7 +1090,7 @@ export function renderSocialRankPanel() {
     <!-- ④ 신분 변경 이벤트 -->
     <div style="padding:10px 12px;border-bottom:1px solid #1a1000">
       <div style="font-family:'Cinzel',serif;font-size:9px;color:${color};letter-spacing:1px;margin-bottom:6px">── 신분 변경 ──</div>
-      <div style="font-size:9px;color:#806040;margin-bottom:8px;line-height:1.5">⚠️ 신분 변경은 AI 서사에 즉시 반영됩니다. 게임 중 실제로 신분이 바뀌는 사건이 있었을 때 사용하세요.</div>
+      <div style="font-size:9px;color:#806040;margin-bottom:8px;line-height:1.5">⚠️ 신분 변경은 서사에 즉시 반영됩니다. 게임 중 실제로 신분이 바뀌는 사건이 있었을 때 사용하세요. 승급에는 골드·레벨 조건이 있습니다(몰락·강등 등 불운한 변화는 무료).</div>
       ${RANK_EVENTS.map(ev => {
         // 현재 신분에서 가능한 옵션만 필터
         const available = ev.options.filter(opt =>
@@ -1061,9 +1104,13 @@ export function renderSocialRankPanel() {
             if (!toRank) return '';
             const isUp = toRank.tier > curRank.tier;
             const isDown = toRank.tier < curRank.tier;
-            return `<button onclick="changeSocialRank('${opt.to}','${esc(ev.label)}')"
-              style="width:100%;padding:7px 10px;background:#180e00;border:1px solid ${toRank.color}55;color:${toRank.color};font-size:9px;cursor:pointer;font-family:'Crimson Text',serif;text-align:left;border-radius:2px;margin-bottom:3px">
-              ${isUp?'⬆️ ':isDown?'⬇️ ':'↔️ '}${toRank.icon} ${toRank.name} — ${esc(opt.label)}
+            const gate = _rankEventGate(opt.to, ev.label);
+            const plLv = (typeof loadPlayerLevel==='function') ? (loadPlayerLevel()||1) : 1;
+            const canAfford = !gate || ((S.gold||0) >= gate.gold && plLv >= gate.minLevel);
+            const gateLabel = gate ? ` <span style="color:${canAfford?'#80b040':'#c05050'}">(💰${gate.gold}G · Lv.${gate.minLevel}+)</span>` : '';
+            return `<button onclick="attemptRankChange('${opt.to}','${esc(ev.label)}')" ${canAfford?'':'disabled'}
+              style="width:100%;padding:7px 10px;background:#180e00;border:1px solid ${toRank.color}55;color:${toRank.color};font-size:9px;cursor:${canAfford?'pointer':'not-allowed'};font-family:'Crimson Text',serif;text-align:left;border-radius:2px;margin-bottom:3px;${canAfford?'':'opacity:0.45'}">
+              ${isUp?'⬆️ ':isDown?'⬇️ ':'↔️ '}${toRank.icon} ${toRank.name} — ${esc(opt.label)}${gateLabel}
             </button>`;
           }).join('')}
         </div>`;

@@ -6,6 +6,7 @@ import { CROP_DEFS, FARM_MANAGER_NAMES, FARM_WORKER_NAMES, LOCATION_FARM_SLOTS }
 import { saveGold, saveInventory } from '../items/007-동적-아이템-생성-시스템-무제한-영구-캐시.js';
 import { updateReputation } from '../misc/054-이동수단-시스템.js';
 import { loadMaterials, saveMaterials } from '../misc/075-파트2-C-크래프팅-시스템.js';
+import { getSocialRankMechanics } from '../core/084-TaleForge-순수-JS-엔진.js';
 import { executeContract, getGarrisonDefense, grantMercBandXp, loadMercGarrisons, renderContractsPanel } from '../misc/251-통합-처리-함수-매-AI-응답-후-호출.js';
 import { closeFarmSeedPicker, renderFarmPanel } from '../misc/253-SVG-타일-렌더링-작물-단계별-애니메이션.js';
 import { getDemesneSeason, loadDemesne } from '../race/260-수인족-패널-렌더.js';
@@ -139,10 +140,12 @@ export function hireFarmWorker(farmId){
 window.hireFarmWorker = hireFarmWorker;
 
 export function getFarmTaxRate(){
-  const rankId = S.character?.socialRankId;
-  if(rankId==='serf') return 0.35;
-  if(rankId==='slave') return 0.6;
-  return 0;
+  // [2026-10-24 신설, 75번 섹션] 기존엔 serf/slave의 세율을 여기 직접
+  // 하드코딩해, SOCIAL_RANKS(core/084)에 이미 정의돼 있는 같은 값
+  // (mechanics.farmTaxRate)과 별개의 평행 로직이었다 — 진짜 소스
+  // 하나로 통합(수치는 그대로, 0.35/0.6 변화 없음).
+  const mech = (typeof getSocialRankMechanics==='function') ? getSocialRankMechanics() : null;
+  return mech?.farmTaxRate || 0;
 }
 window.getFarmTaxRate = getFarmTaxRate;
 

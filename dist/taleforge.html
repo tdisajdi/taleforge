@@ -6977,6 +6977,7 @@ body.light-mode .send-btn{background:linear-gradient(135deg,#d4a050,#c0903a)}
         icon: "\u{1F451}",
         type: "special",
         continent: "central",
+        accessZone: "noble_quarter",
         desc: "\uC655\uB3C4 \uB0B4 \uADC0\uC871 \uC800\uD0DD\uB4E4\uC774 \uBC00\uC9D1\uD55C \uAD6C\uC5ED. \uB3C8\uACFC \uC778\uB9E5\uC774 \uC788\uC5B4\uC57C \uCD9C\uC785\uC774 \uAC00\uB2A5\uD558\uB2E4.",
         triggerKeywords: ["\uACE8\uB4DC\uAC8C\uC774\uD2B8", "\uADC0\uC871 \uAD6C\uC5ED", "\uADC0\uC871 \uAC70\uB9AC", "\uADC0\uC871 \uC800\uD0DD\uAC00", "\uC0C1\uB958\uCE35 \uAD6C\uC5ED"],
         shops: [
@@ -42023,6 +42024,18 @@ ${lines.join("\n")}
     const allLocs = typeof window.getAllTravelableLocations === "function" ? window.getAllTravelableLocations() : window.getAllLocations();
     const loc = allLocs.find((l) => l.name === locName);
     if (!loc) return;
+    if (loc.accessZone && typeof canAccessLocationType === "function" && !canAccessLocationType(loc.accessZone)) {
+      const NOBLE_BRIBE = 200;
+      if ((S.gold || 0) >= NOBLE_BRIBE) {
+        S.gold -= NOBLE_BRIBE;
+        if (typeof saveGold === "function") saveGold(S.gold);
+        if (typeof window.updateHeader === "function") window.updateHeader();
+        toast(`\u{1F4B0} \uBB38\uC9C0\uAE30\uC5D0\uAC8C ${NOBLE_BRIBE}G\uB97C \uC950\uC5EC\uC8FC\uACE0 "${loc.name}"\uC5D0 \uB4E4\uC5B4\uC130\uB2E4`, 3e3);
+      } else {
+        toast(`\u{1F6AB} "${loc.name}" \u2014 \uB3C8\uACFC \uC778\uB9E5\uC774 \uC788\uC5B4\uC57C \uCD9C\uC785\uD560 \uC218 \uC788\uB2E4 (\uB1CC\uBB3C ${NOBLE_BRIBE}G \uD544\uC694, \uBCF4\uC720 ${S.gold || 0}G)`, 3e3);
+        return;
+      }
+    }
     if (!checkDangerLevelWarning(loc)) return;
     const prevLoc = loadCurrentLocation();
     window.currentLocation = loc;
@@ -66106,21 +66119,32 @@ ${lines}`;
     } catch (e) {
     }
   };
-  function changeSocialRank(newRankId, reason) {
+  function changeSocialRank(newRankId, reason, cost) {
     const c = S.character;
-    if (!c) return;
+    if (!c) return false;
     const oldRank = SOCIAL_RANKS.find((r) => r.id === c.socialRankId);
     const newRank = SOCIAL_RANKS.find((r) => r.id === newRankId);
-    if (!newRank) return;
+    if (!newRank) return false;
     const dir = newRank.tier > (oldRank?.tier || 1) ? "\u2B06\uFE0F \uC0C1\uC2B9" : newRank.tier < (oldRank?.tier || 1) ? "\u2B07\uFE0F \uD558\uB77D" : "\u2194\uFE0F \uBCC0\uACBD";
+    const costLine = cost ? `
+\uBE44\uC6A9: ${cost}G` : "";
     const confirmMsg = `\u{1F451} \uC2E0\uBD84 ${dir}
 
 ${oldRank?.icon || ""} ${oldRank?.name || "\uD604\uC7AC"} \u2192 ${newRank.icon} ${newRank.name}
-\uC0AC\uC720: ${reason || "\uC9C1\uC811 \uC124\uC815"}
+\uC0AC\uC720: ${reason || "\uC9C1\uC811 \uC124\uC815"}${costLine}
 
 \uC815\uB9D0 \uBCC0\uACBD\uD558\uACA0\uC2B5\uB2C8\uAE4C?
-(AI \uC11C\uC0AC\uC5D0 \uC989\uC2DC \uBC18\uC601\uB429\uB2C8\uB2E4)`;
-    if (!confirm(confirmMsg)) return;
+(\uC11C\uC0AC\uC5D0 \uC989\uC2DC \uBC18\uC601\uB429\uB2C8\uB2E4)`;
+    if (!confirm(confirmMsg)) return false;
+    if (cost) {
+      if ((S.gold || 0) < cost) {
+        toast(`\u26A0\uFE0F ${cost}G \uD544\uC694 (\uBCF4\uC720 ${S.gold || 0}G)`, 2500);
+        return false;
+      }
+      S.gold -= cost;
+      if (typeof saveGold === "function") saveGold(S.gold);
+      if (typeof window.updateHeader === "function") window.updateHeader();
+    }
     if (oldRank) {
       Object.entries(oldRank.startStat || {}).forEach(([k, v]) => {
         if (S.stats[k] !== void 0) S.stats[k] = Math.max(0, S.stats[k] - v);
@@ -66148,9 +66172,34 @@ ${oldRank?.icon || ""} ${oldRank?.name || "\uD604\uC7AC"} \u2192 ${newRank.icon}
     saveSocialRankLog(log);
     toastHTML(`\u{1F451} \uC2E0\uBD84 ${esc2(dir)}! ${esc2(oldRank?.icon || "")} ${esc2(oldRank?.name || "?")} \u2192 ${typeof getEntityIconHTML === "function" ? getEntityIconHTML(newRank, { size: 14 }) : newRank.icon} ${esc2(newRank.name)}`, 4e3);
     renderSocialRankPanel();
+    return true;
   }
   window.changeSocialRank = changeSocialRank;
   window.changeSocialRank = changeSocialRank;
+  var FREE_RANK_EVENT_RE = /몰락|강등|폐위|실각|붕괴|파산|추방|지명수배|전쟁 포로|빚|범죄에 가담|은퇴/;
+  function _rankEventGate(toRankId, label) {
+    if (FREE_RANK_EVENT_RE.test(label || "")) return null;
+    const idx = SOCIAL_RANKS.findIndex((r) => r.id === toRankId);
+    if (idx < 0) return null;
+    return { gold: 250 * (idx + 1), minLevel: 2 * (idx + 1) + 3 };
+  }
+  window._rankEventGate = _rankEventGate;
+  function attemptRankChange(newRankId, reason) {
+    const gate = _rankEventGate(newRankId, reason);
+    if (gate) {
+      const lv = typeof loadPlayerLevel === "function" ? loadPlayerLevel() || 1 : 1;
+      if (lv < gate.minLevel) {
+        toast(`\u26A0\uFE0F \uB808\uBCA8 ${gate.minLevel} \uD544\uC694 (\uD604\uC7AC ${lv})`, 2500);
+        return;
+      }
+      if ((S.gold || 0) < gate.gold) {
+        toast(`\u26A0\uFE0F ${gate.gold}G \uD544\uC694 (\uBCF4\uC720 ${S.gold || 0}G)`, 2500);
+        return;
+      }
+    }
+    changeSocialRank(newRankId, reason, gate?.gold || 0);
+  }
+  window.attemptRankChange = attemptRankChange;
   function renderSocialRankPanel() {
     const body = document.getElementById("pb-social-rank");
     if (!body) return;
@@ -66309,7 +66358,7 @@ ${oldRank?.icon || ""} ${oldRank?.name || "\uD604\uC7AC"} \u2192 ${newRank.icon}
     <!-- \u2463 \uC2E0\uBD84 \uBCC0\uACBD \uC774\uBCA4\uD2B8 -->
     <div style="padding:10px 12px;border-bottom:1px solid #1a1000">
       <div style="font-family:'Cinzel',serif;font-size:9px;color:${color};letter-spacing:1px;margin-bottom:6px">\u2500\u2500 \uC2E0\uBD84 \uBCC0\uACBD \u2500\u2500</div>
-      <div style="font-size:9px;color:#806040;margin-bottom:8px;line-height:1.5">\u26A0\uFE0F \uC2E0\uBD84 \uBCC0\uACBD\uC740 AI \uC11C\uC0AC\uC5D0 \uC989\uC2DC \uBC18\uC601\uB429\uB2C8\uB2E4. \uAC8C\uC784 \uC911 \uC2E4\uC81C\uB85C \uC2E0\uBD84\uC774 \uBC14\uB00C\uB294 \uC0AC\uAC74\uC774 \uC788\uC5C8\uC744 \uB54C \uC0AC\uC6A9\uD558\uC138\uC694.</div>
+      <div style="font-size:9px;color:#806040;margin-bottom:8px;line-height:1.5">\u26A0\uFE0F \uC2E0\uBD84 \uBCC0\uACBD\uC740 \uC11C\uC0AC\uC5D0 \uC989\uC2DC \uBC18\uC601\uB429\uB2C8\uB2E4. \uAC8C\uC784 \uC911 \uC2E4\uC81C\uB85C \uC2E0\uBD84\uC774 \uBC14\uB00C\uB294 \uC0AC\uAC74\uC774 \uC788\uC5C8\uC744 \uB54C \uC0AC\uC6A9\uD558\uC138\uC694. \uC2B9\uAE09\uC5D0\uB294 \uACE8\uB4DC\xB7\uB808\uBCA8 \uC870\uAC74\uC774 \uC788\uC2B5\uB2C8\uB2E4(\uBAB0\uB77D\xB7\uAC15\uB4F1 \uB4F1 \uBD88\uC6B4\uD55C \uBCC0\uD654\uB294 \uBB34\uB8CC).</div>
       ${RANK_EVENTS.map((ev) => {
       const available = ev.options.filter(
         (opt) => opt.from.includes(curRankId) || opt.from.includes("any")
@@ -66322,9 +66371,13 @@ ${oldRank?.icon || ""} ${oldRank?.name || "\uD604\uC7AC"} \u2192 ${newRank.icon}
         if (!toRank) return "";
         const isUp = toRank.tier > curRank.tier;
         const isDown = toRank.tier < curRank.tier;
-        return `<button onclick="changeSocialRank('${opt.to}','${esc2(ev.label)}')"
-              style="width:100%;padding:7px 10px;background:#180e00;border:1px solid ${toRank.color}55;color:${toRank.color};font-size:9px;cursor:pointer;font-family:'Crimson Text',serif;text-align:left;border-radius:2px;margin-bottom:3px">
-              ${isUp ? "\u2B06\uFE0F " : isDown ? "\u2B07\uFE0F " : "\u2194\uFE0F "}${toRank.icon} ${toRank.name} \u2014 ${esc2(opt.label)}
+        const gate = _rankEventGate(opt.to, ev.label);
+        const plLv = typeof loadPlayerLevel === "function" ? loadPlayerLevel() || 1 : 1;
+        const canAfford = !gate || (S.gold || 0) >= gate.gold && plLv >= gate.minLevel;
+        const gateLabel = gate ? ` <span style="color:${canAfford ? "#80b040" : "#c05050"}">(\u{1F4B0}${gate.gold}G \xB7 Lv.${gate.minLevel}+)</span>` : "";
+        return `<button onclick="attemptRankChange('${opt.to}','${esc2(ev.label)}')" ${canAfford ? "" : "disabled"}
+              style="width:100%;padding:7px 10px;background:#180e00;border:1px solid ${toRank.color}55;color:${toRank.color};font-size:9px;cursor:${canAfford ? "pointer" : "not-allowed"};font-family:'Crimson Text',serif;text-align:left;border-radius:2px;margin-bottom:3px;${canAfford ? "" : "opacity:0.45"}">
+              ${isUp ? "\u2B06\uFE0F " : isDown ? "\u2B07\uFE0F " : "\u2194\uFE0F "}${toRank.icon} ${toRank.name} \u2014 ${esc2(opt.label)}${gateLabel}
             </button>`;
       }).join("")}
         </div>`;
@@ -91307,8 +91360,22 @@ ${lines.join("\n")}
         S._fieldEntryWindowUntil = Date.now() + FIELD_ENTRY_WINDOW_MS;
         if (S.character?.slaveBound) {
           S.character.slaveBound = false;
+          S.character.socialRankId = "vagrant";
+          S.character.socialRank = SOCIAL_RANKS.find((r) => r.id === "vagrant")?.name || "\uBD80\uB791\uC790";
+          if (typeof updateCharHeader === "function") updateCharHeader();
           if (typeof saveCharacter === "function") saveCharacter(true);
-          setTimeout(() => toast("\u26D3\uFE0F\u200D\u{1F4A5} \uC0AC\uC2AC\uC744 \uB04A\uACE0 \uC790\uC720\uB97C \uB418\uCC3E\uC558\uB2E4!", 3500), 300);
+          setTimeout(() => toast("\u26D3\uFE0F\u200D\u{1F4A5} \uC0AC\uC2AC\uC744 \uB04A\uACE0 \uC790\uC720\uB97C \uB418\uCC3E\uC558\uB2E4! \uC2E0\uBD84: \uBD80\uB791\uC790", 3500), 300);
+        }
+      } else if (_turnCat === "move" && (_turnVk === "fail" || _turnVk === "critfail") && S.character?.slaveBound) {
+        const _slaveArrestMech = typeof getSocialRankMechanics === "function" ? getSocialRankMechanics() : {};
+        if (_slaveArrestMech.canBeArrestedFreely && Math.random() < 0.5) {
+          const _fine = Math.min(S.gold || 0, 10 + Math.floor(Math.random() * 20));
+          if (_fine > 0) {
+            S.gold -= _fine;
+            if (typeof saveGold === "function") saveGold(S.gold);
+            if (typeof window.updateHeader === "function") window.updateHeader();
+          }
+          setTimeout(() => toast(`\u26D3\uFE0F \uD0C8\uCD9C\uC774 \uBC1C\uAC01\uB418\uC5B4 \uB9E4\uC9C8\uC744 \uB2F9\uD558\uACE0 ${_fine}G\uB97C \uBAB0\uC218\uB2F9\uD588\uB2E4`, 3500), 300);
         }
       }
       const _turnTarget = _turnPickTarget(S.messages);
@@ -93260,8 +93327,8 @@ ${lines.join("\n")}
     if (jail.jailed) return;
     if (S._inCombat) return;
     if (S._guardEncounterActive) return;
-    const rankId = S.character.socialRankId || "commoner";
-    if (rankId !== "outlaw") return;
+    const _arrestMech = typeof getSocialRankMechanics === "function" ? getSocialRankMechanics() : {};
+    if (!_arrestMech.isWanted) return;
     const loc = typeof loadCurrentLocation === "function" ? loadCurrentLocation() : null;
     const isPublicPlace = loc && ["city", "capital", "town", "port"].includes(loc.type);
     if (!isPublicPlace) return;
@@ -104926,10 +104993,8 @@ GS: {"soul_evolve_candidates":{"soulId":"${soul.id}","candidates":[{"name":"\uC9
   }
   window.hireFarmWorker = hireFarmWorker;
   function getFarmTaxRate() {
-    const rankId = S.character?.socialRankId;
-    if (rankId === "serf") return 0.35;
-    if (rankId === "slave") return 0.6;
-    return 0;
+    const mech = typeof getSocialRankMechanics === "function" ? getSocialRankMechanics() : null;
+    return mech?.farmTaxRate || 0;
   }
   window.getFarmTaxRate = getFarmTaxRate;
   function getCropPrice(cropId) {
@@ -105400,14 +105465,16 @@ GS: {"soul_evolve_candidates":{"soulId":"${soul.id}","candidates":[{"name":"\uC9
       toast("\uC774 \uC124\uACC4\uB3C4\uB294 \uAD6C\uB9E4 \uBD88\uAC00 \u2014 \uD2B9\uC218 \uBCF4\uC0C1\uC73C\uB85C\uB9CC \uD68D\uB4DD \uAC00\uB2A5\uD569\uB2C8\uB2E4");
       return;
     }
-    if (!S || !S.gold || S.gold < bp.price) {
-      toast(`\uACE8\uB4DC \uBD80\uC871 (\uD544\uC694: ${bp.price}G)`);
+    const mech = typeof getSocialRankMechanics === "function" ? getSocialRankMechanics() : null;
+    const price = Math.max(0, Math.round(bp.price * (1 - (mech?.craftDiscount || 0))));
+    if (!S || !S.gold || S.gold < price) {
+      toast(`\uACE8\uB4DC \uBD80\uC871 (\uD544\uC694: ${price}G)`);
       return;
     }
-    S.gold -= bp.price;
+    S.gold -= price;
     saveGold && saveGold(S.gold);
     unlockBlueprint(bpId);
-    toast(`\u{1F4DC} \uAD6C\uB9E4 \uC644\uB8CC! ${bp.name} (${bp.price}G \uC18C\uBAA8)`, 3e3);
+    toast(`\u{1F4DC} \uAD6C\uB9E4 \uC644\uB8CC! ${bp.name} (${price}G \uC18C\uBAA8${mech?.craftDiscount ? ` \u2014 \uC7A5\uC778 \uD560\uC778 ${Math.round(mech.craftDiscount * 100)}%` : ""})`, 3e3);
     if (document.getElementById("p-craft")?.classList.contains("open")) renderCraftPanel();
     if (document.getElementById("p-shop")?.classList.contains("open")) renderShop && renderShop();
   }
@@ -109477,7 +109544,7 @@ ${isCivilianJob ? `
       privilege: "\uC5C6\uC74C. \uBB34\uAE30 \uC18C\uC9C0 \uBD88\uBC95. \uACC4\uC57D\xB7\uC18C\uC720 \uBD88\uAC00.",
       changeUp: "\uD0C8\uCD9C\xB7\uC8FC\uC778\uC758 \uD574\uBC29\xB7\uD0C1\uC6D4\uD55C \uACF5\uD6C8\uC73C\uB85C \uC790\uC720\uBBFC \uC2E0\uBD84 \uD68D\uB4DD.",
       special: "\uC5B4\uB5A4 \uC2E0\uBD84\uC73C\uB85C\uB3C4 \uC0C1\uC2B9 \uAC00\uB2A5. \uBC11\uBC14\uB2E5 \uCD9C\uC2E0\uC774\uB77C \uC0C1\uC2B9 \uC2DC \uC2A4\uD1A0\uB9AC \uC784\uD329\uD2B8 \uCD5C\uB300.",
-      mechanics: { priceMultiplier: 1.3, arrestImmunity: 0, jailSentenceMod: 1.5, accessLocations: [], quotaFree: false, canOwnProperty: false, canBeArrestedFreely: true }
+      mechanics: { priceMultiplier: 1.3, arrestImmunity: 0, jailSentenceMod: 1.5, accessLocations: [], quotaFree: false, canOwnProperty: false, canBeArrestedFreely: true, farmTaxRate: 0.6 }
     },
     {
       id: "vagrant",
@@ -109511,7 +109578,7 @@ ${isCivilianJob ? `
       privilege: "\uACBD\uC791\uC9C0 \uC0AC\uC6A9\uAD8C. \uC601\uC8FC\uC758 \uBCF4\uD638\uB97C \uBA85\uBAA9\uC0C1 \uBC1B\uC74C.",
       changeUp: "\uB3C4\uC8FC \uC131\uACF5, \uC601\uC8FC\uC758 \uD574\uBC29, \uB3C4\uC2DC\uC5D0\uC11C 1\uB144 \uC774\uC0C1 \uC0DD\uD65C \uC2DC \uC790\uC720\uBBFC \uC778\uC815.",
       special: "\uB18D\uC5C5\xB7\uC0DD\uC874 \uD2B9\uD654. \uC790\uC5F0 \uC9C0\uD615 \uC774\uB3D9 \uC2DC \uBD88\uC774\uC775 \uC5C6\uC74C.",
-      mechanics: { priceMultiplier: 1.15, arrestImmunity: 0, jailSentenceMod: 1.1, accessLocations: [], quotaFree: false, canOwnProperty: false, canBeArrestedFreely: false }
+      mechanics: { priceMultiplier: 1.15, arrestImmunity: 0, jailSentenceMod: 1.1, accessLocations: [], quotaFree: false, canOwnProperty: false, canBeArrestedFreely: false, farmTaxRate: 0.35 }
     },
     {
       id: "outlaw",
@@ -135667,6 +135734,11 @@ GS: {"guild_join":"${guildId}"} \uCD9C\uB825.`;
   function buyHouse() {
     if (loadHouse()) {
       toast("\uC774\uBBF8 \uC9D1\uC744 \uC18C\uC720\uD558\uACE0 \uC788\uC2B5\uB2C8\uB2E4");
+      return;
+    }
+    const mech = typeof getSocialRankMechanics === "function" ? getSocialRankMechanics() : null;
+    if (mech && mech.canOwnProperty === false) {
+      toast("\u{1F6AB} \uB2F9\uC2E0\uC758 \uC2E0\uBD84\uC73C\uB85C\uB294 \uC7AC\uC0B0\uC744 \uC18C\uC720\uD560 \uC218 \uC5C6\uC2B5\uB2C8\uB2E4");
       return;
     }
     const loc = loadCurrentLocation();

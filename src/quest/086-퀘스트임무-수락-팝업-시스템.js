@@ -2455,8 +2455,32 @@ export async function sendMsg(userMsg, isChoice=false){
       // 판정 로직 없음).
       if(S.character?.slaveBound){
         S.character.slaveBound = false;
+        // [2026-10-24 신설, 75번 섹션] 74번 섹션이 놓친 연결고리 —
+        // 탈출에 성공해도 신분이 계속 "노예"로 표시되던 것을 부랑자
+        // (SOCIAL_RANKS, 소속·정착지 없이 떠도는 처지 — 탈출한 노예의
+        // 상황과 정확히 일치)로 전환. changeSocialRank()(ui/026)는
+        // confirm() 팝업을 띄워 자동 트리거에 안 맞으므로 쓰지 않고,
+        // 필드만 직접 반영(스탯 재계산 없음 — 과거 신분의 흔적은
+        // 그대로 남는 쪽이 자연스럽다고 판단).
+        S.character.socialRankId = 'vagrant';
+        S.character.socialRank = SOCIAL_RANKS.find(r=>r.id==='vagrant')?.name || '부랑자';
+        if(typeof updateCharHeader==='function') updateCharHeader();
         if(typeof saveCharacter==='function') saveCharacter(true);
-        setTimeout(()=>toast('⛓️‍💥 사슬을 끊고 자유를 되찾았다!', 3500), 300);
+        setTimeout(()=>toast('⛓️‍💥 사슬을 끊고 자유를 되찾았다! 신분: 부랑자', 3500), 300);
+      }
+    } else if(_turnCat==='move' && (_turnVk==='fail'||_turnVk==='critfail') && S.character?.slaveBound){
+      // [2026-10-24 신설, 75번 섹션] mechanics.canBeArrestedFreely
+      // (노예=true)가 정의돼 있었는데 코드 어디서도 안 읽히던 죽은
+      // 데이터 — "탈출 시도는 체포 위험을 동반한다"(ai-prompt/077의
+      // 서사 지시문, 74번 섹션 조사에서 발견)를 처음으로 실제 수치
+      // 결과로 연결한다. 기존 체포/투옥 시스템(checkArrestCondition)은
+      // 그대로 두고(무법자 전용 메커닉과 혼동하지 않기 위해 분리 유지),
+      // 가벼운 몰수 페널티만 추가 — 구속 상태 자체는 변화 없음.
+      const _slaveArrestMech = (typeof getSocialRankMechanics==='function') ? getSocialRankMechanics() : {};
+      if(_slaveArrestMech.canBeArrestedFreely && Math.random() < 0.5){
+        const _fine = Math.min(S.gold||0, 10 + Math.floor(Math.random()*20));
+        if(_fine > 0){ S.gold -= _fine; if(typeof saveGold==='function') saveGold(S.gold); if(typeof window.updateHeader==='function') window.updateHeader(); }
+        setTimeout(()=>toast(`⛓️ 탈출이 발각되어 매질을 당하고 ${_fine}G를 몰수당했다`, 3500), 300);
       }
     }
     // [47번 섹션 ④] 호감도가 바뀌는 그 대상과 서사에 이름이 실리는 대상이
@@ -4690,8 +4714,12 @@ export function checkArrestCondition(){
   if(S._inCombat) return; // 이미 전투/대치 중이면 새 조우를 만들지 않음
   if(S._guardEncounterActive) return; // 이미 경비병과 대치 중
 
-  const rankId = S.character.socialRankId || 'commoner';
-  if(rankId !== 'outlaw') return; // 무법자(지명수배) 신분만 대상
+  // [2026-10-24 신설, 75번 섹션] 기존엔 "무법자만 대상"을 rankId
+  // 리터럴로 하드코딩해, SOCIAL_RANKS(core/084)에 이미 정의돼 있는
+  // mechanics.isWanted(지금은 outlaw만 true)와 별개의 평행 로직이었다
+  // — 데이터 소스 하나로 통합(지금 outlaw만 true라 동작 변화 없음).
+  const _arrestMech = (typeof getSocialRankMechanics==='function') ? getSocialRankMechanics() : {};
+  if(!_arrestMech.isWanted) return; // 지명수배 신분만 대상
 
   const loc = (typeof loadCurrentLocation==='function') ? loadCurrentLocation() : null;
   const isPublicPlace = loc && ['city','capital','town','port'].includes(loc.type);

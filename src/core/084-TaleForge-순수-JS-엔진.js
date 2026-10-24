@@ -429,7 +429,7 @@ export const SOCIAL_RANKS = [
     privilege:'없음. 무기 소지 불법. 계약·소유 불가.',
     changeUp:'탈출·주인의 해방·탁월한 공훈으로 자유민 신분 획득.',
     special:'어떤 신분으로도 상승 가능. 밑바닥 출신이라 상승 시 스토리 임팩트 최대.',
-    mechanics:{ priceMultiplier:1.3, arrestImmunity:0, jailSentenceMod:1.5, accessLocations:[], quotaFree:false, canOwnProperty:false, canBeArrestedFreely:true }
+    mechanics:{ priceMultiplier:1.3, arrestImmunity:0, jailSentenceMod:1.5, accessLocations:[], quotaFree:false, canOwnProperty:false, canBeArrestedFreely:true, farmTaxRate:0.6 }
   },
   {
     id:'vagrant', name:'부랑자', icon:'🥾', svgIcon:`<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20 C4 16 6 14 6 11 C6 8.5 7.5 7 9.5 7 C11.5 7 13 8.5 13 11 C13 14 15 16 15 20"/><path d="M15 20 C15 17 16.5 15.5 18 15.5 C19.5 15.5 20.5 17 20.5 19"/><circle cx="9.5" cy="4" r="1.6"/></svg>`, color:'#756050', tier:0,
@@ -453,7 +453,7 @@ export const SOCIAL_RANKS = [
     privilege:'경작지 사용권. 영주의 보호를 명목상 받음.',
     changeUp:'도주 성공, 영주의 해방, 도시에서 1년 이상 생활 시 자유민 인정.',
     special:'농업·생존 특화. 자연 지형 이동 시 불이익 없음.',
-    mechanics:{ priceMultiplier:1.15, arrestImmunity:0, jailSentenceMod:1.1, accessLocations:[], quotaFree:false, canOwnProperty:false, canBeArrestedFreely:false }
+    mechanics:{ priceMultiplier:1.15, arrestImmunity:0, jailSentenceMod:1.1, accessLocations:[], quotaFree:false, canOwnProperty:false, canBeArrestedFreely:false, farmTaxRate:0.35 }
   },
   {
     id:'outlaw', name:'무법자', icon:'💀', svgIcon:`<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 C7.5 3 4.5 6.2 4.5 10.5 C4.5 13.2 6 15.3 6 17 L6 18.5 L18 18.5 L18 17 C18 15.3 19.5 13.2 19.5 10.5 C19.5 6.2 16.5 3 12 3 Z" stroke-width="1.4"/><circle cx="9" cy="11" r="1.4" fill="currentColor" fill-opacity="0.5"/><circle cx="15" cy="11" r="1.4" fill="currentColor" fill-opacity="0.5"/><path d="M9 21 L9 18.5 M12 21 L12 18.5 M15 21 L15 18.5" stroke-width="1.3"/></svg>`, color:'#808080', tier:0,

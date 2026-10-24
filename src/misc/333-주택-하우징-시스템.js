@@ -1,6 +1,7 @@
 // 🏠 주택/하우징 시스템 (62-1번 섹션 신설)
 import { S } from '../data/084-TaleForge-순수-JS-엔진.js';
 import { FURNITURE_DEFS, HOUSE_BUY_LOCATION_TYPES, HOUSE_PRICE } from '../data/333-주택-하우징-시스템.js';
+import { getSocialRankMechanics } from '../core/084-TaleForge-순수-JS-엔진.js';
 import { saveGold } from '../items/007-동적-아이템-생성-시스템-무제한-영구-캐시.js';
 import { esc, lsGet, lsSet, toast } from '../utils.js';
 import { loadCurrentLocation } from '../world/052-동대륙-추가-장소-4.js';
@@ -15,6 +16,12 @@ window.saveHouse = saveHouse;
 
 export function buyHouse(){
   if(loadHouse()){ toast('이미 집을 소유하고 있습니다'); return; }
+  // [2026-10-24 신설, 75번 섹션] 신분별 mechanics.canOwnProperty(노예/
+  // 부랑자/농노/무법자=false)가 정의돼 있었는데 코드 어디서도 읽히지
+  // 않던 죽은 데이터 — 재산 소유가 가장 직접적으로 연결되는 지점인
+  // 집 구매에 처음 연결한다.
+  const mech = (typeof getSocialRankMechanics==='function') ? getSocialRankMechanics() : null;
+  if(mech && mech.canOwnProperty===false){ toast('🚫 당신의 신분으로는 재산을 소유할 수 없습니다'); return; }
   const loc = loadCurrentLocation();
   if(!loc || !HOUSE_BUY_LOCATION_TYPES.includes(loc.type)){
     toast('🏠 마을이나 도시 등 정착지에서만 집을 살 수 있습니다'); return;

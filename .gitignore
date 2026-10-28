@@ -3,4 +3,5 @@ node_modules/
 scratchpad/
 tools/taleforge_graphic/venv/
 tools/taleforge_graphic/outputs/
+tools/taleforge_graphic/models_location.txt
 __pycache__/

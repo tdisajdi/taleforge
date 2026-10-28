@@ -6,6 +6,7 @@ Emberville 스타일 픽셀아트를 실험해 보는 Gradio 앱.
 """
 import io
 import os
+import threading
 import time
 from pathlib import Path
 
@@ -13,7 +14,10 @@ import gradio as gr
 from PIL import Image
 
 import comfy_client as CC
+import downloader as DL
 import history as HIST
+import model_catalog as MC
+import paths as PATHS
 import pixelate_bridge as PX
 import workflow as WF
 
@@ -130,6 +134,89 @@ def load_gallery():
     return gr.update(value=items)
 
 
+# ---------------- 모델(체크포인트/LoRA) 받기 ----------------
+
+def models_dir_status():
+    md = PATHS.models_dir()
+    if not md:
+        return "설정 안 됨 — 아래에 ComfyUI의 models 폴더 경로를 적고 저장하세요."
+    return f"현재 위치: {md}" + ("" if Path(md).is_dir() else "  ⚠ 이 경로가 실제로 있는지 확인하세요(아직 폴더가 없을 수 있어요).")
+
+
+def save_models_dir(p):
+    p = (p or "").strip().strip('"')
+    if not p:
+        return "경로를 입력하세요 — 예: C:\\Users\\이름\\simple ui confirm\\models"
+    PATHS.set_models_dir(p)
+    return models_dir_status()
+
+
+def _download_with_progress(url, dest_path):
+    """제너레이터: 진행 상황 문자열을 yield하다가, 끝나면 '완료'/'실패'로 시작하는
+    마지막 문자열을 yield한다(그걸로 호출부가 끝났는지 판단)."""
+    state = {"done": 0, "total": 0, "error": None, "finished": False}
+
+    def progress_cb(done, total):
+        state["done"], state["total"] = done, total
+
+    def run():
+        try:
+            DL.download(url, dest_path, progress=progress_cb)
+        except Exception as e:
+            state["error"] = str(e)
+        finally:
+            state["finished"] = True
+
+    threading.Thread(target=run, daemon=True).start()
+    while not state["finished"]:
+        done, total = state["done"], state["total"]
+        if total:
+            pct = int(done * 100 / total)
+            yield f"받는 중... {pct}% ({done / 1024 ** 2:.0f}/{total / 1024 ** 2:.0f} MB)"
+        elif done:
+            yield f"받는 중... ({done / 1024 ** 2:.0f} MB)"
+        else:
+            yield "연결하는 중..."
+        time.sleep(0.5)
+    if state["error"]:
+        yield f"실패: {state['error']}"
+    else:
+        yield f"완료! 저장됨: {dest_path}"
+
+
+def make_catalog_download_handler(entry):
+    def handler():
+        md = PATHS.models_dir()
+        if not md:
+            yield "먼저 위에서 'ComfyUI models 폴더 위치'를 설정하고 저장하세요.", gr.update(), gr.update()
+            return
+        dest = Path(md) / entry["subdir"] / entry["filename"]
+        for status in _download_with_progress(entry["url"], dest):
+            if status.startswith("완료"):
+                yield status, refresh_checkpoints(), refresh_loras()
+            else:
+                yield status, gr.update(), gr.update()
+    return handler
+
+
+def custom_download_handler(url, subdir):
+    md = PATHS.models_dir()
+    if not md:
+        yield "먼저 위에서 'ComfyUI models 폴더 위치'를 설정하고 저장하세요.", gr.update(), gr.update()
+        return
+    url = (url or "").strip()
+    if not (url.startswith("http://") or url.startswith("https://")):
+        yield "http:// 또는 https:// 로 시작하는 주소를 넣어 주세요.", gr.update(), gr.update()
+        return
+    filename = url.rstrip("/").split("/")[-1].split("?")[0] or "download.safetensors"
+    dest = Path(md) / subdir / filename
+    for status in _download_with_progress(url, dest):
+        if status.startswith("완료"):
+            yield status, refresh_checkpoints(), refresh_loras()
+        else:
+            yield status, gr.update(), gr.update()
+
+
 CSS = """
 .status-box textarea { font-family: ui-monospace, monospace; }
 """
@@ -144,6 +231,36 @@ with gr.Blocks(title="taleforge_graphic") as demo:
     with gr.Row():
         status_box = gr.Textbox(label="ComfyUI 상태", value="", interactive=False, elem_classes=["status-box"])
         status_btn = gr.Button("🔄 다시 확인", scale=0)
+
+    with gr.Accordion("📦 픽셀아트 모델 받기 (체크포인트/LoRA)", open=False):
+        gr.Markdown(
+            "먼저 ComfyUI의 **models 폴더 위치**를 한 번 설정하세요(기존에 쓰시던 도구의 "
+            "`models` 폴더와 같은 곳이면 됩니다 — 예: `...\\simple ui confirm\\models`)."
+        )
+        with gr.Row():
+            models_dir_box = gr.Textbox(label="ComfyUI models 폴더 위치", placeholder="예: C:\\Users\\이름\\simple ui confirm\\models", scale=3)
+            models_dir_save_btn = gr.Button("저장", scale=0)
+        models_dir_status_box = gr.Textbox(label="", value="", interactive=False)
+
+        gr.Markdown("### 추천 목록")
+        catalog_rows = []
+        for entry in MC.PIXEL_ART_MODELS:
+            gr.Markdown(f"**{entry['name']}** ({entry['size_hint']})  \n{entry['desc']}")
+            with gr.Row():
+                dl_btn = gr.Button(f"⬇ {entry['filename']} 받기", scale=0)
+                dl_status = gr.Textbox(label="", value="", interactive=False, scale=3)
+            catalog_rows.append((entry, dl_btn, dl_status))
+        gr.Markdown(
+            "*(이 URL들은 받아보기 전까지 확실하다고 장담 못 해요 — 오류가 나면 아래 "
+            "'직접 URL로 받기'로 다른 주소를 시도해 보세요.)*"
+        )
+
+        gr.Markdown("### 직접 URL로 받기")
+        with gr.Row():
+            custom_url_box = gr.Textbox(label="HuggingFace 등 .safetensors 직접 주소", placeholder="https://huggingface.co/.../resolve/main/....safetensors", scale=3)
+            custom_subdir_dd = gr.Dropdown(label="저장 위치", choices=["loras", "checkpoints"], value="loras", scale=1)
+            custom_dl_btn = gr.Button("받기", scale=0)
+        custom_dl_status = gr.Textbox(label="", value="", interactive=False)
 
     with gr.Row():
         with gr.Column():
@@ -197,6 +314,11 @@ with gr.Blocks(title="taleforge_graphic") as demo:
     ckpt_refresh.click(refresh_checkpoints, outputs=checkpoint)
     lora_refresh.click(refresh_loras, outputs=lora)
 
+    models_dir_save_btn.click(save_models_dir, inputs=models_dir_box, outputs=models_dir_status_box)
+    for entry, dl_btn, dl_status in catalog_rows:
+        dl_btn.click(make_catalog_download_handler(entry), outputs=[dl_status, checkpoint, lora])
+    custom_dl_btn.click(custom_download_handler, inputs=[custom_url_box, custom_subdir_dd], outputs=[custom_dl_status, checkpoint, lora])
+
     preview_btn.click(
         do_preview,
         inputs=[category, description, extra, checkpoint, size, steps, cfg, sampler, scheduler, seed_text, lora, lora_strength],
@@ -212,6 +334,8 @@ with gr.Blocks(title="taleforge_graphic") as demo:
     demo.load(refresh_checkpoints, outputs=checkpoint)
     demo.load(refresh_loras, outputs=lora)
     demo.load(load_gallery, outputs=gallery)
+    demo.load(models_dir_status, outputs=models_dir_status_box)
+    demo.load(lambda: str(PATHS.models_dir() or ""), outputs=models_dir_box)
 
 if __name__ == "__main__":
     demo.queue().launch(server_name="127.0.0.1", server_port=PORT, inbrowser=True, css=CSS)

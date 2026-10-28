@@ -1,3 +1,6 @@
 node_modules/
 .claude/worktrees/
 scratchpad/
+tools/taleforge_graphic/venv/
+tools/taleforge_graphic/outputs/
+__pycache__/

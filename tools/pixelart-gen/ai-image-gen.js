@@ -1,10 +1,30 @@
-// 이미지 생성 백엔드 2종을 지원한다:
+// 이미지 생성 백엔드 3종을 지원한다:
 //  - pollinations(기본, 무료, API 키 불필요) — https://pollinations.ai
 //  - gemini(유료, GEMINI_API_KEY 필요, 결제 계정 연결 필요)
-// IMAGE_PROVIDER 환경변수로 고른다('gemini'만 명시적으로 지정하면 유료
-// 경로로 감, 그 외엔 전부 무료 경로). 둘 중 뭘 쓰든 반환값은 항상
-// "원본 이미지 PNG Buffer"로 동일해서, 그 뒤(pixelate.js가 강제로
+//  - comfyui(사용자 본인 컴퓨터의 로컬 ComfyUI 서버 호출, 키 불필요하지만
+//    이 클라우드 샌드박스에선 절대 도달 못 함 — 아래 "ComfyUI 백엔드" 섹션 참고)
+// IMAGE_PROVIDER 환경변수로 고른다('gemini'/'comfyui'를 명시적으로 지정할
+// 때만 그 경로로 감, 그 외엔 기본 pollinations). 셋 중 뭘 쓰든 반환값은
+// 항상 "원본 이미지 PNG Buffer"로 동일해서, 그 뒤(pixelate.js가 강제로
 // 도트화하는 부분)는 완전히 똑같이 처리된다.
+//
+// --- ComfyUI 백엔드 (IMAGE_PROVIDER=comfyui) ---
+// 사용자 본인 PC(RTX 5070 8GB, ComfyUI 설치됨)에서 `node generate.js --ai`를
+// 돌릴 때만 의미가 있다 — 이 코드가 도는 클라우드 샌드박스는 외부 호스트
+// 아웃바운드가 막혀있고(메모장.md 18-2절) localhost:8188은 애초에 사용자의
+// 로컬 머신이라 이 샌드박스에서는 물리적으로 접근 자체가 불가능하다. 즉
+// 이 함수는 **코드만 여기서 작성하고, 실제 호출 테스트는 반드시 사용자가
+// 본인 PC에서 ComfyUI를 켜둔 채로 직접 돌려봐야 한다.**
+// 환경변수로 조정 가능(전부 기본값 있음, ComfyUI 기본 설치 기준):
+//   COMFYUI_URL(기본 http://127.0.0.1:8188), COMFYUI_CHECKPOINT(기본
+//   체크포인트 파일명 — 설치된 모델명으로 반드시 바꿔야 함),
+//   COMFYUI_LORA(선택, 픽셀아트 전용 LoRA 쓸 때), COMFYUI_STEPS/CFG/
+//   SAMPLER/SCHEDULER/WIDTH/HEIGHT/NEGATIVE.
+// ComfyUI는 "그래프(API) 형식" JSON을 /prompt로 큐에 넣고, /history/
+// {prompt_id}를 폴링해 완료를 확인한 뒤 /view로 실제 PNG 바이트를
+// 받아오는 3단계 호출이다(공식 웹소켓 방식 대신 의존성 없는 폴링을
+// 선택 — 이 프로젝트가 이미 fetch 기반 폴링/타임아웃 패턴을 쓰고 있어
+// 일관성 유지).
 //
 // entity에 aiSubtype/element(ai-analyze.js가 무료 텍스트 분석으로
 // 판단한 값)가 있으면 프롬프트에 그대로 반영한다 — "분석 → 그 분석을
@@ -155,6 +175,156 @@ async function generateViaGemini(entity) {
   }
 }
 
+const COMFYUI_URL = (process.env.COMFYUI_URL || 'http://127.0.0.1:8188').replace(/\/$/, '');
+// 기본 체크포인트는 실제로 어떤 모델이 설치돼 있는지 알 수 없어 placeholder일
+// 뿐이다 — 반드시 COMFYUI_CHECKPOINT 환경변수로 본인 PC에 설치된 실제
+// .safetensors/.ckpt 파일명(ComfyUI의 models/checkpoints/ 폴더 기준)으로
+// 덮어써야 한다. 틀린 이름이면 ComfyUI가 /prompt에서 즉시 오류를 주고,
+// 아래 generateViaComfyUI가 그걸 감지해 절차적 생성으로 안전하게 폴백한다.
+const COMFYUI_CHECKPOINT = process.env.COMFYUI_CHECKPOINT || 'sd_xl_base_1.0.safetensors';
+const COMFYUI_LORA = process.env.COMFYUI_LORA || ''; // 선택 — 픽셀아트 전용 LoRA 파일명
+const COMFYUI_LORA_STRENGTH = parseFloat(process.env.COMFYUI_LORA_STRENGTH || '0.8');
+const COMFYUI_STEPS = parseInt(process.env.COMFYUI_STEPS || '20', 10);
+const COMFYUI_CFG = parseFloat(process.env.COMFYUI_CFG || '7.0');
+const COMFYUI_SAMPLER = process.env.COMFYUI_SAMPLER || 'dpmpp_2m';
+const COMFYUI_SCHEDULER = process.env.COMFYUI_SCHEDULER || 'karras';
+const COMFYUI_WIDTH = parseInt(process.env.COMFYUI_WIDTH || '512', 10);
+const COMFYUI_HEIGHT = parseInt(process.env.COMFYUI_HEIGHT || '512', 10);
+// pixelate.js가 어차피 다운스케일+양자화를 강제하므로, 여기서는 사진처럼
+// 지저분해지는 걸 막는 쪽으로만 네거티브를 잡는다(buildPrompt()의 "flat
+// icon" 지시문과 같은 목적).
+const COMFYUI_NEGATIVE = process.env.COMFYUI_NEGATIVE
+  || 'blurry, photo, realistic, 3d render, watermark, signature, text, close-up, cropped, extra limbs, lowres';
+const COMFYUI_POLL_INTERVAL_MS = 1500;
+// SDXL 계열을 8GB VRAM에서 돌리면 모델 로드+생성에 꽤 걸릴 수 있어
+// Pollinations/Gemini보다 훨씬 넉넉하게 잡는다(네트워크 왕복이 아니라
+// 실제 로컬 GPU 추론 시간이라 25초 FETCH_TIMEOUT_MS로는 턱없이 부족함).
+const COMFYUI_MAX_WAIT_MS = 180000;
+
+function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+
+// ComfyUI "API(그래프) 형식" 워크플로 — 기본 설치에 항상 있는 표준 노드
+// (CheckpointLoaderSimple/CLIPTextEncode/EmptyLatentImage/KSampler/
+// VAEDecode/SaveImage)만 써서 커스텀 노드 설치 여부에 의존하지 않는다.
+// COMFYUI_LORA가 지정되면 LoraLoader를 체크포인트와 KSampler/CLIPTextEncode
+// 사이에 끼워 넣는다(ComfyUI 공식 워크플로의 표준 연결 패턴).
+function buildComfyWorkflow(entity) {
+  const positivePrompt = buildPrompt(entity);
+  const seed = seedFor(entity);
+  const graph = {
+    checkpoint: {
+      class_type: 'CheckpointLoaderSimple',
+      inputs: { ckpt_name: COMFYUI_CHECKPOINT },
+    },
+    latent: {
+      class_type: 'EmptyLatentImage',
+      inputs: { batch_size: 1, width: COMFYUI_WIDTH, height: COMFYUI_HEIGHT },
+    },
+    positive: {
+      class_type: 'CLIPTextEncode',
+      inputs: { text: positivePrompt, clip: ['checkpoint', 1] },
+    },
+    negative: {
+      class_type: 'CLIPTextEncode',
+      inputs: { text: COMFYUI_NEGATIVE, clip: ['checkpoint', 1] },
+    },
+    sampler: {
+      class_type: 'KSampler',
+      inputs: {
+        seed, steps: COMFYUI_STEPS, cfg: COMFYUI_CFG,
+        sampler_name: COMFYUI_SAMPLER, scheduler: COMFYUI_SCHEDULER, denoise: 1,
+        model: ['checkpoint', 0], positive: ['positive', 0], negative: ['negative', 0],
+        latent_image: ['latent', 0],
+      },
+    },
+    decode: {
+      class_type: 'VAEDecode',
+      inputs: { samples: ['sampler', 0], vae: ['checkpoint', 2] },
+    },
+    save: {
+      class_type: 'SaveImage',
+      inputs: { filename_prefix: 'taleforge_pixelart', images: ['decode', 0] },
+    },
+  };
+  if (COMFYUI_LORA) {
+    graph.lora = {
+      class_type: 'LoraLoader',
+      inputs: {
+        lora_name: COMFYUI_LORA,
+        strength_model: COMFYUI_LORA_STRENGTH, strength_clip: COMFYUI_LORA_STRENGTH,
+        model: ['checkpoint', 0], clip: ['checkpoint', 1],
+      },
+    };
+    graph.sampler.inputs.model = ['lora', 0];
+    graph.positive.inputs.clip = ['lora', 1];
+    graph.negative.inputs.clip = ['lora', 1];
+  }
+  return graph;
+}
+
+function findFirstOutputImage(outputs) {
+  for (const nodeId of Object.keys(outputs || {})) {
+    const images = outputs[nodeId] && outputs[nodeId].images;
+    if (images && images.length) return images[0];
+  }
+  return null;
+}
+
+// /history/{promptId}를 완료될 때까지 폴링한다. ComfyUI는 실행이 끝난
+// prompt_id만 /history에 올려주므로(진행 중엔 키 자체가 없음), 응답에
+// 그 키가 생기는 걸 "완료" 신호로 쓴다 — 별도 상태 필드를 안 봐도 됨.
+async function waitForComfyResult(promptId) {
+  const start = Date.now();
+  while (Date.now() - start < COMFYUI_MAX_WAIT_MS) {
+    let res;
+    try {
+      res = await fetchWithTimeout(`${COMFYUI_URL}/history/${promptId}`);
+    } catch (e) {
+      return null; // 서버가 중간에 죽거나 연결이 끊김 — 안전하게 폴백
+    }
+    if (res.ok) {
+      const json = await res.json();
+      const entry = json[promptId];
+      if (entry && entry.outputs) return entry.outputs;
+    }
+    await sleep(COMFYUI_POLL_INTERVAL_MS);
+  }
+  console.warn(`[ai-image-gen] ComfyUI 응답 대기 시간 초과(${COMFYUI_MAX_WAIT_MS / 1000}초) — prompt_id=${promptId}`);
+  return null;
+}
+
+async function generateViaComfyUI(entity) {
+  const workflow = buildComfyWorkflow(entity);
+  const clientId = `taleforge-pixelart-gen-${process.pid}`;
+  try {
+    const queueRes = await fetchWithTimeout(`${COMFYUI_URL}/prompt`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: workflow, client_id: clientId }),
+    });
+    if (!queueRes.ok) {
+      const errBody = await queueRes.text().catch(() => '');
+      console.warn(`[ai-image-gen] ComfyUI 큐 등록 실패(${queueRes.status}) — ${entity.id || entity.name}은 절차적 생성으로 대체. 체크포인트 이름(COMFYUI_CHECKPOINT="${COMFYUI_CHECKPOINT}")이 실제 설치된 모델과 맞는지 확인하세요. 응답: ${errBody.slice(0, 300)}`);
+      return null;
+    }
+    const { prompt_id } = await queueRes.json();
+    const outputs = await waitForComfyResult(prompt_id);
+    if (!outputs) {
+      console.warn(`[ai-image-gen] ComfyUI 결과 수신 실패 — ${entity.id || entity.name}은 절차적 생성으로 대체`);
+      return null;
+    }
+    const imageRef = findFirstOutputImage(outputs);
+    if (!imageRef) return null;
+    const viewUrl = `${COMFYUI_URL}/view?filename=${encodeURIComponent(imageRef.filename)}&subfolder=${encodeURIComponent(imageRef.subfolder || '')}&type=${encodeURIComponent(imageRef.type || 'output')}`;
+    const imgRes = await fetchWithTimeout(viewUrl);
+    if (!imgRes.ok) return null;
+    return Buffer.from(await imgRes.arrayBuffer());
+  } catch (e) {
+    console.warn(`[ai-image-gen] ComfyUI 호출 실패(${e.message}) — ${entity.id || entity.name}은 절차적 생성으로 대체. ${COMFYUI_URL}에서 ComfyUI가 실행 중인지 확인하세요.`);
+    return null;
+  }
+}
+
 /**
  * entity 하나에 대해 이미지를 생성해서 PNG Buffer로 돌려준다.
  * 실패(네트워크 오류/키 없음/응답에 이미지 없음)하면 null을 반환한다
@@ -168,8 +338,12 @@ async function generateViaGemini(entity) {
  * 대체한다(잘못된 구도의 이미지를 그대로 쓰지 않음).
  */
 async function generateImageForEntity(entity) {
-  const provider = process.env.IMAGE_PROVIDER === 'gemini' ? 'gemini' : 'pollinations';
-  const gen = provider === 'gemini' ? generateViaGemini : generateViaPollinations;
+  const provider = process.env.IMAGE_PROVIDER === 'gemini' ? 'gemini'
+    : process.env.IMAGE_PROVIDER === 'comfyui' ? 'comfyui'
+    : 'pollinations';
+  const gen = provider === 'gemini' ? generateViaGemini
+    : provider === 'comfyui' ? generateViaComfyUI
+    : generateViaPollinations;
 
   let buf = await gen(entity);
   if (!buf) return null;
@@ -184,4 +358,4 @@ async function generateImageForEntity(entity) {
   return null;
 }
 
-module.exports = { generateImageForEntity, buildPrompt, isFullBodyShot, GEMINI_MODEL };
+module.exports = { generateImageForEntity, buildPrompt, isFullBodyShot, GEMINI_MODEL, buildComfyWorkflow, COMFYUI_URL };

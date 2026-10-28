@@ -18,8 +18,12 @@ const { analyzeEntity } = require('./ai-analyze.js');
 
 // --ai: 캐시에 없는 항목을 AI 이미지 생성으로 채운다. 기본 백엔드는
 // Pollinations(무료, 키 불필요) — IMAGE_PROVIDER=gemini 환경변수를
-// 줄 때만 유료 Gemini 경로로 감(GEMINI_API_KEY 필요, 결제 계정 필요).
-// 어느 쪽이든 실패하면 자동으로 절차적 생성기로 폴백. --ai-limit=N:
+// 줄 때만 유료 Gemini 경로로 감(GEMINI_API_KEY 필요, 결제 계정 필요),
+// IMAGE_PROVIDER=comfyui를 주면 사용자 본인 PC의 로컬 ComfyUI 서버
+// (기본 http://127.0.0.1:8188)를 호출함 — 클라우드 샌드박스에선 절대
+// 도달 못 하므로 사용자가 본인 PC에서 ComfyUI를 켜둔 채 직접 실행해야
+// 함(세부 환경변수는 ai-image-gen.js 상단 주석 참고). 어느 쪽이든
+// 실패하면 자동으로 절차적 생성기로 폴백. --ai-limit=N:
 // 이번 실행에서 새로 이미지 생성을 부를 최대 개수(기본 10 — 속도/
 // 요금제 안전장치, 이미 캐시된 건 개수에 안 셈). --ai-only=weapon,
 // monster: 그 카테고리만 AI 대상으로 삼는다(생략하면 전체 대상).
@@ -77,10 +81,15 @@ function safeFileName(id) {
 async function main() {
   if (AI_MODE) {
     fs.mkdirSync(AI_CACHE_DIR, { recursive: true });
-    const provider = process.env.IMAGE_PROVIDER === 'gemini' ? 'gemini(유료)' : 'pollinations(무료)';
+    const provider = process.env.IMAGE_PROVIDER === 'gemini' ? 'gemini(유료)'
+      : process.env.IMAGE_PROVIDER === 'comfyui' ? `comfyui(로컬, ${process.env.COMFYUI_URL || 'http://127.0.0.1:8188'})`
+      : 'pollinations(무료)';
     console.log(`[generate] --ai 이미지 생성 백엔드: ${provider}`);
     if (process.env.IMAGE_PROVIDER === 'gemini' && !process.env.GEMINI_API_KEY) {
       console.warn('[generate] IMAGE_PROVIDER=gemini인데 GEMINI_API_KEY가 없음 — 전부 절차적 생성으로 진행됩니다.');
+    }
+    if (process.env.IMAGE_PROVIDER === 'comfyui' && !process.env.COMFYUI_CHECKPOINT) {
+      console.warn('[generate] COMFYUI_CHECKPOINT 환경변수가 없음 — placeholder 모델명(sd_xl_base_1.0.safetensors)으로 시도합니다. 본인 PC에 설치된 실제 체크포인트 파일명으로 지정하세요.');
     }
   }
   const { entities, errors } = scanAll();

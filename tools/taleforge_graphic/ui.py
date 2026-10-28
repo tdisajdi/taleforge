@@ -1,8 +1,11 @@
 """taleforge_graphic 화면 — ComfyUI 노드를 직접 안 만지고, 몇 번 클릭으로
-Emberville 스타일 픽셀아트를 실험해 보는 Gradio 앱.
+픽셀아트 에셋을 생성·실험해 보는 Gradio 앱.
 
-흐름: 설명/카테고리 선택 → "미리보기 생성"(ComfyUI가 그린 큰 원본) →
-마음에 들면 "픽셀아트로 저장"(pixelate.js로 강제 도트 변환, outputs/pixel/에 저장).
+흐름: 설명 입력(+원하면 카테고리/스타일 보조 문구) → "미리보기 생성"
+(ComfyUI가 그린 큰 원본) → 마음에 들면 "픽셀아트로 저장"(pixelate.js로
+강제 도트 변환, outputs/pixel/에 저장). 카테고리/스타일 보조 문구는 둘 다
+끌 수 있다 — Opus가 나중에 뽑아낼 실제 에셋 프롬프트를 한 글자도 안 바꾸고
+그대로 테스트하고 싶을 때는 둘 다 끄고 설명란에 그 프롬프트를 그대로 넣으면 된다.
 """
 import io
 import os
@@ -57,11 +60,15 @@ def refresh_loras():
     return gr.update(choices=loras, value=WF.NO_LORA)
 
 
-def do_preview(category, description, extra, checkpoint, size, steps, cfg, sampler, scheduler, seed_text, lora, lora_strength):
+def update_prompt_preview(category, description, extra, use_category_preset, use_style_base):
+    return WF.build_prompt(category, description, extra, use_category_preset=use_category_preset, use_style_base=use_style_base)
+
+
+def do_preview(category, description, extra, use_category_preset, use_style_base, checkpoint, size, steps, cfg, sampler, scheduler, seed_text, lora, lora_strength):
     if not checkpoint:
         yield None, "체크포인트(모델)를 먼저 고르세요 — '새로고침' 버튼으로 목록을 가져올 수 있어요.", None
         return
-    positive = WF.build_prompt(category, description, extra)
+    positive = WF.build_prompt(category, description, extra, use_category_preset=use_category_preset, use_style_base=use_style_base)
     seed = None
     seed_text = (seed_text or "").strip()
     if seed_text:
@@ -224,8 +231,8 @@ CSS = """
 with gr.Blocks(title="taleforge_graphic") as demo:
     gr.Markdown("# 🎨 taleforge_graphic — ComfyUI 그래픽 생성 도우미")
     gr.Markdown(
-        "ComfyUI 노드 화면을 직접 안 만지고, 설명만 쓰고 버튼을 눌러 Emberville 스타일"
-        "(탑뷰 픽셀아트, 디테일한 타일, 동적 조명/파티클) 그림을 실험해 보는 도구입니다."
+        "ComfyUI 노드 화면을 직접 안 만지고, 설명만 쓰고 버튼을 눌러 픽셀아트 에셋을 "
+        "생성·실험해 보는 도구입니다. 카테고리/스타일 보조 문구는 아래에서 켜고 끌 수 있어요."
     )
 
     with gr.Row():
@@ -274,6 +281,12 @@ with gr.Blocks(title="taleforge_graphic") as demo:
                 lines=2,
             )
             extra = gr.Textbox(label="추가 문구 (선택)", placeholder="예: autumn colors", lines=1)
+            with gr.Row():
+                use_category_preset = gr.Checkbox(label="카테고리 구도 문구 추가", value=True,
+                                                    info="켜면 '어떤 종류'에 맞는 구도 설명(아이콘은 중앙 배치 등)을 덧붙여요. 카메라 각도는 안 건드려요.")
+                use_style_base = gr.Checkbox(label="스타일 보조 문구 추가", value=True,
+                                               info="켜면 색감/조명/질감 수식어를 덧붙여요. 둘 다 끄면 입력한 설명이 그대로(수정 없이) 전송돼요 — Opus가 줄 실제 프롬프트를 그대로 테스트할 때 둘 다 끄세요.")
+            prompt_preview = gr.Textbox(label="실제로 전송될 프롬프트 (미리보기)", interactive=False, lines=2)
 
             with gr.Row():
                 checkpoint = gr.Dropdown(label="체크포인트(모델)", choices=[], interactive=True)
@@ -321,9 +334,11 @@ with gr.Blocks(title="taleforge_graphic") as demo:
 
     preview_btn.click(
         do_preview,
-        inputs=[category, description, extra, checkpoint, size, steps, cfg, sampler, scheduler, seed_text, lora, lora_strength],
+        inputs=[category, description, extra, use_category_preset, use_style_base, checkpoint, size, steps, cfg, sampler, scheduler, seed_text, lora, lora_strength],
         outputs=[preview_img, status_text, raw_path_state],
     )
+    for comp in (category, description, extra, use_category_preset, use_style_base):
+        comp.change(update_prompt_preview, inputs=[category, description, extra, use_category_preset, use_style_base], outputs=prompt_preview)
     pixelate_btn.click(
         do_pixelate,
         inputs=[raw_path_state, category, grid_size, max_colors, alpha_threshold],
@@ -334,6 +349,7 @@ with gr.Blocks(title="taleforge_graphic") as demo:
     demo.load(refresh_checkpoints, outputs=checkpoint)
     demo.load(refresh_loras, outputs=lora)
     demo.load(load_gallery, outputs=gallery)
+    demo.load(update_prompt_preview, inputs=[category, description, extra, use_category_preset, use_style_base], outputs=prompt_preview)
     demo.load(models_dir_status, outputs=models_dir_status_box)
     demo.load(lambda: str(PATHS.models_dir() or ""), outputs=models_dir_box)
 
